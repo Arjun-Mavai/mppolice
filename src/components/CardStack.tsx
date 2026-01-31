@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
-import { Card } from "@/components/Card";
+import { Card } from "@/components/Cardswipet";
 import { Category, Quote } from "@/data/quotes";
 import { useAppStore } from "@/hooks/useAppStore";
 

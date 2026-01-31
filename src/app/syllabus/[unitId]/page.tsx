@@ -10,6 +10,10 @@ import { cn } from '@/lib/utils';
 import { SideDrawer } from '@/components/SideDrawer';
 import { SyllabusSearch } from '@/components/SyllabusSearch';
 import { ViewToggle } from '@/components/ViewToggle';
+import { useSettingsStore } from '@/store/useSettingsStore';
+import { Lock, PlayCircle } from 'lucide-react';
+import { SyllabusLockModal } from '@/components/SyllabusLockModal';
+import { Button } from '@/components/ui/button';
 
 // Types for the params
 type Props = {
@@ -49,6 +53,42 @@ export default function UnitPage({ params }: Props) {
   // SideDrawer State
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  
+  // Premium/Lock State
+  const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
+  const { isSubscribed } = useSettingsStore();
+
+  const handleQuizClick = (type: 'topic' | 'unit', topicId?: number) => {
+      // Locking Logic
+      // Unit Test: Always locked for free users (Premium Feature)
+      if (type === 'unit' && !isSubscribed) {
+          setIsUnlockModalOpen(true);
+          return;
+      }
+
+      // Topic Quiz:
+      // Unit 1, Topics 1-5 (IDs usually 1-5 or 0-4 index) are FREE.
+      // Assuming topicId corresponds to index+1. 
+      // If unitId is 'unit_1' and topicId <= 5 -> FREE.
+      // Else -> Locked.
+      if (type === 'topic') {
+          if (isSubscribed) {
+               // Allowed
+          } else {
+              if (unitId === 'unit_1' && topicId && topicId <= 8) {
+                 // Allowed
+             } else {
+                 setIsUnlockModalOpen(true);
+                 return;
+             }
+          }
+      }
+
+      // If allowed, navigate to quiz
+      // router.push(`/syllabus/quiz/${unitId}/${type === 'topic' ? topicId : 'full'}`);
+      // alert("Quiz Feature Coming Soon! (This would open the quiz page)");
+      router.push(`/syllabus/quiz/play?mode=topic&unit=${unitId}&topic=${topicId}`);
+  };
 
   const unit = syllabusData.units[unitId];
 
@@ -378,8 +418,21 @@ export default function UnitPage({ params }: Props) {
                 </section>
             )}
 
+            {/* Quiz Section */}
+            <section className="pt-4 border-t border-slate-100">
+                <Button
+                    onClick={() => handleQuizClick('topic', selectedTopic?.id)}
+                    className="w-full h-12 text-base font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 flex items-center justify-center gap-2"
+                >
+                    {(unitId !== 'unit_1' || (selectedTopic?.id || 99) > 8) && !isSubscribed ? <Lock className="w-4 h-4" /> : <PlayCircle className="w-5 h-5" />}
+                    {language === 'hi' ? 'इस टॉपिक का टेस्ट दें' : 'Take Topic Test'}
+                </Button>
+            </section>
+
          </div>
       </SideDrawer>
+
+      <SyllabusLockModal open={isUnlockModalOpen} onOpenChange={setIsUnlockModalOpen} />
     </div>
   );
 }
