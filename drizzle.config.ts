@@ -9,7 +9,7 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'turso',
   dbCredentials: {
-    url: process.env.NEXT_PUBLIC_TURSO_URL!,
-    authToken: process.env.NEXT_PUBLIC_TURSO_TOKEN!,
+    url: process.env.TURSO_DATABASE_URL!,
+    authToken: process.env.TURSO_AUTH_TOKEN!,
   },
 });
