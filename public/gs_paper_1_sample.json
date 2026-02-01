@@ -1,0 +1,52 @@
+
+{
+  "title": "UPSC Prelims GS Paper I - Mock Test 1",
+  "description": "Comprehensive mock test covering Indian Polity, Modern History, Geography, and Current Affairs.",
+  "slug": "upsc-gs-paper-1-mock-1",
+  "duration": 120,
+  "totalMarks": 200,
+  "type": "FLT",
+  "isPro": false,
+  "questions": [
+    {
+      "text": "Consider the following statements regarding the 'Preamble' of the Indian Constitution:\n1. It is based on the 'Objectives Resolution' moved by Jawaharlal Nehru.\n2. It has been amended only once by the 42nd Constitutional Amendment Act, 1976.\n3. It is not a part of the Constitution.\nWhich of the statements given above is/are correct?",
+      "options": ["1 and 2 only", "2 and 3 only", "1 and 3 only", "1, 2 and 3"],
+      "correct": "1 and 2 only",
+      "explanation": "Statement 1 is correct: The Preamble is based on the 'Objectives Resolution' drafted and moved by Pandit Nehru. Statement 2 is correct: It has been amended only once in 1976. Statement 3 is incorrect: In the Kesavananda Bharati case (1973), the Supreme Court held that Preamble is an integral part of the Constitution.",
+      "marks": 2,
+      "negative": 0.66
+    },
+    {
+      "text": "With reference to the 'Permanent Settlement' introduced by Lord Cornwallis, consider the following statements:\n1. It was introduced in Bengal and Bihar.\n2. The ownership of land was transferred to the peasants.\n3. The revenue to be paid to the state was fixed permanently.\nWhich of the statements given above are correct?",
+      "options": ["1 and 2 only", "2 and 3 only", "1 and 3 only", "1, 2 and 3"],
+      "correct": "1 and 3 only",
+      "explanation": "The Permanent Settlement (1793) was introduced in Bengal and Bihar. It declared Zamindars as the owners of the land, not peasents. The revenue demand was fixed permanently.",
+      "marks": 2,
+      "negative": 0.66
+    },
+    {
+      "text": "Which of the following cloud formations is often associated with continuous rain or snow?",
+      "options": ["Cirrus", "Cumulus", "Nimbostratus", "Altocumulus"],
+      "correct": "Nimbostratus",
+      "explanation": "Nimbostratus clouds are dark, low-level clouds accompanied by light to moderately falling precipitation. They are thick enough to block out the sun.",
+      "marks": 2,
+      "negative": 0.66
+    },
+    {
+      "text": "The 'Monetary Policy Committee' (MPC) in India is headed by:",
+      "options": ["The Finance Minister", "The Prime Minister", "The RBI Governor", "The Chief Economic Advisor"],
+      "correct": "The RBI Governor",
+      "explanation": "The Monetary Policy Committee is constituted by the Central Government under Section 45ZB of the RBI Act. It is chaired by the Governor of the RBI.",
+      "marks": 2,
+      "negative": 0.66
+    },
+    {
+      "text": "Which one of the following is the best description of 'Blue Carbon'?",
+      "options": ["Carbon captured by oceans and coastal ecosystems", "Carbon sequestered in forest biomass", "Carbon contained in petroleum and natural gas", "Carbon in the atmosphere"],
+      "correct": "Carbon captured by oceans and coastal ecosystems",
+      "explanation": "Blue carbon is the carbon stored in coastal and marine ecosystems. Mangroves, tidal marshes, and seagrasses sequester and store more carbon per unit area than terrestrial forests.",
+      "marks": 2,
+      "negative": 0.66
+    }
+  ]
+}

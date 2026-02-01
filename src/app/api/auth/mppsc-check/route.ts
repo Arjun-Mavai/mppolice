@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { db } from '@/db';
+import { mppscUsers } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function GET() {
   try {
@@ -12,19 +14,24 @@ export async function GET() {
     }
 
     // Verify user exists and is subscribed
-    const { data: user, error } = await supabaseAdmin
-        .from('mppsc_users')
-        .select('name, email, is_subscribed')
-        .eq('id', token.value)
-        .single();
+    const users = await db.select({ 
+        name: mppscUsers.name, 
+        email: mppscUsers.email, 
+        isSubscribed: mppscUsers.isSubscribed 
+    })
+    .from(mppscUsers)
+    .where(eq(mppscUsers.id, token.value))
+    .limit(1);
+
+    const user = users[0];
     
-    if (error || !user) {
+    if (!user) {
          return NextResponse.json({ authenticated: false });
     }
 
     return NextResponse.json({ 
         authenticated: true, 
-        user: { name: user.name, email: user.email, is_subscribed: user.is_subscribed } 
+        user: { name: user.name, email: user.email, is_subscribed: user.isSubscribed } 
     });
 
   } catch (error) {

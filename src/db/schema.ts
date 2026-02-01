@@ -1,0 +1,123 @@
+
+import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
+
+// MPPSC Users Table
+export const mppscUsers = sqliteTable('mppsc_users', {
+  id: text('id').primaryKey(), // UUID handled in application logic
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  email: text('email').unique().notNull(),
+  password: text('password').notNull(),
+  name: text('name'),
+  isSubscribed: integer('is_subscribed', { mode: 'boolean' }).default(false),
+});
+
+// Tests Table
+export const tests = sqliteTable('tests', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  description: text('description'),
+  slug: text('slug').unique().notNull(),
+  durationMinutes: integer('duration_minutes').notNull(),
+  totalQuestions: integer('total_questions').default(0),
+  totalMarks: integer('total_marks').notNull(),
+  type: text('type', { enum: ['FLT', 'UNIT', 'CSAT', 'PYQ'] }).notNull(),
+  unitId: text('unit_id'), // To link directly to a syllabus unit e.g., 'unit_1'
+  tags: text('tags', { mode: 'json' }), // JSON array of related tags e.g., ['history', 'ancient']
+  isPro: integer('is_pro', { mode: 'boolean' }).default(false),
+  maxRetries: integer('max_retries'), // null = unlimited. Standard: Unit=5, FLT=3
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+});
+
+// Questions Table
+export const questions = sqliteTable('questions', {
+  id: text('id').primaryKey(),
+  testId: text('test_id').references(() => tests.id, { onDelete: 'cascade' }).notNull(),
+  questionText: text('question_text').notNull(), // Hindi (Default)
+  questionTextEn: text('question_text_en'),     // English
+  options: text('options', { mode: 'json' }).notNull(), // JSON: [{ id: 'A', text: 'Hi', text_en: 'En' }]
+  correctAnswer: text('correct_answer').notNull(), // Option ID (e.g., 'A') or Text
+  explanation: text('explanation'),              // Hindi
+  explanationEn: text('explanation_en'),         // English
+  marks: integer('marks').notNull(),
+  negativeMarks: real('negative_marks').default(1),
+  idealTime: integer('ideal_time').default(60),  // Expected time in seconds
+  order: integer('order').notNull(),
+  subject: text('subject'), // e.g., 'Indian History', 'Polity'
+});
+
+// User Attempts Table
+export const userAttempts = sqliteTable('user_attempts', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => mppscUsers.id).notNull(), // Linked to users table
+  testId: text('test_id').references(() => tests.id).notNull(),
+  startTime: integer('start_time', { mode: 'timestamp' }).notNull(),
+  endTime: integer('end_time', { mode: 'timestamp' }),
+  score: real('score'),
+  isCompleted: integer('is_completed', { mode: 'boolean' }).default(false),
+});
+
+// Attempt Answers (Granular tracking)
+export const attemptAnswers = sqliteTable('attempt_answers', {
+  id: text('id').primaryKey(),
+  attemptId: text('attempt_id').references(() => userAttempts.id, { onDelete: 'cascade' }).notNull(),
+  questionId: text('question_id').references(() => questions.id).notNull(),
+  userAnswer: text('user_answer'),
+  isCorrect: integer('is_correct', { mode: 'boolean' }),
+  timeTakenSeconds: integer('time_taken_seconds'),
+});
+
+// Syllabus Topics Table (New)
+export const syllabusTopics = sqliteTable('syllabus_topics', {
+  id: text('id').primaryKey(),
+  unitId: text('unit_id').notNull(), // e.g. 'unit_1'
+  title: text('title').notNull(),
+  titleEn: text('title_en'),
+  // Content stored as JSON for flexibility
+  // Expected default keys: front, back, details, mnemonic, impact_emoji, important_facts
+  content: text('content', { mode: 'json' }).notNull(),
+  contentEn: text('content_en', { mode: 'json' }), 
+  order: integer('order').notNull(),
+  isFree: integer('is_free', { mode: 'boolean' }).default(false),
+  imgUrl: text('img_url'), // For image support
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+});
+
+// Relations
+import { relations } from 'drizzle-orm';
+
+export const testsRelations = relations(tests, ({ many }) => ({
+	questions: many(questions),
+	userAttempts: many(userAttempts),
+}));
+
+export const questionsRelations = relations(questions, ({ one }) => ({
+	test: one(tests, {
+		fields: [questions.testId],
+		references: [tests.id],
+	}),
+}));
+
+export const userAttemptsRelations = relations(userAttempts, ({ one, many }) => ({
+	user: one(mppscUsers, {
+		fields: [userAttempts.userId],
+		references: [mppscUsers.id],
+	}),
+	test: one(tests, {
+		fields: [userAttempts.testId],
+		references: [tests.id],
+	}),
+    answers: many(attemptAnswers)
+}));
+
+export const attemptAnswersRelations = relations(attemptAnswers, ({ one }) => ({
+    attempt: one(userAttempts, {
+        fields: [attemptAnswers.attemptId],
+        references: [userAttempts.id]
+    }),
+    question: one(questions, {
+        fields: [attemptAnswers.questionId],
+        references: [questions.id]
+    })
+}));

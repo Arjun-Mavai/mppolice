@@ -19,7 +19,11 @@ import {
     ArrowUpRight,
     X,
     TrendingUp,
-    Languages
+    Languages,
+    Brain,
+    AlertTriangle,
+    FileText,
+    History
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -34,7 +38,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 export default function UpgradePage() {
   const router = useRouter();
   const { scrollYProgress } = useScroll();
-  const { language, setLanguage } = useSettingsStore();
+  const { language, setLanguage, user: globalUser } = useSettingsStore();
 
   const [isFlipped, setIsFlipped] = React.useState(false);
   const [hasInteracted, setHasInteracted] = React.useState(false);
@@ -129,28 +133,6 @@ export default function UpgradePage() {
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-indigo-100 selection:text-indigo-900">
       
-      {/* Navbar */}
-      <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 transition-all duration-300">
-          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-              <Link href="/syllabus" className="font-bold text-xl font-display text-slate-900 flex items-center gap-2">
-                  <div className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center shadow-lg shadow-slate-900/20">
-                      <span className="font-bold text-xs tracking-tighter">MP</span>
-                  </div>
-                  <span className="tracking-tight">MPPSC<span className="text-indigo-600">26</span></span>
-              </Link>
-              <div className="flex items-center gap-4">
-                  <Button variant="ghost" className="font-semibold text-slate-600 hover:bg-slate-100 rounded-full px-6" onClick={() => router.push('/syllabus')}>
-                    {language === 'hi' ? 'बंद करें' : 'Close'}
-                  </Button>
-              </div>
-          </div>
-          {/* Progress Bar */}
-          <motion.div 
-            className="h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 animate-gradient-x origin-left"
-            style={{ scaleX: scrollYProgress }}
-          />
-      </nav>
-
       {/* Hero Section */}
       <section className="pt-40 pb-20 px-6 relative overflow-hidden bg-slate-50 border-b border-slate-200">
           <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-100/50 rounded-full blur-3xl -mr-60 -mt-60 opacity-60 animate-pulse-slow"></div>
@@ -161,10 +143,24 @@ export default function UpgradePage() {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white border border-indigo-100 text-sm font-bold text-indigo-600 shadow-lg shadow-indigo-100/50"
+                className={cn(
+                    "inline-flex items-center gap-2 px-6 py-2 rounded-full border text-sm font-bold shadow-lg",
+                    (globalUser as any)?.is_pro 
+                        ? "bg-amber-50 border-amber-200 text-amber-700 shadow-amber-100/50"
+                        : "bg-white border-indigo-100 text-indigo-600 shadow-indigo-100/50"
+                )}
               >
-                 <Zap className="w-4 h-4 fill-indigo-600" />
-                 {language === 'hi' ? 'संपूर्ण MPPSC तैयारी सूट' : 'Complete MPPSC Preparation Suite'}
+                 {(globalUser as any)?.is_pro ? (
+                     <>
+                        <Sparkles className="w-4 h-4 fill-amber-500 text-amber-600" />
+                        {language === 'hi' ? 'प्रीमियम मेंबर' : 'Premium Member Active'}
+                     </>
+                 ) : (
+                     <>
+                        <Zap className="w-4 h-4 fill-indigo-600" />
+                        {language === 'hi' ? 'संपूर्ण MPPSC तैयारी सूट' : 'Complete MPPSC Preparation Suite'}
+                     </>
+                 )}
               </motion.div>
               
               <motion.h1 
@@ -188,7 +184,7 @@ export default function UpgradePage() {
                   {language === 'hi' ? 'MPPSC के लिए सबसे उन्नत अध्ययन मंच।' : 'The most advanced study platform built for MPPSC.'}
                   <br className="hidden md:block"/>
                   <strong>
-                    {language === 'hi' ? 'फ्लैशकार्ड के साथ सीखें। AI के साथ अभ्यास करें। एनालिटिक्स के साथ मास्टर करें।' : 'Learn with Flashcards. Practice with AI. Master with Analytics.'}
+                    {language === 'hi' ? 'प्रीमियम टेस्ट सीरीज़। स्मार्ट फ्लैशकार्ड्स। सटीक विश्लेषण।' : 'Premium Test Series. Smart Flashcards. Precise Analytics.'}
                   </strong>
               </motion.p>
 
@@ -220,12 +216,25 @@ export default function UpgradePage() {
                       </span>
                   </div>
 
-                  <Button 
-                      onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
-                      className="h-16 px-12 rounded-full text-xl font-bold bg-slate-900 text-white hover:bg-slate-800 shadow-2xl shadow-slate-900/30 hover:scale-105 active:scale-95 transition-all w-full sm:w-auto ring-4 ring-slate-100"
-                  >
-                      {language === 'hi' ? 'प्रीमियम एक्सेस प्राप्त करें' : 'Get Premium Access'}
-                  </Button>
+                  {!(globalUser as any)?.is_pro && (
+                      <Button 
+                          onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+                          className="h-16 px-12 rounded-full text-xl font-bold bg-slate-900 text-white hover:bg-slate-800 shadow-2xl shadow-slate-900/30 hover:scale-105 active:scale-95 transition-all w-full sm:w-auto ring-4 ring-slate-100"
+                      >
+                          {language === 'hi' ? 'प्रीमियम एक्सेस प्राप्त करें' : 'Get Premium Access'}
+                      </Button>
+                  )}
+
+                  {(globalUser as any)?.is_pro && (
+                      <div className="flex gap-4">
+                          <Button 
+                              onClick={() => router.push('/dashboard')}
+                              className="h-14 px-8 rounded-full text-lg font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl shadow-indigo-200 hover:scale-105 transition-all"
+                          >
+                             {language === 'hi' ? 'डैशबोर्ड पर जाएँ' : 'Go to Dashboard'}
+                          </Button>
+                      </div>
+                  )}
               </motion.div>
           </div>
       </section>
@@ -345,6 +354,239 @@ export default function UpgradePage() {
               </div>
           </div>
       </section>
+
+         {/* --- FEATURE SECTION 5: THE PREMIUM EXPLANATION (THE GIMMICK) --- */}
+       <section className="py-24 bg-slate-50 border-t border-slate-200">
+           <div className="max-w-7xl mx-auto px-6">
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                    <Badge variant="outline" className="px-4 py-1 text-sm border-purple-200 text-purple-700 bg-purple-50 mb-6 rounded-full">
+                        {language === 'hi' ? 'प्रीमियम व्याख्या' : 'Premium Explanations'}
+                    </Badge>
+                    <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-6">
+                        {language === 'hi' ? 'सिर्फ उत्तर नहीं,' : 'More Than Just Answers.'} <br />
+                        <span className="text-indigo-600">{language === 'hi' ? 'संपूर्ण कांसेप्ट सीखें।' : 'Master The Concept.'}</span>
+                    </h2>
+                    <p className="text-lg text-slate-600 leading-relaxed">
+                        {language === 'hi'
+                         ? 'हर प्रश्न के साथ मिलती है एक विस्तृत, संरक्षित व्याख्या जो आपको रटने की जगह समझने में मदद करती है।'
+                         : 'Every question comes with a structured breakdown designed to help you learn, retain, and eliminate wrong options.'}
+                    </p>
+                </div>
+
+                <div className="grid lg:grid-cols-2 gap-12 items-start">
+                     {/* The Card Visualization */}
+                     <div className="relative">
+                        <div className="absolute -inset-4 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-[2rem] opacity-10 blur-xl"></div>
+                        <Card className="border-0 shadow-2xl rounded-[2rem] overflow-hidden relative z-10 bg-white">
+                            {/* Question Header */}
+                            <div className="bg-slate-50 p-6 border-b border-slate-100">
+                                <div className="flex justify-between items-start gap-4">
+                                    <h3 className="text-lg font-bold text-slate-900 leading-snug">
+                                        Which river is known as the "Ganga of Madhya Pradesh"?
+                                        <br />
+                                        <span className="text-slate-500 font-medium text-base mt-1 block">
+                                            मध्य प्रदेश की गंगा किस नदी को कहा जाता है?
+                                        </span>
+                                    </h3>
+                                    <Badge className="bg-slate-200 text-slate-600 hover:bg-slate-200 shrink-0">MP Geo</Badge>
+                                </div>
+                            </div>
+                            
+                            <div className="p-6 md:p-8 space-y-6">
+                                {/* Answer Status */}
+                                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
+                                        <CheckCircle2 className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <div className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Correct Answer</div>
+                                        <div className="font-bold text-slate-900">Betwa (बेतवा)</div>
+                                    </div>
+                                </div>
+
+                                {/* The 4 Gimmick Sections */}
+                                <div className="space-y-4">
+                                    {/* 1. Logic */}
+                                    <div className="flex gap-4">
+                                        <div className="w-1 bg-emerald-500 rounded-full shrink-0"></div>
+                                        <div className="flex-1">
+                                            <h4 className="flex items-center gap-2 text-sm font-bold text-emerald-700 mb-1">
+                                                <CheckCircle2 size={16} /> ✅ Core Logic
+                                            </h4>
+                                            <p className="text-sm text-slate-700 leading-relaxed">
+                                                Based on <span className="font-bold">pollution levels</span> like the Ganges, Betwa is called the Ganga of MP.
+                                                <br/>
+                                                <span className="text-slate-500 text-xs">(प्रदूषण के आधार पर इसे म.प्र. की गंगा कहा जाता है।)</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* 2. Exam Fact */}
+                                    <div className="flex gap-4">
+                                        <div className="w-1 bg-blue-500 rounded-full shrink-0"></div>
+                                        <div className="flex-1">
+                                            <h4 className="flex items-center gap-2 text-sm font-bold text-blue-700 mb-1">
+                                                <Lightbulb size={16} /> 💡 Exam Fact
+                                            </h4>
+                                            <p className="text-sm text-slate-700 leading-relaxed">
+                                                Origin: <span className="font-bold">Kumra Gaon (Raisen)</span>. <br/>
+                                                Total Length: <span className="font-bold">480 km</span>.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* 3. Memory Tip */}
+                                    <div className="flex gap-4">
+                                        <div className="w-1 bg-amber-500 rounded-full shrink-0"></div>
+                                        <div className="flex-1">
+                                            <h4 className="flex items-center gap-2 text-sm font-bold text-amber-700 mb-1">
+                                                <Brain size={16} /> 🧠 Memory Tip
+                                            </h4>
+                                            <p className="text-sm text-slate-700 leading-relaxed italic bg-amber-50 p-2 rounded-lg border border-amber-100">
+                                                "Betwa = Beta (Son) of Raisen" → Kumra Gaon.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* 4. Scam Alert */}
+                                    <div className="flex gap-4">
+                                        <div className="w-1 bg-red-500 rounded-full shrink-0"></div>
+                                        <div className="flex-1">
+                                            <h4 className="flex items-center gap-2 text-sm font-bold text-red-700 mb-1">
+                                                <AlertTriangle size={16} /> 🚫 Scam Alert
+                                            </h4>
+                                            <p className="text-sm text-slate-700 leading-relaxed">
+                                                Don't confuse with <span className="font-bold text-red-600">Narmada</span>. Narmada is the <span className="underline">Lifeline</span> of MP, not the Ganga (based on sanctity/pollution distinction).
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                     </div>
+
+                     {/* Features List */}
+                     <div className="space-y-10 lg:pt-10">
+                         <div className="flex gap-4">
+                             <div className="w-12 h-12 rounded-2xl bg-indigo-100 flex items-center justify-center shrink-0 text-indigo-600">
+                                 <Brain size={24} />
+                             </div>
+                             <div>
+                                 <h3 className="text-xl font-bold text-slate-900 mb-2">{language === 'hi' ? 'स्मृति तकनीक (Mnemonics)' : 'Built-in Mnemonics'}</h3>
+                                 <p className="text-slate-600 leading-relaxed">
+                                     {language === 'hi' ? 'कठिन तथ्यों को याद रखने के लिए विशेष ट्रिक्स और सूत्र।' : 'Every explanation includes catchy mnemonics to help you retain dry facts forever.'}
+                                 </p>
+                             </div>
+                         </div>
+                         <div className="flex gap-4">
+                             <div className="w-12 h-12 rounded-2xl bg-rose-100 flex items-center justify-center shrink-0 text-rose-600">
+                                 <AlertTriangle size={24} />
+                             </div>
+                             <div>
+                                 <h3 className="text-xl font-bold text-slate-900 mb-2">{language === 'hi' ? 'ट्रैप अलर्ट' : 'Trap Alerts'}</h3>
+                                 <p className="text-slate-600 leading-relaxed">
+                                     {language === 'hi' ? 'जानें कि परीक्षार्थी अक्सर कहाँ गलती करते हैं और उन "जाल" से कैसे बचें।' : 'We highlight commonly confused options and historical "scams" so you never fall for them in the exam.'}
+                                 </p>
+                             </div>
+                         </div>
+                         <div className="flex gap-4">
+                             <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center shrink-0 text-emerald-600">
+                                 <CheckCircle2 size={24} />
+                             </div>
+                             <div>
+                                 <h3 className="text-xl font-bold text-slate-900 mb-2">{language === 'hi' ? 'टू-द-पॉइंट लॉजिक' : 'To-The-Point Logic'}</h3>
+                                 <p className="text-slate-600 leading-relaxed">
+                                     {language === 'hi' ? 'सीधा और सटीक उत्तर। कोई अनावश्यक जानकारी नहीं।' : 'Direct reasoning without the fluff. Save time and absorb only what matters.'}
+                                 </p>
+                             </div>
+                         </div>
+                     </div>
+                </div>
+           </div>
+       </section>
+
+       {/* --- FEATURE SECTION 6: CONTENT SUITE (NUMBERS) --- */}
+       <section className="py-24 bg-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-slate-50 rounded-full blur-3xl -mr-40 -mt-40"></div>
+            <div className="max-w-7xl mx-auto px-6 relative z-10">
+                <div className="text-center mb-16">
+                     <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
+                        {language === 'hi' ? 'सब कुछ एक जगह।' : 'Everything You Need.'}
+                    </h2>
+                    <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+                        {language === 'hi' 
+                         ? 'यूनिट टेस्ट से लेकर फुल लेंथ मॉक तक, आपकी तैयारी का पूरा भंडार।' 
+                         : 'From Unit Tests to Full Length Mocks, we have structured content to take you from Zero to Hero.'}
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {/* Unit Tests */}
+                    <Card className="hover:shadow-xl transition-all hover:-translate-y-1 border-slate-200 bg-slate-50/50">
+                        <CardContent className="p-6 text-center space-y-4">
+                            <div className="w-12 h-12 mx-auto bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center">
+                                <BookOpen size={24} />
+                            </div>
+                            <div>
+                                <div className="text-3xl font-extrabold text-slate-900">10</div>
+                                <div className="text-sm font-bold text-slate-500 uppercase tracking-wide">Units Covered</div>
+                            </div>
+                            <Badge className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100 text-[10px] sm:text-xs">
+                                {language === 'hi' ? '5 प्रयास / टेस्ट' : '5 Attempts / Test'}
+                            </Badge>
+                        </CardContent>
+                    </Card>
+
+                    {/* FLTs */}
+                    <Card className="hover:shadow-xl transition-all hover:-translate-y-1 border-emerald-200 bg-emerald-50/30">
+                        <CardContent className="p-6 text-center space-y-4">
+                            <div className="w-12 h-12 mx-auto bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
+                                <Trophy size={24} />
+                            </div>
+                            <div>
+                                <div className="text-3xl font-extrabold text-slate-900">5</div>
+                                <div className="text-sm font-bold text-slate-500 uppercase tracking-wide">Full Length Tests</div>
+                            </div>
+                            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-[10px] sm:text-xs">
+                                {language === 'hi' ? '3 प्रयास / टेस्ट' : '3 Attempts / Test'}
+                            </Badge>
+                        </CardContent>
+                    </Card>
+
+                    {/* PYQ */}
+                    <Card className="hover:shadow-xl transition-all hover:-translate-y-1 border-amber-200 bg-amber-50/30">
+                        <CardContent className="p-6 text-center space-y-4">
+                            <div className="w-12 h-12 mx-auto bg-amber-100 text-amber-600 rounded-full flex items-center justify-center">
+                                <History size={24} />
+                            </div>
+                            <div>
+                                <div className="text-3xl font-extrabold text-slate-900">5+</div>
+                                <div className="text-sm font-bold text-slate-500 uppercase tracking-wide">Years PYQ</div>
+                            </div>
+                            <p className="text-xs text-slate-500 font-medium pt-1">
+                                {language === 'hi' ? '2021 से अब तक' : '2021 Onwards'}
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                     {/* CSAT */}
+                     <Card className="hover:shadow-xl transition-all hover:-translate-y-1 border-purple-200 bg-purple-50/30">
+                        <CardContent className="p-6 text-center space-y-4">
+                            <div className="w-12 h-12 mx-auto bg-purple-100 text-purple-600 rounded-full flex items-center justify-center">
+                                <Brain size={24} />
+                            </div>
+                            <div>
+                                <div className="text-3xl font-extrabold text-slate-900">3</div>
+                                <div className="text-sm font-bold text-slate-500 uppercase tracking-wide">CSAT Mocks</div>
+                            </div>
+                            <p className="text-xs text-slate-500 font-medium pt-1">
+                                {language === 'hi' ? 'अभ्यास के लिए' : 'For Practice'}
+                            </p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+       </section>
 
       {/* --- FEATURE SECTION 2: INSTANT QUIZ (GREY) --- */}
       <section className="py-32 bg-slate-50 border-y border-slate-200 relative">
@@ -669,6 +911,9 @@ export default function UpgradePage() {
                </div>
            </div>
        </section>
+
+
+    
 
        {/* Pricing Section */}
        <section id="pricing" className="py-24 bg-white relative">

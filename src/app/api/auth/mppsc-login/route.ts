@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { db } from '@/db';
+import { mppscUsers } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 
@@ -12,13 +14,10 @@ export async function POST(request: Request) {
     }
 
     // Verify user against mppsc_users table
-    const { data: user, error } = await supabaseAdmin
-      .from('mppsc_users')
-      .select('*')
-      .eq('email', email)
-      .single();
+    const users = await db.select().from(mppscUsers).where(eq(mppscUsers.email, email)).limit(1);
+    const user = users[0];
 
-    if (error || !user) {
+    if (!user) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
@@ -30,8 +29,7 @@ export async function POST(request: Request) {
     }
 
     // Check subscription status
-    // User mentioned: "fields simple rakhan jisko hum true kar denge to subsribed"
-    if (!user.is_subscribed) {
+    if (!user.isSubscribed) {
         return NextResponse.json({ error: 'Subscription not active. Please contact support.' }, { status: 403 });
     }
 

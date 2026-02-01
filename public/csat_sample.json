@@ -1,0 +1,28 @@
+
+{
+  "title": "CSAT (Paper II) - Practice Test 1",
+  "description": "Practice test for CSAT focusing on Comprehension, Logical Reasoning, and Quantitative Aptitude.",
+  "slug": "csat-paper-2-practice-1",
+  "duration": 120,
+  "totalMarks": 200,
+  "type": "CSAT",
+  "isPro": false,
+  "questions": [
+    {
+      "text": "If A is the brother of B; B is the sister of C; and C is the father of D, how D is related to A?",
+      "options": ["Brother", "Sister", "Nephew/Niece", "Uncle"],
+      "correct": "Nephew/Niece",
+      "explanation": "A is male (brother). B is female (sister). C is male (father of D). A is B's brother, so A is C's brother. D is C's child. So D is A's Nephew or Niece.",
+      "marks": 2.5,
+      "negative": 0.83
+    },
+    {
+       "text": "Find the missing number in the series: 2, 6, 12, 20, 30, ?",
+       "options": ["40", "42", "44", "48"],
+       "correct": "42",
+       "explanation": "Differences are 4, 6, 8, 10. Next difference should be 12. 30 + 12 = 42.",
+       "marks": 2.5,
+       "negative": 0.83
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Clock, 
@@ -18,37 +18,60 @@ import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { Question } from '@/data/mockQuizData';
+import { Question } from '@/types/quiz';
 import { QuizResult } from './QuizResult';
-import { useSettingsStore } from "@/store/useSettingsStore";
+import { useQuizLogic } from '@/hooks/useQuizLogic';
 
 interface QuizInterfaceProps {
     questions: Question[];
     mode: 'topic' | 'full';
     timeLimitInMinutes: number; // 10 or 60
+    testId: string;
+    userId: string;
     onExit: () => void;
-    onRetry?: () => void; // Added onRetry prop
+    onRetry?: () => void;
     isInstantMode?: boolean;
     disablePalette?: boolean;
 }
 
-export function QuizInterface({ questions, mode, timeLimitInMinutes, onExit, onRetry, isInstantMode = false, disablePalette = false }: QuizInterfaceProps) 
+export function QuizInterface(props: QuizInterfaceProps) {
+    const { 
+        questions, 
+        mode, 
+        timeLimitInMinutes, 
+        onExit, 
+        disablePalette = false 
+    } = props;
 
-{
-    // Language State
-    const { language } = useSettingsStore();
+    // Use Custom Hook for Logic
+    const {
+        currentQuestionIndex,
+        answers,
+        markedforReview,
+        isSubmitted,
+        timeLeft,
+        instantModeEnabled,
+        language,
+        
+        setInstantModeEnabled,
+        handleOptionSelect,
+        handleNext,
+        handlePrev,
+        handleJump,
+        toggleMarkForReview,
+        handleSubmit,
+        handleRetry,
+        
+        getParsedOptions,
+        
+        currentQuestion,
+        isAnswered,
+        totalQuestions
+    } = useQuizLogic(props);
 
-    // Game State
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [answers, setAnswers] = useState<Record<number, number>>({}); // questionId -> selectedOptionIndex
-    const [markedforReview, setMarkedForReview] = useState<number[]>([]);
-    const [isSubmitted, setIsSubmitted] = useState(false);
-    const [showExitConfirm, setShowExitConfirm] = useState(false);
-    const [instantModeEnabled, setInstantModeEnabled] = useState(isInstantMode);
-    
-    // Timer State
-    const [timeLeft, setTimeLeft] = useState(timeLimitInMinutes * 60);
+    // UI Local State
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [showExitConfirm, setShowExitConfirm] = useState(false);
 
     // Translations
     const t = {
@@ -76,82 +99,10 @@ export function QuizInterface({ questions, mode, timeLimitInMinutes, onExit, onR
         current: language === 'hi' ? 'वर्तमान' : 'Current',
     }
 
-    // Timer Logic
-    useEffect(() => {
-        if (isSubmitted) return;
-
-        const timer = setInterval(() => {
-            setTimeLeft((prev) => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    handleSubmit();
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [isSubmitted]);
-
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    const handleExitClick = () => {
-        setShowExitConfirm(true);
-    };
-
-    const handleOptionSelect = (optionIndex: number) => {
-        if (answers[questions[currentQuestionIndex].id] !== undefined) return; // Prevent changing answer in demo
-        
-        setAnswers(prev => ({
-            ...prev,
-            [questions[currentQuestionIndex].id]: optionIndex
-        }));
-    };
-
-    const handleNext = () => {
-        if (currentQuestionIndex < questions.length - 1) {
-            setCurrentQuestionIndex(prev => prev + 1);
-        }
-    };
-    const handlePrev = () => {
-        if (currentQuestionIndex > 0) {
-            setCurrentQuestionIndex(prev => prev - 1);
-        }
-       };
-
-    const toggleMarkForReview = () => {
-        const currentId = questions[currentQuestionIndex].id;
-        setMarkedForReview(prev => 
-            prev.includes(currentId) 
-                ? prev.filter(id => id !== currentId)
-                : [...prev, currentId]
-        );
-    };
-
-    const handleSubmit = () => {
-        setIsSubmitted(true);
-    };
-
-    const currentQuestion = questions[currentQuestionIndex];
-    const isAnswered = answers[currentQuestion.id] !== undefined;
-
-    // Handle Retry
-    const handleRetry = () => {
-        if (onRetry) {
-            onRetry();
-        } else {
-             // Fallback local reset
-            setAnswers({});
-            setMarkedForReview([]);
-            setTimeLeft(timeLimitInMinutes * 60);
-            setCurrentQuestionIndex(0);
-            setIsSubmitted(false);
-        }
     };
 
     if (isSubmitted) {
@@ -171,7 +122,7 @@ export function QuizInterface({ questions, mode, timeLimitInMinutes, onExit, onR
             {/* Header / Timer Bar */}
             <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0 shadow-sm z-20">
                 <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" onClick={handleExitClick} className="text-slate-500 hover:text-slate-900 -ml-2">
+                    <Button variant="ghost" size="icon" onClick={() => setShowExitConfirm(true)} className="text-slate-500 hover:text-slate-900 -ml-2">
                         <X className="w-6 h-6" />
                     </Button>
                     
@@ -232,7 +183,7 @@ export function QuizInterface({ questions, mode, timeLimitInMinutes, onExit, onR
                                 <SheetTitle className="flex justify-between items-center">
                                     <span>{t.questionPalette}</span>
                                     <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
-                                        {Object.keys(answers).length}/{questions.length} {t.attempted}
+                                        {Object.keys(answers).length}/{totalQuestions} {t.attempted}
                                     </span>
                                 </SheetTitle>
                             </SheetHeader>
@@ -247,7 +198,7 @@ export function QuizInterface({ questions, mode, timeLimitInMinutes, onExit, onR
                                         <button
                                             key={q.id}
                                             onClick={() => {
-                                                setCurrentQuestionIndex(idx);
+                                                handleJump(idx);
                                                 setIsDrawerOpen(false);
                                             }}
                                             className={cn(
@@ -324,12 +275,31 @@ export function QuizInterface({ questions, mode, timeLimitInMinutes, onExit, onR
 
                           <div className="space-y-3">
                               {/* Support Hindi Options if available */}
-                              {((language === 'hi' && (currentQuestion as any).options_hi) ? (currentQuestion as any).options_hi : currentQuestion.options).map((opt: string, idx: number) => {
+                              {(() => {
+                                    const rawOptions = (language === 'hi' && (currentQuestion as any).options_hi) 
+                                        ? (currentQuestion as any).options_hi 
+                                        : currentQuestion.options;
+                                        
+                                    return getParsedOptions(rawOptions);
+                                })().map((opt: any, idx: number) => {
                                   
                                   const isSelected = answers[currentQuestion.id] === idx;
                                   const isCorrect = currentQuestion.correctAnswer === idx;
                                   const showFeedback = instantModeEnabled && isAnswered;
                                   
+                                  // Handle object options (e.g., { id, text, textEn })
+                                  let optionText = opt;
+                                  if (typeof opt === 'object' && opt !== null) {
+                                      // Prefer Hindi text if language is Hindi, otherwise English/Default
+                                      // Assuming 'text' is default/Hindi and 'textEn' is English based on usage context
+                                      // Or if 'text' matches the current language requirement
+                                      if (language === 'hi') {
+                                          optionText = opt.text || opt.textEn || JSON.stringify(opt);
+                                      } else {
+                                          optionText = opt.textEn || opt.text || JSON.stringify(opt);
+                                      }
+                                  }
+
                                   return (
                                       <div 
                                          key={idx}
@@ -354,7 +324,7 @@ export function QuizInterface({ questions, mode, timeLimitInMinutes, onExit, onR
                                                   "text-lg leading-relaxed pr-8",
                                                   isSelected ? "text-slate-900 font-semibold" : "text-slate-700"
                                               )}>
-                                                  {opt}
+                                                  {optionText}
                                               </span>
                                               
                                               {/* Icons based on state */}
@@ -428,7 +398,7 @@ export function QuizInterface({ questions, mode, timeLimitInMinutes, onExit, onR
                     
                 </div>
                 
-                {currentQuestionIndex === questions.length - 1 ? (
+                {currentQuestionIndex === totalQuestions - 1 ? (
                    <Button 
                         onClick={handleSubmit} 
                         className="h-12 px-8 rounded-xl font-bold bg-slate-900 text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800 transition-all hover:scale-105 active:scale-95"

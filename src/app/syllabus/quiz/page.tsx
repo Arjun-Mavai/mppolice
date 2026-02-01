@@ -19,8 +19,8 @@ export default function QuizSelectionPage() {
     if (!isSubscribed) {
         setUnlockModalOpen(true);
     } else {
-        // Proceed to full length test
-        router.push('/syllabus/quiz/play?mode=full');
+        // Proceed to full length test list
+        router.push('/syllabus/quiz/full-length');
     }
   };
 
@@ -34,7 +34,7 @@ export default function QuizSelectionPage() {
                    <ArrowLeft className="w-6 h-6 text-slate-600" />
                </Button>
                <h1 className="text-2xl font-bold text-slate-900 font-display">
-                   {language === 'hi' ? 'अभ्यास क्विज़ चुनें' : 'Select Practice Quiz'}
+                   {language === 'hi' ? 'अभ्यास टेस्ट चुनें' : 'Select Practice Test'}
                </h1>
            </div>
 
@@ -53,7 +53,7 @@ export default function QuizSelectionPage() {
                            </div>
                            <div className="space-y-2">
                                <h2 className="text-2xl font-bold text-slate-900">
-                                   {language === 'hi' ? 'विषयवार क्विज़' : 'Topic-wise Quiz'}
+                                   {language === 'hi' ? 'विषयवार टेस्ट' : 'Topic-wise Test'}
                                </h2>
                                <p className="text-slate-500">
                                    {language === 'hi' 
@@ -61,7 +61,7 @@ export default function QuizSelectionPage() {
                                      : 'Practice specific topics and strengthen your understanding unit by unit.'}
                                </p>
                            </div>
-                           <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-auto rounded-xl h-12 font-bold">
+                           <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-auto rounded-xl h-12 font-bold">
                                {language === 'hi' ? 'विषय चुनें' : 'Select Topic'}
                            </Button>
                        </CardContent>
@@ -102,7 +102,7 @@ export default function QuizSelectionPage() {
                                </p>
                            </div>
                            <Button 
-                             className="w-full bg-purple-600 hover:bg-purple-700 text-white mt-auto rounded-xl h-12 font-bold gap-2"
+                             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white mt-auto rounded-xl h-12 font-bold gap-2"
                              disabled={!isSubscribed}
                            >
                                {!isSubscribed && <Lock className="w-4 h-4" />}

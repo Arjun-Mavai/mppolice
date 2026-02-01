@@ -31,6 +31,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { SupportButton } from "@/components/SupportButton";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -45,7 +47,9 @@ export default function RootLayout({
         <Suspense fallback={<div>Loading...</div>}>
         {children}
         </Suspense>
+        <SupportButton />
       </body>
     </html>
   );
 }
+

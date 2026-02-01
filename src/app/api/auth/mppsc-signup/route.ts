@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { db } from '@/db';
+import { mppscUsers } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
 import bcrypt from 'bcryptjs';
 
 // --- CONFIGURATION ---
@@ -20,13 +23,9 @@ export async function POST(request: Request) {
     }
 
     // Check if user already exists
-    const { data: existingUser } = await supabaseAdmin
-      .from('mppsc_users')
-      .select('email')
-      .eq('email', email)
-      .single();
+    const existingUsers = await db.select().from(mppscUsers).where(eq(mppscUsers.email, email));
 
-    if (existingUser) {
+    if (existingUsers.length > 0) {
       return NextResponse.json({ error: 'User already exists' }, { status: 409 });
     }
 
@@ -34,24 +33,15 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Insert new user
-    // Note: is_subscribed defaults to false in DB schema usually, but we can be explicit
-    const { data: newUser, error } = await supabaseAdmin
-      .from('mppsc_users')
-      .insert([
-        { 
-            email, 
-            password: hashedPassword, 
-            name,
-            is_subscribed: false // Default to false, they must pay manually
-        }
-      ])
-      .select()
-      .single();
+    await db.insert(mppscUsers).values({
+        id: randomUUID(), // Generate UUID
+        email, 
+        password: hashedPassword, 
+        name,
+        isSubscribed: false // Default to false
+    });
 
-    if (error) {
-        console.error("Signup DB Error:", error);
-        return NextResponse.json({ error: 'Failed to create account' }, { status: 500 });
-    }
+
 
     return NextResponse.json({ success: true, message: 'Account created successfully. Please log in.' });
   } catch (error) {

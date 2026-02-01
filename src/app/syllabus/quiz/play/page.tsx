@@ -1,72 +1,146 @@
-"use client"
+import { redirect } from 'next/navigation';
+import { db } from '@/db';
+import { tests, questions } from '@/db/schema';
+import { eq, desc, sql } from 'drizzle-orm';
+import { QuizPlayClient } from './QuizPlayClient';
+import { Question } from '@/types/quiz';
+import { verifyAuth } from '@/lib/auth';
+import { userAttempts } from '@/db/schema';
+import { and } from 'drizzle-orm';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { QuizInterface } from '@/components/quiz/QuizInterface';
-import { mockFLTQuestions, mockTopicQuestions, Question } from '@/data/mockQuizData';
+// Force dynamic to ensure fresh questions (randomization strategy)
+export const dynamic = 'force-dynamic';
 
-export default function QuizPlayPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const mode = (searchParams.get('mode') as 'topic' | 'full') || 'topic';
-  
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [retryCount, setRetryCount] = useState(0);
+export default async function QuizPlayPage({ searchParams }: { searchParams: Promise<{ mode?: string; unitId?: string; testId?: string }> }) {
+    const params = await searchParams;
+    const mode = (params.mode as 'topic' | 'full') || 'topic';
+    const unitId = params.unitId;
+    const testId = params.testId;
 
-  useEffect(() => {
-     // Shuffle function
-     const shuffle = <T,>(array: T[]): T[] => {
-         return [...array].sort(() => Math.random() - 0.5);
-     };
+    let quizQuestions: Question[] = [];
 
-     // Load and shuffle questions based on mode
-     let rawQuestions: Question[] = [];
-     if (mode === 'full') {
-         rawQuestions = mockFLTQuestions;
-     } else {
-         rawQuestions = mockTopicQuestions;
-     }
+    let maxRetries: number | null = null;
+    let userAttemptsCount = 0;
+    
+    const user = await verifyAuth();
+    if (!user) {
+        redirect('/login?callback=/syllabus/quiz/play');
+    }
+    
+    const isPro = user.isSubscribed || false;
+    let resolvedTestId = "";
 
-     // Shuffle questions AND their options
-     const shuffled = shuffle(rawQuestions).map(q => {
-         // Note: If we shuffle options, we must track the correct answer index change
-         const originalOptions = q.options;
-         const originalCorrect = q.options[q.correctAnswer];
-         
-         const shuffledOptions = shuffle(originalOptions);
-         const newCorrectIndex = shuffledOptions.indexOf(originalCorrect);
+    // Helper to get user ID (mock for now if no auth implemented in this file yet)
+    // Ideally we use `verifyAuth` or similar. 
+    try {
+        if (mode === 'full') {
+             // 1. Full Length Test Logic
+             if (!testId) {
+                 const latestFLT = await db.query.tests.findFirst({
+                     where: (calc, { eq }) => eq(calc.type, 'FLT'),
+                     orderBy: (calc, { desc }) => [desc(calc.createdAt)]
+                 });
+                 if (latestFLT) {
+                    resolvedTestId = latestFLT.id;
+                 }
+             } else {
+                 resolvedTestId = testId;
+             }
 
-         return {
-             ...q,
-             options: shuffledOptions,
-             correctAnswer: newCorrectIndex
-         };
-     });
+             if (resolvedTestId) {
+                 const test = await db.query.tests.findFirst({
+                     where: (calc, { eq }) => eq(calc.id, resolvedTestId),
+                     with: {questions: {orderBy: (q, {asc}) => [asc(q.order)]}}
+                 });
 
-     setQuestions(shuffled);
-     setLoading(false);
-  }, [mode, retryCount]);
+                 if (test) {
+                     quizQuestions = test.questions.map(q => ({
+                         id: q.id,
+                         question: q.questionText,
+                         options: q.options as string[],
+                         correctAnswer: Number(q.correctAnswer),
+                         explanation: q.explanation || "",
+                         marks: q.marks,
+                         negativeMarks: q.negativeMarks || 0
+                     }));
+                     maxRetries = test.maxRetries;
+                 }
+             }
 
-  if (loading) {
-      return (
-          <div className="min-h-screen flex items-center justify-center bg-slate-50">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          </div>
-      );
-  }
+        } else {
+            // 2. Topic Mode Logic
+            if (unitId) {
+                const latestUnitTest = await db.query.tests.findFirst({
+                    where: (calc, { eq, and }) => and(eq(calc.type, 'UNIT'), eq(calc.unitId, unitId)),
+                    orderBy: (calc, { desc }) => [desc(calc.createdAt)],
+                    with: {questions: true}
+                });
 
-  return (
-    <QuizInterface 
-        key={retryCount}
-        questions={questions}
-        mode={mode}
-        timeLimitInMinutes={mode === 'full' ? 60 : 10}
-        onExit={() => router.push('/syllabus')}
-        onRetry={() => {
-            setLoading(true); // Show loading while shuffling
-            setRetryCount(r => r + 1);
-        }}
-    />
-  );
+                if (latestUnitTest) {
+                     // For unit tests, we might pick 20 random Qs from the pool if it's large, 
+                     // or just verify against the test definition.
+                     // The seed script creates a test with questions linked.
+                     const dbQuestions = await db.select().from(questions)
+                        .where(eq(questions.testId, latestUnitTest.id))
+                        .orderBy(sql`RANDOM()`) 
+                        .limit(20);
+
+                     quizQuestions = dbQuestions.map(q => ({
+                        id: q.id,
+                        question: q.questionText,
+                        options: q.options as string[],
+                        correctAnswer: Number(q.correctAnswer),
+                        explanation: q.explanation || "",
+                         marks: q.marks,
+                        negativeMarks: q.negativeMarks || 0
+                    }));
+                    maxRetries = latestUnitTest.maxRetries;
+                    resolvedTestId = latestUnitTest.id;
+                }
+            } else {
+                 const dbQuestions = await db.select().from(questions)
+                    .orderBy(sql`RANDOM()`)
+                    .limit(20);
+                
+                 quizQuestions = dbQuestions.map(q => ({
+                    id: q.id,
+                    question: q.questionText,
+                    options: q.options as string[],
+                    correctAnswer: Number(q.correctAnswer),
+                    explanation: q.explanation || "",
+                     marks: q.marks,
+                        negativeMarks: q.negativeMarks || 0
+                }));
+                resolvedTestId = 'general-practice-v1';
+            }
+        }
+        
+        // Final fallback if resolvedTestId is still empty (e.g. unitId provided but no test found)
+        if (!resolvedTestId) {
+             resolvedTestId = 'general-practice-v1';
+        }
+        
+        // Fetch User Attempts
+        if (resolvedTestId) {
+            const attempts = await db.select({count: sql<number>`count(*)`}).from(userAttempts)
+               .where(and(eq(userAttempts.userId, user.id), eq(userAttempts.testId, resolvedTestId)));
+            userAttemptsCount = Number(attempts[0].count);
+        }
+
+    } catch (error) {
+        console.error("Quiz Fetch Error:", error);
+        quizQuestions = []; 
+    }
+
+    return (
+        <QuizPlayClient 
+            questions={quizQuestions} 
+            mode={mode} 
+            maxRetries={maxRetries}
+            userAttempts={userAttemptsCount}
+            isPro={isPro}
+            testId={resolvedTestId}
+            userId={user.id}
+        />
+    );
 }

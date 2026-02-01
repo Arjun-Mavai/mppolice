@@ -1,0 +1,28 @@
+
+{
+  "title": "General Studies Paper I - Mock Test 1",
+  "description": "Full length mock test covering History, Geography, and Polity.",
+  "slug": "gs-paper-1-mock-1",
+  "duration": 120,
+  "totalMarks": 200,
+  "type": "FLT",
+  "isPro": false,
+  "questions": [
+    {
+      "text": "Who was the first Governor-General of Bengal?",
+      "options": ["Lord Clive", "Warren Hastings", "Lord Canning", "Lord Minto"],
+      "correct": "Warren Hastings",
+      "explanation": "Warren Hastings became the first Governor-General of Bengal in 1773 under the Regulating Act.",
+      "marks": 2,
+      "negative": 0.66
+    },
+    {
+      "text": "Which article of the Indian Constitution deals with the Fundamental Duties?",
+      "options": ["Article 51A", "Article 50", "Article 51", "Article 49"],
+      "correct": "Article 51A",
+      "explanation": "Fundamental Duties were added by the 42nd Amendment Act, 1976.",
+      "marks": 2,
+      "negative": 0.66
+    }
+  ]
+}

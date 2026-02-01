@@ -7,6 +7,7 @@ export interface Topic {
   pro_tip?: string;
   impact_emoji?: string;
   important_facts?: string[];
+  image_url?: string;
 }
 
 export interface UnitData {
@@ -45,19 +46,41 @@ export const syllabusData: SyllabusData = {
           "front": "प्राचीन भारतीय ज्ञान परंपरा",
           "back": "यह हमारे पूर्वजों की सोचने की शक्ति और विज्ञान है, जहाँ शिक्षा सिर्फ किताबी नहीं बल्कि जीवन जीने का तरीका थी।",
           "impact_emoji": "🕉️",
+          "image_url": "https://images.unsplash.com/photo-1544924222-cd53eb09995d?q=80&w=800&auto=format&fit=crop",
+          "important_facts": [
+            "शिक्षा को 'विद्या' कहा जाता था जिसका अर्थ है जानना।",
+            "गुरु-शिष्य परंपरा इस प्रणाली की मुख्य विशेषता थी।",
+            "तक्षशिला और नालंदा प्राचीन ज्ञान के वैश्विक केंद्र थे।",
+            "शिक्षा का उद्देश्य केवल आजीविका नहीं बल्कि आत्म-साक्षात्कार था।"
+          ],
           "details": "वेद, उपनिषद और वेदांग इस परंपरा के आधार स्तंभ हैं।"
         },
         {
           "id": 2,
           "front": "भारतवर्ष",
           "back": "सिर्फ एक ज़मीन का टुकड़ा नहीं, बल्कि हिमालय से समुद्र तक फैली हमारी सांस्कृतिक और भौगोलिक पहचान।",
-          "impact_emoji": "🗺️"
+          "impact_emoji": "🗺️",
+          "image_url": "https://images.unsplash.com/photo-1532375811409-ca664b4c1737?q=80&w=800&auto=format&fit=crop",
+          "important_facts": [
+            "विष्णु पुराण में कहा गया है: 'उत्तरं यत्समुद्रस्य हिमाद्रेश्चैव दक्षिणम्। तद्वर्षं भारतं नाम भारती यत्र सन्ततिः।'",
+            "भारतवर्ष भरत कबीले/राजा के नाम पर आधारित है।",
+            "प्राचीन काल में इसे जंबूद्वीप का हिस्सा माना जाता था।",
+            "यह एक सांस्कृतिक इकाई है जहाँ विविध भाषाएँ और परंपराएँ जुड़ी हैं।"
+          ],
+          "mnemonic": "याद रखें: उत्तर में हिमालय, दक्षिण में समुद्र (Him-Sam)"
         },
         {
           "id": 3,
           "front": "वेद",
           "back": "दुनिया का सबसे पुराना ज्ञान का भंडार (ऋग्वेद, सामवेद, यजुर्वेद, अथर्ववेद) जिसमें ब्रह्मांड के रहस्य छुपे हैं।",
           "impact_emoji": "📜",
+          "image_url": "https://images.unsplash.com/photo-1620311124458-96264024b335?q=80&w=800&auto=format&fit=crop",
+          "important_facts": [
+            "ऋग्वेद: सबसे प्राचीन, देवताओं की स्तुति में मंत्र।",
+            "यजुर्वेद: यज्ञों और अनुष्ठानों की विधियाँ।",
+            "सामवेद: संगीत और गायन का आधार।",
+            "अथर्ववेद: चिकित्सा, जादू और दैनिक जीवन के नियम।"
+          ],
           "mnemonic": "Trick: R-S-Y-A (Rishabh Sings Yearly Always)"
         },
         {
@@ -344,7 +367,18 @@ export const syllabusData: SyllabusData = {
       "title_en": "History, Culture and Literature of Madhya Pradesh",
       "topics": [
       { "id": 1, "front": "मध्यप्रदेश के इतिहास की महत्वपूर्ण घटनाएँ", "back": "प्राचीन काल से लेकर आधुनिक काल तक की वो घटनाएं जिन्होंने राज्य की दिशा तय की।" },
-      { "id": 2, "front": "प्रमुख राजवंश", "back": "होलकर, सिंधिया, चंदेल, परमार और गोंड राजाओं का गौरवशाली इतिहास।" },
+      { 
+          "id": 2, 
+          "front": "प्रमुख राजवंश और उनकी राजधानियाँ", 
+          "back": "मध्य भारत की प्रमुख सत्तारूढ़ शक्तियाँ और उनकी सरकार के मुख्य केंद्र।",
+          "impact_emoji": "🏰",
+          "important_facts": [
+            "होलकर: इंदौर (मालवा)",
+            "सिंधिया: ग्वालियर",
+            "बुंदेला: ओरछा"
+          ],
+          "mnemonic": "होलकर इन डोर्स (इंदौर - Indore)"
+      },
       { "id": 3, "front": "स्वतंत्रता आंदोलन में मध्यप्रदेश का योगदान", "back": "1857 की क्रांति और जंगल सत्याग्रह जैसे आंदोलनों में MP के वीरों की भूमिका।" },
       { "id": 4, "front": "मध्यप्रदेश की प्रमुख कला एवं स्थापत्य कला", "back": "खजुराहो के मंदिर, किलों की नक्काशी और प्राचीन गुफाओं की बेजोड़ बनावट।" },
       { "id": 5, "front": "मध्यप्रदेश की प्रमुख जनजातियाँ", "back": "भील, गोंड, बैगा, सहरिया—जो MP की असली सांस्कृतिक विरासत के संरक्षक हैं।" },
@@ -366,41 +400,73 @@ export const syllabusData: SyllabusData = {
       },
       {
         "id": 2,
+        "front": "Dynasties & Capitals",
+        "back": "The major ruling powers of Central India and their primary seats of government.",
+        "impact_emoji": "🏰",
+        "important_facts": [
+            "Holkar: Indore (Malwa)",
+            "Scindia: Gwalior",
+            "Bundela: Orchha"
+        ],
+        "mnemonic": "Holkar In Doors (Indore)"
+      },
+      {
+        "id": 3,
         "front": "Contribution of MP in Freedom Movement",
         "back": "The sparks of resistance in MP, including the Forest Satyagraha and the bravery of local revolutionaries."
       },
       {
-        "id": 3,
+        "id": 4,
         "front": "Major Arts and Sculpture of MP",
         "back": "Stone poetry! The intricate temples of Khajuraho and the ancient caves that showcase our artistic peak."
       },
       {
-        "id": 4,
-        "front": "Major Tribes and Dialects of MP",
-        "back": "The soul of the state—communities like Bhil, Gond, and Baiga, and their beautiful languages like Nimadi and Malvi."
-      },
-      {
         "id": 5,
-        "front": "Major Festivals, Folk Music, and Folk Arts",
-        "back": "The rhythm of MP—from Bhagoria fairs to the soul-stirring songs of Bundelkhand and Malwa."
+        "front": "Major Tribes of MP",
+        "back": "The soul of the state—communities like Bhil, Gond, and Baiga who preserve the indigenous heritage."
       },
       {
         "id": 6,
+        "front": "Dialects of Tribes",
+        "back": "The rich linguistic tapestry of MP including Bagheli, Nimadi, Malvi and various tribal dialects."
+      },
+      {
+        "id": 7,
+        "front": "Major Festivals of MP",
+        "back": "Cultural celebrations like Lokranjan, Bhagoria, and the Khajuraho Dance Festival."
+      },
+      {
+        "id": 8,
+        "front": "Folk Music",
+        "back": "Traditional melodies echoing in villages, like Alha, Phag, and Pandvani."
+      },
+      {
+        "id": 9,
+        "front": "Folk Arts",
+        "back": "Masterpieces of clay art, painting, and handicrafts that define MP's artistic identity."
+      },
+      {
+        "id": 10,
+        "front": "Folk Literature",
+        "back": "Stories and poems composed in regional languages, passed down through oral traditions."
+      },
+      {
+        "id": 11,
         "front": "Important Literary Creators and their Creations",
         "back": "The legends of the pen—from Kalidasa's Sanskrit epics to the modern poetry of Makhanlal Chaturvedi."
       },
       {
-        "id": 7,
+        "id": 12,
         "front": "Religious, Cultural, and Archaeological Tourism",
         "back": "Holy sites like Ujjain Mahakal, Sanchi Stupa, and Bhimbetka—where history meets spirituality."
       },
       {
-        "id": 8,
+        "id": 13,
         "front": "World Heritage Sites in MP",
         "back": "The three jewels recognized by UNESCO: Khajuraho, Sanchi Stupa, and Bhimbetka Caves."
       },
       {
-        "id": 9,
+        "id": 14,
         "front": "Important Tribal Personalities of MP",
         "back": "Icons of pride like Tantya Bhil and Rani Durgavati who sacrificed everything for their land and dignity."
       }

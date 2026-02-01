@@ -82,9 +82,19 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side: Form */}
-      <div className="flex flex-col items-center justify-center p-6 sm:p-12 relative">
-         <div className="absolute top-6 left-6">
-             <Link href="/syllabus" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors text-sm font-medium">
+      <div className="flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
+         {/* Mobile Background Image (Visible only on small screens) */}
+         <div className="absolute inset-0 lg:hidden z-0">
+             <div className="absolute inset-0 bg-slate-900/90 z-10"></div>
+             <img 
+                src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80&w=2073&auto=format&fit=crop" 
+                alt="Background" 
+                className="w-full h-full object-cover"
+             />
+         </div>
+
+         <div className="absolute top-6 left-6 z-20">
+             <Link href="/syllabus" className="flex items-center gap-2 text-slate-500 lg:text-slate-500 text-slate-300 hover:text-white lg:hover:text-slate-900 transition-colors text-sm font-medium">
                  <ArrowLeft className="w-4 h-4" /> Back to Syllabus
              </Link>
          </div>
@@ -92,10 +102,10 @@ export default function LoginPage() {
          <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-md space-y-8 bg-white p-8 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100"
+            className="w-full max-w-md space-y-8 bg-white p-8 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 relative z-20"
          >
              <div className="text-center space-y-2">
-                 <h2 className="text-2xl font-bold text-slate-900">Sign in to your account</h2>
+                 <h2 className="text-2xl font-bold text-slate-900">Sign in to MPPSC Prep</h2>
                  <p className="text-slate-500 text-sm">Enter your credentials to access your dashboard</p>
              </div>
 
@@ -145,10 +155,7 @@ export default function LoginPage() {
 
              <div className="text-center pt-2 space-y-2">
                  <p className="text-xs text-slate-400">
-                     Don't have an account? <Link href="/signup" className="text-indigo-600 hover:underline font-semibold">Create Account</Link>
-                 </p>
-                 <p className="text-xs text-slate-400">
-                    <Link href="/payment" className="hover:text-slate-600 transition-colors">Buy Premium</Link>
+                     <Link href="/payment" className="hover:text-indigo-600 transition-colors font-semibold">Buy Premium Plan</Link>
                  </p>
              </div>
          </motion.div>
