@@ -14,7 +14,7 @@ export default async function UnitPage({ params }: Props) {
   const { unitId } = await params;
 
   // 1. Fetch from Database first
-  let dbTopics = [];
+  let dbTopics: typeof syllabusTopics.$inferSelect[] = [];
   try {
       dbTopics = await db.query.syllabusTopics.findMany({
           where: eq(syllabusTopics.unitId, unitId),

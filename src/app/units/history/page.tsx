@@ -199,24 +199,19 @@ export default function HistoryUnitPage() {
               {historyData.unit_1.topics.map((topic) => (
                 <motion.div key={topic.id} variants={item}>
                   <FlipCard
-                    className="h-64 w-full"
-                    frontContent={
-                      <div className="flex flex-col items-center justify-center p-4">
-                        <span className="text-5xl mb-4 opacity-20 font-serif absolute top-2 right-4">{topic.id}</span>
-                        <h3 className="text-2xl font-bold text-gray-800 font-display leading-tight">
-                          {topic.front}
-                        </h3>
-                        <p className="text-xs text-indigo-500 font-bold mt-4 uppercase tracking-widest border-t border-indigo-100 pt-2 w-12 text-center">Flip</p>
-                      </div>
-                    }
-                    backContent={
-                      <div className="flex flex-col items-center justify-center h-full">
-                        <h4 className="text-lg font-bold text-white mb-2 border-b border-white/20 pb-1">{topic.front}</h4>
-                        <p className="text-base text-indigo-50 leading-relaxed">
-                          {topic.back}
-                        </p>
-                      </div>
-                    }
+                    id={topic.id}
+                    title={topic.front}
+                    subtitle={`Topic ${topic.id}`}
+                    backTitle={topic.front}
+                    backMainContent={topic.back}
+                    className="h-[400px] w-full"
+                    labels={{
+                        tapToFlip: activeTab === 'hindi' ? 'पलटें' : 'Tap to Flip',
+                        topicAnalysis: activeTab === 'hindi' ? 'विषय विश्लेषण' : 'Analysis',
+                        mnemonicLabel: activeTab === 'hindi' ? 'स्मृति सूत्र' : 'Mnemonic',
+                        practiceTest: activeTab === 'hindi' ? 'अभ्यास करें' : 'Practice',
+                        closeAnalysis: activeTab === 'hindi' ? 'बंद करें' : 'Close'
+                    }}
                   />
                 </motion.div>
               ))}
