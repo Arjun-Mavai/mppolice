@@ -18,6 +18,10 @@ const playfair = Playfair_Display({
 
 export const viewport: Viewport = {
   themeColor: "#4f46e5",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export const metadata: Metadata = {
@@ -32,6 +36,9 @@ export const metadata: Metadata = {
 };
 
 import { SupportButton } from "@/components/SupportButton";
+import { AppFooter } from "@/components/layout/AppFooter";
+import { GlobalLockModal } from "@/components/GlobalLockModal";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({
@@ -46,8 +53,11 @@ export default function RootLayout({
       >
         <PwaRegistry />
         <Suspense fallback={<div>Loading...</div>}>
-        {children}
+          {children}
         </Suspense>
+        <AppFooter />
+        <GlobalLockModal />
+        <ScrollToTop />
         <SupportButton />
         <Toaster position="top-right"  richColors/>
       </body>

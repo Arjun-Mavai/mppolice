@@ -28,10 +28,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Check subscription status
-    if (!user.isSubscribed) {
-        return NextResponse.json({ error: 'Subscription not active. Please contact support.' }, { status: 403 });
-    }
+    // Check subscription status - We allow login even if not subscribed now, as we have a free tier
+    // if (!user.isSubscribed) {
+    //    return NextResponse.json({ error: 'Subscription not active. Please contact support.' }, { status: 403 });
+    // }
 
     // Set session cookie
     const cookieStore = await cookies();
@@ -45,7 +45,16 @@ export async function POST(request: Request) {
         sameSite: 'lax'
     });
 
-    return NextResponse.json({ success: true, user: { email: user.email, name: user.name } });
+    return NextResponse.json({ 
+        success: true, 
+        user: { 
+            email: user.email, 
+            name: user.name,
+            is_subscribed: user.isSubscribed,
+            plan_tier: user.planTier,
+            role: user.role
+        } 
+    });
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

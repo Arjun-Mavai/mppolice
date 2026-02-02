@@ -1,6 +1,7 @@
 export interface Question {
   id: string;
   question: string;
+  questionEn?: string | null;
   options: string[];
   correctAnswer: number;
   explanation?: string;

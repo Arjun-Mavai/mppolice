@@ -1,106 +1,164 @@
-import { getBlogs } from "@/actions/blog-actions";
+'use client';
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Clock, BookOpen, ChevronRight, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
+import { BlogCard } from "@/components/blog/BlogCard";
+import { SearchInput } from "@/components/blog/SearchInput";
+import { getBlogs } from "@/actions/blog-actions";
+import { useSettingsStore } from "@/store/useSettingsStore";
+import { PLAN_LIMITS } from "@/config/plans";
 
-export default async function BlogsPage() {
-    const blogs = await getBlogs();
+export default function BlogsPage() {
+    const { user: currentUser } = useSettingsStore();
+    const [allBlogs, setAllBlogs] = useState<any[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [activeCategory, setActiveCategory] = useState('All');
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Group by category could be done here or in SQL, but for now simple list
-    const categories = ['history', 'geography', 'polity', 'current_affairs_mp', 'current_affairs_india', 'strategy','mP_gK'];
+    const categories = ['All', 'history', 'geography', 'polity', 'strategy', 'current_affairs_mp', 'current_affairs_india', 'economics', 'science', 'mp_gk'];
+
+    useEffect(() => {
+        getBlogs().then(blogs => {
+            setAllBlogs(blogs);
+            setIsLoading(false);
+        });
+    }, []);
+
+    // Client-side filtering
+    const blogs = allBlogs.filter(blog => {
+        const matchesCategory = activeCategory === 'All' ? true : blog.category === activeCategory;
+        const matchesQuery = searchQuery ? blog.title.toLowerCase().includes(searchQuery.toLowerCase()) : true;
+        return matchesCategory && matchesQuery;
+    });
 
     return (
-        <div className="min-h-screen bg-slate-50 pt-24 pb-20 px-4 md:px-8">
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="min-h-screen bg-slate-50/50">
+            {/* Header Section */}
+            <div className="bg-white border-b border-slate-200 sticky top-16 z-30">
+                <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
+                    <div className="flex items-center justify-between mb-4 md:mb-0">
+                         <div className="flex items-center gap-3">
+                            <Button variant="ghost" size="icon" className="md:hidden -ml-2 text-slate-500" asChild>
+                                <Link href="/"><ArrowLeft size={20} /></Link>
+                            </Button>
+                            <h1 className="text-xl md:text-2xl font-black text-slate-900 font-display tracking-tight">
+                                Study Material
+                            </h1>
+                         </div>
+                         
+                         {/* Desktop Search */}
+                         <div className="hidden md:block w-72">
+                             <SearchInput value={searchQuery} onChange={setSearchQuery} />
+                         </div>
+                    </div>
+
+                    {/* Mobile Horizontal Scroll Categories */}
+                    <div className="flex md:hidden overflow-x-auto pb-2 -mx-4 px-4 gap-2 no-scrollbar snap-x">
+                        {categories.map((cat) => (
+                            <button 
+                                key={cat}
+                                onClick={() => setActiveCategory(cat)}
+                                className={`
+                                    px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap snap-start border transition-colors
+                                    ${activeCategory === cat 
+                                        ? 'bg-slate-900 text-white border-slate-900' 
+                                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}
+                                `}
+                            >
+                                {cat.replace(/_/g, ' ')}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8 px-4 md:px-8 py-8">
                 
-                {/* Sidebar (Desktop) / Topbar (Mobile) */}
-                <div className="lg:col-span-1 space-y-6">
-                    <div className="sticky top-24 space-y-4">
-                        <h2 className="text-xl font-display font-bold text-slate-900">Categories</h2>
-                        <div className="flex flex-wrap lg:flex-col gap-2">
-                             <Button variant="secondary" className="justify-start font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 w-full lg:w-auto">
-                                All Topics
-                             </Button>
-                             {categories.map(cat => (
-                                 <Button key={cat} variant="ghost" className="justify-start font-medium text-slate-600 hover:text-slate-900 hover:bg-white w-full lg:w-auto capitalize">
-                                     {cat.replace(/_/g, ' ')}
-                                 </Button>
-                             ))}
+                {/* Sidebar (Desktop Only) */}
+                <div className="hidden lg:col-span-1 lg:block space-y-6">
+                    <div className="sticky top-40 space-y-6">
+                        <div>
+                            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Browse Topics</h2>
+                            <div className="space-y-1">
+                                {categories.map((cat) => (
+                                     <Button 
+                                        key={cat} 
+                                        variant={activeCategory === cat ? "secondary" : "ghost"} 
+                                        className={`w-full justify-start font-bold capitalize ${activeCategory === cat ? 'bg-slate-900 text-white hover:bg-slate-800' : 'text-slate-600'}`}
+                                        onClick={() => setActiveCategory(cat)}
+                                     >
+                                         {cat.replace(/_/g, ' ')}
+                                     </Button>
+                                ))}
+                            </div>
                         </div>
 
-                         <Card className="bg-gradient-to-br from-indigo-600 to-violet-700 text-white border-none shadow-lg mt-8 hidden lg:block">
-                            <CardContent className="p-6 space-y-4">
-                                <h3 className="font-bold text-lg">MPPSC Mission 2026</h3>
-                                <p className="text-indigo-100 text-sm">Get premium study material and mock tests to ace your exam.</p>
-                                <Button variant="secondary" className="w-full text-indigo-700 font-bold" asChild>
-                                    <Link href="/syllabus/quiz">Start Practicing</Link>
-                                </Button>
-                            </CardContent>
-                        </Card>
+                         <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-xl shadow-indigo-200">
+                            <h3 className="font-bold text-lg mb-2">MPPSC Mission 2026</h3>
+                            <p className="text-indigo-100 text-sm mb-4">Unlock premium mock tests and analytics.</p>
+                            <Button variant="secondary" className="w-full text-indigo-700 font-bold hover:bg-white" asChild>
+                                <Link href="/syllabus/quiz">Start Practicing</Link>
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
                 {/* Main Content */}
-                <div className="lg:col-span-3 space-y-8">
-                     <div className="flex items-center justify-between">
-                        <div className="space-y-2">
-                             <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="icon" className="rounded-full -ml-2" asChild>
-                                    <Link href="/">
-                                        <ArrowLeft className="w-6 h-6 text-slate-600" />
-                                    </Link>
-                                </Button>
-                                <h1 className="text-3xl md:text-4xl font-black text-slate-900 font-display tracking-tight">Study Material</h1>
-                             </div>
-                            <p className="text-slate-500">Expert curated articles and notes for MPPSC.</p>
-                        </div>
+                <div className="lg:col-span-3 space-y-6">
+                     {/* Mobile Search */}
+                     <div className="md:hidden relative mb-4">
+                         <SearchInput value={searchQuery} onChange={setSearchQuery} className="h-12" />
                      </div>
 
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {blogs.length === 0 ? (
-                            <div className="col-span-2 py-20 text-center text-slate-400">
-                                No articles found. Check back soon!
-                            </div>
-                        ) : blogs.map((blog) => (
-                            <Link href={`/blogs/${blog.slug}`} key={blog.id} className="group">
-                                <Card className="h-full border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                                    <div className="aspect-video w-full bg-slate-100 relative overflow-hidden">
-                                        {blog.imageUrl ? (
-                                            <img src={blog.imageUrl} alt={blog.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                                        ) : (
-                                            <div className="flex items-center justify-center h-full text-slate-300">
-                                                <BookOpen size={48} />
-                                            </div>
-                                        )}
-                                        <div className="absolute top-3 left-3">
-                                            <Badge className="bg-white/90 backdrop-blur text-slate-900 font-bold shadow-sm hover:bg-white capitalize">
-                                                {blog.category.replace(/_/g, ' ')}
-                                            </Badge>
-                                        </div>
+                     {isLoading ? (
+                         <div className="col-span-2 py-20 text-center text-slate-400">
+                             <p>Loading articles...</p>
+                         </div>
+                     ) : (
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {blogs.length === 0 ? (
+                                <div className="col-span-2 py-20 text-center text-slate-400 flex flex-col items-center gap-4">
+                                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
+                                        <Search className="w-8 h-8 text-slate-300" />
                                     </div>
-                                    <CardContent className="p-6 space-y-3">
-                                        <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-                                            <Clock size={12} />
-                                            <span>{blog.readingTime || 5} min read</span>
-                                            <span>•</span>
-                                            <span>{blog.createdAt ? new Date(blog.createdAt).toLocaleDateString() : 'Recently'}</span>
-                                        </div>
-                                        <h3 className="text-xl font-bold text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors">
-                                            {blog.title}
-                                        </h3>
-                                        <p className="text-slate-600 text-sm line-clamp-2">
-                                            {blog.description}
-                                        </p>
-                                        <div className="pt-2 flex items-center text-indigo-600 font-bold text-sm">
-                                            Read Article <ChevronRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </Link>
-                        ))}
-                     </div>
+                                    <p>No {activeCategory !== 'All' ? activeCategory : ''} articles found.</p>
+                                    {(activeCategory !== 'All' || searchQuery) && (
+                                        <Button variant="outline" onClick={() => { setActiveCategory('All'); setSearchQuery(''); }}>
+                                            Clear Filters
+                                        </Button>
+                                    )}
+                                </div>
+                            ) : (
+                                <>
+                                    {blogs.map((blog, i) => {
+                                        // Determine if locked
+                                        // Free users: see only first 4
+                                        // Paying users (Lite/Pro): see all (limit is very high)
+                                        const userTier = (currentUser as any)?.plan_tier || 'free';
+                                        
+                                        // Special case: If user is "subscribed" in old logic, assume at least Lite equivalent for now, 
+                                        // but ideally we rely on plan_tier. Fallback to 'lite' if isSubscribed is true but tier is free?
+                                        // Let's stick to plan_tier if available, or fallback.
+                                        const effectiveTier = (currentUser as any)?.is_subscribed ? ((currentUser as any)?.plan_tier === 'free' ? 'lite' : (currentUser as any)?.plan_tier) : 'free';
+                                        
+                                        const limit = PLAN_LIMITS[effectiveTier as 'free'|'lite'|'pro']?.blog_limit || 4;
+                                        const isLocked = i >= limit;
+
+                                        return (
+                                            <BlogCard 
+                                                key={blog.id} 
+                                                blog={blog} 
+                                                featured={i === 0 && !isLocked} 
+                                                isLocked={isLocked}
+                                            />
+                                        );
+                                    })}
+                                </>
+                            )}
+                         </div>
+                     )}
                 </div>
 
             </div>

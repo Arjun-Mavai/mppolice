@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { syllabusData } from '@/data/syllabusData';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { PLAN_LIMITS } from '@/config/plans';
 import { SyllabusLockModal } from '@/components/SyllabusLockModal';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -57,7 +58,14 @@ export default function QuizUnitSelectionClient({ stats }: QuizUnitSelectionClie
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.entries(syllabusData.units).map(([key, unit], index) => {
                     const title = language === 'en' && unit.title_en ? unit.title_en : (unit.unit_title || unit.title);
-                    const isLocked = key !== "unit_1" && !isSubscribed;
+                    
+                    const user = (useSettingsStore.getState().user as any);
+                    const userTier = user?.plan_tier || 'free';
+                    const effectiveTier = !user ? 'guest' : (user?.is_subscribed ? (userTier === 'free' ? 'lite' : userTier) : 'free');
+                    const limit = PLAN_LIMITS[effectiveTier as keyof typeof PLAN_LIMITS]?.unit_tests_limit || 0;
+                    
+                    // index is 0-based. So if limit is 5, indices 0,1,2,3,4 are allowed.
+                    const isLocked = index >= limit;
                     const displayIndex = index + 1;
                     
                     const unitStats = stats[key] || { attempts: 0, maxRetries: 5 }; // Default if not found

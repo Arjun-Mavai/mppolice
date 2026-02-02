@@ -14,8 +14,25 @@ import { uploadTestFromJSON, getExistingTests } from '@/actions/admin-actions';
 import { toast } from "sonner";
 import { Loader2, FileJson, Upload, BookOpen, Video, FileText, CheckCircle2, Plus, Database } from "lucide-react";
 import { syllabusData } from "@/data/syllabusData";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+
 
 const UNITS = Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`);
+
+const BLOG_CATEGORIES = [
+    { value: "general", label: "General" },
+    { value: "history", label: "History" },
+    { value: "geography", label: "Geography" },
+    { value: "polity", label: "Polity" },
+    { value: "strategy", label: "Strategy" },
+    { value: "current_affairs_mp", label: "MP Current Affairs" },
+    { value: "economics", label: "Economics" },
+    { value: "science", label: "Science & Tech" },
+    {value:"mp_gk", label:"Madhya Pradesh GK"},
+    {value:"mp_polity", label:"Madhya Pradesh Polity"},
+    {value:"mp_current_affairs", label:"Madhya Pradesh Current Affairs"},
+];
 
 export default function AdminUploadPage() {
     const [isLoading, setIsLoading] = useState(false);
@@ -23,13 +40,7 @@ export default function AdminUploadPage() {
     
     // Blog State
     const [blogData, setBlogData] = useState({
-        title: '',
-        slug: '',
-        description: '',
-        category: 'general',
-        contentType: 'blog', // blog | vlog
         imageUrl: '',
-        readingTime: 5,
         contentJson: ''
     });
 
@@ -81,16 +92,58 @@ export default function AdminUploadPage() {
         e.preventDefault();
         setIsLoading(true);
         try {
-            JSON.parse(blogData.contentJson); // Validate JSON
-            const res = await uploadBlog(blogData);
+            // Validate JSON structure
+            let parsed = JSON.parse(blogData.contentJson);
+            
+            // If AI returns an array, take the first element
+            if (Array.isArray(parsed)) {
+                if (parsed.length === 0) {
+                    toast.error("JSON array is empty. Please provide valid content.");
+                    setIsLoading(false);
+                    return;
+                }
+                parsed = parsed[0]; // Take first element
+            }
+            
+            if (!parsed.metadata || !parsed.content) {
+                toast.error("Invalid JSON: Must contain 'metadata' and 'content' keys.");
+                setIsLoading(false);
+                return;
+            }
+
+            const { metadata, content } = parsed;
+
+            // Validate metadata fields
+            if (!metadata.title || !metadata.slug || !metadata.category) {
+                toast.error("Missing required metadata: title, slug, or category.");
+                setIsLoading(false);
+                return;
+            }
+
+            // Validate content structure
+            if (!content.hi || !content.en) {
+                toast.error("Content must have both 'hi' and 'en' keys.");
+                setIsLoading(false);
+                return;
+            }
+
+            const res = await uploadBlog({
+                imageUrl: blogData.imageUrl,
+                contentJson: JSON.stringify(parsed) // Pass the extracted object
+            });
+            
             if (res.success) {
-                toast.success(`${blogData.contentType === 'vlog' ? 'Vlog' : 'Blog'} uploaded!`);
-                setBlogData(prev => ({ ...prev, title: '', slug: '', description: '', imageUrl: '', contentJson: '' }));
+                toast.success(`${metadata.type === 'vlog' ? 'Vlog' : 'Blog'} uploaded successfully!`);
+                setBlogData({ 
+                    imageUrl: '', 
+                    contentJson: ''
+                });
             } else {
                 toast.error(res.error || "Upload failed");
             }
         } catch (err) {
-            toast.error("Invalid JSON Content");
+            console.error(err);
+            toast.error("Invalid JSON format. Please check the structure.");
         } finally {
             setIsLoading(false);
         }
@@ -177,76 +230,46 @@ export default function AdminUploadPage() {
                             </CardHeader>
                             <CardContent className="p-6">
                                 <form onSubmit={handleBlogSubmit} className="space-y-6">
-                                    <div className="grid md:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <Label>Title</Label>
-                                            <Input name="title" value={blogData.title} onChange={handleBlogChange} required placeholder="Post Title" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Slug</Label>
-                                            <Input name="slug" value={blogData.slug} onChange={handleBlogChange} required placeholder="unique-post-slug" />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Type</Label>
-                                            <Select value={blogData.contentType} onValueChange={(v) => setBlogData(p => ({...p, contentType: v}))}>
-                                                <SelectTrigger>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="blog"><div className="flex items-center"><FileText className="w-4 h-4 mr-2"/> Blog Article</div></SelectItem>
-                                                    <SelectItem value="vlog"><div className="flex items-center"><Video className="w-4 h-4 mr-2"/> Vlog (Video)</div></SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Category</Label>
-                                            <Select value={blogData.category} onValueChange={(v) => setBlogData(p => ({...p, category: v}))}>
-                                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="general">General</SelectItem>
-                                                    <SelectItem value="history">History</SelectItem>
-                                                    <SelectItem value="geography">Geography</SelectItem>
-                                                    <SelectItem value="polity">Polity</SelectItem>
-                                                    <SelectItem value="strategy">Strategy</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                         <div className="space-y-2">
-                                            <Label>Read Time (m)</Label>
-                                            <Input type="number" name="readingTime" value={blogData.readingTime} onChange={handleBlogChange} />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Image URL</Label>
-                                            <Input name="imageUrl" value={blogData.imageUrl} onChange={handleBlogChange} placeholder="https://..." />
-                                        </div>
-                                    </div>
-
                                     <div className="space-y-2">
-                                        <Label>Short Description</Label>
-                                        <Textarea name="description" value={blogData.description} onChange={handleBlogChange} placeholder="For card preview..." className="h-20" />
+                                        <Label>Image URL (Optional)</Label>
+                                        <Input 
+                                            name="imageUrl" 
+                                            value={blogData.imageUrl} 
+                                            onChange={handleBlogChange} 
+                                            placeholder="https://example.com/image.jpg" 
+                                        />
+                                        <p className="text-xs text-slate-400">Cover image for the blog post</p>
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label className="flex justify-between">
-                                            <span>Content JSON</span>
-                                            <span className="text-xs text-slate-400 font-normal">Use AI Prompt to generate</span>
+                                            <span>AI-Generated JSON (with Metadata + Content)</span>
+                                            <div className="flex gap-2">
+                                                 <span className="text-xs text-slate-400 font-normal">Format: <code>{`{ "metadata": {...}, "content": {...} }`}</code></span>
+                                                 <a 
+                                                    href="/prompts/blog_generation.md" 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-xs text-indigo-500 font-bold hover:underline"
+                                                 >
+                                                    View Prompt
+                                                 </a>
+                                            </div>
                                         </Label>
                                         <Textarea 
                                             name="contentJson" 
                                             value={blogData.contentJson} 
                                             onChange={handleBlogChange} 
-                                            className="font-mono text-xs h-[300px] bg-slate-50" 
-                                            placeholder='[{ "type": "paragraph", "text": "..." }]'
+                                            className="font-mono text-xs h-[400px] bg-slate-50" 
+                                            placeholder='{ "metadata": { "title": "...", "slug": "...", "description": "...", "category": "...", "readingTime": 5, "type": "blog" }, "content": { "hi": [...], "en": [...] } }'
                                             required 
                                         />
+                                        <p className="text-[10px] text-slate-400">Paste the complete JSON response from the AI generator. It should include both metadata and bilingual content.</p>
                                     </div>
 
                                     <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={isLoading}>
                                         {isLoading ? <Loader2 className="animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-                                        Upload Content
+                                        Upload Blog
                                     </Button>
                                 </form>
                             </CardContent>
@@ -340,12 +363,14 @@ export default function AdminUploadPage() {
                                                     </div>
                                                     <Select value={testData.topicId} onValueChange={(v) => setTestData(p => ({...p, topicId: v}))}>
                                                         <SelectTrigger><SelectValue placeholder="Choose a topic..." /></SelectTrigger>
-                                                        <SelectContent className="max-h-64">
-                                                            {availableTopics.map((t: any) => (
-                                                                <SelectItem key={t.id} value={t.id.toString()}>
-                                                                    {t.front.substring(0, 40)}...
-                                                                </SelectItem>
-                                                            ))}
+                                                        <SelectContent>
+                                                            <ScrollArea className="h-64">
+                                                                {availableTopics.map((t: any) => (
+                                                                    <SelectItem key={t.id} value={t.id.toString()}>
+                                                                        {t.front.substring(0, 40)}...
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </ScrollArea>
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
@@ -364,15 +389,17 @@ export default function AdminUploadPage() {
                                                 <SelectTrigger className="h-12 bg-white">
                                                     <SelectValue placeholder="Search or select a test..." />
                                                 </SelectTrigger>
-                                                <SelectContent className="max-h-[300px]">
-                                                    {existingTests.length === 0 ? <SelectItem value="none" disabled>No tests found</SelectItem> : 
-                                                        existingTests.map(t => (
-                                                            <SelectItem key={t.id} value={t.id}>
-                                                                <span className="font-medium">{t.title}</span> 
-                                                                <span className="text-slate-400 text-xs ml-2">({t.type} • {t.totalQuestions} Qs)</span>
-                                                            </SelectItem>
-                                                        ))
-                                                    }
+                                                <SelectContent>
+                                                    <ScrollArea className="h-[300px]">
+                                                        {existingTests.length === 0 ? <SelectItem value="none" disabled>No tests found</SelectItem> : 
+                                                            existingTests.map(t => (
+                                                                <SelectItem key={t.id} value={t.id}>
+                                                                    <span className="font-medium">{t.title}</span> 
+                                                                    <span className="text-slate-400 text-xs ml-2">({t.type} • {t.totalQuestions} Qs)</span>
+                                                                </SelectItem>
+                                                            ))
+                                                        }
+                                                    </ScrollArea>
                                                 </SelectContent>
                                             </Select>
                                         </div>

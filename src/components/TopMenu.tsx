@@ -126,7 +126,7 @@ export const TopMenu = ({
                   className="flex flex-col items-center justify-center p-4 rounded-2xl bg-gray-50 hover:bg-purple-50 hover:text-purple-600 transition-colors gap-2 group"
                 >
                   <User size={24} className="text-gray-400 group-hover:text-purple-500" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Profile</span>
+                  <span className="text-xs font-bold uppercase tracking-wider">Profile hi</span>
                 </Link>
               </div>
 

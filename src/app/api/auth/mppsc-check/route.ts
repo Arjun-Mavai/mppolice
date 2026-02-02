@@ -17,7 +17,10 @@ export async function GET() {
     const users = await db.select({ 
         name: mppscUsers.name, 
         email: mppscUsers.email, 
-        isSubscribed: mppscUsers.isSubscribed 
+        isSubscribed: mppscUsers.isSubscribed,
+        role: mppscUsers.role,
+        plan_tier: mppscUsers.planTier,
+        
     })
     .from(mppscUsers)
     .where(eq(mppscUsers.id, token.value))
@@ -31,7 +34,7 @@ export async function GET() {
 
     return NextResponse.json({ 
         authenticated: true, 
-        user: { name: user.name, email: user.email, is_subscribed: user.isSubscribed } 
+        user: { name: user.name, email: user.email, is_subscribed: user.isSubscribed, role: user.role, plan_tier: user.plan_tier } 
     });
 
   } catch (error) {

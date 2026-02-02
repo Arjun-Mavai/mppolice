@@ -10,6 +10,7 @@ export const mppscUsers = sqliteTable('mppsc_users', {
   password: text('password').notNull(),
   name: text('name'),
   isSubscribed: integer('is_subscribed', { mode: 'boolean' }).default(false),
+  planTier: text('plan_tier', { enum: ['free', 'lite', 'pro'] }).default('free'),
   role: text('role').default('guest'), // 'guest' | 'admin'
 });
 
@@ -152,3 +153,11 @@ export const attemptAnswersRelations = relations(attemptAnswers, ({ one }) => ({
         references: [questions.id]
     })
 }));
+
+// Payment Exit Reasons Table
+export const paymentExitReasons = sqliteTable('payment_exit_reasons', {
+    id: text('id').primaryKey(),
+    reason: text('reason').notNull(),
+    customReason: text('custom_reason'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+});

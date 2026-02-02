@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Calendar, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useSettingsStore } from "@/store/useSettingsStore";
+
 
 export default function BlogContentRenderer({ blog }: { blog: any }) {
     const { scrollYProgress } = useScroll();
@@ -14,6 +16,15 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
         damping: 30,
         restDelta: 0.001
     });
+
+    const { language, setLanguage } = useSettingsStore();
+    
+    // Determine content based on structure
+    // If it's a flat array (old format), just use it.
+    // If it's an object with keys (hi/en), pick based on language. default to 'hi' if selected lang missing.
+    const content = Array.isArray(blog.content) 
+        ? blog.content 
+        : (blog.content[language] || blog.content['hi'] || []);
 
     const renderContent = (blocks: any[]) => {
         if (!blocks || !Array.isArray(blocks)) return null;
@@ -53,9 +64,9 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
 
     return (
         <div className="min-h-screen bg-white font-sans">
-             {/* Reading Progress Bar */}
+             {/* Reading Progress Bar - Positioned below fixed header (h-16 = 64px) */}
              <motion.div
-                className="fixed top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 to-purple-500 origin-left z-[100]"
+                className="fixed top-[64px] left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 origin-left z-50"
                 style={{ scaleX }}
             />
 
@@ -92,16 +103,33 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
 
             {/* Content Section */}
             <article className="max-w-3xl mx-auto px-6 py-16">
-                 {/* Back Button */}
-                 <div className="mb-12">
+                 {/* Back Button & Language Toggle */}
+                 <div className="mb-12 flex justify-between items-center">
                      <Button variant="ghost" className="text-slate-500 hover:text-slate-900 -ml-4" asChild>
                          <Link href="/blogs"><ArrowLeft size={16} className="mr-2" /> Back to Articles</Link>
                      </Button>
+                     
+                     {!Array.isArray(blog.content) && (
+                        <div className="flex bg-slate-100 rounded-lg p-1">
+                            <button 
+                                onClick={() => setLanguage('hi')}
+                                className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${language === 'hi' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                हिंदी
+                            </button>
+                            <button 
+                                onClick={() => setLanguage('en')}
+                                className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${language === 'en' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                English
+                            </button>
+                        </div>
+                     )}
                  </div>
 
                  {/* Render JSON Content */}
                  <div className="prose prose-lg prose-slate max-w-none">
-                     {renderContent(blog.content)}
+                     {renderContent(content)}
                  </div>
 
                  {/* Footer / Share / Next */}

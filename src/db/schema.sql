@@ -4,7 +4,8 @@ create table card_users (
   email text unique not null,
   password text not null, -- In a real production app, never store plain text passwords. Use bcrypt.
   name text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  plan_tier text default 'free' -- 'free', 'lite', 'pro'
 );
 
 -- Row Level Security (RLS) is recommended but for this simple example we will just query via API key (anon) 

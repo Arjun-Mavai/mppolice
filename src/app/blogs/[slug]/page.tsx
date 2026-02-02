@@ -1,14 +1,16 @@
 import { getBlogBySlug } from "@/actions/blog-actions";
 import { notFound } from "next/navigation";
-import BlogContentRenderer from "./BlogContentRenderer"; // Client component for reading progress and rendering
+// import BlogContentRenderer from "./BlogContentRenderer"; // Client component for reading progress and rendering
 import { Metadata } from "next";
+import BlogContentRenderer from "./BlogContentRenderer";
 
 interface PageProps {
-    params: { slug: string };
+    params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-    const blog = await getBlogBySlug(params.slug);
+    const { slug } = await params;
+    const blog = await getBlogBySlug(slug);
     if (!blog) return { title: 'Not Found' };
     
     return {
@@ -18,7 +20,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function BlogDetailPage({ params }: PageProps) {
-    const blog = await getBlogBySlug(params.slug);
+    const { slug } = await params;
+    const blog = await getBlogBySlug(slug);
 
     if (!blog) {
         notFound();

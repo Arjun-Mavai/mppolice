@@ -6,20 +6,70 @@ import { QuizInterface } from '@/components/quiz/QuizInterface';
 import { Question } from '@/types/quiz';
 import { Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SyllabusLockModal } from '@/components/SyllabusLockModal';
 
 interface QuizPlayClientProps {
     questions: Question[];
-    mode: 'topic' | 'full';
+    mode: 'topic' | 'full' | 'pyq';
     testId: string;
-    userId: string;
+    userId: string | null;
     maxRetries?: number | null;
     userAttempts?: number;
     isPro?: boolean;
+    shouldShowPaywall?: boolean;
 }
 
-export function QuizPlayClient({ questions, mode, testId, userId, maxRetries = null, userAttempts = 0, isPro = false }: QuizPlayClientProps) {
+export function QuizPlayClient({ 
+    questions, 
+    mode, 
+    testId, 
+    userId, 
+    maxRetries = null, 
+    userAttempts = 0, 
+    isPro = false,
+    shouldShowPaywall = false 
+}: QuizPlayClientProps) {
   const router = useRouter();
   const [retryCount, setRetryCount] = useState(0);
+  const [paywallOpen, setPaywallOpen] = useState(shouldShowPaywall);
+
+  // If premium content and user is not subscribed, show paywall modal
+  if (shouldShowPaywall) {
+      return (
+          <>
+              <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+                  <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-xl text-center space-y-6">
+                       <div className="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                           <Lock size={32} />
+                       </div>
+                       
+                       <h2 className="text-2xl font-bold text-slate-900">
+                           Premium Content
+                       </h2>
+                       
+                       <p className="text-slate-600 leading-relaxed">
+                           {mode === 'full' 
+                               ? 'Full Length Tests are available for Premium members only. Upgrade to access complete mock tests with detailed analysis.'
+                               : 'Previous Year Questions are available for Premium members only. Upgrade to practice with actual exam questions.'}
+                       </p>
+
+                       <div className="pt-4 space-y-3">
+                           <Button 
+                               onClick={() => setPaywallOpen(true)}
+                               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-indigo-200"
+                           >
+                               Upgrade to Premium
+                           </Button>
+                           <Button variant="outline" onClick={() => router.push('/syllabus/quiz')} className="w-full h-12 rounded-xl">
+                               Back to Tests
+                           </Button>
+                       </div>
+                  </div>
+              </div>
+              <SyllabusLockModal open={paywallOpen} onOpenChange={setPaywallOpen} />
+          </>
+      );
+  }
 
   // Retry Logic Check
   const effectiveAttempts = userAttempts + retryCount;
@@ -92,7 +142,7 @@ export function QuizPlayClient({ questions, mode, testId, userId, maxRetries = n
         questions={questions}
         mode={mode}
         testId={testId}
-        userId={userId}
+        userId={userId || 'guest'}
         timeLimitInMinutes={mode === 'full' ? 120 : 20} // 2 hours for FLT, 20 mins for Unit
         onExit={() => router.push('/syllabus')}
         onRetry={() => {

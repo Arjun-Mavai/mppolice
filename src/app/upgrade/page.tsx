@@ -35,6 +35,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from "@/components/ui/progress"
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { AppFooter } from '@/components/layout/AppFooter';
+import { DualLanguageShowcase } from '@/components/home/DualLanguageShowcase';
+import { FeatureShowcase } from '@/components/home/FeatureShowcase';
 
 export default function UpgradePage() {
   const router = useRouter();
@@ -217,7 +219,7 @@ export default function UpgradePage() {
                       </span>
                   </div>
 
-                  {!(globalUser as any)?.is_pro && (
+                  {!globalUser && (
                       <Button 
                           onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
                           className="h-16 px-12 rounded-full text-xl font-bold bg-slate-900 text-white hover:bg-slate-800 shadow-2xl shadow-slate-900/30 hover:scale-105 active:scale-95 transition-all w-full sm:w-auto ring-4 ring-slate-100"
@@ -226,7 +228,7 @@ export default function UpgradePage() {
                       </Button>
                   )}
 
-                  {(globalUser as any)?.is_pro && (
+                  {globalUser && (
                       <div className="flex gap-4">
                           <Button 
                               onClick={() => router.push('/dashboard')}
@@ -766,6 +768,14 @@ export default function UpgradePage() {
           </div>
       </section>
 
+
+
+       {/* --- NEW: DUAL LANGUAGE SHOWCASE --- */}
+       <DualLanguageShowcase />
+
+       {/* --- NEW: FEATURE SHOWCASE (Best Looking) --- */}
+       <FeatureShowcase />
+
        {/* --- FEATURE SECTION 4: REAL EXAM SIMULATION (GRADIENT) --- */}
        <section className="py-32 relative bg-slate-900 text-white overflow-hidden">
            {/* Background Mesh */}
@@ -916,33 +926,17 @@ export default function UpgradePage() {
 
     
 
-       {/* Pricing Section */}
-       <section id="pricing" className="py-24 bg-white relative">
-           <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
-           <div className="max-w-5xl mx-auto px-4">
-                <PremiumMarketing onUnlock={handleUnlock} />
-           </div>
-       </section>
+       {/* Pricing Section - Conditionally Render for Non-Pro Users */}
+       {!(globalUser as any)?.is_pro && (
+           <section id="pricing" className="py-24 bg-white relative">
+               <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
+               <div className="max-w-5xl mx-auto px-4">
+                    <PremiumMarketing onUnlock={handleUnlock} />
+               </div>
+           </section>
+       )}
 
-       {/* Footer */}
-       <footer className="bg-slate-950 text-slate-400 py-16 px-6 border-t border-slate-800">
-           <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-               <div className="flex flex-col items-center md:items-start gap-4">
-                   <div className="flex items-center gap-2">
-                       <div className="w-10 h-10 bg-white text-slate-900 rounded-xl flex items-center justify-center shadow-lg shadow-white/10">
-                           <Sparkles size={20} />
-                       </div>
-                       <span className="font-bold text-white text-2xl tracking-tight">Mindful</span>
-                   </div>
-                   <p className="text-slate-500 text-sm max-w-xs text-center md:text-left">
-                       Empowering MPPSC aspirants with technology, analytics, and quality content.
-                   </p>
-               </div>
-               <div className="text-sm font-medium">
-                   © 2024 Mindful Education. All rights reserved.
-               </div>
-           </div>
-       </footer>
+
     </div>
   );
 }

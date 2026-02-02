@@ -25,7 +25,7 @@ import { PremiumExplanation } from './PremiumExplanation';
 
 interface QuizInterfaceProps {
     questions: Question[];
-    mode: 'topic' | 'full';
+    mode: 'topic' | 'full' | 'pyq';
     timeLimitInMinutes: number; // 10 or 60
     testId: string;
     userId: string;
@@ -270,8 +270,9 @@ export function QuizInterface(props: QuizInterfaceProps) {
 
                          {/* Question Text */}
                          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-normal">
-                             {/* Support Hindi Question if available, else fallback */}
-                             {language === 'hi' && (currentQuestion as any).q_hi ? (currentQuestion as any).q_hi : currentQuestion.question}
+                             {language === 'en' && currentQuestion.questionEn 
+                                 ? currentQuestion.questionEn 
+                                 : currentQuestion.question}
                          </h2>
 
                           <div className="space-y-3">
@@ -295,9 +296,9 @@ export function QuizInterface(props: QuizInterfaceProps) {
                                       // Assuming 'text' is default/Hindi and 'textEn' is English based on usage context
                                       // Or if 'text' matches the current language requirement
                                       if (language === 'hi') {
-                                          optionText = opt.text || opt.textEn || JSON.stringify(opt);
+                                          optionText = opt.text || opt.textEn || opt.text_en || JSON.stringify(opt);
                                       } else {
-                                          optionText = opt.textEn || opt.text || JSON.stringify(opt);
+                                          optionText = opt.textEn || opt.text_en || opt.text || JSON.stringify(opt);
                                       }
                                   }
 

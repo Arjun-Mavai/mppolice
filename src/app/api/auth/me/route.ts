@@ -1,28 +1,28 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
-import { cookies } from 'next/headers';
+import { verifyAuth } from '@/lib/auth';
 
-export async function GET(request: Request) {
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const userId = cookieStore.get('auth_token')?.value;
+    const user = await verifyAuth();
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user) {
+      return NextResponse.json({ user: null });
     }
 
-    const { data: user, error } = await supabase
-      .from('card_users')
-      .select('id, email, name, created_at, is_pro')
-      .eq('id', userId)
-      .single();
-
-    if (error || !user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    return NextResponse.json({ user });
+    return NextResponse.json({ 
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        is_subscribed: user.isSubscribed,
+        plan_tier: user.planTier,
+      }
+    });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('Session check failed:', error);
+    return NextResponse.json({ user: null }, { status: 500 });
   }
 }

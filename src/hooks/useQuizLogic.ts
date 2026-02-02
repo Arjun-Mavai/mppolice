@@ -4,7 +4,7 @@ import { Question } from '@/types/quiz';
 
 interface UseQuizLogicProps {
     questions: Question[];
-    mode: 'topic' | 'full';
+    mode: 'topic' | 'full' | 'pyq';
     timeLimitInMinutes: number;
     testId: string;
     userId: string;
@@ -72,6 +72,11 @@ export function useQuizLogic({
     const handleSubmit = useCallback(async () => {
         setIsSubmitted(true);
         
+        // If guest (no userId), don't save to DB, just show results locally
+        if (!userId) {
+            return;
+        }
+
         try {
             const { submitTestAttempt } = await import('@/actions/test-actions');
             
@@ -83,6 +88,7 @@ export function useQuizLogic({
             
             // Calculate final time for the last question active
             const now = Date.now();
+            // ... (rest of logic)
             const duration = (now - questionStartTimeRef.current) / 1000;
             const currentQId = questions[currentQuestionIndex].id;
             

@@ -4,11 +4,12 @@ import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { ArrowLeft, Mail, Copy, CheckCircle2, Download, Quote, Sparkles, ShieldCheck } from "lucide-react"
+import { ArrowLeft, Mail, Copy, CheckCircle2, Download, Quote, Sparkles, ShieldCheck, MessageCircle } from "lucide-react"
 import { toast } from "sonner"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { ExitSurveyModal } from "./ExitSurveyModal"
 
 function PaymentContent() {
   const router = useRouter()
@@ -26,10 +27,49 @@ function PaymentContent() {
 
   const currencySymbol = currency === "INR" ? "₹" : "$"
   const displayAmount = `${currencySymbol}${amount}`
-  const planName = amount === "299" ? "Premium Yearly Plan" : "Basic Yearly Plan"
-  // Calculate original price for strike-through (approx 3x or 2x)
-  const originalAmount = amount === "299" ? `${currencySymbol}799` : `${currencySymbol}299`
-  const discount = amount === "299" ? "63% OFF" : "67% OFF"
+  const planName = amount === "299" ? "Premium Yearly Plan" : (amount === "199" ? "Upgrade to Pro" : "Basic Yearly Plan")
+  // Calculate original price 
+  const originalAmount = amount === "299" ? `${currencySymbol}799` : (amount === "199" ? `${currencySymbol}499` : `${currencySymbol}299`)
+  const discount = amount === "299" ? "63% OFF" : (amount === "199" ? "60% OFF" : "67% OFF")
+
+  // Back Navigation Interception
+  const [showExitModal, setShowExitModal] = useState(false)
+  const isSurveyCompleted = typeof window !== 'undefined' ? localStorage.getItem('payment_exit_survey_completed') : null;
+
+  useEffect(() => {
+    // If already surveyed, no need to intercept
+    if (isSurveyCompleted) return;
+
+    // Push state to detect back button
+    window.history.pushState(null, '', window.location.href);
+
+    const handlePopState = (event: PopStateEvent) => {
+       // Check FRESH value from localStorage (in case it changed)
+       const currentStatus = localStorage.getItem('payment_exit_survey_completed');
+       
+       if (!currentStatus) {
+          // Prevent back, show modal
+          window.history.pushState(null, '', window.location.href);
+          setShowExitModal(true);
+       } 
+       // If it IS surveyed, we don't do anything, letting the browser's back action proceed?
+       // Actually, popstate happens AFTER the URL changes (but before page reload if SPA).
+       // If we don't pushState again, the URL has already changed to the previous one (e.g. /syllabus).
+       // So if surveyed, we just let it be.
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isSurveyCompleted]);
+
+  const handleConfirmExit = () => {
+      setShowExitModal(false);
+      localStorage.setItem('payment_exit_survey_completed', 'true'); 
+      // Force navigation back
+      router.back(); 
+      // Fallback
+      setTimeout(() => router.push('/syllabus'), 100);
+  };
 
   const paymentEmail = "mppscsyllabus@gmail.com"
   const paymentSubject = `Payment Confirmation - ${planName}`
@@ -58,9 +98,18 @@ Thank you,
     const mailtoLink = `mailto:${paymentEmail}?subject=${encodeURIComponent(paymentSubject)}&body=${encodeURIComponent(paymentBody)}`
     window.open(mailtoLink)
   }
+  
+  const openTelegramBot = () => {
+      window.open('https://t.me/MPPSC_Support_Bot', '_blank');
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-100 selection:text-indigo-900 pb-20">
+      <ExitSurveyModal 
+        open={showExitModal} 
+        onOpenChange={setShowExitModal} 
+        onConfirmExit={handleConfirmExit} 
+      />
       
       {/* Header */}
       <nav className="fixed w-full z-50 bg-white/70 backdrop-blur-xl border-b border-white/20 shadow-sm">
@@ -73,12 +122,12 @@ Thank you,
                     Mindful
                 </span>
             </Link>
-             <Link href="/syllabus">
+             <button onClick={() => setShowExitModal(true)}>
                 <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100/50">
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Back to Syllabus
                 </Button>
-            </Link>
+            </button>
         </div>
       </nav>
 
@@ -88,13 +137,13 @@ Thank you,
         <div className="text-center space-y-4">
              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-xs font-bold text-indigo-600 shadow-sm mb-4">
                 <Sparkles className="w-3 h-3" />
-                {amount === "299" ? "Premium Access" : "Basic Access"}
+                {amount === "299" || amount === "199" ? "Premium Access" : "Basic Access"}
               </div>
               <h1 className="text-4xl md:text-5xl font-extrabold font-display tracking-tight text-slate-900">
-                {amount === "299" ? "Unlock Complete Mastery" : "Unlock Syllabus Access"}
+                {amount === "299" || amount === "199" ? "Unlock Complete Mastery" : "Unlock Syllabus Access"}
               </h1>
               <p className="text-lg text-slate-600 max-w-lg mx-auto">
-                 {amount === "299" 
+                 {amount === "299" || amount === "199"
                     ? "Get yearly access to 10 units, Quizzes, Mock Tests, and Smart Analytics." 
                     : "Get yearly access to all 10 units of the MPPSC Syllabus with detailed notes."}
               </p>
@@ -171,8 +220,27 @@ Thank you,
                    </div>
                    
                    <p className="text-sm text-slate-600 mb-6 leading-relaxed">
-                       After successful payment, please send the payment screenshot to the email below to activate your account.
+                       Congratulations on taking the first step! 🎉 <br/>
+                       Please send the screenshot to activate your account immediately.
                    </p>
+
+                   <div className="grid grid-cols-2 gap-3 mb-6">
+                        <Button 
+                             onClick={openEmailClient}
+                             className="w-full bg-slate-900 text-white hover:bg-slate-800 h-10 font-bold rounded-lg shadow-md"
+                         >
+                             <Mail className="w-4 h-4 mr-2" />
+                             Via Email
+                        </Button>
+                        <Button 
+                             onClick={openTelegramBot}
+                             className="w-full bg-[#2AABEE] text-white hover:bg-[#229ED9] h-10 font-bold rounded-lg shadow-md"
+                         >
+                             <MessageCircle className="w-4 h-4 mr-2" />
+                             Via Bot
+                        </Button>
+                   </div>
+
 
                    <div className="space-y-3">
                        <div className="group flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/30 transition-all cursor-pointer" onClick={openEmailClient}>
@@ -206,15 +274,8 @@ Thank you,
                        </div>
                    </div>
 
-                   <Button 
-                        onClick={openEmailClient}
-                        className="w-full mt-6 bg-slate-900 text-white hover:bg-slate-800 h-11 font-bold rounded-lg shadow-lg shadow-slate-200 text-base"
-                    >
-                        <Mail className="w-5 h-5 mr-3" />
-                        Open Email App to Send
-                   </Button>
-                   <p className="text-center text-xs text-slate-400 mt-3 font-medium">
-                       Opens your default email client with details pre-filled
+                   <p className="text-center text-xs text-slate-400 mt-4 font-medium">
+                       We usually reply within 10 minutes on the Bot! ⚡️
                    </p>
                 </motion.div>
 

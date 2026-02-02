@@ -8,6 +8,7 @@ import Link from "next/link"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Quote, Loader2, ArrowLeft } from "lucide-react"
+import { useSettingsStore } from "@/store/useSettingsStore";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -31,6 +32,9 @@ export default function LoginPage() {
       const data = await res.json()
 
       if (res.ok) {
+        // Update Global Store
+        useSettingsStore.getState().setUser(data.user, true);
+        
         toast.success("Welcome back!", {
           description: "Accessing your syllabus...",
         })

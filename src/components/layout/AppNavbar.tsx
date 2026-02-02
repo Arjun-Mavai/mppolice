@@ -16,7 +16,8 @@ import {
   Languages,
   Send,
   GraduationCap,
-  Crown
+  Crown,
+  Upload
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,9 @@ interface AppNavbarProps {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    role?: string;
+    is_subscribed?: boolean;
+    plan_tier?: 'free' | 'lite' | 'pro';
   } | null;
 }
 
@@ -52,7 +56,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const [isScrolled, setIsScrolled] = React.useState(false);
   
   // Use Global Store
-  const { language, setLanguage, user: globalUser } = useSettingsStore();
+  const { language, setLanguage, user: globalUser, setUser } = useSettingsStore();
   
   // Create a merged user object (prop + global), favoring global if updated
   // Actually, usually global store should be source of truth if we set it on mount in layout
@@ -63,16 +67,42 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
       setIsScrolled(window.scrollY > 10);
     };
     window.addEventListener("scroll", handleScroll);
+    
+    // Hydrate user session if not present and no initial user
+    // This restores session on page reload
+    if (!initialUser && !globalUser) {
+        fetch('/api/auth/me')
+            .then(res => res.json())
+            .then(data => {
+                if (data.user) {
+                    setUser(data.user, true);
+                }
+            })
+            .catch(err => console.error("Failed to restore session:", err));
+    }
+
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [initialUser, globalUser, setUser]);
 
   const handleLogout = async () => {
       try {
-        await fetch('/api/auth/logout', { method: 'POST' });
-        router.push('/login');
-        router.refresh();
+        // Clear Client Store FIRST to update UI immediately
+        setUser(null, false);
+        
+        const response = await fetch('/api/auth/mppsc-logout', { method: 'POST' });
+        
+        if (response.ok) {
+          // Redirect to login without callback to prevent auto-redirect loop
+          router.push('/login');
+          // Force a hard refresh to clear any cached state
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 100);
+        }
       } catch (error) {
         console.error('Logout failed:', error);
+        // Even if API fails, redirect to login
+        window.location.href = '/login';
       }
   };
 
@@ -98,7 +128,13 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
+          <div 
+            onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                router.push('/');
+            }}
+            className="flex items-center gap-2 group cursor-pointer"
+          >
             <div className="w-9 h-9 bg-slate-900 text-white rounded-xl flex items-center justify-center shadow-lg shadow-slate-900/20 transition-transform group-hover:scale-105">
                  <span className="font-bold text-xs tracking-tighter">MP</span>
             </div>
@@ -106,11 +142,19 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                 <span className="font-bold text-lg font-display text-slate-900 leading-none">MPPSC<span className="text-indigo-600">26</span></span>
                 <span className="text-[10px] text-slate-500 font-medium tracking-wider uppercase">Mindful Prep</span>
             </div>
-          </Link>
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1 bg-slate-100/50 p-1.5 rounded-full border border-slate-200/50 backdrop-blur-md">
-            {navItems.map((item) => {
+            {navItems
+              .filter(item => {
+                // Hide Dashboard if user is not logged in
+                if (item.name === "Dashboard") {
+                  return !!user;
+                }
+                return true;
+              })
+              .map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
               return (
@@ -129,7 +173,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                 </Link>
               );
             })}
-                  {(user as any)?.is_pro ? (
+                  {(user && user.is_subscribed) ? (
                     <div className="px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-gradient-to-r from-slate-900 to-slate-800 text-white border border-slate-700 shadow-lg cursor-default relative overflow-hidden group">
                         <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent,25%,rgba(255,255,255,0.1),50%,transparent)] bg-[length:250%_100%] animate-shimmer" />
                         <Sparkles size={12} className="text-yellow-400 fill-yellow-400" />
@@ -200,10 +244,26 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
-                  {/* <DropdownMenuItem onClick={() => router.push('/settings')}>
-                     <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </DropdownMenuItem> */}
+                  
+                  {(user && user.role === 'admin') && (
+                    <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>Admin</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => router.push('/admin/dashboard')}>
+                            <LayoutDashboard className="mr-2 h-4 w-4" />
+                            <span>Dashboard</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push('/admin/upload')}>
+                            <Upload className="mr-2 h-4 w-4" />
+                            <span>Upload Content</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push('/admin/upload-syllabus')}>
+                            <BookOpen className="mr-2 h-4 w-4" />
+                            <span>Upload Syllabus</span>
+                        </DropdownMenuItem>
+                    </>
+                  )}
+
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
@@ -271,9 +331,9 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                     <div className="flex-1 overflow-y-auto px-6 py-6 space-y-2">
                          {navItems
                             .filter(item => {
-                                // Hide Dashboard if user is NOT pro
+                                // Hide Dashboard if user is not logged in
                                 if (item.name === "Dashboard") {
-                                    return (user as any)?.is_pro;
+                                    return !!user;
                                 }
                                 return true;
                             })
@@ -307,7 +367,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                             Join Telegram Mission
                         </a>
 
-                        {!(user as any)?.is_pro ? (
+                        {!(user as any)?.is_subscribed ? (
                             <Link
                                 href="/upgrade"
                                 className="px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-3 bg-slate-900 text-white mt-4 shadow-lg shadow-slate-900/20"
@@ -328,6 +388,40 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                                 </div>
                             </div>
                         )}
+
+                        {/* Admin Mobile Menu - Explicitly for Admin Role */}
+                        {(user as any)?.role === 'admin' && (
+                            <div className="pt-4 border-t border-slate-100 mt-4">
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Admin Controls</p>
+                                <div className="space-y-1">
+                                    <Link
+                                        href="/admin/dashboard"
+                                        className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-3"
+                                        onClick={() => document.body.click()}
+                                    >
+                                        <LayoutDashboard size={18} />
+                                        Dashboard
+                                    </Link>
+                                    <Link
+                                        href="/admin/upload"
+                                        className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-3"
+                                        onClick={() => document.body.click()}
+                                    >
+                                        <Upload size={18} />
+                                        Upload Center
+                                    </Link>
+                                    <Link
+                                        href="/admin/upload-syllabus"
+                                        className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-3"
+                                        onClick={() => document.body.click()}
+                                    >
+                                        <BookOpen size={18} />
+                                        Syllabus Manager
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
+
                     </div>
 
                     <div className="p-6 border-t border-slate-100 bg-slate-50/50">

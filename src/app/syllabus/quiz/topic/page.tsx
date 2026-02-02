@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ChevronRight, Search, BookOpen, Layers, Sparkles } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Search, BookOpen, Layers, Sparkles, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,7 +11,9 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { syllabusData } from '@/data/syllabusData';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { toast } from "sonner"; // Assuming toast is available or use existing import
+import { toast } from "sonner"; 
+import { SyllabusLockModal } from '@/components/SyllabusLockModal';
+import { PLAN_LIMITS } from '@/config/plans';
 
 const UNIT_COLORS = [
     'bg-rose-50 text-rose-600 border-rose-100 group-hover:bg-rose-600 group-hover:text-white',
@@ -28,10 +30,11 @@ const UNIT_COLORS = [
 
 export default function TopicSelectionPage() {
     const router = useRouter();
-    const { language } = useSettingsStore();
+    const { language, isSubscribed } = useSettingsStore();
 
     const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [paywallOpen, setPaywallOpen] = useState(false);
 
     // Prepare Unit Data
     const units = Object.entries(syllabusData.units).map(([key, unit], index) => {
@@ -49,6 +52,24 @@ export default function TopicSelectionPage() {
     });
 
     const handleTopicClick = (unitId: string, topicId: number) => {
+        // Determine user tier
+        const user = (useSettingsStore.getState().user as any);
+        const userTier = user?.plan_tier || 'free';
+        // If no user, it's guest. If user but free/not subscribed, it's free/lite logic
+        const effectiveTier = !user ? 'guest' : (user?.is_subscribed ? (userTier === 'free' ? 'lite' : userTier) : 'free');
+        
+        const limit = PLAN_LIMITS[effectiveTier as keyof typeof PLAN_LIMITS]?.topic_tests_limit || 0;
+        
+        // Topic IDs are 1-based index within the unit usually, but here 'topicId' is passed.
+        // Assuming topicId corresponds to order.
+        // If topicId > limit, it's locked.
+        const isLocked = topicId > limit;
+        
+        if (isLocked) {
+            setPaywallOpen(true);
+            return;
+        }
+        
         // Placeholder for navigation
         console.log("Selected", unitId, topicId);
         toast.info(language === 'hi' ? 'टेस्ट जल्द ही आ रहा है!' : 'Test coming soon!');
@@ -163,36 +184,71 @@ export default function TopicSelectionPage() {
                                 <ScrollArea className="h-[calc(100vh-220px)]">
                                     <div className="p-4 grid gap-3 md:grid-cols-2">
                                         {filteredTopics.length > 0 ? (
-                                            filteredTopics.map((topic: any, index: number) => (
+                                            filteredTopics.map((topic: any, index: number) => {
+                                                const user = (useSettingsStore.getState().user as any);
+                                                const userTier = user?.plan_tier || 'free';
+                                                const effectiveTier = user?.is_subscribed ? (userTier === 'free' ? 'lite' : userTier) : 'free';
+                                                const limit = PLAN_LIMITS[effectiveTier as keyof typeof PLAN_LIMITS]?.topic_tests_limit || 0;
+                                                
+                                                const isLocked = topic.id > limit; // Assuming topic.id is the 1-based index integer
+                                                
+                                                return (
                                                 <motion.div 
                                                     key={topic.id}
                                                     initial={{ opacity: 0, y: 10 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     transition={{ delay: index * 0.03 }}
                                                     onClick={() => handleTopicClick(selectedUnitId, topic.id)}
-                                                    className="
-                                                        flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 
-                                                        hover:bg-indigo-50 hover:border-indigo-100 cursor-pointer transition-all group
-                                                    "
+                                                    className={`
+                                                        flex items-center justify-between p-4 rounded-xl border transition-all group
+                                                        ${isLocked 
+                                                            ? 'border-slate-200 bg-slate-50/50 opacity-70 cursor-not-allowed' 
+                                                            : 'border-slate-100 bg-slate-50/50 hover:bg-indigo-50 hover:border-indigo-100 cursor-pointer'
+                                                        }
+                                                    `}
                                                 >
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-full bg-white text-indigo-600 flex items-center justify-center border border-indigo-50 font-bold text-sm shadow-sm group-hover:scale-110 transition-transform">
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border font-bold text-sm shadow-sm transition-transform ${
+                                                            isLocked 
+                                                                ? 'bg-slate-100 text-slate-400 border-slate-200' 
+                                                                : 'bg-white text-indigo-600 border-indigo-50 group-hover:scale-110'
+                                                        }`}>
                                                             {topic.id}
                                                         </div>
-                                                        <div className="space-y-0.5">
-                                                            <span className="font-semibold text-slate-700 group-hover:text-indigo-900 transition-colors line-clamp-2 leading-tight">
-                                                                {topic.front}
-                                                            </span>
+                                                        <div className="space-y-0.5 flex-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className={`font-semibold transition-colors line-clamp-2 leading-tight ${
+                                                                    isLocked 
+                                                                        ? 'text-slate-500' 
+                                                                        : 'text-slate-700 group-hover:text-indigo-900'
+                                                                }`}>
+                                                                    {topic.front}
+                                                                </span>
+                                                                {isLocked && (
+                                                                    <Badge className="bg-slate-900 text-white text-[10px] px-2 py-0.5">
+                                                                        <Lock className="w-3 h-3 mr-1" />
+                                                                        Premium
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
                                                             {topic.back && (
-                                                                <p className="text-xs text-slate-400 line-clamp-1 group-hover:text-indigo-400">
+                                                                <p className={`text-xs line-clamp-1 ${
+                                                                    isLocked 
+                                                                        ? 'text-slate-400' 
+                                                                        : 'text-slate-400 group-hover:text-indigo-400'
+                                                                }`}>
                                                                     {topic.back}
                                                                 </p>
                                                             )}
                                                         </div>
                                                     </div>
-                                                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 transition-transform group-hover:translate-x-1" />
+                                                    <ChevronRight className={`w-5 h-5 transition-transform ${
+                                                        isLocked 
+                                                            ? 'text-slate-300' 
+                                                            : 'text-slate-300 group-hover:text-indigo-400 group-hover:translate-x-1'
+                                                    }`} />
                                                 </motion.div>
-                                            ))
+                                            )})
                                         ) : (
                                             <div className="col-span-2 text-center py-20">
                                                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
@@ -209,6 +265,8 @@ export default function TopicSelectionPage() {
                     )}
                 </AnimatePresence>
             </div>
+            
+            <SyllabusLockModal open={paywallOpen} onOpenChange={setPaywallOpen} />
         </div>
     );
 }

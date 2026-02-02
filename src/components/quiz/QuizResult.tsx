@@ -13,7 +13,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 interface QuizResultProps {
     questions: Question[];
     answers: Record<string, number>;
-    mode: 'topic' | 'full';
+    mode: 'topic' | 'full' | 'pyq';
     timeTaken: number; // in seconds
     onRetry: () => void;
     onExit: () => void;

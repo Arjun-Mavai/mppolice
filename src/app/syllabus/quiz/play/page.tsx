@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function QuizPlayPage({ searchParams }: { searchParams: Promise<{ mode?: string; unitId?: string; testId?: string }> }) {
     const params = await searchParams;
-    const mode = (params.mode as 'topic' | 'full') || 'topic';
+    const mode = (params.mode as 'topic' | 'full' | 'pyq') || 'topic';
     const unitId = params.unitId;
     const testId = params.testId;
 
@@ -22,13 +22,15 @@ export default async function QuizPlayPage({ searchParams }: { searchParams: Pro
     let maxRetries: number | null = null;
     let userAttemptsCount = 0;
     
+    // Auth is OPTIONAL - only required for tracking attempts and premium content
     const user = await verifyAuth();
-    if (!user) {
-        redirect('/login?callback=/syllabus/quiz/play');
-    }
-    
-    const isPro = user.isSubscribed || false;
+    const isPro = user?.isSubscribed || false;
     let resolvedTestId = "";
+    
+    // For premium content (FLT, PYQ), check if user is subscribed
+    // If not subscribed, we'll pass a flag to show paywall modal instead of redirecting
+    const isPremiumMode = mode === 'full' || mode === 'pyq';
+    const shouldShowPaywall = isPremiumMode && !isPro;
 
     // Helper to get user ID (mock for now if no auth implemented in this file yet)
     // Ideally we use `verifyAuth` or similar. 
@@ -57,9 +59,11 @@ export default async function QuizPlayPage({ searchParams }: { searchParams: Pro
                      quizQuestions = test.questions.map(q => ({
                          id: q.id,
                          question: q.questionText,
+                         questionEn: q.questionTextEn || null,
                          options: q.options as string[],
                          correctAnswer: Number(q.correctAnswer),
                          explanation: q.explanation || "",
+                         explanationEn: q.explanationEn || null,
                          marks: q.marks,
                          negativeMarks: q.negativeMarks || 0
                      }));
@@ -67,8 +71,44 @@ export default async function QuizPlayPage({ searchParams }: { searchParams: Pro
                  }
              }
 
+        } else if (mode === 'pyq') {
+            // 3. PYQ Mode Logic
+            if (!testId) {
+                const latestPYQ = await db.query.tests.findFirst({
+                    where: (calc, { eq }) => eq(calc.type, 'PYQ'),
+                    orderBy: (calc, { desc }) => [desc(calc.createdAt)]
+                });
+                if (latestPYQ) {
+                    resolvedTestId = latestPYQ.id;
+                }
+            } else {
+                resolvedTestId = testId;
+            }
+
+            if (resolvedTestId) {
+                const test = await db.query.tests.findFirst({
+                    where: (calc, { eq }) => eq(calc.id, resolvedTestId),
+                    with: {questions: {orderBy: (q, {asc}) => [asc(q.order)]}}
+                });
+
+                if (test) {
+                    quizQuestions = test.questions.map(q => ({
+                        id: q.id,
+                        question: q.questionText,
+                        questionEn: q.questionTextEn || null,
+                        options: q.options as string[],
+                        correctAnswer: Number(q.correctAnswer),
+                        explanation: q.explanation || "",
+                        explanationEn: q.explanationEn || null,
+                        marks: q.marks,
+                        negativeMarks: q.negativeMarks || 0
+                    }));
+                    maxRetries = test.maxRetries;
+                }
+            }
+
         } else {
-            // 2. Topic Mode Logic
+            // 4. Topic Mode Logic (default)
             if (unitId) {
                 const latestUnitTest = await db.query.tests.findFirst({
                     where: (calc, { eq, and }) => and(eq(calc.type, 'UNIT'), eq(calc.unitId, unitId)),
@@ -88,10 +128,12 @@ export default async function QuizPlayPage({ searchParams }: { searchParams: Pro
                      quizQuestions = dbQuestions.map(q => ({
                         id: q.id,
                         question: q.questionText,
+                        questionEn: q.questionTextEn || null,
                         options: q.options as string[],
                         correctAnswer: Number(q.correctAnswer),
                         explanation: q.explanation || "",
-                         marks: q.marks,
+                        explanationEn: q.explanationEn || null,
+                        marks: q.marks,
                         negativeMarks: q.negativeMarks || 0
                     }));
                     maxRetries = latestUnitTest.maxRetries;
@@ -105,11 +147,13 @@ export default async function QuizPlayPage({ searchParams }: { searchParams: Pro
                  quizQuestions = dbQuestions.map(q => ({
                     id: q.id,
                     question: q.questionText,
+                    questionEn: q.questionTextEn || null,
                     options: q.options as string[],
                     correctAnswer: Number(q.correctAnswer),
                     explanation: q.explanation || "",
-                     marks: q.marks,
-                        negativeMarks: q.negativeMarks || 0
+                    explanationEn: q.explanationEn || null,
+                    marks: q.marks,
+                    negativeMarks: q.negativeMarks || 0
                 }));
                 resolvedTestId = 'general-practice-v1';
             }
@@ -120,8 +164,8 @@ export default async function QuizPlayPage({ searchParams }: { searchParams: Pro
              resolvedTestId = 'general-practice-v1';
         }
         
-        // Fetch User Attempts
-        if (resolvedTestId) {
+        // Fetch User Attempts (only if user is logged in)
+        if (resolvedTestId && user) {
             const attempts = await db.select({count: sql<number>`count(*)`}).from(userAttempts)
                .where(and(eq(userAttempts.userId, user.id), eq(userAttempts.testId, resolvedTestId)));
             userAttemptsCount = Number(attempts[0].count);
@@ -140,7 +184,8 @@ export default async function QuizPlayPage({ searchParams }: { searchParams: Pro
             userAttempts={userAttemptsCount}
             isPro={isPro}
             testId={resolvedTestId}
-            userId={user.id}
+            userId={user?.id || null}
+            shouldShowPaywall={shouldShowPaywall}
         />
     );
 }

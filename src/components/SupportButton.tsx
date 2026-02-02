@@ -3,17 +3,12 @@ import React from 'react';
 import { MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from "@/store/useSettingsStore";
-
 export function SupportButton() {
-  const { isSubscribed } = useSettingsStore();
-  const telegramBotLink = "https://t.me/mppss_26_bot"; // Original link
+  const { user } = useSettingsStore();
+  const telegramBotLink = "https://t.me/mppss_26_bot";
 
-  // Hide for Pro users if previously requested, but user said "same as before"
-  // Assuming previously it might have been hidden or shown.
-  // User asked for "direct wo support bot hi open kar do".
-  // Let's keep it visible for now, or match previous behavior.
-  // User asked for "direct wo support bot hi open kar do" regardless of subscription.
-  // if (isSubscribed) return null;  
+  // Hide for logged in users
+  if (user) return null;  
 
   return (
     <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-3">

@@ -4,12 +4,24 @@ import { persist } from 'zustand/middleware';
 
 type Language = 'en' | 'hi';
 
+export interface User {
+  id?: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role?: string; // 'admin' | 'user'
+  is_subscribed?: boolean;
+  plan_tier?: 'free' | 'lite' | 'pro';
+}
+
 interface SettingsState {
   language: Language;
   setLanguage: (lang: Language) => void;
-  user: { id?: string; name?: string; email?: string } | null;
+  user: User | null;
   isSubscribed: boolean;
-  setUser: (user: { id?: string; name?: string; email?: string } | null, isSubscribed: boolean) => void;
+  isLockModalOpen: boolean;
+  setLockModalOpen: (isOpen: boolean) => void;
+  setUser: (user: User | null, isSubscribed: boolean) => void;
   // We can add more settings here like 'theme'
 }
 
@@ -20,6 +32,8 @@ export const useSettingsStore = create<SettingsState>()(
       setLanguage: (lang) => set({ language: lang }),
       user: null,
       isSubscribed: false,
+      isLockModalOpen: false,
+      setLockModalOpen: (isOpen) => set({ isLockModalOpen: isOpen }),
       setUser: (user, isSubscribed) => set({ user, isSubscribed }),
     }),
     {

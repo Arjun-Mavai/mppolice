@@ -1,6 +1,7 @@
 export interface AdminDashboardStats {
     totalTests: number;
     totalQuestions: number;
+    totalBlogs: number;
     typeCount: {
         FLT: number;
         UNIT: number;
@@ -9,6 +10,7 @@ export interface AdminDashboardStats {
         PYQ: number;
         [key: string]: number;
     };
+    blogCategoryCount: Record<string, number>;
 }
 
 export interface RecentUpload {
@@ -25,6 +27,7 @@ export interface AdminDashboardResponse {
     success: boolean;
     stats?: AdminDashboardStats;
     recentUploads?: RecentUpload[];
+    recentBlogs?: any[];
     topicCoverage?: Record<string, string[]>;
     error?: string;
 }

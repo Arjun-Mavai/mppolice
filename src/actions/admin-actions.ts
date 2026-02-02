@@ -1,10 +1,10 @@
 'use server';
 
 import { db } from '@/db';
-import { tests, questions } from '@/db/schema';
+import { tests, questions, contentBlogs, paymentExitReasons } from '@/db/schema';
 import { nanoid } from 'nanoid';
 import { revalidatePath } from 'next/cache';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, desc } from 'drizzle-orm';
 import { AdminDashboardResponse } from '@/types/admin';
 
 // Helper to fetch tests for the dropdown
@@ -200,8 +200,17 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
             updatedAt: tests.updatedAt
         }).from(tests);
 
+        const blogsData = await db.select({
+            id: contentBlogs.id,
+            title: contentBlogs.title,
+            category: contentBlogs.category,
+            contentType: contentBlogs.contentType,
+            createdAt: contentBlogs.createdAt
+        }).from(contentBlogs);
+
         const totalTests = testsData.length;
         const totalQuestions = testsData.reduce((acc, t) => acc + (t.totalQuestions || 0), 0);
+        const totalBlogs = blogsData.length;
         
         const typeCount = {
             FLT: 0,
@@ -211,7 +220,14 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
             PYQ: 0
         };
 
+        // Blog category count
+        const blogCategoryCount: Record<string, number> = {};
+        blogsData.forEach(b => {
+            blogCategoryCount[b.category] = (blogCategoryCount[b.category] || 0) + 1;
+        });
+
         const recentUploads = testsData.sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0)).slice(0, 5);
+        const recentBlogs = blogsData.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)).slice(0, 5);
 
         // Topic Coverage Map: Unit -> Set of TopicIds
         const topicCoverage: Record<string, Set<string>> = {};
@@ -241,9 +257,12 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
             stats: {
                 totalTests,
                 totalQuestions,
-                typeCount
+                totalBlogs,
+                typeCount,
+                blogCategoryCount
             },
             recentUploads,
+            recentBlogs,
             topicCoverage: serializedCoverage
         };
 
@@ -251,4 +270,21 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
          console.error("Dashboard Stats Error:", e);
          return { success: false, error: "Failed to fetch stats" };
     }
+}
+// --- PAYMENT EXIT STATS ---
+export async function getPaymentExitStats() {
+  try {
+    const reasons = await db.select().from(paymentExitReasons).orderBy(desc(paymentExitReasons.createdAt)).limit(50);
+    
+    // Group by reason
+    const breakdown = reasons.reduce((acc: any, curr) => {
+      acc[curr.reason] = (acc[curr.reason] || 0) + 1;
+      return acc;
+    }, {});
+
+    return { success: true, reasons, breakdown };
+  } catch (error) {
+    console.error('Failed to fetch payment exit stats:', error);
+    return { success: false, error: 'Failed to fetch stats' };
+  }
 }

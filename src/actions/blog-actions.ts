@@ -17,22 +17,38 @@ export async function uploadBlog(data: any) {
     }
 
     try {
-        const { title, slug, description, category, imageUrl, readingTime, contentJson, contentType } = data;
+        const { imageUrl, contentJson } = data;
         
-        // Parse JSON content to ensure it's valid before saving
-        const content = JSON.parse(contentJson);
+        // Parse and validate JSON structure
+        const parsed = JSON.parse(contentJson);
+        
+        if (!parsed.metadata || !parsed.content) {
+            return { success: false, error: "Invalid JSON: Must contain 'metadata' and 'content' keys" };
+        }
+
+        const { metadata, content } = parsed;
+
+        // Validate required metadata fields
+        if (!metadata.title || !metadata.slug || !metadata.category) {
+            return { success: false, error: "Missing required metadata: title, slug, or category" };
+        }
+
+        // Validate content structure
+        if (!content.hi || !content.en) {
+            return { success: false, error: "Content must have both 'hi' and 'en' keys" };
+        }
 
         await db.insert(contentBlogs).values({
             id: crypto.randomUUID(),
-            title,
-            slug,
-            description,
-            category,
-            imageUrl,
-            readingTime: parseInt(readingTime),
+            title: metadata.title,
+            slug: metadata.slug,
+            description: metadata.description || '',
+            category: metadata.category,
+            imageUrl: imageUrl || null,
+            readingTime: parseInt(metadata.readingTime) || 5,
             content,
-            contentType: contentType || 'blog', // Default to blog
-            isPublished: true, // Auto publish for now
+            contentType: metadata.type || 'blog',
+            isPublished: true,
             createdAt: new Date(),
             updatedAt: new Date(),
         });
@@ -44,7 +60,7 @@ export async function uploadBlog(data: any) {
         if (error.code === 'SQLITE_CONSTRAINT') {
             return { success: false, error: "Slug already exists" };
         }
-        return { success: false, error: "Failed to create blog post" };
+        return { success: false, error: error.message || "Failed to create blog post" };
     }
 }
 
