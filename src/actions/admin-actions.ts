@@ -5,6 +5,7 @@ import { tests, questions } from '@/db/schema';
 import { nanoid } from 'nanoid';
 import { revalidatePath } from 'next/cache';
 import { eq, sql } from 'drizzle-orm';
+import { AdminDashboardResponse } from '@/types/admin';
 
 // Helper to fetch tests for the dropdown
 export async function getExistingTests() {
@@ -33,8 +34,9 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         const existingTestId = formData.get('existingTestId') as string;
         
         const title = formData.get('title') as string;
-        const type = formData.get('type') as 'FLT' | 'UNIT' | 'PYQ' | 'CSAT';
+        const type = formData.get('type') as 'FLT' | 'UNIT' | 'PYQ' | 'CSAT' | 'TOPIC';
         const unitId = formData.get('unitId') as string;
+        const topicId = formData.get('topicId') as string; // Changed from null/undefined
         const jsonInput = formData.get('jsonData') as string;
 
         // Basic Validation
@@ -74,7 +76,8 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
                 title: title,
                 slug: slug,
                 type: type, // FLT, UNIT, etc.
-                unitId: type === 'UNIT' ? unitId : null,
+                unitId: type === 'UNIT' || type === 'TOPIC' ? unitId : null,
+                topicId: type === 'TOPIC' ? topicId : null,
                 description: `Imported test: ${title}`,
                 totalMarks: parsedQuestions.length * 2, // Initial marks
                 totalQuestions: parsedQuestions.length,
@@ -180,5 +183,72 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
     } catch (error) {
         console.error("Upload Error:", error);
         return { success: false, message: `Server Error: ${error instanceof Error ? error.message : "Unknown error"}` };
+    }
+}
+
+// --- DASHBOARD STATS ---
+// --- DASHBOARD STATS ---
+export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> {
+    try {
+        const testsData = await db.select({
+            id: tests.id,
+            type: tests.type,
+            title: tests.title,
+            unitId: tests.unitId,
+            topicId: tests.topicId,
+            totalQuestions: tests.totalQuestions,
+            updatedAt: tests.updatedAt
+        }).from(tests);
+
+        const totalTests = testsData.length;
+        const totalQuestions = testsData.reduce((acc, t) => acc + (t.totalQuestions || 0), 0);
+        
+        const typeCount = {
+            FLT: 0,
+            UNIT: 0,
+            TOPIC: 0,
+            CSAT: 0,
+            PYQ: 0
+        };
+
+        const recentUploads = testsData.sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0)).slice(0, 5);
+
+        // Topic Coverage Map: Unit -> Set of TopicIds
+        const topicCoverage: Record<string, Set<string>> = {};
+
+        testsData.forEach(t => {
+            const normalizedType = t.type?.toUpperCase();
+            if (normalizedType && typeCount.hasOwnProperty(normalizedType)) {
+                // @ts-ignore
+                typeCount[normalizedType]++;
+            }
+            if (normalizedType === 'TOPIC' && t.unitId && t.topicId) {
+                if (!topicCoverage[t.unitId]) {
+                    topicCoverage[t.unitId] = new Set();
+                }
+                topicCoverage[t.unitId].add(t.topicId);
+            }
+        });
+
+        // Convert Sets to Arrays for serialization
+        const serializedCoverage: Record<string, string[]> = {};
+        for (const [unit, topics] of Object.entries(topicCoverage)) {
+             serializedCoverage[unit] = Array.from(topics);
+        }
+
+        return {
+            success: true,
+            stats: {
+                totalTests,
+                totalQuestions,
+                typeCount
+            },
+            recentUploads,
+            topicCoverage: serializedCoverage
+        };
+
+    } catch (e) {
+         console.error("Dashboard Stats Error:", e);
+         return { success: false, error: "Failed to fetch stats" };
     }
 }

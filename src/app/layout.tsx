@@ -32,6 +32,7 @@ export const metadata: Metadata = {
 };
 
 import { SupportButton } from "@/components/SupportButton";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({
   children,
@@ -48,6 +49,7 @@ export default function RootLayout({
         {children}
         </Suspense>
         <SupportButton />
+        <Toaster position="top-right"  richColors/>
       </body>
     </html>
   );

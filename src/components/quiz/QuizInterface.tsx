@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { Question } from '@/types/quiz';
 import { QuizResult } from './QuizResult';
 import { useQuizLogic } from '@/hooks/useQuizLogic';
+import { PremiumExplanation } from './PremiumExplanation';
 
 interface QuizInterfaceProps {
     questions: Question[];
@@ -365,16 +366,22 @@ export function QuizInterface(props: QuizInterfaceProps) {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.2 }}
-                                className="bg-slate-50 border border-slate-200 rounded-xl p-5"
+                                className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm ring-1 ring-slate-100"
                              >
-                                 <div className="flex items-center gap-2 mb-3">
+                                 <div className="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
                                      <span className="bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1 shadow-sm">
                                          {t.explanation}
                                      </span>
+                                     <span className="text-xs text-slate-400 font-medium">
+                                        {language === 'hi' ? 'विस्तृत विश्लेषण' : 'Detailed Analysis'}
+                                     </span>
                                  </div>
-                                 <p className="text-slate-700 leading-relaxed text-base border-l-2 border-indigo-200 pl-4">
-                                     {currentQuestion.explanation}
-                                 </p>
+                                 
+                                 <PremiumExplanation 
+                                    explanation={(currentQuestion as any).explanation_hi || currentQuestion.explanation} 
+                                    explanationEn={currentQuestion.explanationEn}
+                                    language={language as 'hi' | 'en'}
+                                 />
                              </motion.div>
                          )}
 

@@ -20,6 +20,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { PremiumExplanation } from '@/components/quiz/PremiumExplanation';
+import { HistoryLanguageToggle } from '@/components/quiz/HistoryLanguageToggle';
 export default async function AttemptReviewPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
     const attempt = await getAttemptDetails(params.id);
@@ -46,9 +48,11 @@ export default async function AttemptReviewPage(props: { params: Promise<{ id: s
                 <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl -ml-20 -mb-20"></div>
                 
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 relative z-10">
-                    <Link href="/syllabus" className="inline-flex items-center text-slate-400 hover:text-white transition-colors mb-6 text-sm font-medium">
-                        <ArrowLeft className="w-4 h-4 mr-2" /> Back to Syllabus
-                    </Link>
+                    <div className="flex items-center justify-between mb-6">
+                        <Link href="/syllabus" className="inline-flex items-center text-slate-400 hover:text-white transition-colors text-sm font-medium">
+                            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Syllabus
+                        </Link>
+                    </div>
                     
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                         <div className="space-y-4">
@@ -234,27 +238,39 @@ export default async function AttemptReviewPage(props: { params: Promise<{ id: s
                                                 <Lightbulb className="w-4 h-4 text-indigo-600" />
                                                 <span className="text-xs font-black text-indigo-600 uppercase tracking-widest">Premium Explanation</span>
                                             </div>
-                                            <div className="p-6 space-y-4 text-sm leading-relaxed text-slate-700">
-                                                {/* 
-                                                    Here we can render the new markdown format user requested.
-                                                    Since `explanation` is a string, assuming it might contain the formatted blocks.
-                                                    If strictly JSON is expected for the blocks, we need to parse it. 
-                                                    The user's previous request was to store Markdown in these fields using headings like **✅ Core Logic**.
-                                                    So rendering it as Markdown would be best.
-                                                    For now, displaying as whitespace-pre-wrap text is safe.
-                                                */}
-                                                 <div className="prose prose-sm prose-indigo max-w-none text-slate-700 whitespace-pre-wrap font-medium">
-                                                    {ans.explanationEn || ans.explanation}
-                                                 </div>
-                                                 
-                                                 {ans.explanation && ans.explanationEn && (
-                                                     <div className="mt-4 pt-4 border-t border-indigo-200/50">
-                                                         <div className="text-xs font-bold text-indigo-400 mb-2 uppercase">Hindi Explanation</div>
-                                                         <div className="prose prose-sm prose-indigo max-w-none text-slate-700 whitespace-pre-wrap">
-                                                            {ans.explanation}
-                                                         </div>
-                                                     </div>
-                                                 )}
+                                            <div className="p-6">
+                                                 {/* We let the component handle language via store, but we pass the raw strings.
+                                                     Logic: If user prefers Hindi, we try to pass Hindi string if available. 
+                                                     Actually, PreimumExplanation takes one 'explanation' string and parses it. 
+                                                     In the history object, we have 'explanation' (Hindi usually) and 'explanationEn'.
+                                                     We should pass the one matching the user's preference? 
+                                                     But here in Server Component we don't know user pref easily.
+                                                     However, PremiumExplanation is Client Component. 
+                                                     So we can pass BOTH and let it decide? No, it takes one string.
+                                                     
+                                                     Solution: Pass a wrapper client component? 
+                                                     Or better: Pass 'explanation' (Hindi) as primary if we assume Hindi base, 
+                                                     or we need a 'SmartExplanationWrapper' that takes both and picks based on store.
+                                                     
+                                                     Let's stick to passing 'explanation' (Hindi) for now as default, 
+                                                     OR create a small client wrapper right here? 
+                                                     
+                                                     Actually, PremiumExplanation DOES access store now. 
+                                                     But it takes `explanation` prop. It can't switch the *content* of the prop based on store 
+                                                     unless the prop *contains* both. 
+                                                     
+                                                     Refactor: I should pass BOTH to PremiumExplanation if I want it to switch text.
+                                                     But for now, I will pass `ans.explanation` (Hindi/Default) because `mppsc_prompts` says 'explanation' is the main one.
+                                                     Wait, `mppsc_prompts.md` has `explanation` and `explanationEn`.
+                                                     
+                                                     If I only pass `ans.explanation`, English users see Hindi.
+                                                     
+                                                     I will update `PremiumExplanation` to accept `explanationEn` as optional prop.
+                                                 */}
+                                                 <PremiumExplanation 
+                                                    explanation={ans.explanation}
+                                                    explanationEn={ans.explanationEn}
+                                                 />
                                             </div>
                                         </div>
                                     )}

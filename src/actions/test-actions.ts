@@ -24,7 +24,7 @@ const TestImportSchema = z.object({
   slug: z.string().min(3),
   duration: z.number(), // in minutes
   totalMarks: z.number(),
-  type: z.enum(['FLT', 'UNIT', 'CSAT']),
+  type: z.enum(['FLT', 'UNIT', 'CSAT', 'PYQ', 'TOPIC']),
   isPro: z.boolean().default(false),
   questions: z.array(QuestionSchema),
 });

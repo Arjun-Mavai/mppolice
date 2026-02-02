@@ -10,6 +10,7 @@ export const mppscUsers = sqliteTable('mppsc_users', {
   password: text('password').notNull(),
   name: text('name'),
   isSubscribed: integer('is_subscribed', { mode: 'boolean' }).default(false),
+  role: text('role').default('guest'), // 'guest' | 'admin'
 });
 
 // Tests Table
@@ -21,8 +22,9 @@ export const tests = sqliteTable('tests', {
   durationMinutes: integer('duration_minutes').notNull(),
   totalQuestions: integer('total_questions').default(0),
   totalMarks: integer('total_marks').notNull(),
-  type: text('type', { enum: ['FLT', 'UNIT', 'CSAT', 'PYQ'] }).notNull(),
+  type: text('type', { enum: ['FLT', 'UNIT', 'CSAT', 'PYQ', 'TOPIC'] }).notNull(),
   unitId: text('unit_id'), // To link directly to a syllabus unit e.g., 'unit_1'
+  topicId: text('topic_id'), // To link to specific topic ID from syllabusData
   tags: text('tags', { mode: 'json' }), // JSON array of related tags e.g., ['history', 'ancient']
   isPro: integer('is_pro', { mode: 'boolean' }).default(false),
   maxRetries: integer('max_retries'), // null = unlimited. Standard: Unit=5, FLT=3
@@ -84,6 +86,22 @@ export const syllabusTopics = sqliteTable('syllabus_topics', {
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
 });
 
+// Blog/Vlog Content Table
+export const contentBlogs = sqliteTable('content_blogs', {
+  id: text('id').primaryKey(),
+  slug: text('slug').unique().notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+  content: text('content', { mode: 'json' }).notNull(), // Mixed content: text, images, etc.
+  category: text('category').notNull(), // e.g., 'history', 'geography', 'current_affairs_mp'
+  imageUrl: text('image_url'),
+  readingTime: integer('reading_time'), // in minutes
+  contentType: text('content_type', { enum: ['blog', 'vlog'] }).default('blog').notNull(),
+  isPublished: integer('is_published', { mode: 'boolean' }).default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+});
+
 // Relations
 import { relations } from 'drizzle-orm';
 
@@ -110,6 +128,19 @@ export const userAttemptsRelations = relations(userAttempts, ({ one, many }) => 
 	}),
     answers: many(attemptAnswers)
 }));
+
+// Support Tickets Table
+export const supportTickets = sqliteTable('support_tickets', {
+    id: text('id').primaryKey(),
+    userId: text('user_id'), // Optional, if user is logged in
+    name: text('name').notNull(),
+    email: text('email').notNull(),
+    phone: text('phone'),
+    category: text('category').default('general'), // 'general', 'technical', 'payment', 'content'
+    message: text('message').notNull(),
+    status: text('status', { enum: ['open', 'in_progress', 'resolved', 'closed'] }).default('open'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+});
 
 export const attemptAnswersRelations = relations(attemptAnswers, ({ one }) => ({
     attempt: one(userAttempts, {

@@ -8,6 +8,8 @@ import { Question } from '@/types/quiz';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
+import { PremiumExplanation } from './PremiumExplanation';
+import { useSettingsStore } from '@/store/useSettingsStore';
 interface QuizResultProps {
     questions: Question[];
     answers: Record<string, number>;
@@ -221,64 +223,15 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                                     </div>
 
                                     {/* Explanation */}
-                                    <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl text-sm text-indigo-900">
-                                        <div className="font-bold text-indigo-700 mb-2 flex items-center gap-1.5">
+                                    <div className="bg-white border border-indigo-100 p-4 rounded-xl text-sm shadow-sm">
+                                        <div className="font-bold text-indigo-700 mb-2 flex items-center gap-1.5 uppercase tracking-wide text-xs">
                                             <AlertCircle className="w-4 h-4" /> Explanation
                                         </div>
                                         
-                                        <div className="space-y-3">
-                                            {q.explanation ? q.explanation.split('\n').map((line: string, i: number) => {
-                                                const trimmed = line.trim();
-                                                if (!trimmed) return null;
-
-                                                // 💡 Exam Fact
-                                                if (trimmed.includes('💡') || trimmed.toLowerCase().includes('exam fact')) {
-                                                    return (
-                                                        <div key={i} className="flex gap-2 p-2.5 rounded-lg bg-white border border-indigo-200 text-indigo-900 shadow-sm">
-                                                            <span className="text-base">💡</span>
-                                                            <span className="text-xs font-semibold pt-0.5">{trimmed.replace(/💡|Exam Fact:/gi, '').trim()}</span>
-                                                        </div>
-                                                    );
-                                                }
-                                                
-                                                // 🧠 Memory Tip
-                                                if (trimmed.includes('🧠') || trimmed.toLowerCase().includes('memory tip')) {
-                                                    return (
-                                                        <div key={i} className="flex gap-2 p-2.5 rounded-lg bg-purple-100 border border-purple-200 text-purple-900 shadow-sm">
-                                                            <span className="text-base">🧠</span>
-                                                            <div className="flex flex-col">
-                                                                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700">Memory Strategy</span>
-                                                                <span className="text-xs font-semibold">{trimmed.replace(/🧠|Memory Tip:/gi, '').trim()}</span>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                }
-
-                                                // 🚫 Scam Alert
-                                                if (trimmed.includes('🚫') || trimmed.toLowerCase().includes('scam alert')) {
-                                                    return (
-                                                        <div key={i} className="flex gap-2 p-2.5 rounded-lg bg-rose-100 border border-rose-200 text-rose-900 shadow-sm">
-                                                            <span className="text-base">🚫</span>
-                                                            <div className="flex flex-col">
-                                                                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700">Alert</span>
-                                                                <span className="text-xs font-semibold">{trimmed.replace(/🚫|Scam Alert:/gi, '').trim()}</span>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                }
-
-                                                // Check formatting or Standard
-                                                if (trimmed.includes('✅') || trimmed.toLowerCase().includes('correct answer')) {
-                                                     return (
-                                                        <p key={i} className="text-indigo-900/80 leading-relaxed font-medium">
-                                                            {trimmed.replace(/✅|Correct Answer:|Detailed Analysis:/gi, '').trim()}
-                                                        </p>
-                                                    );
-                                                }
-
-                                                return <p key={i} className="text-indigo-900/80 leading-relaxed">{trimmed}</p>;
-                                            }) : <span className="italic opacity-50">No explanation available.</span>}
-                                        </div>
+                                        <PremiumExplanation 
+                                            explanation={q.explanation || 'No explanation available.'}
+                                            explanationEn={q.explanationEn}
+                                        />
                                     </div>
                                 </motion.div>
                             )}

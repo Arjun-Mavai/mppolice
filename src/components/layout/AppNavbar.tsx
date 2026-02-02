@@ -80,7 +80,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Syllabus", href: "/syllabus", icon: BookOpen },
     { name: "Test Series", href: "/syllabus/quiz", icon: GraduationCap },
-    { name: "Analytics", href: "/syllabus/analytics", icon: BarChart2 },
+    { name: "Study Material", href: "/blogs", icon: BookOpen },
   ];
 
   // Only hide on the actual quiz play interface
@@ -130,22 +130,14 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
               );
             })}
                   {(user as any)?.is_pro ? (
-                    <div className="px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-gradient-to-r from-amber-100 via-amber-200 to-yellow-100 text-amber-900 border border-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.3)] cursor-default relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent,25%,rgba(255,255,255,0.7),50%,transparent)] bg-[length:250%_100%] animate-shimmer" />
-                        <div className="w-5 h-5 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center shadow-sm relative z-10">
-                            <Crown size={12} className="text-white fill-white" />
-                        </div>
-                        <span className="tracking-wide uppercase text-[10px] relative z-10 font-black text-amber-950">Royal Member</span>
+                    <div className="px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-gradient-to-r from-slate-900 to-slate-800 text-white border border-slate-700 shadow-lg cursor-default relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent,25%,rgba(255,255,255,0.1),50%,transparent)] bg-[length:250%_100%] animate-shimmer" />
+                        <Sparkles size={12} className="text-yellow-400 fill-yellow-400" />
+                        <span className="tracking-wide uppercase text-[10px] relative z-10 font-black">Premium</span>
                     </div>
-                  ) : (
+                  ) : user ? (
                     <Link
-                        href="/#pricing"
-                        onClick={(e) => {
-                            if (pathname === '/' || pathname === '/upgrade') {
-                                e.preventDefault();
-                                document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
-                            }
-                        }}
+                        href="/upgrade"
                         className={cn(
                         "px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-md hover:scale-105",
                         )}
@@ -153,30 +145,30 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                         <Sparkles size={14} className="fill-white/20" />
                         Upgrade
                     </Link>
-                  )}
+                  ) : null}
           </nav>
 
           {/* Right Section */}
-          <div className="flex items-center gap-3">
-             {/* Language Toggle - Visible on Mobile too as per request */}
-             <div className="hidden sm:flex items-center gap-1 bg-slate-100 p-1 rounded-full border border-slate-200">
+          <div className="flex items-center gap-2 sm:gap-3">
+             {/* Global Language Toggle - Visible on All Screens */}
+             <div className="flex items-center gap-0.5 bg-slate-100 p-1 rounded-full border border-slate-200">
                 <button
                     onClick={() => setLanguage('en')}
                     className={cn(
-                        "px-3 py-1 rounded-full text-xs font-bold transition-all",
+                        "px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all",
                         language === 'en' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-900"
                     )}
                 >
-                    English
+                    EN
                 </button>
                 <button
                     onClick={() => setLanguage('hi')}
                     className={cn(
-                        "px-3 py-1 rounded-full text-xs font-bold transition-all",
+                        "px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all",
                         language === 'hi' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-900"
                     )}
                 >
-                    हिंदी
+                    HI
                 </button>
              </div>
 
@@ -277,24 +269,32 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                     </SheetHeader>
                     
                     <div className="flex-1 overflow-y-auto px-6 py-6 space-y-2">
-                         {navItems.map((item) => {
-                            const isActive = pathname === item.href;
-                            const Icon = item.icon;
-                            return (
-                                <Link
-                                key={item.href}
-                                href={item.href}
-                                className={cn(
-                                    "px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-3",
-                                    isActive
-                                    ? "bg-slate-100 text-indigo-600"
-                                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                                )}
-                                >
-                                <Icon size={18} />
-                                {item.name}
-                                </Link>
-                            );
+                         {navItems
+                            .filter(item => {
+                                // Hide Dashboard if user is NOT pro
+                                if (item.name === "Dashboard") {
+                                    return (user as any)?.is_pro;
+                                }
+                                return true;
+                            })
+                            .map((item) => {
+                                const isActive = pathname === item.href;
+                                const Icon = item.icon;
+                                return (
+                                    <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={cn(
+                                        "px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-3",
+                                        isActive
+                                        ? "bg-slate-100 text-indigo-600"
+                                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                                    )}
+                                    >
+                                    <Icon size={18} />
+                                    {item.name}
+                                    </Link>
+                                );
                             })}
                         
                         <a
@@ -310,21 +310,20 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                         {!(user as any)?.is_pro ? (
                             <Link
                                 href="/upgrade"
-                                className="px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-3 bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 mt-4"
+                                className="px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-3 bg-slate-900 text-white mt-4 shadow-lg shadow-slate-900/20"
                             >
-                                <Sparkles size={18} />
-                                Upgrade Plan
+                                <Crown size={18} className="text-yellow-400" />
+                                Become Premium Member
                             </Link>
                         ) : (
-                             <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 shadow-sm relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-yellow-200/40 to-transparent rounded-full -mr-8 -mt-8 opacity-50" />
+                             <div className="mt-4 p-4 rounded-xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden group">
                                 <div className="relative z-10 flex items-center gap-3 mb-2">
-                                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 flex items-center justify-center shadow-sm">
-                                         <Crown size={14} className="text-white fill-white" />
+                                     <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shadow-sm">
+                                         <Crown size={14} className="text-yellow-400 fill-yellow-400" />
                                      </div>
                                      <div>
-                                         <h4 className="font-bold text-amber-950 text-sm leading-tight">Royal Member</h4>
-                                         <p className="text-[10px] text-amber-700 font-medium">Top Tier Access Active</p>
+                                         <h4 className="font-bold text-white text-sm leading-tight">Premium Active</h4>
+                                         <p className="text-[10px] text-slate-400 font-medium">All Features Unlocked</p>
                                      </div>
                                 </div>
                             </div>

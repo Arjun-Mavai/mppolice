@@ -5,9 +5,26 @@ import { userAttempts, tests, questions, attemptAnswers } from '@/db/schema';
 import { eq, desc, sql } from 'drizzle-orm';
 import { syllabusData } from '@/data/syllabusData';
 
-export async function getUserAnalytics(userId: string) {
+import { unstable_cache } from "next/cache";
+
+// Cache Analytics per user for 5 minutes to avoid DB spam on refresh
+export const getUserAnalytics = async (userId: string) => {
     if (!userId) return null;
 
+    const getCachedAnalytics = unstable_cache(
+        async (uid: string) => {
+             // ... The entire logic ...
+             return await fetchAnalyticsInternal(uid);
+        },
+        [`user-analytics-${userId}`],
+        { revalidate: 300, tags: [`analytics-${userId}`] }
+    );
+    
+    return await getCachedAnalytics(userId);
+}
+
+// Extracted internal function
+async function fetchAnalyticsInternal(userId: string) {
     try {
         // 1. Fetch all completed attempts for the user
         const attempts = await db.select({
@@ -35,27 +52,17 @@ export async function getUserAnalytics(userId: string) {
         }
 
         // 2. Calculate Overall Stats
-        // We calculate score as percentage of total marks
         let totalPercentage = 0;
         let validAttemptsCount = 0;
 
         // 3. Granular Analysis by Subject (Question Level)
-        // Fetch all answers for these attempts to calculate subject-wise mastery
         const attemptIds = attempts.map(a => a.id);
         
         let subjectStats: Record<string, { totalScore: number, totalMax: number, count: number, name: string }> = {};
         
-        // Initialize from syllabus data if needed, or build dynamically
-        // We will build dynamically from question subjects
-        
         if (attemptIds.length > 0) {
-            // Batch fetch answers
-            // SQLite limit is usually 999 vars, so we might need to batch if user has MANY attempts.
-            // For now, we assume reasonable usage or take latest 50 attempts.
-            // Using a simple loop or large 'inArray' if supported. 
-            // Drizzle 'inArray' should handle it or we limit to recent 20 attempts for analysis to keep it fast.
-            
-            const recentAttemptIds = attemptIds.slice(0, 50); // Analyze last 50 attempts for performance
+            // Limit to last 50 attempts for performance
+            const recentAttemptIds = attemptIds.slice(0, 50);
 
             const answersData = await db.select({
                 isCorrect: attemptAnswers.isCorrect,
@@ -104,10 +111,9 @@ export async function getUserAnalytics(userId: string) {
                     color: percentage >= 80 ? 'emerald' : percentage >= 60 ? 'amber' : 'red'
                 };
             })
-            .sort((a, b) => b.percentage - a.percentage); // Sort best to worst
+            .sort((a, b) => b.percentage - a.percentage);
 
         // 5. Generate AI Suggestion
-        // Find weakest and strongest units
         const sortedMastery = [...mastery].sort((a, b) => a.percentage - b.percentage);
         const weakest = sortedMastery[0];
         const strongest = sortedMastery[sortedMastery.length - 1];
@@ -130,7 +136,7 @@ export async function getUserAnalytics(userId: string) {
             overallScore: overallAvg,
             totalTests: attempts.length,
             mastery,
-            recentActivity: attempts.sort((a,b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)), // sorted
+            recentActivity: attempts.sort((a,b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)), 
             aiSuggestion
         };
 

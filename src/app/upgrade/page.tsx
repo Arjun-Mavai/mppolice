@@ -34,6 +34,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from "@/components/ui/progress"
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { AppFooter } from '@/components/layout/AppFooter';
 
 export default function UpgradePage() {
   const router = useRouter();

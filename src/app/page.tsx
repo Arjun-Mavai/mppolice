@@ -65,12 +65,14 @@ const FeatureCard = ({ icon: Icon, title, description, color }: { icon: any, tit
 );
 */
 
-export default async function Home() {
-  const user = await getUser();
-
+export default function Home() {
+  // Static Render for Lightning Speed ⚡️
+  // We rely on client-side hydration (useSettingsStore) for auth state
+  // This prevents the global loading.tsx from triggering on initial load
+  
   return (
     <main>
-      <AppNavbar user={user} />
+      <AppNavbar user={null} />
       <UpgradePage />
     </main>
   );

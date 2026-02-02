@@ -1,6 +1,6 @@
 import { db } from '@/db';
 import { tests, userAttempts } from '@/db/schema';
-import { desc, eq, and, sql } from 'drizzle-orm';
+import { desc, eq, and, sql, inArray } from 'drizzle-orm';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,22 +9,34 @@ import { Lock, Play, ArrowLeft, CheckCircle2, AlertTriangle } from 'lucide-react
 import { verifyAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { unstable_cache } from 'next/cache';
 
-export const revalidate = 0;
+// Cache the Test List (Heavy Query / Static Data)
+const getCachedFLTests = unstable_cache(
+    async () => {
+        return await db.select().from(tests).where(eq(tests.type, 'FLT')).orderBy(desc(tests.createdAt));
+    },
+    ['flt-tests-list'],
+    { revalidate: 3600, tags: ['tests'] }
+);
 
 export default async function FLTListPage() {
     const user = await verifyAuth();
     const isPro = user?.isSubscribed || false;
 
-    const allTests = await db.select().from(tests).where(eq(tests.type, 'FLT')).orderBy(desc(tests.createdAt));
+    // 1. Fetch Cached Test List
+    const allTests = await getCachedFLTests();
     
-    // Fetch attempts for all FLTs for this user
-    const userFLTAttempts = user ? await db.select({
+    // 2. Fetch Attempts specific to this user (Dynamic)
+    // Optimization: Only fetch attempts for the tests we just retrieved
+    const testIds = allTests.map(t => t.id);
+    
+    const userFLTAttempts = (user && testIds.length > 0) ? await db.select({
         testId: userAttempts.testId,
         count: sql<number>`count(*)`
     })
     .from(userAttempts)
-    .where(eq(userAttempts.userId, user.id))
+    .where(and(eq(userAttempts.userId, user.id), inArray(userAttempts.testId, testIds)))
     .groupBy(userAttempts.testId) : [];
 
     const attemptsMap = new Map(userFLTAttempts.map(a => [a.testId, Number(a.count)]));

@@ -7,9 +7,9 @@ type Language = 'en' | 'hi';
 interface SettingsState {
   language: Language;
   setLanguage: (lang: Language) => void;
-  user: { name?: string; email?: string } | null;
+  user: { id?: string; name?: string; email?: string } | null;
   isSubscribed: boolean;
-  setUser: (user: { name?: string; email?: string } | null, isSubscribed: boolean) => void;
+  setUser: (user: { id?: string; name?: string; email?: string } | null, isSubscribed: boolean) => void;
   // We can add more settings here like 'theme'
 }
 
