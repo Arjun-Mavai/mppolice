@@ -13,21 +13,84 @@ import { useRouter } from 'next/navigation';
 
 export default function QuizSelectionPage() {
   const router = useRouter();
-  const { language, isSubscribed } = useSettingsStore();
+  const { language, isSubscribed, user } = useSettingsStore();
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
+
+  // Greeting State (SSR Safe)
+  const [welcomeMsg, setWelcomeMsg] = useState({
+      title: language === 'hi' ? 'नमस्ते 🙏' : 'Welcome 👋',
+      subtitle: isSubscribed 
+          ? (language === 'hi' ? 'आपकी प्रीमियम मेंबरशिप सक्रिय है।' : 'Your Premium Membership is Active.')
+          : (language === 'hi' ? 'अपनी तैयारी को एक नई दिशा दें।' : 'Kickstart your preparation today!')
+  });
+
+  React.useEffect(() => {
+    const hour = new Date().getHours();
+    const isHindi = language === 'hi';
+    const name = user?.name ? user.name.split(' ')[0] : (isHindi ? 'विद्यार्थी' : 'Aspirant');
+
+    let greeting = '';
+    
+    // Time based greeting
+    if (hour >= 4 && hour < 12) greeting = isHindi ? 'सुप्रभात' : 'Good Morning';
+    else if (hour >= 12 && hour < 17) greeting = isHindi ? 'शाम की नमस्ते' : 'Good Afternoon';
+    else if (hour >= 17 && hour < 22) greeting = isHindi ? 'नमस्ते' : 'Good Evening';
+    else greeting = isHindi ? 'शुभ रात्रि' : 'Good Night'; // Late night (10 PM - 4 AM)
+
+    setWelcomeMsg({
+        title: `${greeting}, ${name}! ${isHindi ? '🙏' : '👋'}`,
+        subtitle: isSubscribed 
+            ? (isHindi ? 'आपकी प्रीमियम मेंबरशिप सक्रिय है। अपनी तैयारी को अगले स्तर पर ले जाएं!' : 'Your Premium Membership is Active. Let\'s ace this exam!')
+            : (isHindi ? 'अपनी तैयारी को एक नई दिशा दें। अभी शुरू करें!' : 'Kickstart your preparation today!')
+    });
+  }, [language, isSubscribed, user]);
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans p-6">
        
        <div className="max-w-6xl mx-auto space-y-8">
-           {/* Header */}
-           <div className="flex items-center gap-4">
-               <Button variant="ghost" size="icon" onClick={() => router.back()}>
-                   <ArrowLeft className="w-6 h-6 text-slate-600" />
-               </Button>
-               <h1 className="text-2xl font-bold text-slate-900 font-display">
-                   {language === 'hi' ? 'अभ्यास टेस्ट चुनें' : 'Select Practice Test'}
-               </h1>
+           {/* Header with Personalization */}
+           <div className="flex flex-col gap-4">
+               <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                        <ArrowLeft className="w-6 h-6 text-slate-600" />
+                    </Button>
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 font-display pt-40 mb-2">
+                            {welcomeMsg.title}
+                        </h1>
+                        <p className={`text-sm sm:text-base font-medium ${isSubscribed ? 'text-indigo-600' : 'text-slate-500'}`}>
+                            {welcomeMsg.subtitle}
+                        </p>
+                    </div>
+               </div>
+               
+               {/* Marketing Nudge for Non-Subscribed */}
+               {!isSubscribed && (
+                   <div className="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-6 text-white relative overflow-hidden shadow-xl shadow-indigo-200 ">
+                       <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                           <div>
+                               <h3 className="font-bold text-lg mb-1">
+                                   {language === 'hi' ? 'फुल एक्सेस अनलॉक करें' : 'Unlock Full Access'}
+                               </h3>
+                               <p className="text-indigo-100 text-sm max-w-md">
+                                   {language === 'hi' 
+                                     ? 'सभी टेस्ट सीरीज़, विस्तृत विश्लेषण और अधिक के लिए प्रो बनें।' 
+                                     : 'Get unlimited access to all Test Series, Detailed Analysis and more.'}
+                               </p>
+                           </div>
+                           <Button asChild className="bg-white text-indigo-600 hover:bg-indigo-50 font-bold border-0 shadow-lg">
+                               <Link href="/upgrade">
+                                   {language === 'hi' ? 'अभी अपग्रेड करें' : 'Upgrade Now'}
+                               </Link>
+                           </Button>
+                       </div>
+                       
+                       {/* Abstract Shapes */}
+                       <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-32" />
+                       <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/30 rounded-full blur-xl -ml-10 -mb-10" />
+                   </div>
+               )}
            </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">

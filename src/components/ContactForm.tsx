@@ -25,7 +25,7 @@ export function ContactForm() {
     const t = {
         en: {
             name: "Name",
-            phone: "Phone (Optional)",
+            phone: "Phone",
             email: "Email",
             topic: "Topic",
             message: "Message",
@@ -47,7 +47,7 @@ export function ContactForm() {
         },
         hi: {
             name: "नाम",
-            phone: "फ़ोन (वैकल्पिक)",
+            phone: "फ़ोन",
             email: "ईमेल",
             topic: "विषय",
             message: "संदेश",
@@ -107,7 +107,8 @@ export function ContactForm() {
                 </div>
                 <div className="space-y-2">
                         <Label htmlFor="phone">{text.phone}</Label>
-                        <Input id="phone" placeholder={text.placeholderPhone} {...register('phone')} className="h-12" />
+                        <Input id="phone" placeholder={text.placeholderPhone} {...register('phone', { required: true, minLength: 10 })} className="h-12" />
+                        {errors.phone && <span className="text-red-500 text-xs">{text.required}</span>}
                 </div>
             </div>
             

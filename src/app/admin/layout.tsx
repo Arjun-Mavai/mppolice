@@ -13,7 +13,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <main className="flex-1 pt-20">
                 {children}
             </main>
-            <AppFooter />
+            {/* <AppFooter /> */}
         </div>
     );
 }

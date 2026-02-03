@@ -39,7 +39,12 @@ export default function LoginPage() {
           description: "Accessing your syllabus...",
         })
         setTimeout(() => {
-          router.push("/syllabus")
+          // Redirect logic based on subscription
+          if (data.user?.is_subscribed) {
+             router.push("/syllabus/quiz");
+          } else {
+             router.push("/");
+          }
         }, 800)
       } else {
         setError(data.error || "Login failed")

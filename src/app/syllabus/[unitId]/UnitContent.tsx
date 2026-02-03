@@ -12,6 +12,8 @@ import { ViewToggle } from '@/components/ViewToggle';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { SyllabusLockModal } from '@/components/SyllabusLockModal';
 import { Button } from '@/components/ui/button';
+import { SyllabusTopicSheet } from '@/components/syllabus/SyllabusTopicSheet';
+import { isSyllabusTopicLocked } from '@/lib/syllabus-locks';
 
 // Type definition matching the DB Schema / Fallback Data
 export interface TopicData {
@@ -24,6 +26,7 @@ export interface TopicData {
   pro_tip?: string;
   impact_emoji?: string;
   important_facts?: string[];
+  pyq?: { year: number | string; question: string; strategy?: string; type?: string }[];
   isFree?: boolean;
   image_url?: string;
 }
@@ -70,13 +73,26 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
   // SideDrawer State
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<TopicData | null>(null);
+  const [isTopicSheetOpen, setIsTopicSheetOpen] = useState(false);
   
   // Premium/Lock State
   const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
-  const { isSubscribed } = useSettingsStore();
+  const { isSubscribed, user } = useSettingsStore();
+
+  const isTopicLocked = (topic: TopicData, index: number) => {
+      // Use the centralized logic
+      return isSyllabusTopicLocked(
+          topic,
+          index,
+          { isSubscribed: !!isSubscribed, plan_tier: user?.plan_tier },
+          unitId,
+          currentTopics.length // Pass the total count of filtered/current topics
+      );
+  };
 
   const handleQuizClick = (type: 'topic' | 'unit', topicId?: string | number) => {
       if (type === 'unit') {
+           // Unit Test: Allowed for Unit 1 OR Subscribed Users
            if (unitId === 'unit_1' || isSubscribed) {
                router.push(`/syllabus/quiz/play?mode=topic&unit=${unitId}`);
                return;
@@ -86,8 +102,8 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
       }
 
       if (type === 'topic' && topicId) {
-          const topic = currentTopics.find(t => t.id === topicId);
-          if (topic?.isFree || isSubscribed) {
+          const index = currentTopics.findIndex(t => t.id === topicId);
+          if (!isTopicLocked(currentTopics[index], index)) {
                router.push(`/syllabus/quiz/play?mode=topic&unit=${unitId}&topic=${topicId}`);
           } else {
                setIsUnlockModalOpen(true);
@@ -126,13 +142,13 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
     (t.id.toString() === searchTerm)
   );
 
-  const handleOpenDetails = (topic: TopicData) => {
-    if (!topic.isFree && !isSubscribed) {
+  const handleOpenDetails = (topic: TopicData, index: number) => {
+    if (isTopicLocked(topic, index)) {
         setIsUnlockModalOpen(true);
         return;
     }
     setSelectedTopic(topic);
-    setIsDrawerOpen(true);
+    setIsTopicSheetOpen(true); 
   };
 
     // Progress Calculation
@@ -269,7 +285,7 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
               <FlipCard
                 id={topic.id}
                 className="h-[520px] w-full"
-                isLocked={!topic.isFree && !isSubscribed}
+                isLocked={isTopicLocked(topic, currentTopics.indexOf(topic))}
                 isFlipped={activeFlippedId === topic.id}
                 image={topic.image_url}
                 
@@ -285,6 +301,9 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
                 
                 // Logic
                 onPracticeTest={() => handleQuizClick('unit')}
+                onReadMore={() => {
+                    handleOpenDetails(topic, currentTopics.indexOf(topic));
+                }}
                 onFlip={(id) => {
                    if (activeFlippedId === id) {
                       setActiveFlippedId(null);
@@ -313,24 +332,24 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
                         animate={{ opacity: 1, scale: 1 }}
                         className={cn(
                             "border-2 rounded-[2.5rem] p-8 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all group flex items-start gap-8 cursor-pointer relative overflow-hidden",
-                            !topic.isFree && !isSubscribed ? "bg-slate-50/50 border-slate-100 opacity-75 grayscale-[0.5]" : "bg-white border-slate-100 hover:border-indigo-200"
+                            isTopicLocked(topic, currentTopics.indexOf(topic)) ? "bg-slate-50/50 border-slate-100 opacity-75 grayscale-[0.5]" : "bg-white border-slate-100 hover:border-indigo-200"
                         )}
-                        onClick={() => handleOpenDetails(topic)}
+                        onClick={() => handleOpenDetails(topic, currentTopics.indexOf(topic))}
                     >
                          <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-40" />
                         
                         <div className={cn(
                             "flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center font-black text-2xl shadow-xl transition-transform group-hover:scale-110",
-                            !topic.isFree && !isSubscribed ? "bg-slate-200 text-slate-400" : "bg-slate-900 text-white shadow-slate-900/20"
+                            isTopicLocked(topic, currentTopics.indexOf(topic)) ? "bg-slate-200 text-slate-400" : "bg-slate-900 text-white shadow-slate-900/20"
                         )}>
-                            {topic.id.toString().split('_').pop()?.replace('t', '') || topic.id}
+                            {/* {topic.id.toString().split('_').pop()?.replace('t', '') || topic.id} */}
                         </div>
                         <div className="flex-1 relative z-10">
                             <h3 className="text-2xl font-black text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{topic.front}</h3>
                             <p className="text-slate-500 leading-relaxed mb-4 text-base line-clamp-2 italic font-medium">"{topic.back}"</p>
                             
                             <div className="flex items-center gap-3">
-                                {!topic.isFree && !isSubscribed ? (
+                                {isTopicLocked(topic, currentTopics.indexOf(topic)) ? (
                                     <span className="inline-flex items-center text-[10px] font-black text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100 uppercase tracking-widest">
                                         <Lock className="w-3.5 h-3.5 mr-2" /> PREMIUM LOCKED
                                     </span>
@@ -385,7 +404,7 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
                      <FlipCard
                         id={currentTopics[revisionIndex].id}
                         className="h-[500px] w-full"
-                        isLocked={!currentTopics[revisionIndex].isFree && !isSubscribed}
+                        isLocked={isTopicLocked(currentTopics[revisionIndex], revisionIndex)}
                         isFlipped={activeFlippedId === currentTopics[revisionIndex].id}
                         onFlip={(id) => {
                            if (activeFlippedId === id) {
@@ -395,6 +414,9 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
                            }
                         }}
                         onPracticeTest={() => handleQuizClick('unit')}
+                        onReadMore={() => {
+                            handleOpenDetails(currentTopics[revisionIndex], revisionIndex);
+                        }}
                         
                         // Content
                         title={currentTopics[revisionIndex].front}
@@ -426,87 +448,25 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
 
       </main>
 
-      {/* Deep Dive Sidebar - Fixed for Premium Feel */}
+      {/* Deep Dive Sidebar - Replaced by AI Sheet */}
+      {/* 
       <SideDrawer 
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)}
         title={selectedTopic?.front}
       >
-         <div className="space-y-10 pb-12">
-            {/* Header Aesthetic */}
-            <div className="h-48 rounded-[2.5rem] bg-gradient-to-br from-indigo-600 to-violet-700 p-8 flex flex-col justify-end relative overflow-hidden shadow-2xl">
-                <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-white/10 blur-[60px] rounded-full" />
-                <div className="relative z-10">
-                   <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60 mb-2 block">Deep Dive Analysis</span>
-                   <h2 className="text-2xl font-black text-white italic line-clamp-2 leading-tight">
-                     {selectedTopic?.front}
-                   </h2>
-                </div>
-            </div>
+         ... (Existing SideDrawer Content) ...
+      </SideDrawer> 
+      */}
 
-            <section>
-                <div className="flex items-center gap-3 mb-6">
-                   <div className="p-3 bg-indigo-50 rounded-2xl">
-                      <Brain className="w-6 h-6 text-indigo-600" />
-                   </div>
-                   <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Deep Dive Analysis</h3>
-                </div>
-                
-                <div className="space-y-6">
-                    {/* Points Style for Deep Dive */}
-                    {selectedTopic?.important_facts && selectedTopic.important_facts.length > 0 ? (
-                        <div className="space-y-4">
-                            {selectedTopic.important_facts.map((fact, i) => (
-                                <div key={i} className="p-6 rounded-3xl bg-slate-50 border border-slate-100 hover:border-indigo-100 transition-colors flex gap-4">
-                                     <div className="w-2 h-2 rounded-full bg-indigo-500 mt-2 shrink-0" />
-                                     <p className="text-slate-700 font-medium leading-relaxed">{fact}</p>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-slate-600 leading-relaxed text-lg bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 shadow-sm font-medium">
-                            {selectedTopic?.details ? renderText(selectedTopic.details) : (
-                                <p className="italic text-slate-400 text-center py-10">
-                                    {language === 'hi' ? 'विस्तृत जानकारी शीघ्र उपलब्ध होगी।' : 'Detailed analysis coming soon.'}
-                                </p>
-                            )}
-                        </div>
-                    )}
-
-                    {selectedTopic?.mnemonic && (
-                      <div className="p-8 rounded-[2.5rem] bg-[#2d1e12] border border-[#4d3219] animate-in fade-in slide-in-from-bottom-2 duration-500">
-                          <div className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
-                              <Lightbulb size={14} fill="currentColor" /> Memory Hack
-                          </div>
-                          <div className="text-amber-100 font-black text-2xl italic leading-snug">
-                              "{selectedTopic.mnemonic}"
-                          </div>
-                      </div>
-                    )}
-                </div>
-            </section>
-
-            {/* Quiz Action Card */}
-            <section className="pt-10 border-t border-slate-100">
-                <div className="bg-slate-900 rounded-[2.5rem] p-8 text-center space-y-6 shadow-2xl shadow-slate-900/40">
-                   <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center mx-auto">
-                      <PlayCircle className="w-8 h-8 text-indigo-400" />
-                   </div>
-                   <div className="space-y-2">
-                     <h4 className="text-xl font-black text-white uppercase tracking-widest leading-tight">Ready to verify?</h4>
-                     <p className="text-slate-400 text-sm font-medium">Quick 5-question test on this concept.</p>
-                   </div>
-                   <Button
-                      onClick={() => handleQuizClick('topic', selectedTopic?.id)}
-                      className="w-full h-16 text-xs font-black uppercase tracking-widest bg-white text-slate-900 hover:bg-slate-100 rounded-2xl shadow-xl transition-all active:scale-95"
-                   >
-                       START TOPIC TEST
-                   </Button>
-                </div>
-            </section>
-
-         </div>
-      </SideDrawer>
+      <SyllabusTopicSheet 
+         open={isTopicSheetOpen} 
+         onOpenChange={setIsTopicSheetOpen}
+         topic={selectedTopic}
+         unitTitle={language === 'hi' ? unitTitle : unitTitleEn}
+         unitId={unitId}
+         language={language}
+      />
 
       <SyllabusLockModal open={isUnlockModalOpen} onOpenChange={setIsUnlockModalOpen} />
     </div>

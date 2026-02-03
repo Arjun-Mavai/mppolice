@@ -38,10 +38,28 @@ import { AppFooter } from '@/components/layout/AppFooter';
 import { DualLanguageShowcase } from '@/components/home/DualLanguageShowcase';
 import { FeatureShowcase } from '@/components/home/FeatureShowcase';
 
+import { getTopicTestStats } from '@/actions/getTopicTestStats';
+
 export default function UpgradePage() {
   const router = useRouter();
   const { scrollYProgress } = useScroll();
   const { language, setLanguage, user: globalUser } = useSettingsStore();
+  
+  const [topicCount, setTopicCount] = React.useState(0);
+
+  React.useEffect(() => {
+      // Fetch dynamic stats for landing page
+      getTopicTestStats().then(res => {
+          if (res.success && res.data) {
+              // Sum up all topics with > 0 questions
+              let total = 0;
+              Object.values(res.data).forEach(topics => {
+                  total += topics.filter(t => t.questionCount > 0).length;
+              });
+              setTopicCount(total);
+          }
+      });
+  }, []);
 
   const [isFlipped, setIsFlipped] = React.useState(false);
   const [hasInteracted, setHasInteracted] = React.useState(false);
@@ -523,7 +541,7 @@ export default function UpgradePage() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                     {/* Unit Tests */}
                     <Card className="hover:shadow-xl transition-all hover:-translate-y-1 border-slate-200 bg-slate-50/50">
                         <CardContent className="p-6 text-center space-y-4">
@@ -536,6 +554,24 @@ export default function UpgradePage() {
                             </div>
                             <Badge className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100 text-[10px] sm:text-xs">
                                 {language === 'hi' ? '5 प्रयास / टेस्ट' : '5 Attempts / Test'}
+                            </Badge>
+                        </CardContent>
+                    </Card>
+
+                     {/* Topic Tests (NEW) */}
+                     <Card className="hover:shadow-xl transition-all hover:-translate-y-1 border-rose-200 bg-rose-50/30">
+                        <CardContent className="p-6 text-center space-y-4">
+                            <div className="w-12 h-12 mx-auto bg-rose-100 text-rose-600 rounded-full flex items-center justify-center">
+                                <Target size={24} />
+                            </div>
+                            <div>
+                                <div className="text-3xl font-extrabold text-slate-900">
+                                   {topicCount > 0 ? topicCount : '100+'}
+                                </div>
+                                <div className="text-sm font-bold text-slate-500 uppercase tracking-wide">Topic Wise Tests</div>
+                            </div>
+                            <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 text-[10px] sm:text-xs">
+                                {language === 'hi' ? 'टॉपिक वार' : 'Topic Wise'}
                             </Badge>
                         </CardContent>
                     </Card>
@@ -573,7 +609,7 @@ export default function UpgradePage() {
                     </Card>
 
                      {/* CSAT */}
-                     <Card className="hover:shadow-xl transition-all hover:-translate-y-1 border-purple-200 bg-purple-50/30">
+                     <Card className="hover:shadow-xl transition-all hover:-translate-y-1 border-purple-200 bg-purple-50/30 lg:col-span-1 md:col-span-2 lg:col-start-auto">
                         <CardContent className="p-6 text-center space-y-4">
                             <div className="w-12 h-12 mx-auto bg-purple-100 text-purple-600 rounded-full flex items-center justify-center">
                                 <Brain size={24} />
@@ -926,8 +962,8 @@ export default function UpgradePage() {
 
     
 
-       {/* Pricing Section - Conditionally Render for Non-Pro Users */}
-       {!(globalUser as any)?.is_pro && (
+       {/* Pricing Section - Conditionally Render for Non-Subscribed Users */}
+       {!(globalUser as any)?.is_subscribed && (
            <section id="pricing" className="py-24 bg-white relative">
                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
                <div className="max-w-5xl mx-auto px-4">

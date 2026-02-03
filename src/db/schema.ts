@@ -12,6 +12,7 @@ export const mppscUsers = sqliteTable('mppsc_users', {
   isSubscribed: integer('is_subscribed', { mode: 'boolean' }).default(false),
   planTier: text('plan_tier', { enum: ['free', 'lite', 'pro'] }).default('free'),
   role: text('role').default('guest'), // 'guest' | 'admin'
+  adminSecret: text('admin_secret'), // Secure key for admin operations (nullable)
 });
 
 // Tests Table
@@ -81,6 +82,9 @@ export const syllabusTopics = sqliteTable('syllabus_topics', {
   // Expected default keys: front, back, details, mnemonic, impact_emoji, important_facts
   content: text('content', { mode: 'json' }).notNull(),
   contentEn: text('content_en', { mode: 'json' }), 
+  // New AI-enriched content (Points, PYQ, Mnemonic) - Separate from official syllabus text
+  aiContent: text('ai_content', { mode: 'json' }),
+  aiContentEn: text('ai_content_en', { mode: 'json' }), 
   order: integer('order').notNull(),
   isFree: integer('is_free', { mode: 'boolean' }).default(false),
   imgUrl: text('img_url'), // For image support
@@ -160,4 +164,14 @@ export const paymentExitReasons = sqliteTable('payment_exit_reasons', {
     reason: text('reason').notNull(),
     customReason: text('custom_reason'),
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+});
+
+// Topic Revisions Table (User Progress)
+export const topicRevisions = sqliteTable('topic_revisions', {
+    id: text('id').primaryKey(),
+    userId: text('user_id').references(() => mppscUsers.id).notNull(),
+    topicId: text('topic_id').notNull(), // Matching syllabusData IDs
+    unitId: text('unit_id').notNull(),
+    revisionCount: integer('revision_count').default(0),
+    lastRevisedAt: integer('last_revised_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
 });

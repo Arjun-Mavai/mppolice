@@ -340,3 +340,38 @@ Generate **20 High-Quality Questions** for **MPPSC Prelims Unit 10: Tribes of Ma
 3. **Bilingual:** Hindi and English.
 4. **Output:** Return ONLY a valid JSON array matching the Universal Schema (Marks 3, Neg 1).
 ```
+
+1.  **Iterate:** Go through every single topic in the JSON list provided.
+2.  **Generate:** Create 10 unique, high-quality questions for that specific topic.
+3.  **Content:** Ensure questions cover deep facts, concepts, and current relevance.
+4.  **Explanations:** MUST use the "Marketing Gimmick" style (**💡 Exam Fact**, **🧠 Memory Tip**, **🚫 Scam Alert**).
+5.  **Bilingual:** Provide Hindi and English for Question, Options, and Explanations.
+
+**Output Format (Strict JSON):**
+Return a SINGLE valid JSON object with the following structure:
+
+{
+"unitId": "unit_X", // Use the unitId from the context
+"topics": [
+{
+"topicId": "1.1", // EXACT ID from the Context provided
+"questions": [
+{
+"questionText": "...",
+"questionTextEn": "...",
+"options": ["Option A", "Option B", "Option C", "Option D"],
+"correctAnswer": "Option B",
+"explanation": "...",
+"explanationEn": "...",
+"marks": 3,
+"negativeMarks": 1,
+"idealTime": 60,
+"subject": "Topic Subject",
+"order": 1
+},
+// ... 9 more questions
+]
+},
+// ... next topic
+]
+}

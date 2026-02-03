@@ -73,7 +73,12 @@ Return ONLY a valid JSON object with the following structure:
    - Example: "संविधान (Constitution)"
    - English version should be complete and standalone
 
-5. **Length**: 500-800 words (5-7 min read)
+5. **Length**: Concise and punchy. Around 400-600 words. Focus on high-yield facts.
+
+6. **Past Year Questions Integration (CRITICAL)**:
+   - You MUST add a section at the end called "Past Year Questions & Analysis" (ignore if not relevant, but try to find connections).
+   - Include 1-2 actual or modeled questions from MPPSC/UPSC previous years related to this topic.
+   - Provide a "Strategy to Solve" for each.
 
 ## Example Generation
 

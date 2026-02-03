@@ -64,6 +64,16 @@ export default function ContactPage() {
                                              <p className="text-slate-500 text-sm">mppscsyllabus@gmail.com</p>
                                          </div>
                                      </div>
+
+                                     <div className="flex items-start gap-4">
+                                         <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+                                             <Phone size={18} />
+                                         </div>
+                                         <div>
+                                             <p className="font-bold text-slate-900">{language === 'hi' ? 'फ़ोन' : 'Phone'}</p>
+                                             <p className="text-slate-500 text-sm">+91 8766451748</p>
+                                         </div>
+                                     </div>
                                 </div>
                           </div>
                     </motion.div>

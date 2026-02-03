@@ -1,19 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ChevronRight, Search, BookOpen, Layers, Sparkles, Lock } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Search, BookOpen, Layers, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { syllabusData } from '@/data/syllabusData';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { toast } from "sonner"; 
 import { SyllabusLockModal } from '@/components/SyllabusLockModal';
 import { PLAN_LIMITS } from '@/config/plans';
+import { getSyllabusTopics } from '@/actions/getSyllabusTopics';
 
 const UNIT_COLORS = [
     'bg-rose-50 text-rose-600 border-rose-100 group-hover:bg-rose-600 group-hover:text-white',
@@ -28,58 +28,106 @@ const UNIT_COLORS = [
     'bg-sky-50 text-sky-600 border-sky-100 group-hover:bg-sky-600 group-hover:text-white',
 ];
 
+interface Topic {
+    id: string; // UUID from DB
+    unitId: string;
+    order: number;
+    title: string;
+    titleEn: string | null;
+    description: string | null; // Back text
+    descriptionEn: string | null; 
+}
+
+interface Unit {
+    id: string; // unit_1
+    index: number;
+    title: string; // Fallback or fetched
+    topics: Topic[];
+}
+
 export default function TopicSelectionPage() {
     const router = useRouter();
-    const { language, isSubscribed } = useSettingsStore();
+    const { language } = useSettingsStore();
 
     const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [paywallOpen, setPaywallOpen] = useState(false);
+    
+    const [dbData, setDbData] = useState<Record<string, Topic[]> | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    // Prepare Unit Data
-    const units = Object.entries(syllabusData.units).map(([key, unit], index) => {
-        // @ts-ignore
-        const title = language === 'hi' ? unit.title : unit.title_en;
-        // @ts-ignore
-        const topics = language === 'hi' ? unit.topics : (unit.topics_en || unit.topics);
+    // Fetch DB Data on Mount
+    useEffect(() => {
+        getSyllabusTopics().then((res) => {
+            if (res.success && res.data) {
+                // Map the data to our interface if needed or use directly
+                // The action returns Record<string, typeof topics>
+                // We trust it matches our rough shape.
+                setDbData(res.data as any); 
+            }
+            setLoading(false);
+        });
+    }, []);
+
+    // Transform DB Data to UI Units
+    const units: Unit[] = dbData ? Object.entries(dbData).map(([unitId, topicsData]) => {
+        const unitIndex = parseInt(unitId.replace('unit_', '')) || 0;
+        // Simple titles based on index or hardcoded map if we had one. 
+        // For now, "Unit X" is fine, or we can use the first topic's unit info if available? No.
+        // We'll stick to "Unit X" unless we have a translations map. 
+        // Actually the previous mock `syllabusData` had titles. Maybe we should still use `syllabusData` JUST for Unit Titles?
+        // Let's assume Unit Titles are static for now or generic.
         
         return {
-            id: key,
-            index: index + 1,
-            title,
-            topics: topics
+            id: unitId,
+            index: unitIndex,
+            title: `Unit ${unitIndex}`, // We could map this to real titles if we kept a mapping.
+            topics: topicsData.sort((a: any, b: any) => a.order - b.order).map((t: any) => ({
+                id: t.id,
+                unitId: t.unitId,
+                order: t.order,
+                title: language === 'hi' ? t.title : (t.titleEn || t.title),
+                titleEn: t.titleEn,
+                description: language === 'hi' ? t.description : (t.descriptionEn || t.description),
+                descriptionEn: t.descriptionEn
+            }))
         };
-    });
+    }).sort((a,b) => a.index - b.index) : [];
 
-    const handleTopicClick = (unitId: string, topicId: number) => {
+
+    const handleTopicClick = (unitId: string, topic: Topic) => {
         // Determine user tier
         const user = (useSettingsStore.getState().user as any);
         const userTier = user?.plan_tier || 'free';
-        // If no user, it's guest. If user but free/not subscribed, it's free/lite logic
         const effectiveTier = !user ? 'guest' : (user?.is_subscribed ? (userTier === 'free' ? 'lite' : userTier) : 'free');
         
         const limit = PLAN_LIMITS[effectiveTier as keyof typeof PLAN_LIMITS]?.topic_tests_limit || 0;
         
-        // Topic IDs are 1-based index within the unit usually, but here 'topicId' is passed.
-        // Assuming topicId corresponds to order.
-        // If topicId > limit, it's locked.
-        const isLocked = topicId > limit;
+        // Use order for locking logic (Top 5 free, etc)
+        const isLocked = topic.order > limit;
         
         if (isLocked) {
             setPaywallOpen(true);
             return;
         }
         
-        // Placeholder for navigation
-        console.log("Selected", unitId, topicId);
-        toast.info(language === 'hi' ? 'टेस्ट जल्द ही आ रहा है!' : 'Test coming soon!');
+        // Navigation: Pass specific topicId (DB UUID)
+        // router.push(`/syllabus/quiz/play?unitId=${unitId}&topicId=${topic.id}`);
+        // User asked for "efficinet server fetching". The link navigation will trigger server fetch on new page.
+        router.push(`/syllabus/quiz/play?unitId=${unitId}&topicId=${topic.id}`);
     };
 
     // Filter topics if inside a unit
     const currentUnit = selectedUnitId ? units.find(u => u.id === selectedUnitId) : null;
-    const filteredTopics = currentUnit ? currentUnit.topics.filter((t: any) => 
-        t.front.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredTopics = currentUnit ? currentUnit.topics.filter((t) => 
+        t.title.toLowerCase().includes(searchQuery.toLowerCase())
     ) : [];
+
+    if (loading) {
+        return <div className="min-h-screen bg-slate-50 flex items-center justify-center pt-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        </div>;
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans p-4 md:p-8 pt-32">
@@ -146,7 +194,7 @@ export default function TopicSelectionPage() {
                                 >
                                     <Card 
                                         className="h-full cursor-pointer hover:shadow-xl transition-all border-l-4 group bg-white"
-                                        style={{ borderLeftColor: idx % 2 === 0 ? '#4f46e5' : '#db2777' }} // Indigo or Pink accent
+                                        style={{ borderLeftColor: idx % 2 === 0 ? '#4f46e5' : '#db2777' }} 
                                         onClick={() => setSelectedUnitId(unit.id)}
                                     >
                                         <CardContent className="p-6 space-y-4">
@@ -184,13 +232,13 @@ export default function TopicSelectionPage() {
                                 <ScrollArea className="h-[calc(100vh-220px)]">
                                     <div className="p-4 grid gap-3 md:grid-cols-2">
                                         {filteredTopics.length > 0 ? (
-                                            filteredTopics.map((topic: any, index: number) => {
+                                            filteredTopics.map((topic, index) => {
                                                 const user = (useSettingsStore.getState().user as any);
                                                 const userTier = user?.plan_tier || 'free';
                                                 const effectiveTier = user?.is_subscribed ? (userTier === 'free' ? 'lite' : userTier) : 'free';
                                                 const limit = PLAN_LIMITS[effectiveTier as keyof typeof PLAN_LIMITS]?.topic_tests_limit || 0;
                                                 
-                                                const isLocked = topic.id > limit; // Assuming topic.id is the 1-based index integer
+                                                const isLocked = topic.order > limit;
                                                 
                                                 return (
                                                 <motion.div 
@@ -198,7 +246,7 @@ export default function TopicSelectionPage() {
                                                     initial={{ opacity: 0, y: 10 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     transition={{ delay: index * 0.03 }}
-                                                    onClick={() => handleTopicClick(selectedUnitId, topic.id)}
+                                                    onClick={() => handleTopicClick(selectedUnitId, topic)}
                                                     className={`
                                                         flex items-center justify-between p-4 rounded-xl border transition-all group
                                                         ${isLocked 
@@ -213,16 +261,16 @@ export default function TopicSelectionPage() {
                                                                 ? 'bg-slate-100 text-slate-400 border-slate-200' 
                                                                 : 'bg-white text-indigo-600 border-indigo-50 group-hover:scale-110'
                                                         }`}>
-                                                            {topic.id}
+                                                            {topic.order}
                                                         </div>
-                                                        <div className="space-y-0.5 flex-1">
+                                                        <div className="space-y-0.5 flex-1 select-none">
                                                             <div className="flex items-center gap-2">
                                                                 <span className={`font-semibold transition-colors line-clamp-2 leading-tight ${
                                                                     isLocked 
                                                                         ? 'text-slate-500' 
                                                                         : 'text-slate-700 group-hover:text-indigo-900'
                                                                 }`}>
-                                                                    {topic.front}
+                                                                    {topic.title}
                                                                 </span>
                                                                 {isLocked && (
                                                                     <Badge className="bg-slate-900 text-white text-[10px] px-2 py-0.5">
@@ -231,13 +279,13 @@ export default function TopicSelectionPage() {
                                                                     </Badge>
                                                                 )}
                                                             </div>
-                                                            {topic.back && (
+                                                            {topic.description && (
                                                                 <p className={`text-xs line-clamp-1 ${
                                                                     isLocked 
                                                                         ? 'text-slate-400' 
                                                                         : 'text-slate-400 group-hover:text-indigo-400'
                                                                 }`}>
-                                                                    {topic.back}
+                                                                    {topic.description}
                                                                 </p>
                                                             )}
                                                         </div>

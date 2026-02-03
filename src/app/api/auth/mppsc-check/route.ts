@@ -15,6 +15,7 @@ export async function GET() {
 
     // Verify user exists and is subscribed
     const users = await db.select({ 
+      id:mppscUsers.id,
         name: mppscUsers.name, 
         email: mppscUsers.email, 
         isSubscribed: mppscUsers.isSubscribed,

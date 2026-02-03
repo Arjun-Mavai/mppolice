@@ -44,7 +44,7 @@ export default function BlogsPage() {
                                 <Link href="/"><ArrowLeft size={20} /></Link>
                             </Button>
                             <h1 className="text-xl md:text-2xl font-black text-slate-900 font-display tracking-tight">
-                                Study Material
+                               Blogs
                             </h1>
                          </div>
                          
@@ -97,10 +97,28 @@ export default function BlogsPage() {
 
                          <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-xl shadow-indigo-200">
                             <h3 className="font-bold text-lg mb-2">MPPSC Mission 2026</h3>
-                            <p className="text-indigo-100 text-sm mb-4">Unlock premium mock tests and analytics.</p>
-                            <Button variant="secondary" className="w-full text-indigo-700 font-bold hover:bg-white" asChild>
-                                <Link href="/syllabus/quiz">Start Practicing</Link>
-                            </Button>
+                            {(currentUser as any)?.is_subscribed ? (
+                                <>
+                                    <p className="text-indigo-100 text-sm mb-4">You have premium access! Practice mock tests now.</p>
+                                    <Button variant="secondary" className="w-full text-indigo-700 font-bold hover:bg-white" asChild>
+                                        <Link href="/syllabus/quiz">Start Practicing</Link>
+                                    </Button>
+                                </>
+                            ) : (currentUser as any)?.plan_tier === 'lite' ? (
+                                <>
+                                    <p className="text-indigo-100 text-sm mb-4">Upgrade to Pro for full Mock Tests.</p>
+                                    <Button variant="secondary" className="w-full text-indigo-700 font-bold hover:bg-white" asChild>
+                                        <Link href="/upgrade">Upgrade to Pro</Link>
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <p className="text-indigo-100 text-sm mb-4">Unlock premium mock tests and analytics.</p>
+                                    <Button variant="secondary" className="w-full text-indigo-700 font-bold hover:bg-white" asChild>
+                                        <Link href="/upgrade">Get Premium</Link>
+                                    </Button>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

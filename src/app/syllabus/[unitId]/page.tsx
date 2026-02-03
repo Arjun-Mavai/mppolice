@@ -41,34 +41,38 @@ export default async function UnitPage({ params }: Props) {
 
       // Process DB Topics
       finalTopics = dbTopics.map(t => {
-           const c = t.content as any;
+           const c = t.content as any;               // Official Syllabus (Old)
+           const ai = t.aiContent as any;            // Rich AI Content (New)
+
            return {
                id: t.id,
                unitId: t.unitId,
-               front: t.title, // or c.front
-               back: c?.back || "",
+               front: t.title, 
+               back: c?.back || ai?.content || "",   // Fallback to AI summary if back missing
                details: c?.details,
-               mnemonic: c?.mnemonic,
-               pro_tip: c?.pro_tip,
-               impact_emoji: c?.impact_emoji,
-               important_facts: c?.important_facts,
+               mnemonic: ai?.mnemonic || c?.mnemonic,
+               impact_emoji: ai?.impact_emoji || c?.impact_emoji,
+               important_facts: ai?.points || c?.important_facts, // "Points" from AI -> "important_facts" in UI
+               pyq: ai?.pyq, // New field
                isFree: t.isFree ?? false
            };
       });
 
       // Process English (if exists in DB, otherwise check contentEn)
       finalTopicsEn = dbTopics.map(t => {
-           const c = (t.contentEn as any) || (t.content as any); // Fallback to Hindi content if EN missing
+           const c = (t.contentEn as any) || (t.content as any); 
+           const ai = (t.aiContentEn as any) || (t.aiContent as any);
+
            return {
                id: t.id,
                unitId: t.unitId,
                front: t.titleEn || t.title,
-               back: c?.back || "",
+               back: c?.back || ai?.content || "",
                details: c?.details,
-               mnemonic: c?.mnemonic,
-               pro_tip: c?.pro_tip,
-               impact_emoji: c?.impact_emoji,
-               important_facts: c?.important_facts,
+               mnemonic: ai?.mnemonic || c?.mnemonic,
+               impact_emoji: ai?.impact_emoji || c?.impact_emoji,
+               important_facts: ai?.points || c?.important_facts,
+               pyq: ai?.pyq,
                isFree: t.isFree ?? false
            };
       });

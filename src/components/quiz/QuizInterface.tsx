@@ -318,7 +318,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
                                              
                                              // Disabled State (if answered but not instant mode, or non-selected options in instant mode)
                                              isAnswered && !showFeedback && isSelected && "border-slate-900 bg-slate-100",
-                                             isAnswered && !isSelected && "opacity-60 border-slate-100",
+                                             isAnswered && !isSelected && !(showFeedback && isCorrect) && "opacity-60 border-slate-100",
                                          )}
                                       >
                                           <div className="flex justify-between items-center relative z-10">

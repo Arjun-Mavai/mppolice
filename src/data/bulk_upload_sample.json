@@ -1,0 +1,30 @@
+{
+  "unitId": "unit_1",
+  "tests": [
+    {
+      "topicId": 1,
+      "questions": [
+        {
+          "questionText": "What is the primary language of the Vedas?",
+          "questionTextEn": "What is the primary language of the Vedas?",
+          "options": ["Pali", "Sanskrit", "Prakrit", "Hindi"],
+          "correctAnswer": "Option B",
+          "explanation": "The Vedas are written in Vedic Sanskrit.",
+          "explanationEn": "The Vedas are written in Vedic Sanskrit, an ancient Indo-Aryan language.",
+          "marks": 3,
+          "negativeMarks": 1
+        },
+        {
+            "questionText": "Who constructed the Sanchi Stupa?",
+            "questionTextEn": "Who constructed the Sanchi Stupa?",
+            "options": ["Chandragupta Maurya", "Ashoka", "Bindusara", "Kanishka"],
+            "correctAnswer": "Option B",
+            "explanation": "Emperor Ashoka commissioned the Sanchi Stupa in the 3rd century BCE.",
+            "explanationEn": "Emperor Ashoka commissioned the construction of the Great Stupa at Sanchi.",
+            "marks": 3,
+            "negativeMarks": 1
+        }
+      ]
+    }
+  ]
+}
