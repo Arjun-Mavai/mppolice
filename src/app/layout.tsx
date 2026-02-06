@@ -58,7 +58,9 @@ export default function RootLayout({
         <AppFooter />
         <GlobalLockModal />
         <ScrollToTop />
-        <SupportButton />
+        <Suspense fallback={null}>
+          <SupportButton />
+        </Suspense>
         <Toaster position="top-right"  richColors/>
       </body>
     </html>
