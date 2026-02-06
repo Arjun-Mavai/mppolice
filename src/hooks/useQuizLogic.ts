@@ -180,22 +180,30 @@ export function useQuizLogic({
     }, [testId, timeLimitInMinutes]);
 
     // Timer Logic
+    // Timer Logic - Refactored to prevent memory leaks
     useEffect(() => {
         if (isSubmitted) return;
 
-        const timer = setInterval(() => {
+        const timerId = setInterval(() => {
             setTimeLeft((prev) => {
                 if (prev <= 1) {
-                    clearInterval(timer);
-                    handleSubmit();
+                    clearInterval(timerId);
+                    // Use a flag to prevent multiple submissions
                     return 0;
                 }
                 return prev - 1;
             });
         }, 1000);
 
-        return () => clearInterval(timer);
-    }, [isSubmitted, handleSubmit]);
+        return () => clearInterval(timerId);
+    }, [isSubmitted]); // Removed handleSubmit from dependencies
+
+    // Auto-submit when time reaches 0
+    useEffect(() => {
+        if (timeLeft === 0 && !isSubmitted) {
+            handleSubmit();
+        }
+    }, [timeLeft, isSubmitted, handleSubmit]);
 
 
     return {
