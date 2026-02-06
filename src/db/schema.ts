@@ -190,3 +190,19 @@ export const topicRevisions = sqliteTable('topic_revisions', {
     revisionCount: integer('revision_count').default(0),
     lastRevisedAt: integer('last_revised_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
 });
+
+// Test Leaderboard Table (Ranking Feature)
+export const testLeaderboard = sqliteTable('test_leaderboard', {
+    id: text('id').primaryKey(),
+    testId: text('test_id').notNull(),
+    userId: text('user_id'), // Nullable for fake users
+    displayName: text('display_name').notNull(),
+    score: real('score').notNull(),
+    percentage: real('percentage'),
+    timeTakenSeconds: integer('time_taken_seconds'),
+    rank: integer('rank'),
+    isFake: integer('is_fake').default(0),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+}, (table) => [
+  index('test_score_idx').on(table.testId, table.score),
+]);

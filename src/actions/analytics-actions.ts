@@ -243,9 +243,11 @@ export async function getAttemptDetails(attemptId: string) {
         // 1. Fetch Attempt Meta
         const attempt = await db.select({
             id: userAttempts.id,
+            userId: userAttempts.userId, // Added for Leaderboard
             score: userAttempts.score,
             testId: userAttempts.testId,
             testTitle: tests.title,
+            topicId: tests.topicId, // Added for title resolution
             totalMarks: tests.totalMarks,
             endTime: userAttempts.endTime,
             startTime: userAttempts.startTime
@@ -256,6 +258,29 @@ export async function getAttemptDetails(attemptId: string) {
         .limit(1);
 
         if (!attempt[0]) return null;
+
+        // Resolve Dynamic Topic Name
+        try {
+             if (attempt[0].topicId) {
+                 const { getSyllabusTopics } = await import('./getSyllabusTopics');
+                 const syllabusRes = await getSyllabusTopics();
+                 
+                 if (syllabusRes.success && syllabusRes.data) {
+                     let foundTopic: any = null;
+                     // Syllabus data is Record<string, Topic[]>
+                     const allTopics = Object.values(syllabusRes.data).flat();
+                     foundTopic = allTopics.find((t: any) => t.id === attempt[0].topicId);
+
+                     if (foundTopic) {
+                         // Prefer English title, fallback to Hindi/Default
+                         attempt[0].testTitle = foundTopic.titleEn || foundTopic.title || attempt[0].testTitle;
+                     }
+                 }
+             }
+        } catch (e) {
+            logger.error("Failed to resolve topic title", e);
+            // Fallback to existing testTitle (no change needed)
+        }
 
         // 2. Fetch Questions (ALL questions for the test)
         const allQuestions = await db.select({

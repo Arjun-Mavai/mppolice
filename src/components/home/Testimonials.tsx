@@ -85,7 +85,7 @@ export function Testimonials() {
           Loved by <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Serious Aspirants</span>
         </h2>
         <p className="text-slate-500 max-w-2xl mx-auto text-lg md:text-xl leading-relaxed">
-          Join thousands of students from every corner of Madhya Pradesh who are mastering the syllabus smarter, not harder.
+          Join students from every corner of Madhya Pradesh who are mastering the syllabus smarter, not harder.
         </p>
       </div>
 

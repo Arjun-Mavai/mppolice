@@ -7,6 +7,7 @@ import { unstable_cache } from 'next/cache';
 import { verifyAuth } from '@/lib/auth';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { logger } from '@/lib/logger';
+import { insertUserToLeaderboard } from '@/actions/leaderboard-actions';
 
 // --- Generic Cached Fetchers ---
 
@@ -214,6 +215,28 @@ export async function submitTestAttempt(
                  );
              }
         });
+
+        // 4. Update Leaderboard (Async - Fire and Forget mostly, or await if critical)
+        // Need user name for leaderboard
+        const user = await verifyAuth();
+        if (user && user.name) {
+             // We need total marks for percentage calc in leaderboard
+             // We sum marks from questions
+             /* 
+                Already have testQuestions with marks.
+                const totalMarks = testQuestions.reduce((sum, q) => sum + q.marks, 0); 
+             */
+             const totalTestMarks = testQuestions.reduce((sum, q) => sum + q.marks, 0);
+
+             await insertUserToLeaderboard({
+                 testId,
+                 userId,
+                 displayName: user.name,
+                 score: parseFloat(totalScore.toFixed(2)),
+                 timeTaken: durationSeconds,
+                 totalMarks: totalTestMarks
+             });
+        }
 
         return { success: true, attemptId, score: parseFloat(totalScore.toFixed(2)) };
 

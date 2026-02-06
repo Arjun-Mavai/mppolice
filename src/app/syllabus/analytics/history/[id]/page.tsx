@@ -1,8 +1,9 @@
 
-import React, { Suspense } from 'react';
+import  { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getAttemptDetails } from '@/actions/analytics-actions';
+import { getTestLeaderboard } from '@/actions/leaderboard-actions';
 import { 
     ArrowLeft, 
     Clock, 
@@ -17,7 +18,8 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { PremiumExplanation } from '@/components/quiz/PremiumExplanation';
 import { calculateScore } from '@/lib/quiz-scoring';
-import Loading from './loading';
+ import Loading from './loading';
+import { HistoryLeaderboard } from './HistoryLeaderboard';
 
 export default async function AttemptReviewPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
@@ -37,6 +39,10 @@ async function AttemptContent({ attemptId }: { attemptId: string }) {
     }
 
     const { meta, answers } = attempt;
+console.log("logging attempt", attempt);
+    // Fetch Leaderboard Data
+    // Bhai, history page pe bhi rank dikhni chahiye, tabhi maza aayega.
+    const leaderboard = await getTestLeaderboard(meta.testId, meta.userId);
 
     // Categorize answers first to use lengths for calculation
     const correctAns = answers.filter(a => a.isCorrect);
@@ -60,7 +66,7 @@ async function AttemptContent({ attemptId }: { attemptId: string }) {
          const seconds = diffSeconds % 60;
          durationDisplay = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
     }
-
+console.log("logging meta" ,meta);
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-20">
             {/* Header / Hero */}
@@ -142,6 +148,12 @@ async function AttemptContent({ attemptId }: { attemptId: string }) {
                     </div>
                 </div>
             </div>
+
+            {/* LEADERBOARD SECTION - Integrated for History */}
+            <HistoryLeaderboard 
+                leaderboard={leaderboard} 
+                currentUserId={meta.userId} 
+            />
 
             {/* Question List */}
             <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-8">
