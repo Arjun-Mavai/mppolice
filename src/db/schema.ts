@@ -13,7 +13,10 @@ export const mppscUsers = sqliteTable('mppsc_users', {
   planTier: text('plan_tier', { enum: ['free', 'lite', 'pro'] }).default('free'),
   role: text('role').default('guest'), // 'guest' | 'admin'
   adminSecret: text('admin_secret'), // Secure key for admin operations (nullable)
-});
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }), // Soft delete support
+}, (table) => [
+  index('idx_users_email').on(table.email),
+]);
 
 // Tests Table
 export const tests = sqliteTable('tests', {
@@ -33,7 +36,11 @@ export const tests = sqliteTable('tests', {
   maxRetries: integer('max_retries'), // null = unlimited. Standard: Unit=5, FLT=3
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
-});
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }), // Soft delete support
+}, (table) => [
+  index('idx_tests_slug').on(table.slug),
+  index('idx_tests_type_ispro').on(table.type, table.isPro),
+]);
 
 // Questions Table
 export const questions = sqliteTable('questions', {
@@ -53,7 +60,10 @@ export const questions = sqliteTable('questions', {
   // New fields for Matching Support
   type: text('type', { enum: ['standard', 'matching'] }).default('standard'),
   matchPairs: text('match_pairs', { mode: 'json' }), // JSON Array: [{ id: '1', label: 'A', match: 'B', ... }]
-});
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }), // Soft delete support
+}, (table) => [
+    index('idx_questions_subject').on(table.testId, table.subject),
+]);
 
 // User Attempts Table
 export const userAttempts = sqliteTable('user_attempts', {
@@ -64,11 +74,19 @@ export const userAttempts = sqliteTable('user_attempts', {
   endTime: integer('end_time', { mode: 'timestamp' }),
   score: real('score'),
   isCompleted: integer('is_completed', { mode: 'boolean' }).default(false),
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }), // Soft delete support
 }, (table) => [
   index('user_id_idx').on(table.userId),
   index('test_id_idx').on(table.testId),
   index('user_test_idx').on(table.userId, table.testId),
+  // Optimized for analytics and completion history
   index('completed_idx').on(table.isCompleted, table.endTime),
+  // Composite index for fast history lookups
+  index('idx_user_test_completed').on(table.userId, table.testId, table.isCompleted, table.endTime),
+  // Time-based analytics index
+  index('idx_attempts_by_date').on(table.userId, table.endTime),
+  // NEW: Requested by code review
+  index('idx_user_attempts_completion_score').on(table.userId, table.isCompleted, table.score),
 ]);
 
 
@@ -80,10 +98,12 @@ export const attemptAnswers = sqliteTable('attempt_answers', {
   userAnswer: text('user_answer'),
   isCorrect: integer('is_correct', { mode: 'boolean' }),
   timeTakenSeconds: integer('time_taken_seconds'),
-}, (table) => ({
-    attemptIdIdx: index('attempt_id_idx').on(table.attemptId),
-    questionIdIdx: index('question_id_idx').on(table.questionId),
-}));
+ }, (table) => [
+    index('attempt_id_idx').on(table.attemptId),
+    index('question_id_idx').on(table.questionId),
+    // Performance: Composite index for granular analytics
+    index('idx_attempt_question').on(table.attemptId, table.questionId),
+]);
 
 // Syllabus Topics Table (New)
 export const syllabusTopics = sqliteTable('syllabus_topics', {
@@ -102,9 +122,9 @@ export const syllabusTopics = sqliteTable('syllabus_topics', {
   isFree: integer('is_free', { mode: 'boolean' }).default(false),
   imgUrl: text('img_url'), // For image support
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
-}, (table) => ({
-    unitOrderIdx: index('unit_order_idx').on(table.unitId, table.order),
-}));
+}, (table) => [
+    index('unit_order_idx').on(table.unitId, table.order),
+]);
 
 // Blog/Vlog Content Table
 export const contentBlogs = sqliteTable('content_blogs', {
@@ -205,4 +225,6 @@ export const testLeaderboard = sqliteTable('test_leaderboard', {
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
 }, (table) => [
   index('test_score_idx').on(table.testId, table.score),
+  // Ranking index: Score DESC, Time ASC
+  index('idx_leaderboard_ranking').on(table.testId, table.score, table.timeTakenSeconds),
 ]);

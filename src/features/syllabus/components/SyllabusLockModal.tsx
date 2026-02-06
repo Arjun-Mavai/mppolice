@@ -1,6 +1,6 @@
 import { PremiumMarketing } from "@/components/PremiumMarketing";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 interface SyllabusLockModalProps {
   open: boolean;

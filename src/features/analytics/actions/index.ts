@@ -6,6 +6,7 @@ import { eq, inArray } from 'drizzle-orm';
 import { unstable_cache, revalidateTag } from "next/cache";
 import { verifyAuth } from '@/lib/auth';
 import { logger } from '@/lib/logger';
+import { cachedData } from "@/lib/cache";
 
 // Cache Analytics per user for 5 minutes to avoid DB spam on refresh
 export const getUserAnalytics = async (userId: string) => {
@@ -162,7 +163,7 @@ async function fetchAnalyticsInternal(userId: string) {
         });
         
         // Use server data to enrich history with proper Topic & Unit names
-        const { getSyllabusTopics } = await import('./getSyllabusTopics');
+        const { getSyllabusTopics } = await import('@/actions/getSyllabusTopics');
         const syllabusRes = await getSyllabusTopics();
         const topicMap = new Map<string, any>();
         
@@ -236,7 +237,7 @@ async function fetchAnalyticsInternal(userId: string) {
     }
 }
 
-export async function getAttemptDetails(attemptId: string) {
+export const getAttemptDetails = cachedData(async (attemptId: string) => {
     if (!attemptId) return null;
 
     try {
@@ -262,8 +263,8 @@ export async function getAttemptDetails(attemptId: string) {
         // Resolve Dynamic Topic Name
         try {
              if (attempt[0].topicId) {
-                 const { getSyllabusTopics } = await import('./getSyllabusTopics');
-                 const syllabusRes = await getSyllabusTopics();
+        const { getSyllabusTopics } = await import('@/actions/getSyllabusTopics');
+        const syllabusRes = await getSyllabusTopics();
                  
                  if (syllabusRes.success && syllabusRes.data) {
                      let foundTopic: any = null;
@@ -337,4 +338,4 @@ export async function getAttemptDetails(attemptId: string) {
         logger.error("Fetch Attempt Details Error:", error);
         return null;
     }
-}
+}, ['attempt-details'], ['attempts']);

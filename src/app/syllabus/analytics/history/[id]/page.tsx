@@ -2,7 +2,7 @@
 import  { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getAttemptDetails } from '@/actions/analytics-actions';
+import { getAttemptDetails } from "@/features/analytics/actions";
 import { getTestLeaderboard } from '@/actions/leaderboard-actions';
 import { 
     ArrowLeft, 
@@ -15,11 +15,12 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { QuizResult } from "@/features/tests/components/QuizResult";
 import { cn } from '@/lib/utils';
-import { PremiumExplanation } from '@/components/quiz/PremiumExplanation';
-import { calculateScore } from '@/lib/quiz-scoring';
+ import { calculateScore } from '@/lib/quiz-scoring';
  import Loading from './loading';
 import { HistoryLeaderboard } from './HistoryLeaderboard';
+import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
 
 export default async function AttemptReviewPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;

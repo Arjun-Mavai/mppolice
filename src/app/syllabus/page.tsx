@@ -19,9 +19,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/store/useSettingsStore";
-import { SyllabusSearch } from "@/components/SyllabusSearch";
+import { SyllabusSearch } from "@/features/syllabus/components/SyllabusSearch";
 // import { ViewToggle } from "@/components/ViewToggle";
-import { SyllabusLockModal } from "@/components/SyllabusLockModal";
+import { SyllabusLockModal } from "@/features/syllabus/components/SyllabusLockModal";
 
 // Shadcn UI Components
 import { Button } from "@/components/ui/button";

@@ -79,7 +79,7 @@ export function useQuizLogic({
         }
 
         try {
-            const { submitTestAttempt } = await import('@/actions/test-actions');
+            const { submitTestAttempt } = await import('@/features/tests/actions/submission');
             
             // Mapping answers to string format
             const formattedAnswers: Record<string, string> = {};

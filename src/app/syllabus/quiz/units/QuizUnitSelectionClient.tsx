@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { syllabusData } from '@/data/syllabusData';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { PLAN_LIMITS } from '@/config/plans';
-import { SyllabusLockModal } from '@/components/SyllabusLockModal';
+import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';

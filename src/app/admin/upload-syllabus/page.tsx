@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { uploadSyllabusData } from '@/actions/syllabus-actions';
+import { uploadSyllabusData } from '@/features/syllabus/actions';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';

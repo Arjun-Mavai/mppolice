@@ -70,9 +70,7 @@ export default function RootLayout({
         className={`${outfit.variable} ${playfair.variable} antialiased font-sans bg-gray-50 text-gray-900`}
       >
         <PwaRegistry />
-        <Suspense fallback={<div>Loading...</div>}>
-          {children}
-        </Suspense>
+        {children}
         <AppFooter />
         <GlobalLockModal />
         <ScrollToTop />

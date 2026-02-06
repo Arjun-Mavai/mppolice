@@ -9,7 +9,7 @@ import { ArrowLeft, Calendar, FileText, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { PLAN_LIMITS } from '@/config/plans';
-import { SyllabusLockModal } from '@/components/SyllabusLockModal';
+import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 
 interface PYQTest {
     id: string;

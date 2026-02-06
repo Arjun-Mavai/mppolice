@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, XCircle, AlertCircle, RefreshCw, Home, ChevronDown, ChevronUp, Sparkles, Quote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,11 +9,9 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { PremiumExplanation } from './PremiumExplanation';
-import { useSettingsStore } from '@/store/useSettingsStore';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
-import { revalidateAnalyticsAction } from '@/actions/analytics-actions';
-import { useEffect } from 'react';
 import { getTestLeaderboard } from '@/actions/leaderboard-actions';
+import { revalidateAnalyticsAction } from '@/features/analytics/actions';
 
 interface QuizResultProps {
     questions: Question[];

@@ -3,7 +3,7 @@
 import { db } from '@/db';
 import { tests, userAttempts, questions, attemptAnswers } from '@/db/schema';
 import { eq, asc, desc, and, inArray, sql } from 'drizzle-orm';
-import { unstable_cache } from 'next/cache';
+import { unstable_cache, revalidateTag } from 'next/cache';
 import { verifyAuth } from '@/lib/auth';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { logger } from '@/lib/logger';
@@ -238,6 +238,10 @@ export async function submitTestAttempt(
              });
         }
 
+        // 5. Invalidate User Analytics Cache
+        // "Bhai result aa gaya, ab purana cache hatao"
+        await revalidateTag(`analytics-${userId}`, { expire: 0 });
+        
         return { success: true, attemptId, score: parseFloat(totalScore.toFixed(2)) };
 
     } catch (error) {

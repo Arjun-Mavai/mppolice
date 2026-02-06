@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Lock, Play, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
-import { SyllabusLockModal } from '@/components/SyllabusLockModal';
+import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { useRouter } from 'next/navigation';
 
 export interface TestWithAccess {

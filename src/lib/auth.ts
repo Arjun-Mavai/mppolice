@@ -13,7 +13,18 @@ export const verifyAuth = cache(async () => {
         return null;
     }
 
-    const userId = token.value;
+
+    // "Bhai token verify kar raha hai"
+    const { verifyToken } = await import('@/lib/jwt');
+    const decoded: any = verifyToken(token.value);
+
+    if (!decoded || !decoded.userId) {
+        // "Nakli maal ya expired"
+        return null;
+    }
+
+    const userId = decoded.userId;
+
 
     try {
         const users = await db.select().from(mppscUsers).where(eq(mppscUsers.id, userId)).limit(1);

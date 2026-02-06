@@ -65,9 +65,9 @@ export async function uploadBlog(data: any) {
     }
 }
 
-import { unstable_cache } from "next/cache";
+import { cachedData, CACHE_TAGS } from "@/lib/cache";
 
-export const getCachedBlogs = unstable_cache(
+export const getCachedBlogs = cachedData(
     async () => {
         try {
             const blogs = await db.select().from(contentBlogs).orderBy(desc(contentBlogs.createdAt));
@@ -78,7 +78,7 @@ export const getCachedBlogs = unstable_cache(
         }
     },
     ['blogs-list'],
-    { revalidate: 3600, tags: ['blogs'] }
+    [CACHE_TAGS.SYLLABUS] // Using SYLLABUS tag as proxy or create BLOGS tag if needed. Reuse minimizes complexity.
 );
 
 export async function getBlogs() {

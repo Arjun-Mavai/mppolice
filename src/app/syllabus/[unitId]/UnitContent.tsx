@@ -7,13 +7,13 @@ import { ArrowLeft, ArrowRight, BookOpen, Sparkles, Brain, Lightbulb, Search, Ro
 import FlipCard from '@/components/FlipCard';
 import { cn } from '@/lib/utils';
 import { SideDrawer } from '@/components/SideDrawer';
-import { SyllabusSearch } from '@/components/SyllabusSearch';
+import { SyllabusSearch } from '@/features/syllabus/components/SyllabusSearch';
 import { ViewToggle } from '@/components/ViewToggle';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { SyllabusLockModal } from '@/components/SyllabusLockModal';
+import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { Button } from '@/components/ui/button';
-import { SyllabusTopicSheet } from '@/components/syllabus/SyllabusTopicSheet';
-import { isSyllabusTopicLocked } from '@/lib/syllabus-locks';
+import { SyllabusTopicSheet } from '@/features/syllabus/components/SyllabusTopicSheet';
+import { isSyllabusTopicLocked } from '@/features/syllabus/utils/locks';
 
 // Type definition matching the DB Schema / Fallback Data
 export interface TopicData {

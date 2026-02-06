@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getTestWithQuestions, getUserAttempts } from '@/actions/test-actions';
+import { getTestWithQuestions, getUserAttempts } from '@/features/tests/actions/submission';
 import { QuizPlayClient } from './QuizPlayClient';
 import { verifyAuth } from '@/lib/auth';
 import { PLAN_LIMITS } from '@/config/plans';

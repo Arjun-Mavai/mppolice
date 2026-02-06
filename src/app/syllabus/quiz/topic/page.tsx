@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { toast } from "sonner"; 
-import { SyllabusLockModal } from '@/components/SyllabusLockModal';
+import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { PLAN_LIMITS } from '@/config/plans';
 import { getSyllabusTopics } from '@/actions/getSyllabusTopics';
 

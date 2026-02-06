@@ -12,7 +12,7 @@ import { TopicData } from "@/app/syllabus/[unitId]/UnitContent";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useEffect, useState, useTransition } from "react";
-import { getRevisionCount, markTopicRevised } from "@/actions/syllabus";
+import { getRevisionCount, markTopicRevised } from "@/features/syllabus/actions/revision";
 import { logger } from "@/lib/logger";
 
 interface SyllabusTopicSheetProps {

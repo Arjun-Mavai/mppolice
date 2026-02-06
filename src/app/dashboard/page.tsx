@@ -2,15 +2,15 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import { getUserAnalytics } from '@/actions/analytics-actions';
+import { DashboardView } from "@/features/analytics/components/DashboardView";
+import { getUserAnalytics } from "@/features/analytics/actions";
 import AnalyticsDashboardClient from '@/app/syllabus/analytics/AnalyticsDashboardClient';
 import { Badge } from '@/components/ui/badge';
-import { getUserSyllabusProgress } from '@/actions/syllabus';
-import { syllabusData } from '@/data/syllabusData';
-import { SyllabusProgressWidget } from '@/components/analytics/SyllabusProgressWidget';
-
+ import { syllabusData } from '@/data/syllabusData';
+ 
 import { verifyAuth } from '@/lib/auth';
+import { getUserSyllabusProgress } from '@/features/syllabus/actions/revision';
+import { SyllabusProgressWidget } from '@/features/analytics/components/SyllabusProgressWidget';
 
 export default async function DashboardPage() {
     const user = await verifyAuth();
