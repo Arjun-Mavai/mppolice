@@ -4,6 +4,7 @@ import { QuizPlayClient } from './QuizPlayClient';
 import { verifyAuth } from '@/lib/auth';
 import { PLAN_LIMITS } from '@/config/plans';
 import { Question } from '@/types/quiz';
+import { logger } from "@/lib/logger";
 
 interface PageProps {
     searchParams: Promise<{
@@ -15,7 +16,7 @@ interface PageProps {
 export default async function QuizPlayPage({ searchParams }: PageProps) {
 
     const params = await searchParams;
-    console.log("params", params);
+    logger.debug("params", params);
     const { testId, mode } = params;
 
     if (!testId) {

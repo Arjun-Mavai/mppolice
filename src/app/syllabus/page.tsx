@@ -135,24 +135,11 @@ function SyllabusContent() {
     }
   }, []);
 
-  // Check auth status
+  // Check auth status - REDUNDANT: Handled by AppNavbar global session check
+  // keeping purely for reference if specific logic needed later, but removing fetch to save calls
   useEffect(() => {
-    const checkAuth = async () => {
-        try {
-            const res = await fetch('/api/auth/mppsc-check');
-            const data = await res.json();
-            if (data.authenticated) {
-                // Assuming the API returns is_subscribed in the user object or separately
-                // I need to update the mppsc-check API to return is_subscribed if it doesn't already
-                setUser(data.user, data.user.is_subscribed || false);
-            } else {
-                setUser(null, false);
-            }
-        } catch (e) {
-            console.error("Auth check failed", e);
-        }
-    };
-    checkAuth();
+     // We rely on the global useSettingsStore populated by AppNavbar
+     // No need to fetch /api/auth/mppsc-check again here
   }, []);
 
   const handleLogout = async () => {
@@ -182,7 +169,7 @@ function SyllabusContent() {
       {/* --- Global Command Palette (Search) --- */}
 
       {/* --- Global Command Palette (Search) --- */}
-      <SyllabusSearch open={open} setOpen={setOpen} />
+      {/* <SyllabusSearch open={open} setOpen={setOpen} /> */}
 
 
       {/* --- Main Content --- */}

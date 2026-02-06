@@ -5,6 +5,7 @@ import { userAttempts, tests, questions, attemptAnswers } from '@/db/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { unstable_cache, revalidateTag } from "next/cache";
 import { verifyAuth } from '@/lib/auth';
+import { logger } from '@/lib/logger';
 
 // Cache Analytics per user for 5 minutes to avoid DB spam on refresh
 export const getUserAnalytics = async (userId: string) => {
@@ -230,7 +231,7 @@ async function fetchAnalyticsInternal(userId: string) {
         };
 
     } catch (error) {
-        console.error("Analytics Error:", error);
+        logger.error("Analytics Error:", error);
         return null;
     }
 }
@@ -308,7 +309,7 @@ export async function getAttemptDetails(attemptId: string) {
         };
 
     } catch (error) {
-        console.error("Fetch Attempt Details Error:", error);
+        logger.error("Fetch Attempt Details Error:", error);
         return null;
     }
 }

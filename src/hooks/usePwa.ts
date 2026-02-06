@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logger } from "@/lib/logger";
 
 /**
  * Interface for the BeforeInstallPromptEvent
@@ -53,7 +54,7 @@ export function usePwa() {
       // We cast it because the event listener uses the standard Event type
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
-      console.log("PWA Install Prompt captured");
+      logger.debug("PWA Install Prompt captured");
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -63,10 +64,10 @@ export function usePwa() {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js').then(
                 (registration) => {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    logger.debug('ServiceWorker registration successful with scope: ', registration.scope);
                 },
                 (err) => {
-                    console.log('ServiceWorker registration failed: ', err);
+                    logger.error('ServiceWorker registration failed: ', err);
                 }
             );
         });
@@ -82,7 +83,7 @@ export function usePwa() {
 
   const installPwa = async () => {
     if (!deferredPrompt) {
-        console.log("Install prompt not available");
+        logger.debug("Install prompt not available");
         return;
     }
 
@@ -91,7 +92,7 @@ export function usePwa() {
 
     // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response to the install prompt: ${outcome}`);
+    logger.info(`User response to the install prompt: ${outcome}`);
 
     // We've used the prompt, and can't use it again, throw it away
     setDeferredPrompt(null);

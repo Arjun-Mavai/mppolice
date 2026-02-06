@@ -6,6 +6,7 @@ import { eq, asc, desc, and, inArray, sql } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { verifyAuth } from '@/lib/auth';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
+import { logger } from '@/lib/logger';
 
 // --- Generic Cached Fetchers ---
 
@@ -114,7 +115,7 @@ export async function getTestWithQuestions(testId: string) {
         
         return test || null;
     } catch (error) {
-        console.error("Invalid Test ID or DB Error:", error);
+        logger.error("Invalid Test ID or DB Error:", error);
         return null;
     }
 }
@@ -217,7 +218,7 @@ export async function submitTestAttempt(
         return { success: true, attemptId, score: parseFloat(totalScore.toFixed(2)) };
 
     } catch (error) {
-        console.error("Error submitting test:", error);
+        logger.error("Error submitting test:", error);
         return { error: "Failed to submit test" };
     }
 }

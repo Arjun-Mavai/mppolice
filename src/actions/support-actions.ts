@@ -5,6 +5,7 @@ import { supportTickets, mppscUsers } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { verifyAuth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 
 export async function submitSupportTicket(data: any) {
     try {
@@ -29,7 +30,7 @@ export async function submitSupportTicket(data: any) {
         // revalidatePath('/admin/dashboard'); // If we show tickets there
         return { success: true };
     } catch (error) {
-        console.error("Support Ticket Error:", error);
+        logger.error("Support Ticket Error:", error);
         return { success: false, error: "Failed to submit ticket" };
     }
 }

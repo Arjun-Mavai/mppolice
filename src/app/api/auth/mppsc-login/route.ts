@@ -4,6 +4,7 @@ import { mppscUsers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
         } 
     });
   } catch (error) {
-    console.error("Login error:", error);
+    logger.error("Login error:", error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

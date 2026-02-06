@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { TopMenu } from "@/components/TopMenu";
 import { QUOTES } from "@/data/quotes"; // Import QUOTES directly for now
+import { useSettingsStore } from "@/store/useSettingsStore";
 
 // Extended props to accept initial data from Server Component
 interface DashboardProps {
@@ -32,27 +33,31 @@ export default function Dashboard({ initialCategories, initialQuotes }: Dashboar
 
   // Check paywall on mount and whenever swipeCount changes
   // Sync Pro Status
-  useEffect(() => {
-      async function syncStatus() {
-          try {
-              const res = await fetch('/api/auth/me');
-              if (res.ok) {
-                  const data = await res.json();
-                  syncProStatus(!!data.user.is_pro);
-              }
-          } catch (e) {
-              console.error("Failed to sync pro status", e);
-          }
-      }
-      syncStatus();
-  }, [syncProStatus]);
+  // Sync Pro Status from Global Store instead of redundant API call
+  const { user } = useSettingsStore();
 
-  // Check paywall on mount and whenever swipeCount changes
   useEffect(() => {
-    if (!isPro && swipeCount >= 10) {
-        setShowPaywall(true);
-    }
-  }, [swipeCount, isPro]);
+      if (user) {
+          // Check multiple flags for robustness (legacy is_pro, plan_tier, or is_subscribed)
+          const isProUser = user.is_pro || user.plan_tier === 'pro' || user.is_subscribed;
+          
+          // Only sync if the value actually changes to avoid unnecessary store updates
+          // (Assuming syncProStatus handles this check internally, but good to be aware)
+          syncProStatus(!!isProUser);
+      }
+  }, [user, syncProStatus]);
+
+  // // ------------------------------------------------------------------
+  // // EFFECT 2: BUSINESS LOGIC (The "Enforcer")
+  // // ------------------------------------------------------------------
+  // // Why: This strictly watches the `swipeCount` and `isPro` status.
+  // // If the user runs out of free swipes (>=10) and isn't Pro, we slam the Paywall.
+  // useEffect(() => {
+  //   // Optimization: Only trigger if NOT pro. Pro users shouldn't even check this logic.
+  //   if (!isPro && swipeCount >= 10) {
+  //       setShowPaywall(true);
+  //   }
+  // }, [swipeCount, isPro]);
 
   return (
     <main className={cn(

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { paymentExitReasons } from '@/db/schema';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {
   try {
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Failed to save exit survey:", error);
+    logger.error("Failed to save exit survey:", error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

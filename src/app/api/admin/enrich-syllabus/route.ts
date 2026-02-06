@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { syllabusTopics, mppscUsers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { logger } from "@/lib/logger";
 
 // Admin Secret for protection (reuse the one we added)
 const ADMIN_SECRET_HEADER = 'x-admin-secret';
@@ -69,10 +70,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        console.log("request", request)
+        // logger.debug("request", request)
         // 1. Security Check
         const adminSecret = request.headers.get(ADMIN_SECRET_HEADER);
-        console.log("adminSecret", adminSecret)
+        // logger.debug("adminSecret", adminSecret)
         if (!adminSecret) {
             return NextResponse.json({ error: "Missing Admin Secret" }, { status: 401 });
         }
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest) {
         let updatedCount = 0;
         let errors = [];
 
-        console.log("topics", topics)
+        // logger.debug("topics", topics)
         // 3. Bulk Update
         // We loop and update. For massive datasets (1000+), we might want batching, 
         // but for syllabus (100-200 items), sequential await is fine for this admin tool.
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
                 
                 updatedCount++;
             } catch (err: any) {
-                console.error(`Failed to update topic ${topic.id}:`, err);
+                logger.error(`Failed to update topic ${topic.id}:`, err);
                 errors.push({ id: topic.id, error: err.message });
             }
         }
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (error: any) {
-        console.error("Bulk enrichment failed:", error);
+        logger.error("Bulk enrichment failed:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

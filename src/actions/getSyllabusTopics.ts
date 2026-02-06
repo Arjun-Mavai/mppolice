@@ -3,6 +3,7 @@
 import { db } from "@/db";
 import { syllabusTopics, tests } from "@/db/schema";
 import { asc, eq, inArray } from "drizzle-orm";
+import { logger } from "@/lib/logger";
 
 export async function getSyllabusTopics() {
   try {
@@ -45,7 +46,7 @@ export async function getSyllabusTopics() {
     return { success: true, data: grouped };
 
   } catch (error) {
-    console.error("Error fetching syllabus topics:", error);
+    logger.error("Error fetching syllabus topics:", error);
     return { success: false, error: "Failed to fetch topics" };
   }
 }

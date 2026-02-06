@@ -5,6 +5,7 @@ import { topicRevisions, mppscUsers } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
+import { logger } from '@/lib/logger';
 
 async function getUser() {
   const cookieStore = await cookies();
@@ -14,15 +15,15 @@ async function getUser() {
 
 export async function markTopicRevised(topicId: string, unitId: string) {
   const userId = await getUser();
-  console.log('markTopicRevised called:', { topicId, unitId, userId }); // Debug log
+  logger.info('markTopicRevised called:', { topicId, unitId, userId }); // Debug log
 
   if (!userId) {
-      console.error('markTopicRevised: No user ID found');
+      logger.error('markTopicRevised: No user ID found');
       return { error: 'Unauthorized' };
   }
   
   if (!topicId || !unitId) {
-      console.error('markTopicRevised: Missing topicId or unitId', { topicId, unitId });
+      logger.error('markTopicRevised: Missing topicId or unitId', { topicId, unitId });
       return { error: 'Invalid data' };
   }
 
@@ -61,7 +62,7 @@ export async function markTopicRevised(topicId: string, unitId: string) {
           return { success: true, count: 1 };
       }
   } catch (error) {
-      console.error('Error marking revision:', error);
+      logger.error('Error marking revision:', error);
       return { error: 'Failed to mark revision' };
   }
 }
@@ -99,7 +100,7 @@ export async function getUserSyllabusProgress() {
 
         return { revisedTopicsCount, totalRevisions };
     } catch (error) {
-        console.error('Error fetching progress:', error);
+        logger.error('Error fetching progress:', error);
         return { revisedTopicsCount: 0, totalRevisions: 0 };
     }
 }

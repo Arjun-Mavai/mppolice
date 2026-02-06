@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { tests, questions, mppscUsers, syllabusTopics } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 
 // Type definitions for the upload payload
 interface QuestionPayload {
@@ -149,7 +150,7 @@ export async function uploadTopicTestQuestions(data: BulkUploadPayload, adminSec
     return { success: true, message: `Successfully processed ${processedCount} topics.` };
 
   } catch (error: any) {
-    console.error("Bulk Upload Error:", error);
+    logger.error("Bulk Upload Error:", error);
     return { success: false, error: error.message || "Internal Server Error" };
   }
 }

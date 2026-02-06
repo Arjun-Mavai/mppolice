@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Loader2, FileJson, Upload, BookOpen, Video, FileText, CheckCircle2, Plus, Database } from "lucide-react";
 import { syllabusData } from "@/data/syllabusData";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { logger } from "@/lib/logger";
 
 
 
@@ -142,7 +143,7 @@ export default function AdminUploadPage() {
                 toast.error(res.error || "Upload failed");
             }
         } catch (err) {
-            console.error(err);
+            logger.error('Blog Upload Failed:', err);
             toast.error("Invalid JSON format. Please check the structure.");
         } finally {
             setIsLoading(false);

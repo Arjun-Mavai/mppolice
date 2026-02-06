@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Check, Loader2, MessageCircle, ShieldQuestion } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { logger } from "@/lib/logger";
 
 import { Button } from "@/components/ui/button"
 import {
@@ -56,7 +57,7 @@ export function ExitSurveyModal({
       
       onConfirmExit();
     } catch (error) {
-      console.error("Failed to submit survey:", error)
+      logger.error("Failed to submit survey:", error)
       onConfirmExit(); // Let them go anyway
     } finally {
       setLoading(false)

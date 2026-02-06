@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { RotateCcw, Home } from 'lucide-react';
+import { logger } from "@/lib/logger";
 
 export default function QuizError({
     error,
@@ -11,7 +12,7 @@ export default function QuizError({
     reset: () => void;
 }) {
     useEffect(() => {
-        console.error('Quiz Error:', error);
+        logger.error('Quiz Error:', error);
     }, [error]);
 
     return (

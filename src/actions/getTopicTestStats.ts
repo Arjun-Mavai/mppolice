@@ -3,6 +3,7 @@
 import { db } from "@/db";
 import { tests, syllabusTopics } from "@/db/schema";
 import { eq, sql, and } from "drizzle-orm";
+import { logger } from "@/lib/logger";
 
 export interface TopicStat {
     topicId: string; // the string ID from syllabus_topics
@@ -62,7 +63,7 @@ export async function getTopicTestStats() {
         return { success: true, data: stats };
 
     } catch (error) {
-        console.error("Error fetching topic stats:", error);
+        logger.error("Error fetching topic stats:", error);
         return { success: false, error: "Failed to load stats" };
     }
 }

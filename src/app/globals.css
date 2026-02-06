@@ -54,6 +54,9 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+body.lock-scroll {
+  overflow: hidden; /* Hide scrollbars and disable scrolling */
+}
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .no-scrollbar {

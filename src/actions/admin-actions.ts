@@ -6,6 +6,7 @@ import { nanoid } from 'nanoid';
 import { revalidatePath } from 'next/cache';
 import { eq, sql, desc } from 'drizzle-orm';
 import { AdminDashboardResponse } from '@/types/admin';
+import { logger } from '@/lib/logger';
 
 // Helper to fetch tests for the dropdown
 export async function getExistingTests() {
@@ -23,7 +24,7 @@ export async function getExistingTests() {
         
         return result;
     } catch (e) {
-        console.error("Error fetching tests:", e);
+        logger.error("Error fetching tests:", e);
         return [];
     }
 }
@@ -183,7 +184,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
 
 
     } catch (error) {
-        console.error("Upload Error:", error);
+        logger.error("Upload Error:", error);
         return { success: false, message: `Server Error: ${error instanceof Error ? error.message : "Unknown error"}` };
     }
 }
@@ -269,7 +270,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
         };
 
     } catch (e) {
-         console.error("Dashboard Stats Error:", e);
+         logger.error("Dashboard Stats Error:", e);
          return { success: false, error: "Failed to fetch stats" };
     }
 }
@@ -286,7 +287,7 @@ export async function getPaymentExitStats() {
 
     return { success: true, reasons, breakdown };
   } catch (error) {
-    console.error('Failed to fetch payment exit stats:', error);
+    logger.error('Failed to fetch payment exit stats:', error);
     return { success: false, error: 'Failed to fetch stats' };
   }
 }

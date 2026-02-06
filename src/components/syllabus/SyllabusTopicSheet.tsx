@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useEffect, useState, useTransition } from "react";
 import { getRevisionCount, markTopicRevised } from "@/actions/syllabus";
+import { logger } from "@/lib/logger";
 
 interface SyllabusTopicSheetProps {
   open: boolean;
@@ -38,7 +39,7 @@ export function SyllabusTopicSheet({
   useEffect(() => {
      if (open && topic) {
          getRevisionCount(topic.id.toString()).then(count => {
-             console.log("Fetched revision count:", count);
+             logger.debug("Fetched revision count:", count);
              setRevisionCount(count);
          });
      }
@@ -48,7 +49,7 @@ export function SyllabusTopicSheet({
       if (!topic) return;
       // Use explicit unitId or fallback to topic.unitId
       const targetUnitId = unitId || topic.unitId;
-      console.log("Marking revised:", topic.id, targetUnitId);
+      logger.debug("Marking revised:", topic.id, targetUnitId);
       
       startTransition(async () => {
           const res = await markTopicRevised(topic.id.toString(), targetUnitId);

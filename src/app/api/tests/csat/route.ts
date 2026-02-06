@@ -3,6 +3,7 @@ import { tests, userAttempts } from '@/db/schema';
 import { eq, and, desc, sql, inArray, asc } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { logger } from "@/lib/logger";
 
 // export const dynamic = 'force-dynamic';
 
@@ -43,7 +44,7 @@ export async function GET() {
         });
 
     } catch (error) {
-        console.error('Error fetching CSAT tests:', error);
+        logger.error('Error fetching CSAT tests:', error);
         return NextResponse.json({ error: 'Failed to fetch tests' }, { status: 500 });
     }
 }

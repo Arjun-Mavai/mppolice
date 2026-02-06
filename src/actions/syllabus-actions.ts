@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { syllabusTopics } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { logger } from '@/lib/logger';
 
 export async function uploadSyllabusData(jsonData: string, secretKey: string) {
     if (secretKey !== process.env.ADMIN_SECRET_KEY && secretKey !== 'mppsc_admin_2026') {
@@ -41,7 +42,7 @@ export async function uploadSyllabusData(jsonData: string, secretKey: string) {
         return { success: true, message: `Successfully uploaded ${topicsToInsert.length} topics for ${data.unitId}` };
 
     } catch (error: any) {
-        console.error("Upload Error:", error);
+        logger.error("Upload Error:", error);
         return { success: false, message: "Server Error: " + error.message };
     }
 }

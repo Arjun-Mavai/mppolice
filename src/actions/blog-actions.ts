@@ -5,6 +5,7 @@ import { contentBlogs, mppscUsers } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { verifyAuth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 
 export async function uploadBlog(data: any) {
     const user = await verifyAuth();
@@ -56,7 +57,7 @@ export async function uploadBlog(data: any) {
         revalidatePath('/blogs');
         return { success: true };
     } catch (error: any) {
-        console.error("Upload Blog Error:", error);
+        logger.error("Upload Blog Error:", error);
         if (error.code === 'SQLITE_CONSTRAINT') {
             return { success: false, error: "Slug already exists" };
         }
@@ -72,7 +73,7 @@ export const getCachedBlogs = unstable_cache(
             const blogs = await db.select().from(contentBlogs).orderBy(desc(contentBlogs.createdAt));
             return blogs;
         } catch (error) {
-            console.error("Get Blogs Error:", error);
+            logger.error("Get Blogs Error:", error);
             return [];
         }
     },
@@ -89,7 +90,7 @@ export async function getBlogBySlug(slug: string) {
         const blog = await db.select().from(contentBlogs).where(eq(contentBlogs.slug, slug)).get();
         return blog;
     } catch (error) {
-        console.error("Get Blog Error:", error);
+        logger.error("Get Blog Error:", error);
         return null;
     }
 }

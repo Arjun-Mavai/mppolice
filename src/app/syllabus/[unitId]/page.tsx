@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { syllabusTopics } from '@/db/schema';
 import { eq, asc } from 'drizzle-orm';
 import UnitContent, { TopicData } from './UnitContent';
+import { logger } from "@/lib/logger";
 
 type Props = {
   params: Promise<{ unitId: string }>
@@ -21,7 +22,7 @@ export default async function UnitPage({ params }: Props) {
           orderBy: [asc(syllabusTopics.order)]
       });
   } catch (error) {
-      console.error("Failed to fetch syllabus topics from DB:", error);
+      logger.error("Failed to fetch syllabus topics from DB:", error);
       // Fallback to empty, will use static data
   }
 
