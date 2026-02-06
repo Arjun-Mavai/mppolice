@@ -23,7 +23,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
 };
-
+ const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://mppsc.vercel.app/";
 export const metadata: Metadata = {
   title: {
     default: "Mindful MPPSC | Crack MPPSC 2026 with Mnemonics",
@@ -31,11 +31,11 @@ export const metadata: Metadata = {
   },
   description: "The #1 App for MPPSC 2026. Master the syllabus 10x faster with creative Mnemonics, Bilingual Notes (Hindi/English), and Daily Quizzes. Start for free today!",
   keywords: ["MPPSC 2026", "MPPSC Mnemonics", "MPPSC Notes Hindi", "MPPSC Syllabus", "MPPSC PYQs", "Best MPPSC App", "Mindful MPPSC"],
-  metadataBase: new URL("https://www.mindfulmppsc.com"),
+  metadataBase: new URL(baseUrl),
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://www.mindfulmppsc.com",
+    url: baseUrl,
     title: "Mindful MPPSC - Crack MPPSC with Mnemonics",
     description: "Don't just read, REMEMBER. The only app with dedicated mnemonics for the entire MPPSC syllabus in Hindi & English.",
     siteName: "Mindful MPPSC",

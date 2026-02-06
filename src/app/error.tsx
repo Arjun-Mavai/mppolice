@@ -1,6 +1,6 @@
-'use client';
-
-import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+ import { useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 export default function Error({
     error,
@@ -9,9 +9,10 @@ export default function Error({
     error: Error & { digest?: string };
     reset: () => void;
 }) {
+    const router = useRouter();
     useEffect(() => {
         // Log to error tracking service
-        console.error('App Error:', error);
+        logger.error('App Error:', error);
     }, [error]);
 
     return (
@@ -38,7 +39,7 @@ export default function Error({
                         Try Again
                     </button>
                     <button
-                        onClick={() => window.location.href = '/'}
+                        onClick={() =>router.push("/")}
                         className="w-full px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
                     >
                         Go Home

@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState,   } from "react";
 import { 
   MessageCircle, 
   X, 
   Send, 
   Phone, 
-  HelpCircle, 
   ChevronDown, 
   ChevronUp,
-  MessageSquare
+   
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -53,8 +52,7 @@ export function SupportChat() {
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // if user is logged in dont show support button
- if(user && pathname !== "/") return null
+  if(user && pathname !== "/") return null;
   // Hide on Quiz Play for focus
   if (pathname === "/syllabus/quiz/play" ) return null;
 
