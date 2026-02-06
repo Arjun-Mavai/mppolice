@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { submitTestAttempt } from '@/actions/test-actions';
+import { submitTestAttempt } from '@/features/tests/actions/submission';
 import { Clock, ChevronLeft, ChevronRight, Menu, X, Flag } from 'lucide-react';
 
 // Types (simplified import or redefine)

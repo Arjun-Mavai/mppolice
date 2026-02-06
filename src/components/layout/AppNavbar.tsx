@@ -38,6 +38,8 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { useEffect } from "react";
+import { logger } from "@/lib/logger";
 
 interface AppNavbarProps {
   user: {
@@ -56,33 +58,60 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const [isScrolled, setIsScrolled] = React.useState(false);
   
   // Use Global Store
-  const { language, setLanguage, user: globalUser, setUser } = useSettingsStore();
+  const { language, setLanguage, user: globalUser, setUser, authCheckStatus, setAuthCheckStatus } = useSettingsStore();
   
   // Create a merged user object (prop + global), favoring global if updated
   // Actually, usually global store should be source of truth if we set it on mount in layout
   const user = globalUser || initialUser;
 
-  React.useEffect(() => {
+  // ------------------------------------------------------------------
+  // EFFECT 1: SCROLL LISTENER (The "Visuals")
+  // ------------------------------------------------------------------
+  // Why: Toggles the background style of the navbar when the user scrolls down.
+  useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
+    
+    // Add listener on mount
     window.addEventListener("scroll", handleScroll);
     
-    // Hydrate user session if not present and no initial user
-    // This restores session on page reload
-    if (!initialUser && !globalUser) {
+    // Cleanup on unmount to prevent memory leaks
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // ------------------------------------------------------------------
+  // EFFECT 2: SESSION RESTORATION (The "Hydration")
+  // ------------------------------------------------------------------
+  // Why: When a user reloads the page, the client side `user` prop might be null initially.
+  // We need to fetch the session from the server to restore the specific user state.
+  // CRITICAL OPTIMIZATION: We check `authCheckStatus === 'idle'` to ensure this ONLY runs once per session load.
+  useEffect(() => {
+    // Only fetch if:
+    // 1. No initial user passed from server component
+    // 2. Global store is empty
+    // 3. We haven't already checked (status is 'idle')
+    if (!initialUser && !globalUser && authCheckStatus === 'idle') {
+        setAuthCheckStatus('loading');
+        
         fetch('/api/auth/me')
             .then(res => res.json())
             .then(data => {
                 if (data.user) {
+                    logger.info("Session restored successfully for:", data.user.email);
                     setUser(data.user, true);
+                } else {
+                    // Important: Mark as checked even if no user found to prevent future loops
+                    logger.debug("No active session found during hydration.");
+                    setAuthCheckStatus('checked');
                 }
             })
-            .catch(err => console.error("Failed to restore session:", err));
+            .catch(err => {
+                logger.error("Failed to restore session:", err);
+                setAuthCheckStatus('checked'); // Stop retrying on error
+            });
     }
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [initialUser, globalUser, setUser]);
+  }, [initialUser, globalUser, setUser, authCheckStatus, setAuthCheckStatus]);
 
   const handleLogout = async () => {
       try {
@@ -100,7 +129,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
           }, 100);
         }
       } catch (error) {
-        console.error('Logout failed:', error);
+        logger.error('Logout failed:', error);
         // Even if API fails, redirect to login
         window.location.href = '/login';
       }
@@ -219,7 +248,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
              <div className="w-px h-6 bg-slate-200 hidden sm:block"></div>
 
             {user ? (
-               <DropdownMenu>
+               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full ring-2 ring-slate-100 hover:ring-indigo-100 transition-all p-0 hidden md:flex">
                     <Avatar className="h-10 w-10">

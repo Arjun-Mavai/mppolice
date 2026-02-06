@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import crypto from 'crypto';
+import { logger } from "@/lib/logger";
 
 // Manual Svix Signature Verification (to avoid adding dependencies)
 function verifySignature(payload: string, headers: Headers, secret: string) {
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
     const secret = process.env.DODO_WEBHOOK_SECRET;
 
     if (!secret) {
-      console.error("Webhook secret not configured");
+      logger.error("Webhook secret not configured");
       return NextResponse.json({ error: 'Configuration Error' }, { status: 500 });
     }
 
@@ -71,11 +72,11 @@ export async function POST(request: Request) {
     //    // Return 400 or 401
     //    return NextResponse.json({ error: 'Invalid Signature' }, { status: 400 });
     // }
-console.log("Webhook payload", payload);
+    // console.log("Webhook payload", payload);
     const event = JSON.parse(payload);
     
     // Log event for debugging (optional)
-    console.log(`Received secure webhook event: ${event.type}`);
+    logger.info(`Received secure webhook event: ${event.type}`);
 
     // Handle 'payment.succeeded'
     // Dodo payload structure variant: Check generic 'type' or Dodo specific
@@ -114,21 +115,21 @@ console.log("Webhook payload", payload);
                 .eq('email', email);
             
             if (error) {
-                console.error("Failed to update user status:", error);
+                logger.error("Failed to update user status:", error);
                 return NextResponse.json({ error: 'Database Update Failed' }, { status: 500 });
             }
             
-            console.log(`Upgraded user ${email} to Pro with sub_id: ${subscriptionId}`);
+            logger.info(`Upgraded user ${email} to Pro with sub_id: ${subscriptionId}`);
             // return NextResponse.redirect(new URL('/app', request.url));
         } else {
-             console.warn("No email found in payment payload");
+             logger.warn("No email found in payment payload");
         }
     }
 
     // Handle 'payment.failed' or 'subscription.deleted' for cancellations
     if (event.type === 'payment.failed' || event.type === 'subscription.deleted') {
         const { data } = event;
-        console.log("Payment failed or subscription deleted", data);
+        logger.info("Payment failed or subscription deleted", data);
         const email = data.customer_email || data.customer?.email || data.email;
 
         if (email) {
@@ -146,17 +147,17 @@ console.log("Webhook payload", payload);
                 .eq('email', email);
             
             if (error) {
-                console.error("Failed to update user status on failure:", error);
+                logger.error("Failed to update user status on failure:", error);
                 return NextResponse.json({ error: 'Database Update Failed' }, { status: 500 });
             }
             
-            console.log(`Downgraded user ${email} to Free`);
+            logger.info(`Downgraded user ${email} to Free`);
         }
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Webhook Error:", error);
+    logger.error("Webhook Error:", error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

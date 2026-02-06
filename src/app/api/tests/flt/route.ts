@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { tests, userAttempts } from '@/db/schema';
 import { eq, desc, and, sql, inArray, asc } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
+import { logger } from "@/lib/logger";
 
 export async function GET() {
     try {
@@ -41,7 +42,7 @@ export async function GET() {
             attempts: userFLTAttempts
         });
     } catch (error) {
-        console.error('FLT fetch error:', error);
+        logger.error('FLT fetch error:', error);
         return NextResponse.json({
             success: false,
             error: 'Failed to fetch FLT tests',

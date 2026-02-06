@@ -2,11 +2,24 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { QuizInterface } from '@/components/quiz/QuizInterface';
+import dynamic from 'next/dynamic';
+import { Loader2 } from 'lucide-react';
+
+const QuizInterface = dynamic(() => import('@/features/tests/components/QuizInterface').then(mod => mod.QuizInterface), {
+  loading: () => (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="flex flex-col items-center gap-2">
+        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+        <p className="text-slate-500 font-medium">Loading Quiz...</p>
+      </div>
+    </div>
+  ),
+  ssr: false
+});
 import { Question } from '@/types/quiz';
 import { Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SyllabusLockModal } from '@/components/SyllabusLockModal';
+import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 
 interface QuizPlayClientProps {
     questions: Question[];

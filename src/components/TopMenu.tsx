@@ -8,6 +8,7 @@ import { Category, Quote } from "@/data/quotes";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { CategorySelector } from "@/components/CategorySelector";
+import { logger } from "@/lib/logger";
 
 interface TopMenuProps {
   category: Category;
@@ -39,7 +40,7 @@ export const TopMenu = ({
       router.push('/login');
       router.refresh();
     } catch (error) {
-      console.error('Logout failed:', error);
+      logger.error('Logout failed:', error);
     }
   };
 

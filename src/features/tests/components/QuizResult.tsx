@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, XCircle, AlertCircle, RefreshCw, Home, ChevronDown, ChevronUp, Sparkles, Quote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,10 +9,9 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { PremiumExplanation } from './PremiumExplanation';
-import { useSettingsStore } from '@/store/useSettingsStore';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
-import { revalidateAnalyticsAction } from '@/actions/analytics-actions';
-import { useEffect } from 'react';
+import { getTestLeaderboard } from '@/actions/leaderboard-actions';
+import { revalidateAnalyticsAction } from '@/features/analytics/actions';
 
 interface QuizResultProps {
     questions: Question[];
@@ -22,19 +21,30 @@ interface QuizResultProps {
     onRetry?: () => void;
     onExit?: () => void;
     title?: string;
+    testId?: string;
+    userId?: string;
 }
 
-export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExit, title }: QuizResultProps) {
+// Bhai, ye component ekdum jhakaas hai! Result dikhane ka zimma iska hai.
+export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExit, title, testId, userId }: QuizResultProps) {
     const router = useRouter();
 
     // Revalidate Analytics on Mount to ensure Dashboard is fresh
+    // Bhai, data ekdum taaza hona mangta hai!
+    const [leaderboard, setLeaderboard] = useState<any>(null);
+
     useEffect(() => {
         const refreshData = async () => {
             await revalidateAnalyticsAction();
             router.refresh(); // Refresh Client Router Cache
+            
+            if (testId) {
+                const data = await getTestLeaderboard(testId, userId);
+                setLeaderboard(data);
+            }
         };
         refreshData();
-    }, [router]);
+    }, [router, testId, userId]);
     
     // Calculate Score matching server logic (SCORING_CONFIG)
     let correctCount = 0;
@@ -112,9 +122,24 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                          <p className="text-slate-400 text-sm mt-2">
                              Time Taken: {Math.floor(timeTaken / 60)}m {timeTaken % 60}s
                          </p>
-                    </div>
+                     </div>
 
-                    <div className="grid grid-cols-3 gap-3 max-w-md mx-auto mt-8">
+                     {/* RANKING SECTION - Bhai ka Rank kya hai? */}
+                     {leaderboard && (
+                        <div className="mt-6 mb-2">
+                             <div className="inline-flex items-center gap-2 bg-slate-800/80 rounded-full px-6 py-2 border border-slate-700 shadow-lg backdrop-blur-sm animate-in zoom-in duration-500 delay-300">
+                                 <span className="text-2xl">🏆</span>
+                                 <div>
+                                     <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Your Rank</div>
+                                     <div className="text-xl font-bold text-yellow-400">
+                                        #{leaderboard.userRank} <span className="text-slate-500 text-sm">/ {leaderboard.totalParticipants}</span>
+                                     </div>
+                                 </div>
+                             </div>
+                        </div>
+                     )}
+
+                    <div className="grid grid-cols-3 gap-3 max-w-md mx-auto mt-6">
                         <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 backdrop-blur-sm">
                             <div className="text-2xl font-bold text-emerald-400">{correctCount}</div>
                             <div className="text-[10px] uppercase font-bold text-emerald-200">Correct</div>
@@ -186,10 +211,98 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                         </div>
                     </motion.div>
                 </div>
-            </div>
+                </div>
+
+
+            {/* LEADERBOARD TABLE - Yeda banke peda khao, Top 10 dikhao! */}
+            {leaderboard && (
+                <div className="max-w-3xl mx-auto px-4 -mt-10 relative z-20 mb-10">
+                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+                        <div className="bg-slate-50 p-4 border-b border-slate-200 flex justify-between items-center">
+                            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                                <span className="text-xl">🏅</span> Top Performers
+                            </h3>
+                            <div className="text-xs font-medium text-slate-500">
+                                Only Top 10 shown
+                            </div>
+                        </div>
+                        <div className="divide-y divide-slate-100">
+                            {leaderboard.leaderboard.map((entry: any, index: number) => {
+                                const isCurrentUser = entry.userId === userId;
+                                return (
+                                    <div 
+                                        key={entry.id} 
+                                        className={cn(
+                                            "flex items-center justify-between p-3 transition-colors",
+                                            isCurrentUser ? "bg-yellow-50" : "hover:bg-slate-50"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className={cn(
+                                                "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm",
+                                                index === 0 ? "bg-yellow-100 text-yellow-700" :
+                                                index === 1 ? "bg-slate-200 text-slate-700" :
+                                                index === 2 ? "bg-orange-100 text-orange-700" :
+                                                "text-slate-400"
+                                            )}>
+                                                {index === 0 && '👑'}
+                                                {index === 1 && '🥈'}
+                                                {index === 2 && '🥉'}
+                                                {index > 2 && (index + 1)}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                                    {isCurrentUser ? "YOU" : entry.displayName}
+                                                    {isCurrentUser && <span className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-600">ME</span>}
+                                                </div>
+                                                <div className="text-[10px] text-slate-400">
+                                                    {Math.floor(entry.timeTakenSeconds / 60)}m {entry.timeTakenSeconds % 60}s
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-bold text-indigo-600">{entry.score}</div>
+                                            <div className="text-[10px] text-slate-400">Score</div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            
+                            {/* If user is not in top 10, show them at bottom */}
+                            {leaderboard.userRank > 10 && leaderboard.userEntry && (
+                                <>
+                                    <div className="p-2 text-center text-xs text-slate-400 bg-slate-50 border-y border-slate-100">
+                                        ...
+                                    </div>
+                                    <div className="flex items-center justify-between p-3 bg-yellow-50 border-l-4 border-yellow-400">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm text-slate-500">
+                                                {leaderboard.userRank}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                                    YOU
+                                                    <span className="text-[10px] bg-slate-900 text-white px-1.5 py-0.5 rounded">ME</span>
+                                                </div>
+                                                <div className="text-[10px] text-slate-400">
+                                                    {Math.floor(leaderboard.userEntry.timeTakenSeconds / 60)}m {leaderboard.userEntry.timeTakenSeconds % 60}s
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-bold text-indigo-600">{leaderboard.userEntry.score}</div>
+                                            <div className="text-[10px] text-slate-400">Score</div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Detailed Analysis */}
-            <div className="max-w-3xl mx-auto px-4 -mt-16 relative z-20 space-y-4">
+            <div className="max-w-3xl mx-auto px-4 -mt-4 relative z-20 space-y-4">
                 {questions.map((q, idx) => {
                     const userAnswer = answers[q.id];
                     const isCorrect = userAnswer === q.correctAnswer;

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { Question } from '@/types/quiz';
+import { logger } from "@/lib/logger";
 
 interface UseQuizLogicProps {
     questions: Question[];
@@ -23,7 +24,7 @@ export function useQuizLogic({
 }: UseQuizLogicProps) {
     // Language State
     const { language } = useSettingsStore();
- console.log("questions" , questions)
+ // logger.debug("questions" , questions)
     // Game State
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, number>>({}); // questionId -> selectedOptionIndex
@@ -78,7 +79,7 @@ export function useQuizLogic({
         }
 
         try {
-            const { submitTestAttempt } = await import('@/actions/test-actions');
+            const { submitTestAttempt } = await import('@/features/tests/actions/submission');
             
             // Mapping answers to string format
             const formattedAnswers: Record<string, string> = {};
@@ -103,7 +104,7 @@ export function useQuizLogic({
                 finalTimes
             );
         } catch (error) {
-            console.error("Failed to save test attempt:", error);
+            logger.error("Failed to save test attempt:", error);
         }
     }, [answers, questions, currentQuestionIndex, questionTimes, testId, userId, timeLimitInMinutes, timeLeft]);
 

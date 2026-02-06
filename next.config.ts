@@ -9,7 +9,8 @@ const hostnames = [
   'pwonlyias.com',
   'notes.saralupsc.com',
   'framerusercontent.com',
-  'chrysalishigh.com'
+  'chrysalishigh.com',
+  'i.pravatar.cc',
   // 'example.com',
 ];
 

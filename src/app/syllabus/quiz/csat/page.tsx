@@ -1,4 +1,4 @@
-import { getCachedCSATTests } from '@/actions/test-actions';
+import { getCachedCSATTests } from '@/features/tests/actions/submission';
 import CSATPageClient from './CSATPageClient';
 
 // Server Component

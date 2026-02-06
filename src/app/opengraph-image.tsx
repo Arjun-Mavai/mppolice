@@ -1,8 +1,10 @@
 import { ImageResponse } from 'next/og';
  
+// Route segment config
 export const runtime = 'edge';
  
-export const alt = 'Mindful MPPSC Application Preview';
+// Image metadata
+export const alt = 'MPPSC Prelims 2026 Test Series & Notes';
 export const size = {
   width: 1200,
   height: 630,
@@ -13,6 +15,7 @@ export const contentType = 'image/png';
 export default async function Image() {
   return new ImageResponse(
     (
+      // Outer Container
       <div
         style={{
           height: '100%',
@@ -21,64 +24,148 @@ export default async function Image() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundImage: 'linear-gradient(to bottom right, #4f46e5, #7c3aed)',
+          backgroundColor: '#09090b', // zinc-950
+          backgroundImage: 'radial-gradient(circle at 25px 25px, #27272a 2%, transparent 0%), radial-gradient(circle at 75px 75px, #27272a 2%, transparent 0%)',
+          backgroundSize: '100px 100px',
           color: 'white',
           fontFamily: 'sans-serif',
           position: 'relative',
         }}
       >
-        {/* Background Pattern */}
+        {/* Glow Effect */}
         <div 
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            opacity: 0.1,
-            backgroundImage: 'radial-gradient(circle at 25px 25px, white 2%, transparent 0%), radial-gradient(circle at 75px 75px, white 2%, transparent 0%)',
-            backgroundSize: '100px 100px',
-          }}
+            style={{
+                position: 'absolute',
+                top: '-20%',
+                right: '-10%',
+                width: '600px',
+                height: '600px',
+                background: 'radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 70%)', // Indigo glow
+                filter: 'blur(80px)',
+            }}
         />
-
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
-            {/* Logo Icon Placeholder */}
+        
+        {/* Main Card Container (Glassmorphismish) */}
+        <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid #27272a', // zinc-800
+            borderRadius: '24px',
+            padding: '60px 80px',
+            backgroundColor: 'rgba(9, 9, 11, 0.8)', // semi-transparent black
+            boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.7)',
+            position: 'relative',
+            zIndex: 10
+        }}>
+            
+            {/* Top Badge */}
             <div style={{
-                width: 80,
-                height: 80,
-                backgroundColor: 'white',
-                borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: 20,
-                boxShadow: '0 8px 30px rgba(0,0,0,0.2)'
+                padding: '8px 24px',
+                borderRadius: '9999px',
+                background: 'linear-gradient(90deg, #3730a3, #4f46e5)', // Indigo gradient
+                border: '1px solid #4338ca',
+                marginBottom: '32px',
+                boxShadow: '0 0 20px rgba(79, 70, 229, 0.4)'
             }}>
-                <span style={{ fontSize: 40, color: '#4f46e5', fontWeight: 'bold' }}>M</span>
+                <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '0.05em', color: 'white' }}>
+                    TARGET: MPPSC 2026
+                </span>
             </div>
-            <h1 style={{ fontSize: 72, fontWeight: 'bold', margin: 0, letterSpacing: '-0.02em' }}>Mindful MPPSC</h1>
-        </div>
-        
-        <p style={{ fontSize: 32, maxWidth: 800, textAlign: 'center', margin: '0 0 40px 0', opacity: 0.9, lineHeight: 1.4 }}>
-          Master the Syllabus with Mnemonics<br/>
-          <span style={{ fontSize: 24, opacity: 0.8 }}>India's First Bilingual MPPSC App</span>
-        </p>
 
-        <div style={{
-            display: 'flex', 
-            gap: 20,
-            marginTop: 20
-        }}>
-            <div style={{ padding: '10px 20px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 12, fontSize: 20 }}>
-                🇮🇳 Hindi & English
-            </div>
-             <div style={{ padding: '10px 20px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 12, fontSize: 20 }}>
-                🧠 Smart Mnemonics
-            </div>
-             <div style={{ padding: '10px 20px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 12, fontSize: 20 }}>
-                ⚡ Daily Quizzes
+            {/* Main Headline */}
+            <h1 style={{ 
+                fontSize: 72, 
+                fontWeight: 800, 
+                textAlign: 'center', 
+                marginBottom: '16px',
+                lineHeight: 1.1,
+                background: 'linear-gradient(to bottom, #ffffff, #a1a1aa)', // Text gradient
+                backgroundClip: 'text',
+                color: 'transparent',
+                letterSpacing: '-0.03em'
+            }}>
+                Prelims Test Series
+            </h1>
+
+            {/* Sub Headline */}
+            <p style={{ 
+                fontSize: 32, 
+                color: '#a1a1aa', // zinc-400
+                marginBottom: '48px',
+                textAlign: 'center',
+                maxWidth: '600px'
+            }}>
+                India's First Bilingual Platform with Smart Mnemonics
+            </p>
+
+            {/* Feature Grid */}
+            <div style={{
+                display: 'flex',
+                gap: '24px',
+                justifyContent: 'center',
+                width: '100%'
+            }}>
+                 {/* Feature 1 */}
+                 <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '16px 24px',
+                    background: '#18181b', // zinc-900
+                    border: '1px solid #27272a',
+                    borderRadius: '16px'
+                 }}>
+                    <span style={{ fontSize: 24 }}>📊</span>
+                    <span style={{ fontSize: 22, fontWeight: 600, color: '#e4e4e7' }}>Deep Analysis</span>
+                 </div>
+
+                 {/* Feature 2 */}
+                 <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '16px 24px',
+                    background: '#18181b', // zinc-900
+                    border: '1px solid #27272a',
+                    borderRadius: '16px'
+                 }}>
+                    <span style={{ fontSize: 24 }}>⚡</span>
+                    <span style={{ fontSize: 22, fontWeight: 600, color: '#e4e4e7' }}>Flashcards</span>
+                 </div>
+
+                 {/* Feature 3 */}
+                 <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '16px 24px',
+                    background: '#18181b', // zinc-900
+                    border: '1px solid #27272a',
+                    borderRadius: '16px'
+                 }}>
+                     <span style={{ fontSize: 24 }}>🇮🇳</span>
+                    <span style={{ fontSize: 22, fontWeight: 600, color: '#e4e4e7' }}>Hindi & Eng</span>
+                 </div>
             </div>
         </div>
+
+        {/* Branding Footer */}
+        <div style={{
+            position: 'absolute',
+            bottom: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            opacity: 0.6
+        }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4f46e5' }} />
+            <span style={{ fontSize: 18, color: '#71717a', fontWeight: 500 }}>Mindful MPPSC</span>
+        </div>
+
       </div>
     ),
     {

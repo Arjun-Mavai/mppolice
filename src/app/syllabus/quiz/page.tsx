@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { SyllabusLockModal } from '@/components/SyllabusLockModal';
+import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { useRouter } from 'next/navigation';
 
 export default function QuizSelectionPage() {

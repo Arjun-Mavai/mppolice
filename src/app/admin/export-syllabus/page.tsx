@@ -5,6 +5,7 @@ import { syllabusData } from '@/data/syllabusData';
 import { Button } from '@/components/ui/button';
 import { Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
    
 export default function ExportTool() {
@@ -23,7 +24,7 @@ export default function ExportTool() {
                 setDbData(data.units);
             }
         } catch (err) {
-            console.error(err);
+            logger.error("Failed to fetch DB syllabus:", err);
             toast.error("Failed to fetch DB syllabus");
         } finally {
             setLoading(false);
@@ -83,7 +84,7 @@ export default function ExportTool() {
             const sanitized = importJson.replace(/,\s*([\]}])/g, '$1');
             parsed = JSON.parse(sanitized);
         } catch (e) {
-            console.error(e);
+            logger.error('JSON Parse Error:', e);
             toast.error("Invalid JSON format. Check for trailing commas or syntax errors.");
             return;
         }

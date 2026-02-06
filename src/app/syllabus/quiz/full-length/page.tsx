@@ -1,4 +1,4 @@
-import { getCachedFLTTests, getUserAttempts } from '@/actions/test-actions';
+import { getCachedFLTTests, getUserAttempts } from '@/features/tests/actions/submission';
 import FLTPageClient, { TestWithAccess } from './FLTPageClient';
 import { verifyAuth } from '@/lib/auth';
 import { PLAN_LIMITS } from '@/config/plans';

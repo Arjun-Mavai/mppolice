@@ -9,6 +9,7 @@ import { createClient } from "@supabase/supabase-js";
 // Re-exporting UpgradePage as the main page for now
 import UpgradePage from "./upgrade/page";
 import { AppNavbar } from "@/components/layout/AppNavbar";
+import { Testimonials } from "@/components/home/Testimonials";
 
 // Force Static Rendering for Home Page
 // export const dynamic = 'force-static';
@@ -23,6 +24,7 @@ export default function Home() {
     <main>
       <AppNavbar user={null} />
       <UpgradePage />
+      <Testimonials />
     </main>
   );
 }

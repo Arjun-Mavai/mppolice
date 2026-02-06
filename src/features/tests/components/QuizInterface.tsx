@@ -43,7 +43,10 @@ export function QuizInterface(props: QuizInterfaceProps) {
         timeLimitInMinutes, 
         title,
         onExit, 
-        disablePalette = false 
+        disablePalette = false,
+        // Bhai, ye variables dhyan se uthana, inke bina Result page adhoora hai!
+        testId, // Test ka alag pehchan (ID)
+        userId  // User ka personal ID (Leaderboard ke liye)
     } = props;
 
     // Use Custom Hook for Logic
@@ -116,6 +119,10 @@ export function QuizInterface(props: QuizInterfaceProps) {
             timeTaken={(timeLimitInMinutes * 60) - timeLeft}
             onRetry={handleRetry}
             title={title}
+            // Bhai, yahan se ye ID Result page pe ja rahe hain taaki Leaderboard ban sake!
+            // Agar ye miss hue toh Rank nahi dikhegi.
+            testId={testId} 
+            userId={userId}
         />;
     }
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
+import { logger } from '@/lib/logger';
 
 // export const dynamic = 'force-dynamic';
 
@@ -22,7 +23,7 @@ export async function GET() {
       }
     });
   } catch (error) {
-    console.error('Session check failed:', error);
+    logger.error('Session check failed:', error);
     return NextResponse.json({ user: null }, { status: 500 });
   }
 }

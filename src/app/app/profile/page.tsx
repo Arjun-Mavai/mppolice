@@ -3,6 +3,7 @@
 import { useAppStore } from "@/hooks/useAppStore";
 import { User, LogOut, Check, ChevronLeft } from "lucide-react";
 import Link from "next/link";
+import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
  
@@ -25,7 +26,7 @@ export default function ProfilePage() {
                 router.push("/login");
             }
         } catch (e) {
-            console.error(e);
+            logger.error("Profile Fetch Error:", e);
         } finally {
             setLoading(false);
         }
@@ -39,7 +40,7 @@ export default function ProfilePage() {
         router.push("/login"); 
         
     } catch (error) {
-        console.error("Logout failed", error);
+        logger.error("Logout failed", error);
     }
   };
 

@@ -8,12 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { Lock, Play, ArrowLeft, BrainCircuit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
-import { SyllabusLockModal } from '@/components/SyllabusLockModal';
+import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useRouter } from 'next/navigation';
 import { PLAN_LIMITS } from '@/config/plans';
-import { getUserAttempts } from '@/actions/test-actions';
-
+import { getUserAttempts } from '@/features/tests/actions/submission';
+ 
 interface Test {
     id: string;
     title: string;

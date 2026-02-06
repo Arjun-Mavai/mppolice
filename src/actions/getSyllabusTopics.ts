@@ -3,8 +3,10 @@
 import { db } from "@/db";
 import { syllabusTopics, tests } from "@/db/schema";
 import { asc, eq, inArray } from "drizzle-orm";
+import { logger } from "@/lib/logger";
+import { cachedData, CACHE_TAGS } from "@/lib/cache";
 
-export async function getSyllabusTopics() {
+export const getSyllabusTopics = cachedData(async () => {
   try {
     const topics = await db.query.syllabusTopics.findMany({
       orderBy: [asc(syllabusTopics.order)],
@@ -45,7 +47,7 @@ export async function getSyllabusTopics() {
     return { success: true, data: grouped };
 
   } catch (error) {
-    console.error("Error fetching syllabus topics:", error);
+    logger.error("Error fetching syllabus topics:", error);
     return { success: false, error: "Failed to fetch topics" };
   }
-}
+}, ['syllabus-topics-grouped'], [CACHE_TAGS.SYLLABUS]);

@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, message: 'Account created successfully. User can now log in.' });
   } catch (error) {
-    console.error("Signup error:", error);
+    logger.error("Signup error:", error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

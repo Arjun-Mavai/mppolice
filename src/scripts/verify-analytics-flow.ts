@@ -1,13 +1,11 @@
 
-
 import * as dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import { db } from '@/db';
-import { userAttempts, attemptAnswers, mppscUsers } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import { submitTestAttempt } from '@/actions/test-actions';
-import { getUserAnalytics } from '@/actions/analytics-actions';
+import { mppscUsers } from '@/db/schema';
+import { submitTestAttempt } from '@/features/tests/actions/submission';
 import { v4 as uuidv4 } from 'uuid';
+import { getUserAnalytics } from '@/features/analytics/actions';
 
 async function main() {
     console.log("🚀 Starting Analytics Verification Flow...");

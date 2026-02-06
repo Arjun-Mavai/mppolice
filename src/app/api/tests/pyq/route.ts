@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { tests } from '@/db/schema';
 import { eq, asc, desc } from 'drizzle-orm';
+import { logger } from "@/lib/logger";
 
 export async function GET() {
     try {
@@ -28,7 +29,7 @@ export async function GET() {
             tests: testsWithYear 
         });
     } catch (error) {
-        console.error('PYQ fetch error:', error);
+        logger.error('PYQ fetch error:', error);
         return NextResponse.json({ 
             success: false, 
             error: 'Failed to fetch PYQ tests',

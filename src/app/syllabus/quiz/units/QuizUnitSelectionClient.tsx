@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Lock, Trophy, Zap, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { logger } from "@/lib/logger";
 import { Card, CardContent } from '@/components/ui/card';
 import { syllabusData } from '@/data/syllabusData';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { PLAN_LIMITS } from '@/config/plans';
-import { SyllabusLockModal } from '@/components/SyllabusLockModal';
+import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -43,7 +44,7 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
   const limit = PLAN_LIMITS[effectiveTier as keyof typeof PLAN_LIMITS]?.unit_tests_limit || 0;
 
   const handleUnitClick = (testId: string, isLocked: boolean, attempts: number, maxRetries: number) => {
-    console.log("testId helolllllllllll bhai", testId)
+    logger.debug("testId helolllllllllll bhai", testId)
       // Logic: Allow if user has attempts left OR if we want to allow review
       const attemptsLeft = Math.max(0, maxRetries - attempts);
 
@@ -82,7 +83,7 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
                      </div>
                 )}
                 {availableTests.map((test, index) => {
-                    console.log("test checking", test)
+                    // logger.debug("test checking", test)
                     // Enrich with Syllabus Data if unitId matches
                     const unitData = test.unitId ? syllabusData.units[test.unitId] : null;
 

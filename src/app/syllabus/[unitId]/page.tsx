@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { syllabusTopics } from '@/db/schema';
 import { eq, asc } from 'drizzle-orm';
 import UnitContent, { TopicData } from './UnitContent';
+import { logger } from "@/lib/logger";
 
 type Props = {
   params: Promise<{ unitId: string }>
@@ -13,15 +14,13 @@ type Props = {
 export default async function UnitPage({ params }: Props) {
   const { unitId } = await params;
 
-  // 1. Fetch from Database first
+  // 1. Fetch from Database first (Cached)
   let dbTopics: typeof syllabusTopics.$inferSelect[] = [];
   try {
-      dbTopics = await db.query.syllabusTopics.findMany({
-          where: eq(syllabusTopics.unitId, unitId),
-          orderBy: [asc(syllabusTopics.order)]
-      });
+      const { getSyllabusTopics } = await import('@/features/syllabus/actions/get-syllabus');
+      dbTopics = await getSyllabusTopics(unitId);
   } catch (error) {
-      console.error("Failed to fetch syllabus topics from DB:", error);
+      logger.error("Failed to fetch syllabus topics from DB:", error);
       // Fallback to empty, will use static data
   }
 
@@ -41,7 +40,7 @@ export default async function UnitPage({ params }: Props) {
       // Optimally, we fetch metadata from DB or a lightweight config.
       
       try {
-        const { getSyllabusUnit } = await import('@/lib/syllabus-loader');
+        const { getSyllabusUnit } = await import('@/features/syllabus/utils/loader');
         const staticUnit = await getSyllabusUnit(unitId);
         
         if (staticUnit) {
@@ -96,7 +95,7 @@ export default async function UnitPage({ params }: Props) {
 
   } else {
       // Fallback: Use Static Data via Dynamic Loader (Code Splitting)
-      const { getSyllabusUnit } = await import('@/lib/syllabus-loader');
+      const { getSyllabusUnit } = await import('@/features/syllabus/utils/loader');
       const unit = await getSyllabusUnit(unitId);
 
       if (!unit) {

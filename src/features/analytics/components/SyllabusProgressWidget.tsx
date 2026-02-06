@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { RotateCw, CheckCircle2, Circle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { logger } from "@/lib/logger";
 
 interface SyllabusProgressWidgetProps {
   data: {
@@ -14,7 +15,7 @@ interface SyllabusProgressWidgetProps {
 }
 
 export function SyllabusProgressWidget({ data, totalTopics }: SyllabusProgressWidgetProps) {
-    console.log("revise count" , data)
+    logger.debug("revise count" , data)
   const revised = data?.revisedTopicsCount || 0;
   const totalRevisions = data?.totalRevisions || 0;
   

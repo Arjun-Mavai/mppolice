@@ -1,4 +1,4 @@
-import { getCachedPYQTests } from '@/actions/test-actions';
+import { getCachedPYQTests } from '@/features/tests/actions/submission';
 import PYQPageClient from './PYQPageClient';
 
 // Server Component

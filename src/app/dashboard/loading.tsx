@@ -1,5 +1,5 @@
 
-import { DashboardSkeleton } from "@/components/analytics/DashboardSkeleton";
+import { DashboardSkeleton } from "@/features/analytics/components/DashboardSkeleton";
 
 export default function DashboardLoading() {
   return (

@@ -4,6 +4,7 @@ import { mppscUsers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -33,17 +34,34 @@ export async function POST(request: Request) {
     //    return NextResponse.json({ error: 'Subscription not active. Please contact support.' }, { status: 403 });
     // }
 
+
+    // Create JWT payload
+    const payload = {
+        userId: user.id,
+        email: user.email,
+        role: user.role
+    };
+
+    // "Bhai sign kar raha hai token"
+    const { signToken } = await import('@/lib/jwt'); // Dynamic import to avoid build time issues if any
+    const token = signToken(payload);
+
+    if (!token) {
+        throw new Error('Token generation failed');
+    }
+
     // Set session cookie
     const cookieStore = await cookies();
     
     // Using a specific cookie name for this syllabus app section
-    cookieStore.set('mppsc_token', user.id, {
+    cookieStore.set('mppsc_token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         path: '/',
         maxAge: 60 * 60 * 24 * 30, // 30 days
         sameSite: 'lax'
     });
+
 
     return NextResponse.json({ 
         success: true, 
@@ -56,7 +74,7 @@ export async function POST(request: Request) {
         } 
     });
   } catch (error) {
-    console.error("Login error:", error);
+    logger.error("Login error:", error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
