@@ -40,7 +40,7 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // If user is logged in and tries to access login or signup, redirect to syllabus
-  if (token && (pathname === '/login' || pathname === '/signup')) {
+  if (token && (pathname === '/login')) {
     return NextResponse.redirect(new URL('/syllabus', request.url))
   }
 

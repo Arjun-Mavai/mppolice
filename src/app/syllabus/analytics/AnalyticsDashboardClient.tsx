@@ -8,11 +8,13 @@ import {
     Target, 
     Clock, 
     ChevronRight,
-    AlertCircle
+    AlertCircle,
+    History
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -35,6 +37,13 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
   }
 
   const { overallScore, totalTests, mastery, recentActivity, aiSuggestion } = analytics;
+  
+  const [activeTab, setActiveTab] = React.useState('ALL');
+
+  const filteredHistory = recentActivity.filter((item: any) => {
+      if (activeTab === 'ALL') return true;
+      return item.type === activeTab;
+  });
 
   const overviewStats = [
     { label: "Tests Taken", value: totalTests.toString(), icon: <Target className="w-4 h-4 text-indigo-500" />, trend: "Total Attempts" },
@@ -116,51 +125,189 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
                        </CardContent>
                    </Card>
 
-                    <Card className="border-slate-200 shadow-sm">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="text-lg font-bold text-slate-900">Recent Test History</CardTitle>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Click to Review</span>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                            {recentActivity.map((activity: any, idx: number) => {
-                                const accuracy = Math.round((activity.score / (activity.totalMarks || 1)) * 100);
-                                return (
-                                    <div 
-                                        key={idx} 
-                                        onClick={() => router.push(`/syllabus/analytics/history/${activity.id}`)}
-                                        className="flex items-center justify-between p-4 rounded-2xl hover:bg-indigo-50/50 transition-all border border-slate-100 hover:border-indigo-100 cursor-pointer group"
+                    <Card className="border-slate-200 shadow-sm overflow-hidden">
+                        <CardHeader className="border-b border-slate-100 bg-slate-50/50 pb-4">
+                            <div className="flex items-center justify-between mb-4">
+                                <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                    <Clock className="w-5 h-5 text-indigo-500" /> Recent Test History 
+                                </CardTitle>
+                            </div>
+                            
+                            {/* Category Tabs */}
+                            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                                {['ALL', 'UNIT', 'TOPIC', 'CSAT', 'PYQ'].map((tab) => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setActiveTab(tab)}
+                                        className={cn(
+                                            "px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap border",
+                                            activeTab === tab 
+                                                ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200" 
+                                                : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                                        )}
                                     >
-                                        <div className="flex items-center gap-4">
-                                            <div className={cn(
-                                                "w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm shadow-sm transition-transform group-hover:scale-110",
-                                                accuracy >= 80 ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
-                                                accuracy >= 60 ? "bg-amber-50 text-amber-600 border border-amber-100" : 
-                                                "bg-red-50 text-red-600 border border-red-100"
-                                            )}>
-                                                {accuracy}%
-                                            </div>
-                                            <div>
-                                                <div className="font-bold text-slate-900 text-[15px] group-hover:text-indigo-600 transition-colors">
-                                                    {activity.testTitle || "Practice Test"}
-                                                </div>
-                                                <div className="text-xs text-slate-500 font-medium flex items-center gap-2 mt-0.5">
-                                                    <Clock size={12} />
-                                                    {new Date(activity.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
+                                        {tab === 'ALL' ? 'All Tests' : 
+                                         tab === 'UNIT' ? 'Unit Wise' :
+                                         tab === 'TOPIC' ? 'Topic Wise' : tab}
+                                    </button>
+                                ))}
+                            </div>
+                        </CardHeader>
+                        
+                        <CardContent className="p-0">
+                            <ScrollArea className="h-[400px]">
+                                {activeTab === 'TOPIC' ? (
+                                    // Grouped By Unit View for Topic Tests
+                                    <div className="divide-y divide-slate-100">
+                                        {(() => {
+                                            const grouped: Record<string, any[]> = {};
+                                            filteredHistory.forEach((item: any) => {
+                                                // Group by Unit Name (provided by server) or ID if name missing
+                                                // We use unitId as key for sorting, but store name for display
+                                                const unitKey = item.unitId || 'unknown';
+                                                if (!grouped[unitKey]) grouped[unitKey] = [];
+                                                grouped[unitKey].push(item);
+                                            });
+                                            
+                                            // Sort keys (Unit 1, Unit 2...) - naive sort for now
+                                            const sortedKeys = Object.keys(grouped).sort((a,b) => {
+                                                // Handle unit_1, unit_2 natural sort
+                                                const numA = parseInt(a.replace('unit_', '')) || 999;
+                                                const numB = parseInt(b.replace('unit_', '')) || 999;
+                                                return numA - numB;
+                                            });
+
+                                            if (sortedKeys.length === 0) {
+                                                return (
+                                                    <div className="flex flex-col items-center justify-center py-16 text-slate-400 space-y-3">
+                                                       <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center">
+                                                           <History className="w-6 h-6 text-slate-300" />
+                                                       </div>
+                                                       <p className="font-medium text-sm">No Topic Tests found.</p>
+                                                   </div>
+                                                );
+                                            }
+
+                                            return sortedKeys.map(unitKey => {
+                                                const groupItems = grouped[unitKey];
+                                                // Take unit name from the first item in the group (enriched on server)
+                                                const unitName = groupItems[0]?.unitName || unitKey;
+
+                                                return (
+                                                    <div key={unitKey} className="border-b border-slate-100 last:border-0">
+                                                        <div className="bg-slate-50/80 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-sm border-b border-slate-100">
+                                                            <div className="w-2 h-2 rounded-full bg-indigo-400" />
+                                                            {unitName}
+                                                        </div>
+                                                        <div className="divide-y divide-slate-50">
+                                                            {groupItems.map((activity: any, idx: number) => {
+                                                                const accuracy = Math.round((activity.score / (activity.totalMarks || 1)) * 100);
+                                                                
+                                                                let displayTitle = activity.testTitle || "Unknown Topic";
+                                                                
+                                                                return (
+                                                                    <div 
+                                                                        key={idx} 
+                                                                        onClick={() => router.push(`/syllabus/analytics/history/${activity.id}`)}
+                                                                        className="flex items-center justify-between p-4 pl-8 hover:bg-white transition-colors cursor-pointer group"
+                                                                    >
+                                                                        <div className="flex items-center gap-4">
+                                                                            <div className={cn(
+                                                                                "w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs shadow-sm border shrink-0",
+                                                                                accuracy >= 80 ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                                                                                accuracy >= 60 ? "bg-amber-50 text-amber-600 border-amber-100" : 
+                                                                                "bg-red-50 text-red-600 border-red-100"
+                                                                            )}>
+                                                                            </div>
+                                                                            <div className="min-w-0">
+                                                                                <div className="font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors truncate pr-4">
+                                                                                    {displayTitle}
+                                                                                </div>
+                                                                                <div className="text-[10px] text-slate-400 flex items-center gap-1">
+                                                                                    <Clock size={10} />
+                                                                                    {new Date(activity.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • {activity.totalMarks} Marks
+                                                                                </div>
+                                                                                {activity.timeTaken && (
+                                                                                    <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5 font-medium">
+                                                                                        <span className="bg-slate-100 px-1.5 rounded-sm flex items-center gap-1">
+                                                                                            ⏱️ {activity.timeTaken} / {activity.totalDuration}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all shrink-0" />
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            });
+                                        })()}
                                     </div>
-                                );
-                            })}
-                             {recentActivity.length === 0 && (
-                                 <div className="text-center py-10">
-                                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
-                                         <Clock size={24} />
-                                     </div>
-                                     <p className="text-slate-400 font-medium">No tests taken yet.</p>
-                                 </div>
-                             )}
+                                ) : (
+                                    // Default Flat List for Other Tabs
+                                    <div className="divide-y divide-slate-100">
+                                        {filteredHistory.length > 0 ? filteredHistory.map((activity: any, idx: number) => {
+                                            const accuracy = Math.round((activity.score / (activity.totalMarks || 1)) * 100);
+                                            // Determine type label style
+                                            const typeLabel = activity.type === 'UNIT' ? 'Unit Test' : 
+                                                              activity.type === 'TOPIC' ? 'Topic Test' : 
+                                                              activity.type === 'CSAT' ? 'CSAT' : 
+                                                              activity.type === 'PYQ' ? 'PYQ' : 'Test';
+                                                              
+                                            return (
+                                                <div 
+                                                    key={idx} 
+                                                    onClick={() => router.push(`/syllabus/analytics/history/${activity.id}`)}
+                                                    className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors cursor-pointer group"
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={cn(
+                                                            "w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm shadow-sm border shrink-0",
+                                                            accuracy >= 80 ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                                                            accuracy >= 60 ? "bg-amber-50 text-amber-600 border-amber-100" : 
+                                                            "bg-red-50 text-red-600 border-red-100"
+                                                        )}>
+                                                            {accuracy}%
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200">
+                                                                    {typeLabel}
+                                                                </span>
+                                                                <span className="text-xs text-slate-400 flex items-center gap-1">
+                                                                    <Clock size={10} />
+                                                                    {new Date(activity.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                                </span>
+                                                            </div>
+                                                            <div className="font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors truncate pr-4">
+                                                                {activity.testTitle || "Practice Test"}
+                                                            </div>
+                                                            {activity.timeTaken && (
+                                                                <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-1 font-medium">
+                                                                    <span className="bg-slate-100 px-1.5 rounded-sm flex items-center gap-1 border border-slate-200">
+                                                                        ⏱️ {activity.timeTaken} / {activity.totalDuration}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all shrink-0" />
+                                                </div>
+                                            );
+                                        }) : (
+                                            <div className="flex flex-col items-center justify-center py-16 text-slate-400 space-y-3">
+                                                <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center">
+                                                    <History className="w-6 h-6 text-slate-300" />
+                                                </div>
+                                                <p className="font-medium text-sm">No tests found in this category.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </ScrollArea>
                         </CardContent>
                     </Card>
                </div>

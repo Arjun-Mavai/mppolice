@@ -9,6 +9,15 @@ export interface Question {
   explanation_hi?: string | null; // Optional override handling if needed
   marks?: number;
   negativeMarks?: number;
+  type?: 'standard' | 'matching';
+  matchPairs?: {
+    id: string;
+    label: string;
+    labelEn?: string;
+    match: string;
+    matchId: string;
+    matchEn?: string;
+  }[];
 }
 
 export interface TestAttempt {

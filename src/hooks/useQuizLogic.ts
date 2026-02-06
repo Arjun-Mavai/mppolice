@@ -23,7 +23,7 @@ export function useQuizLogic({
 }: UseQuizLogicProps) {
     // Language State
     const { language } = useSettingsStore();
-
+ console.log("questions" , questions)
     // Game State
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, number>>({}); // questionId -> selectedOptionIndex
@@ -166,6 +166,18 @@ export function useQuizLogic({
     }, [onRetry, timeLimitInMinutes]);
 
     // --- Effects ---
+    
+    // Reset state when testId changes - Fixes "Old Result" persistence issue
+    useEffect(() => {
+        setAnswers({});
+        setMarkedForReview([]);
+        const savedTime = localStorage.getItem(`quiz-time-${testId}`);
+        setTimeLeft(savedTime ? parseInt(savedTime) : timeLimitInMinutes * 60);
+        setCurrentQuestionIndex(0);
+        setIsSubmitted(false);
+        setQuestionTimes({});
+        questionStartTimeRef.current = Date.now();
+    }, [testId, timeLimitInMinutes]);
 
     // Timer Logic
     useEffect(() => {
@@ -210,8 +222,8 @@ export function useQuizLogic({
         getParsedOptions,
         
         // Derived
-        currentQuestion: questions[currentQuestionIndex],
-        isAnswered: answers[questions[currentQuestionIndex].id] !== undefined,
+        currentQuestion: questions[currentQuestionIndex] || {},
+        isAnswered: questions[currentQuestionIndex] ? answers[questions[currentQuestionIndex].id] !== undefined : false,
         totalQuestions: questions.length,
     };
 }

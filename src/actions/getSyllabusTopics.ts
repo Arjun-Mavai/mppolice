@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/db";
-import { syllabusTopics } from "@/db/schema";
-import { asc } from "drizzle-orm";
+import { syllabusTopics, tests } from "@/db/schema";
+import { asc, eq, inArray } from "drizzle-orm";
 
 export async function getSyllabusTopics() {
   try {
@@ -10,8 +10,24 @@ export async function getSyllabusTopics() {
       orderBy: [asc(syllabusTopics.order)],
     });
 
+    // Fetch related tests
+    const topicIds = topics.map(t => t.id);
+    const relatedTests = await db.select({
+      id: tests.id,
+      topicId: tests.topicId
+    })
+    .from(tests)
+    .where(
+      inArray(tests.topicId, topicIds)
+    );
+
+    const topicTestMap = relatedTests.reduce((acc, curr) => {
+      if(curr.topicId) acc[curr.topicId] = curr.id;
+      return acc;
+    }, {} as Record<string, string>);
+
     // Group by Unit
-    const grouped: Record<string, typeof topics> = {};
+    const grouped: Record<string, (typeof topics[0] & { testId?: string })[]> = {};
     
     // Sort logic handled by DB order, but if we need unit sorting we can do it client side or here.
     // Let's return the raw list or grouped list. Grouping is easier for UI.
@@ -20,7 +36,10 @@ export async function getSyllabusTopics() {
       if (!grouped[topic.unitId]) {
         grouped[topic.unitId] = [];
       }
-      grouped[topic.unitId].push(topic);
+      grouped[topic.unitId].push({
+        ...topic,
+        testId: topicTestMap[topic.id]
+      });
     });
 
     return { success: true, data: grouped };

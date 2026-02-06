@@ -1,0 +1,120 @@
+
+import { Question } from '@/types/quiz';
+
+export const demoMatchingQuestions: Question[] = [
+  {
+    "id": "demo-match-1",
+    "question": "मध्य प्रदेश के निम्नलिखित जिलों को उनके अद्वितीय उत्पाद (ODOP) के साथ सुमेलित करें:",
+    "questionEn": "Match the following districts of Madhya Pradesh with their unique product (ODOP):",
+    "type": "matching",
+    "matchPairs": [
+      { "id": "(1)", "label": "अशोकनगर", "labelEn": "Ashoknagar", "match": "केले", "matchId": "(i)", "matchEn": "Bananas" },
+      { "id": "(2)", "label": "खरगोन", "labelEn": "Khargone", "match": "महेश्वरी साड़ियाँ", "matchId": "(ii)", "matchEn": "Maheshwari Sarees" },
+      { "id": "(3)", "label": "बुरहानपुर", "labelEn": "Burhanpur", "match": "चंदेरी साड़ियाँ", "matchId": "(iii)", "matchEn": "Chanderi Sarees" },
+      { "id": "(4)", "label": "मंदसौर", "labelEn": "Mandsaur", "match": "लहसुन", "matchId": "(iv)", "matchEn": "Garlic" }
+    ],
+    "options": [
+      "(1)-(iii), (2)-(ii), (3)-(i), (4)-(iv)",
+      "(1)-(ii), (2)-(iii), (3)-(iv), (4)-(i)",
+      "(1)-(i), (2)-(ii), (3)-(iii), (4)-(iv)",
+      "(1)-(iv), (2)-(i), (3)-(ii), (4)-(iii)"
+    ],
+    "correctAnswer": 0,
+    "explanation": "**सही उत्तर:** A \n\n**विस्तृत विश्लेषण:**\n- **अशोकनगर:** चंदेरी साड़ियाँ (GI टैग प्राप्त)।\n- **खरगोन:** महेश्वरी साड़ियाँ।\n- **बुरहानपुर:** केले (केले का बड़ा उत्पादक)।\n- **मंदसौर:** लहसुन (एक जिला एक उत्पाद)।\n\n**💡 Exam Fact:** चंदेरी साड़ियों को **2005** में GI टैग मिला था, जो MP का पहला GI टैग उत्पाद था।\n\n**🧠 Memory Tip:** 'अशोक' की 'चांद' जैसी साड़ी (Ashoknagar-Chanderi)।\n\n**🚫 Scam Alert:** अक्सर छात्र बुरहानपुर और भुसावल (महाराष्ट्र) में कंफ्यूज होते हैं, दोनों केले के लिए प्रसिद्ध हैं।",
+    "explanationEn": "**Correct Answer:** A \n\n**Detailed Analysis:**\n- **Ashoknagar:** Chanderi Sarees (GI Tagged).\n- **Khargone:** Maheshwari Sarees.\n- **Burhanpur:** Bananas (Major producer).\n- **Mandsaur:** Garlic (ODOP).\n\n**💡 Exam Fact:** Chanderi Sarees received the **first GI Tag** of MP in **2005**.\n\n**🧠 Memory Tip:** 'Ashok' bought a 'Chand' (Chanderi).\n\n**🚫 Scam Alert:** Don't confuse Burhanpur with Bhusawal (Maharashtra), both are famous for Bananas.",
+    "marks": 3,
+    "negativeMarks": 1
+  },
+  {
+    "id": "demo-match-2",
+    "question": "निम्नलिखित ऐतिहासिक स्थलों को उनके निर्माणकर्ताओं के साथ सुमेलित करें:",
+    "questionEn": "Match the following historical sites with their builders:",
+    "type": "matching",
+    "matchPairs": [
+      { "id": "(1)", "label": "सांची स्तूप", "labelEn": "Sanchi Stupa", "match": "चंदेल राजा", "matchId": "(i)", "matchEn": "Chandela Kings" },
+      { "id": "(2)", "label": "खजुराहो मंदिर", "labelEn": "Khajuraho Temples", "match": "सम्राट अशोक", "matchId": "(ii)", "matchEn": "Emperor Ashoka" },
+      { "id": "(3)", "label": "गूजरी महल", "labelEn": "Gujari Mahal", "match": "राजा मान सिंह तोमर", "matchId": "(iii)", "matchEn": "Raja Man Singh Tomar" },
+      { "id": "(4)", "label": "जहाज महल", "labelEn": "Jahaz Mahal", "match": "गयासुद्दीन खिलजी", "matchId": "(iv)", "matchEn": "Ghiyas-ud-din Khilji" }
+    ],
+    "options": [
+      "(1)-(ii), (2)-(i), (3)-(iii), (4)-(iv)",
+      "(1)-(i), (2)-(ii), (3)-(iv), (4)-(iii)",
+      "(1)-(iii), (2)-(i), (3)-(ii), (4)-(iv)",
+      "(1)-(ii), (2)-(iv), (3)-(i), (4)-(iii)"
+    ],
+    "correctAnswer": 0,
+    "explanation": "**सही उत्तर:** A \n\n**विस्तृत विश्लेषण:**\n- **सांची स्तूप:** सम्राट अशोक (मौर्य वंश)।\n- **खजुराहो:** चंदेल राजा (950-1050 ई.)।\n- **गूजरी महल:** राजा मान सिंह तोमर (ग्वालियर)।\n- **जहाज महल:** गयासुद्दीन खिलजी (मांडू)।\n\n**💡 Exam Fact:** सांची को 1989 में यूनेस्को विश्व धरोहर स्थल घोषित किया गया था।\n\n**🧠 Memory Tip:** 'खजूर' 'चांद' पर नहीं उगते (Khajuraho - Chandela)।\n\n**🚫 Scam Alert:** जहाज महल मांडू में है, धार में नहीं (हालांकि मांडू, धार जिले में है)।",
+    "explanationEn": "**Correct Answer:** A \n\n**Detailed Analysis:**\n- **Sanchi Stupa:** Emperor Ashoka (Maurya Dynasty).\n- **Khajuraho:** Chandela Kings (950-1050 AD).\n- **Gujari Mahal:** Raja Man Singh Tomar (Gwalior).\n- **Jahaz Mahal:** Ghiyas-ud-din Khilji (Mandu).\n\n**💡 Exam Fact:** Sanchi was declared a UNESCO World Heritage Site in **1989**.\n\n**🧠 Memory Tip:** 'Khajoor' (Dates) don't grow on 'Chand' (Moon) -> Khajuraho-Chandela.\n\n**🚫 Scam Alert:** Jahaz Mahal is in Mandu, don't just tick 'Dhar' unless Mandu is not an option.",
+    "marks": 3,
+    "negativeMarks": 1
+  },
+  {
+    "id": "demo-match-3",
+    "question": "मध्य प्रदेश की निम्नलिखित नदियों को उनके उद्गम स्थल से सुमेलित करें:",
+    "questionEn": "Match the following rivers of Madhya Pradesh with their origin:",
+    "type": "matching",
+    "matchPairs": [
+      { "id": "(1)", "label": "नर्मदा", "labelEn": "Narmada", "match": "जानापाव पहाड़ी", "matchId": "(i)", "matchEn": "Janapav Hill" },
+      { "id": "(2)", "label": "चंबल", "labelEn": "Chambal", "match": "अमरकंटक", "matchId": "(ii)", "matchEn": "Amarkantak" },
+      { "id": "(3)", "label": "बेतवा", "labelEn": "Betwa", "match": "मुलताई", "matchId": "(iii)", "matchEn": "Multai" },
+      { "id": "(4)", "label": "ताप्ती", "labelEn": "Tapti", "match": "कुमरा गाँव", "matchId": "(iv)", "matchEn": "Kumra Village" }
+    ],
+    "options": [
+      "(1)-(ii), (2)-(i), (3)-(iv), (4)-(iii)",
+      "(1)-(i), (2)-(ii), (3)-(iii), (4)-(iv)",
+      "(1)-(ii), (2)-(i), (3)-(iii), (4)-(iv)",
+      "(1)-(iv), (2)-(ii), (3)-(i), (4)-(iii)"
+    ],
+    "correctAnswer": 0,
+    "explanation": "**सही उत्तर:** A \n\n**विस्तृत विश्लेषण:**\n- **नर्मदा:** अमरकंटक (अनुपपुर)।\n- **चंबल:** जानापाव पहाड़ी (इंदौर)।\n- **बेतवा:** कुमरा गाँव (रायसेन)।\n- **ताप्ती:** मुलताई (बैतूल)।\n\n**💡 Exam Fact:** बेतवा को 'मध्य प्रदेश की गंगा' (प्रदूषण के आधार पर) कहा जाता है।\n\n**🧠 Memory Tip:** 'ताप्ती' को 'मूल' (Root/Multai) से गर्मी मिलती है।\n\n**🚫 Scam Alert:** सोन नदी भी अमरकंटक से निकलती है, जोहिला भी - सिर्फ नर्मदा नहीं।",
+    "explanationEn": "**Correct Answer:** A \n\n**Detailed Analysis:**\n- **Narmada:** Amarkantak (Anuppur).\n- **Chambal:** Janapav Hill (Indore).\n- **Betwa:** Kumra Village (Raisen).\n- **Tapti:** Multai (Betul).\n\n**💡 Exam Fact:** Betwa is called 'Ganga of Madhya Pradesh' (based on pollution).\n\n**🧠 Memory Tip:** 'Tapti' heats up from 'Mul' (Multai).\n\n**🚫 Scam Alert:** Son and Johila rivers also originate from Amarkantak, not just Narmada.",
+    "marks": 3,
+    "negativeMarks": 1
+  },
+  {
+    "id": "demo-match-4",
+    "question": "भारतीय संविधान की अनुसूचियों को उनके विषय से सुमेलित करें:",
+    "questionEn": "Match the Schedules of Indian Constitution with their subject:",
+    "type": "matching",
+    "matchPairs": [
+      { "id": "(1)", "label": "तीसरी अनुसूची", "labelEn": "Third Schedule", "match": "राज्यसभा में सीटों का आवंटन", "matchId": "(i)", "matchEn": "Allocation of seats in Rajya Sabha" },
+      { "id": "(2)", "label": "चौथी अनुसूची", "labelEn": "Fourth Schedule", "match": "शपथ और प्रतिज्ञान", "matchId": "(ii)", "matchEn": "Oaths and Affirmations" },
+      { "id": "(3)", "label": "सातवीं अनुसूची", "labelEn": "Seventh Schedule", "match": "दल-बदल विरोधी कानून", "matchId": "(iii)", "matchEn": "Anti-Defection Law" },
+      { "id": "(4)", "label": "दसवीं अनुसूची", "labelEn": "Tenth Schedule", "match": "शक्ति विभाजन (सूचियाँ)", "matchId": "(iv)", "matchEn": "Division of Powers (Lists)" }
+    ],
+    "options": [
+      "(1)-(ii), (2)-(i), (3)-(iv), (4)-(iii)",
+      "(1)-(i), (2)-(ii), (3)-(iii), (4)-(iv)",
+      "(1)-(iii), (2)-(i), (3)-(ii), (4)-(iv)",
+      "(1)-(ii), (2)-(iv), (3)-(i), (4)-(iii)"
+    ],
+    "correctAnswer": 0,
+    "explanation": "**सही उत्तर:** A \n\n**विस्तृत विश्लेषण:**\n- **तीसरी अनुसूची:** शपथ और प्रतिज्ञान (Oaths)।\n- **चौथी अनुसूची:** राज्यसभा सीटों का आवंटन।\n- **सातवीं अनुसूची:** संघ, राज्य और समवर्ती सूचियाँ।\n- **दसवीं अनुसूची:** दल-बदल (Anti-Defection) - 52वें संशोधन द्वारा जोड़ी गई।\n\n**💡 Exam Fact:** राष्ट्रपति और राज्यपाल की शपथ तीसरी अनुसूची में नहीं है (उनके लिए अलग अनुच्छेद हैं, जैसे Art 60)।\n\n**🧠 Memory Tip:** 'Tears of Old PM' - T=Territory, E=Emoluments, A=Affirmations (3rd), R=Rajya Sabha (4th).\n\n**🚫 Scam Alert:** 10वीं अनुसूची 'दल-बदल' है, 11वीं 'पंचायत' है - इसमें कंफ्यूज न हों।",
+    "explanationEn": "**Correct Answer:** A \n\n**Detailed Analysis:**\n- **Third Schedule:** Oaths and Affirmations.\n- **Fourth Schedule:** Allocation of seats in Rajya Sabha.\n- **Seventh Schedule:** Union, State and Concurrent Lists.\n- **Tenth Schedule:** Anti-Defection - added by 52nd Amendment.\n\n**💡 Exam Fact:** Oaths of President and Governor are NOT in 3rd Schedule (they have specific Articles, e.g., Art 60).\n\n**🧠 Memory Tip:** 'Tears of Old PM' - A=Affirmations (3rd), R=Rajya Sabha (4th).\n\n**🚫 Scam Alert:** 10th is Defection, 11th is Panchayat - don't mix them up.",
+    "marks": 3,
+    "negativeMarks": 1
+  },
+  {
+    "id": "demo-match-5",
+    "question": "मध्य प्रदेश की निम्नलिखित जनजातियों को उनके मुख्य नृत्य से सुमेलित करें:",
+    "questionEn": "Match the following tribes of Madhya Pradesh with their major dance forms:",
+    "type": "matching",
+    "matchPairs": [
+      { "id": "(1)", "label": "भील", "labelEn": "Bhil", "match": "अहिराई", "matchId": "(i)", "matchEn": "Ahirai" },
+      { "id": "(2)", "label": "गोंड", "labelEn": "Gond", "match": "भगोरिया", "matchId": "(ii)", "matchEn": "Bhagoria" },
+      { "id": "(3)", "label": "बैगा", "labelEn": "Baiga", "match": "कर्मा", "matchId": "(iii)", "matchEn": "Karma" },
+      { "id": "(4)", "label": "भारिया", "labelEn": "Bharia", "match": "भड़म", "matchId": "(iv)", "matchEn": "Bhadam" }
+    ],
+    "options": [
+      "(1)-(ii), (2)-(iii), (3)-(iii), (4)-(iv)", 
+      "(1)-(ii), (2)-(iii), (3)-(iv), (4)-(i)", 
+      "(1)-(ii), (2)-(iii), (3)-(i), (4)-(iv)", 
+      "(1)-(ii), (2)-(iii), (3)-(iv), (4)-(iv)" 
+    ], 
+    "correctAnswer": 0, 
+    "explanation": "**सही उत्तर:** A \n\n**विस्तृत विश्लेषण:**\n- **भील:** भगोरिया (होली के समय)।\n- **गोंड:** कर्मा (सबसे प्रसिद्ध), सैला।\n- **बैगा:** परधोनी, रीना। (नोट: कर्मा गोंड और बैगा दोनों करते हैं, लेकिन भगोरिया विशिष्ट रूप से भील का है और भड़म भारिया का)।\n- **भारिया:** भड़म, सैतम।\n\n**💡 Exam Fact:** 'कर्मा' नृत्य को गिनीज बुक ऑफ वर्ल्ड रिकॉर्ड में शामिल किया गया है।\n\n**🧠 Memory Tip:** 'भारिया' का 'भड़म' (Rhyming)।\n\n**🚫 Scam Alert:** भगोरिया एक हाट बाजार भी है और नृत्य भी, सिर्फ नृत्य नहीं।",
+    "explanationEn": "**Correct Answer:** A \n\n**Detailed Analysis:**\n- **Bhil:** Bhagoria (during Holi).\n- **Gond:** Karma (most famous), Saila.\n- **Baiga:** Pardhoni. (Note: Karma is done by both, but Bhagoria is unique to Bhil and Bhadam to Bharia).\n- **Bharia:** Bhadam, Saitam.\n\n**💡 Exam Fact:** 'Karma' dance has been included in the Guinness Book of World Records.\n\n**🧠 Memory Tip:** 'Bharia' performs 'Bhadam' (Similiar Sound).\n\n**🚫 Scam Alert:** Bhagoria is a market festival (Haat) as well as a dance, not just a dance.",
+    "marks": 3,
+    "negativeMarks": 1
+  }
+];

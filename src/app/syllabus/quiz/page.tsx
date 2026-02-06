@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Sparkles, ArrowLeft, BookOpen, Layers, Lock, Play } from 'lucide-react';
+import { Sparkles, ArrowLeft, BookOpen, Layers, Lock, Play, BrainCircuit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -188,6 +188,39 @@ export default function QuizSelectionPage() {
                               className="w-full bg-slate-900 hover:bg-slate-800 text-white mt-auto rounded-xl h-12 font-bold gap-2 shadow-lg shadow-slate-900/10 border border-slate-900"
                             >
                                 {language === 'hi' ? 'टेस्ट देखें' : 'View Tests'}
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                {/* CSAT Tests */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.22 }}
+                >
+                    <Card 
+                      className="h-full border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden" 
+                      onClick={() => router.push('/syllabus/quiz/csat')}
+                    >
+                        <CardContent className="p-8 space-y-6 flex flex-col h-full items-center text-center relative z-0">
+                            <div className="w-20 h-20 rounded-2xl bg-slate-50 text-slate-900 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <BrainCircuit className="w-10 h-10" />
+                            </div>
+                            <div className="space-y-2">
+                                <h2 className="text-xl font-bold text-slate-900">
+                                    {language === 'hi' ? 'सीसैट (CSAT)' : 'CSAT Practice'}
+                                </h2>
+                                <p className="text-slate-500 text-sm">
+                                    {language === 'hi' 
+                                      ? 'सामान्य अभिरुचि परीक्षण और तार्किक क्षमता।' 
+                                      : 'Aptitude, logical reasoning and comprehension.'}
+                                </p>
+                            </div>
+                            <Button 
+                              className="w-full bg-slate-900 hover:bg-slate-800 text-white mt-auto rounded-xl h-12 font-bold gap-2 shadow-lg shadow-slate-900/10 border border-slate-900"
+                            >
+                                {language === 'hi' ? 'अभ्यास करें' : 'Practice Now'}
                             </Button>
                         </CardContent>
                     </Card>

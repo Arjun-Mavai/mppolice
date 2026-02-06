@@ -1,11 +1,10 @@
-import React from 'react';
-import { getUnitStats } from '@/actions/quiz-actions';
+import { getAvailableUnitTests } from '@/actions/quiz-actions';
 import QuizUnitSelectionClient from './QuizUnitSelectionClient';
 
 export default async function QuizUnitSelectionPage() {
-    const stats = await getUnitStats();
+    const availableTests = await getAvailableUnitTests();
 
     return (
-        <QuizUnitSelectionClient stats={stats} />
+        <QuizUnitSelectionClient availableTests={availableTests} />
     );
 }

@@ -10,40 +10,78 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { PremiumExplanation } from './PremiumExplanation';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { SCORING_CONFIG } from '@/lib/quiz-scoring';
+import { revalidateAnalyticsAction } from '@/actions/analytics-actions';
+import { useEffect } from 'react';
+
 interface QuizResultProps {
     questions: Question[];
     answers: Record<string, number>;
     mode: 'topic' | 'full' | 'pyq';
     timeTaken: number; // in seconds
-    onRetry: () => void;
-    onExit: () => void;
+    onRetry?: () => void;
+    onExit?: () => void;
+    title?: string;
 }
 
-export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExit }: QuizResultProps) {
+export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExit, title }: QuizResultProps) {
     const router = useRouter();
+
+    // Revalidate Analytics on Mount to ensure Dashboard is fresh
+    useEffect(() => {
+        const refreshData = async () => {
+            await revalidateAnalyticsAction();
+            router.refresh(); // Refresh Client Router Cache
+        };
+        refreshData();
+    }, [router]);
     
-    // Calculate Score
+    // Calculate Score matching server logic (SCORING_CONFIG)
     let correctCount = 0;
     let wrongCount = 0;
     let skippedCount = 0;
+    let totalScore = 0;
+    let maxMarks = 0;
 
     questions.forEach(q => {
+        // Strict Standard Scoring
+        const qMarks = SCORING_CONFIG.MARKS_PER_QUESTION;
+        const qNegative = SCORING_CONFIG.NEGATIVE_MARKING;
+        
+        maxMarks += qMarks;
+
         if (answers[q.id] === undefined) {
             skippedCount++;
         } else if (answers[q.id] === q.correctAnswer) {
             correctCount++;
+            totalScore += qMarks;
         } else {
             wrongCount++;
+            totalScore -= qNegative;
         }
     });
 
-    const totalQuestions = questions.length;
-    const scorePercentage = Math.round((correctCount / totalQuestions) * 100);
+    // Precise Score
+    totalScore = parseFloat(totalScore.toFixed(2)); 
+    
+    const scorePercentage = maxMarks > 0 ? Math.round((totalScore / maxMarks) * 100) : 0;
 
     const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
+             {/* Header for Result Page */}
+             <div className="bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between sticky top-0 z-30 shadow-md">
+                <div className="flex items-center gap-3">
+                    <Button variant="ghost" size="icon" onClick={() => onExit?.()} className="text-slate-400 hover:text-white hover:bg-slate-800">
+                        <Home className="w-5 h-5" />
+                    </Button>
+                    <h1 className="text-lg font-bold text-white font-display truncate max-w-[200px] sm:max-w-md">
+                        {title || "Results"}
+                    </h1>
+                </div>
+             </div>
+
             {/* Score Header */}
             <div className="bg-slate-900 text-white p-6 pb-24 relative overflow-hidden">
                 {/* Background effects */}
@@ -51,18 +89,19 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl -ml-20 -mb-20"></div>
 
                 <div className="relative z-10 max-w-3xl mx-auto text-center space-y-6">
-                    <h1 className="text-2xl font-bold font-display opacity-90">Test Results</h1>
+                    <h1 className="text-2xl font-bold font-display opacity-90">{title || "Test Results"}</h1>
                     
                     <div className="flex flex-col items-center">
                          <div className={cn(
-                             "w-32 h-32 rounded-full border-4 flex items-center justify-center mb-4 shadow-2xl relative bg-slate-800",
+                             "w-40 h-40 rounded-full border-4 flex items-center justify-center mb-4 shadow-2xl relative bg-slate-800",
                              scorePercentage >= 70 ? "border-emerald-500 text-emerald-500 shadow-emerald-900/50" :
                              scorePercentage >= 40 ? "border-amber-500 text-amber-500 shadow-amber-900/50" :
                              "border-red-500 text-red-500 shadow-red-900/50"
                          )}>
                              <div className="text-center">
-                                 <div className="text-4xl font-bold">{scorePercentage}%</div>
-                                 <div className="text-xs uppercase font-bold tracking-wider opacity-60">Accuracy</div>
+                                 <div className="text-4xl font-bold">{totalScore}</div>
+                                 <div className="text-sm font-medium opacity-80">/ {maxMarks}</div>
+                                 <div className="text-[10px] uppercase font-bold tracking-wider opacity-60 mt-1">Score</div>
                              </div>
                          </div>
                          <h2 className="text-3xl font-bold">
@@ -241,7 +280,10 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
 
                 <div className="flex gap-4 pt-8">
                      <Button 
-                        onClick={onExit}
+                        onClick={() => {
+                            if (onExit) onExit();
+                            router.push('/syllabus/quiz'); // Force navigation to hub
+                        }}
                         variant="outline" 
                         className="flex-1 h-12 bg-white text-slate-900 border-slate-300 font-bold rounded-xl"
                     >

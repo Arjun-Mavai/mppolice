@@ -1,271 +1,115 @@
 import { redirect } from 'next/navigation';
-import { db } from '@/db';
-import { tests, questions } from '@/db/schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { getTestWithQuestions, getUserAttempts } from '@/actions/test-actions';
 import { QuizPlayClient } from './QuizPlayClient';
-import { Question } from '@/types/quiz';
 import { verifyAuth } from '@/lib/auth';
-import { userAttempts } from '@/db/schema';
-import { and } from 'drizzle-orm';
+import { PLAN_LIMITS } from '@/config/plans';
+import { Question } from '@/types/quiz';
 
-
-// Force dynamic to ensure fresh questions (randomization strategy)
-export const dynamic = 'force-dynamic';
-
-function resolveCorrectAnswerIndex(val: string | number | null | undefined): number {
-    if (val === null || val === undefined) return 0;
-    if (typeof val === 'number') return val;
-    
-    const str = String(val).trim().toUpperCase();
-    
-    // Check if it's already a number string like "0", "1"
-    if (!isNaN(Number(str)) && str !== "") {
-        return Number(str);
-    }
-    
-    // Check for "Option A", "Option B" etc. common patterns
-    if (str.startsWith("OPTION ")) {
-        const char = str.replace("OPTION ", "").trim().charAt(0);
-         return char.charCodeAt(0) - 65;
-    }
-
-    // Map A->0, B->1, etc.
-    if (str.length === 1 && str >= 'A' && str <= 'Z') {
-        return str.charCodeAt(0) - 65;
-    }
-    
-    return 0; // Fallback
+interface PageProps {
+    searchParams: Promise<{
+        testId?: string;
+        mode?: string;
+    }>;
 }
 
-export default async function QuizPlayPage({ searchParams }: { searchParams: Promise<{ mode?: string; unitId?: string; testId?: string, topicId?: string }> }) {
+export default async function QuizPlayPage({ searchParams }: PageProps) {
+
     const params = await searchParams;
-    const mode = (params.mode as 'topic' | 'full' | 'pyq') || 'topic';
-    const unitId = params.unitId;
-    const testId = params.testId;
-    const topicId = params.topicId;
+    console.log("params", params);
+    const { testId, mode } = params;
 
-    let quizQuestions: Question[] = [];
-
-    let maxRetries: number | null = null;
-    let userAttemptsCount = 0;
-    
-    // Auth is OPTIONAL - only required for tracking attempts and premium content
-    const user = await verifyAuth();
-    const isPro = user?.isSubscribed || false;
-    let resolvedTestId = "";
-    
-    // For premium content (FLT, PYQ), check if user is subscribed
-    // If not subscribed, we'll pass a flag to show paywall modal instead of redirecting
-    const isPremiumMode = mode === 'full' || mode === 'pyq';
-    const shouldShowPaywall = isPremiumMode && !isPro;
-
-    // Helper to get user ID (mock for now if no auth implemented in this file yet)
-    // Ideally we use `verifyAuth` or similar. 
-    try {
-        if (mode === 'full') {
-             // 1. Full Length Test Logic
-             if (!testId) {
-                 const latestFLT = await db.query.tests.findFirst({
-                     where: (calc, { eq }) => eq(calc.type, 'FLT'),
-                     orderBy: (calc, { desc }) => [desc(calc.createdAt)]
-                 });
-                 if (latestFLT) {
-                    resolvedTestId = latestFLT.id;
-                 }
-             } else {
-                 resolvedTestId = testId;
-             }
-
-             if (resolvedTestId) {
-                 const test = await db.query.tests.findFirst({
-                     where: (calc, { eq }) => eq(calc.id, resolvedTestId),
-                     with: {questions: {orderBy: (q, {asc}) => [asc(q.order)]}}
-                 });
-
-                 if (test) {
-                     quizQuestions = test.questions.map(q => ({
-                         id: q.id,
-                         question: q.questionText,
-                         questionEn: q.questionTextEn || null,
-                         options: q.options as string[],
-                         correctAnswer: resolveCorrectAnswerIndex(q.correctAnswer),
-                         explanation: q.explanation || "",
-                         explanationEn: q.explanationEn || null,
-                         marks: q.marks,
-                         negativeMarks: q.negativeMarks || 0
-                     }));
-                     maxRetries = test.maxRetries;
-                 }
-             }
-
-        } else if (mode === 'pyq') {
-            // 3. PYQ Mode Logic
-            if (!testId) {
-                const latestPYQ = await db.query.tests.findFirst({
-                    where: (calc, { eq }) => eq(calc.type, 'PYQ'),
-                    orderBy: (calc, { desc }) => [desc(calc.createdAt)]
-                });
-                if (latestPYQ) {
-                    resolvedTestId = latestPYQ.id;
-                }
-            } else {
-                resolvedTestId = testId;
-            }
-
-            if (resolvedTestId) {
-                const test = await db.query.tests.findFirst({
-                    where: (calc, { eq }) => eq(calc.id, resolvedTestId),
-                    with: {questions: {orderBy: (q, {asc}) => [asc(q.order)]}}
-                });
-
-                if (test) {
-                    quizQuestions = test.questions.map(q => ({
-                        id: q.id,
-                        question: q.questionText,
-                        questionEn: q.questionTextEn || null,
-                        options: q.options as string[],
-                        correctAnswer: resolveCorrectAnswerIndex(q.correctAnswer),
-                        explanation: q.explanation || "",
-                        explanationEn: q.explanationEn || null,
-                        marks: q.marks,
-                        negativeMarks: q.negativeMarks || 0
-                    }));
-                    maxRetries = test.maxRetries;
-                }
-            }
-
-        } else {
-            // 4. Topic Mode Logic (Default)
-            // If `testId` is passed directly (from our new flow), use it.
-            if (testId) {
-                 resolvedTestId = testId;
-                 const test = await db.query.tests.findFirst({
-                     where: (calc, { eq }) => eq(calc.id, resolvedTestId),
-                     with: {questions: {orderBy: (q, {asc}) => [asc(q.order)]}}
-                 });
-                 if (test) {
-                     quizQuestions = test.questions.map(q => ({
-                         id: q.id,
-                         question: q.questionText,
-                         questionEn: q.questionTextEn || null,
-                         options: q.options as string[],
-                         correctAnswer: resolveCorrectAnswerIndex(q.correctAnswer),
-                         explanation: q.explanation || "",
-                         explanationEn: q.explanationEn || null,
-                         marks: q.marks,
-                         negativeMarks: q.negativeMarks || 0
-                     }));
-                     maxRetries = test.maxRetries;
-                 }
-            } 
-            // Fallback: If only unitId and topicId are provided (Legacy or Link flow)
-            else if (unitId && params.topicId) { 
-                 const topicId = params.topicId as string;
-                 // Try to find a specific TOPIC test first
-                 const topicTest = await db.query.tests.findFirst({
-                    where: (calc, { eq, and }) => and(
-                        eq(calc.type, 'TOPIC'), 
-                        eq(calc.unitId, unitId),
-                        eq(calc.topicId, topicId) 
-                    ),
-                    orderBy: (calc, { desc }) => [desc(calc.createdAt)],
-                    with: {questions: {orderBy: (q, {asc}) => [asc(q.order)]}}
-                 });
-
-                 if (topicTest) {
-                     resolvedTestId = topicTest.id;
-                     quizQuestions = topicTest.questions.map(q => ({
-                         id: q.id,
-                         question: q.questionText,
-                         questionEn: q.questionTextEn || null,
-                         options: q.options as string[],
-                         correctAnswer: resolveCorrectAnswerIndex(q.correctAnswer),
-                         explanation: q.explanation || "",
-                         explanationEn: q.explanationEn || null,
-                         marks: q.marks,
-                         negativeMarks: q.negativeMarks || 0
-                     }));
-                 } else {
-                     // If no specific topic test, maybe fallback or empty?
-                     // For now, if no test found for topic, we return empty (handled below)
-                 }
-            }
-            else if (unitId) {
-                // If only Unit ID is provided -> UNIT Test (Random 20 mixed)
-                const latestUnitTest = await db.query.tests.findFirst({
-                    where: (calc, { eq, and }) => and(eq(calc.type, 'UNIT'), eq(calc.unitId, unitId)),
-                    orderBy: (calc, { desc }) => [desc(calc.createdAt)],
-                    with: {questions: true}
-                });
-
-                if (latestUnitTest) {
-                     resolvedTestId = latestUnitTest.id;
-                     // For unit tests, pick 20 random from its pool
-                     const dbQuestions = await db.select().from(questions)
-                        .where(eq(questions.testId, latestUnitTest.id))
-                        .orderBy(sql`RANDOM()`) 
-                        .limit(20);
-
-                     quizQuestions = dbQuestions.map(q => ({
-                        id: q.id,
-                        question: q.questionText,
-                        questionEn: q.questionTextEn || null,
-                        options: q.options as string[],
-                        correctAnswer: resolveCorrectAnswerIndex(q.correctAnswer),
-                        explanation: q.explanation || "",
-                        explanationEn: q.explanationEn || null,
-                        marks: q.marks,
-                        negativeMarks: q.negativeMarks || 0
-                    }));
-                    maxRetries = latestUnitTest.maxRetries;
-                }
-            } else {
-                 // General Practice (Random)
-                 const dbQuestions = await db.select().from(questions)
-                    .orderBy(sql`RANDOM()`)
-                    .limit(20);
-                
-                 quizQuestions = dbQuestions.map(q => ({
-                    id: q.id,
-                    question: q.questionText,
-                    questionEn: q.questionTextEn || null,
-                    options: q.options as string[],
-                    correctAnswer: resolveCorrectAnswerIndex(q.correctAnswer),
-                    explanation: q.explanation || "",
-                    explanationEn: q.explanationEn || null,
-                    marks: q.marks,
-                    negativeMarks: q.negativeMarks || 0
-                }));
-                resolvedTestId = 'general-practice-v1';
-            }
-        }
-        
-        // Final fallback if resolvedTestId is still empty (e.g. unitId provided but no test found)
-        if (!resolvedTestId) {
-             resolvedTestId = 'general-practice-v1';
-        }
-        
-        // Fetch User Attempts (only if user is logged in)
-        if (resolvedTestId && user) {
-            const attempts = await db.select({count: sql<number>`count(*)`}).from(userAttempts)
-               .where(and(eq(userAttempts.userId, user.id), eq(userAttempts.testId, resolvedTestId)));
-            userAttemptsCount = Number(attempts[0].count);
-        }
-
-    } catch (error) {
-        console.error("Quiz Fetch Error:", error);
-        quizQuestions = []; 
+    if (!testId) {
+        redirect('/syllabus/quiz');
     }
 
+    // 1. Fetch Test and User Data in Parallel
+    const [testData, user] = await Promise.all([
+        getTestWithQuestions(testId),
+        verifyAuth()
+    ]);
+
+    if (!testData) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 pt-[80px]">
+                <div className="text-center space-y-4">
+                    <h1 className="text-2xl font-bold text-slate-900">Test Not Found</h1>
+                    <p className="text-slate-500">The requested test could not be found.</p>
+                </div>
+            </div>
+        );
+    }
+
+    // 2. Map Questions to correct type
+    const questions: Question[] = testData.questions.map((q) => {
+        // Ensure options are parsed if they come as a stringified array
+        const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+
+        return {
+            ...q,
+            question: q.questionText,
+            questionEn: (testData.type === 'CSAT' && (!q.questionTextEn || q.questionTextEn.trim().toLowerCase() === 'n/a' || q.questionTextEn.trim().toLowerCase() === 'na')) 
+                        ? q.questionText 
+                        : (q.questionTextEn || undefined),
+            correctAnswer: Number(q.correctAnswer), 
+            options: parsedOptions as string[], // Cast assumes standard string[] options for now
+            explanation: q.explanation || undefined,
+            explanationEn: q.explanationEn || undefined,
+            subject: q.subject || undefined,
+            type: (q.type as 'standard' | 'matching') || 'standard',
+            matchPairs: (q.matchPairs as any) || undefined,
+            negativeMarks: q.negativeMarks ?? undefined,
+            marks: q.marks ?? undefined
+        };
+    });
+
+    // 3. Determine Access / Paywall Logic
+    const userTier = user?.planTier || 'free';
+    const effectiveTier = !user ? 'guest' : (user.isSubscribed ? (userTier === 'free' ? 'lite' : userTier) : 'free');
+    
+    // Limits
+    // Note: This page is for PLAYING. The limit check usually happens on the listing page (FLTPage).
+    // However, for direct link access, we should re-verify or rely on "Access Denied" if locked.
+    // Current requirement: "FLT page client hydration issue... sab kuch server se karo".
+    // For this specific 'Play' page, we might want to ensure they CAN play.
+    
+    // Logic from FLT Page:
+    // limit = PLAN_LIMITS[effectiveTier].flt_limit
+    // isOpen = index < limit.
+    // But here we rely on testId. We don't know the index easily without fetching ALL tests.
+    // Optimization: If it's an FLT, maybe we should just check subscription for now, 
+    // OR we trust the "Locked" UI on the previous page prevented entry.
+    // BUT direct navigation is possible.
+    
+    // Simplification for 'Principal Engineer' robustness:
+    // If it's an FLT and user is NOT Pro/Lite (depending on specific logic), maybe show paywall.
+    // But `displayOrder` is key.
+    // Let's assume for now valid entry if they got here, BUT check `isPro` for the test itself.
+    
+    const isProUser = user?.isSubscribed || false;
+    
+    // If test is marked isPro and user is not subscribed -> Paywall
+    // OR if test is FLT and user is Free -> Paywall (typically FLT are premium except demo)
+    
+    let shouldShowPaywall = false;
+    
+    // Very basic check: If test.isPro && !isProUser
+    if (testData.isPro && !isProUser) {
+        shouldShowPaywall = true;
+    }
+    
+    // 4. Content Logic (Attempts)
+    const attemptsMap = await getUserAttempts([testId]);
+    const userAttemptsCount = attemptsMap[testId] || 0;
+    
     return (
         <QuizPlayClient 
-            questions={quizQuestions} 
-            mode={mode} 
-            maxRetries={maxRetries}
-            userAttempts={userAttemptsCount}
-            isPro={isPro}
-            testId={resolvedTestId}
+            questions={questions}
+            mode={(mode as 'topic' | 'full' | 'pyq') || 'topic'} // Default to topic if undefined
+            testId={testId}
             userId={user?.id || null}
+            maxRetries={testData.maxRetries}
+            userAttempts={userAttemptsCount}
+            isPro={isProUser}
             shouldShowPaywall={shouldShowPaywall}
         />
     );

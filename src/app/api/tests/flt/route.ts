@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { tests, userAttempts } from '@/db/schema';
-import { eq, desc, and, sql, inArray } from 'drizzle-orm';
+import { eq, desc, and, sql, inArray, asc } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
 
 export async function GET() {
     try {
-        // Fetch all FLT tests
+        // 1. Fetch FLTs
         const fltTests = await db.select()
             .from(tests)
             .where(eq(tests.type, 'FLT'))
-            .orderBy(desc(tests.createdAt));
+            .orderBy(asc(tests.displayOrder));
 
         // Get user attempts if logged in
         const user = await verifyAuth();

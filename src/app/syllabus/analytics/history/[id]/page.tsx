@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getAttemptDetails } from '@/actions/analytics-actions';
@@ -9,36 +9,57 @@ import {
     CheckCircle2, 
     XCircle, 
     AlertCircle, 
-    Target,
     BarChart3,
-    Trophy,
-    Lightbulb,
-    Brain,
-    AlertTriangle
+    Lightbulb
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { PremiumExplanation } from '@/components/quiz/PremiumExplanation';
-import { HistoryLanguageToggle } from '@/components/quiz/HistoryLanguageToggle';
+import { calculateScore } from '@/lib/quiz-scoring';
+import Loading from './loading';
+
 export default async function AttemptReviewPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
-    const attempt = await getAttemptDetails(params.id);
+    
+    return (
+        <Suspense fallback={<Loading />}>
+            <AttemptContent attemptId={params.id} />
+        </Suspense>
+    );
+}
+
+async function AttemptContent({ attemptId }: { attemptId: string }) {
+    const attempt = await getAttemptDetails(attemptId);
 
     if (!attempt) {
         return notFound();
     }
 
     const { meta, answers } = attempt;
-    const accuracy = Math.round(((meta.score ?? 0) / (meta.totalMarks || 1)) * 100);
-    const duration = meta.endTime && meta.startTime ? 
-        Math.round((new Date(meta.endTime).getTime() - new Date(meta.startTime).getTime()) / 60000) : 0;
 
-    // Categorize answers
+    // Categorize answers first to use lengths for calculation
     const correctAns = answers.filter(a => a.isCorrect);
-    const wrongAns = answers.filter(a => !a.isCorrect && a.userAnswer);
-    const skippedAns = answers.filter(a => !a.userAnswer);
+    // Wrong answers are those that are NOT correct AND have a userAnswer (not skipped)
+    const wrongAns = answers.filter(a => !a.isCorrect && a.userAnswer !== null && a.userAnswer !== undefined && a.userAnswer !== ''); 
+    const skippedAns = answers.filter(a => !a.userAnswer || a.userAnswer === '');
+
+    // Recalculate Score Dynamically to ensure 3/-1 Rule is always displayed
+    const recalculated = calculateScore(answers.length, correctAns.length, wrongAns.length);
+    
+    // Use recalculated values for display
+    const finalScore = recalculated.totalScore;
+    const finalTotalMarks = recalculated.maxMarks;
+    const accuracy = recalculated.percentage;
+
+    // Calculate Duration
+    let durationDisplay = "0m";
+    if (meta.startTime && meta.endTime) {
+         const diffSeconds = Math.round((new Date(meta.endTime).getTime() - new Date(meta.startTime).getTime()) / 1000);
+         const minutes = Math.floor(diffSeconds / 60);
+         const seconds = diffSeconds % 60;
+         durationDisplay = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-20">
@@ -65,7 +86,11 @@ export default async function AttemptReviewPage(props: { params: Promise<{ id: s
                             <div className="flex items-center gap-4 text-slate-300 text-sm">
                                 <span className="flex items-center gap-1.5">
                                     <Clock className="w-4 h-4" /> 
-                                    {new Date(meta.endTime || new Date()).toDateString()}
+                                    {durationDisplay}
+                                </span>
+                                <span className="w-1 h-1 bg-slate-600 rounded-full"></span>
+                                <span className="flex items-center gap-1.5">
+                                    <span className="text-slate-400">{new Date(meta.endTime || new Date()).toDateString()}</span>
                                 </span>
                                 <span className="w-1 h-1 bg-slate-600 rounded-full"></span>
                                 <span className="flex items-center gap-1.5">
@@ -79,7 +104,7 @@ export default async function AttemptReviewPage(props: { params: Promise<{ id: s
                              <div className="text-right">
                                  <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">Score</div>
                                  <div className="text-3xl font-black text-white">
-                                     {meta.score}<span className="text-lg text-slate-500 font-medium">/{meta.totalMarks}</span>
+                                     {finalScore}<span className="text-lg text-slate-500 font-medium">/{finalTotalMarks}</span>
                                  </div>
                              </div>
                              <div className={cn(
@@ -162,12 +187,12 @@ export default async function AttemptReviewPage(props: { params: Promise<{ id: s
                                          <div className="shrink-0">
                                              {isCorrect && (
                                                  <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none">
-                                                     Correct (+{ans.marks})
+                                                     Correct (+{3})
                                                  </Badge>
                                              )}
                                              {isWrong && (
                                                  <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-none">
-                                                     Incorrect (0)
+                                                     Incorrect (-{1})
                                                  </Badge>
                                              )}
                                              {isSkipped && (
@@ -175,6 +200,9 @@ export default async function AttemptReviewPage(props: { params: Promise<{ id: s
                                                      Skipped
                                                  </Badge>
                                              )}
+                                             <Badge variant="outline" className="ml-2 text-slate-500 border-slate-200 bg-slate-50">
+                                                 ⏱️ {ans.timeTaken || 0}s
+                                             </Badge>
                                          </div>
                                      </div>
                                 </CardHeader>

@@ -4,7 +4,7 @@ import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { getUserAnalytics } from '@/actions/analytics-actions';
-import { DashboardView } from '@/components/analytics/DashboardView';
+import AnalyticsDashboardClient from '@/app/syllabus/analytics/AnalyticsDashboardClient';
 import { Badge } from '@/components/ui/badge';
 import { getUserSyllabusProgress } from '@/actions/syllabus';
 import { syllabusData } from '@/data/syllabusData';
@@ -62,7 +62,7 @@ export default async function DashboardPage() {
                 <SyllabusProgressWidget data={syllabusProgress} totalTopics={totalTopics} />
 
                 {/* Dashboard Content */}
-                <DashboardView data={analyticsData} userName={user.name || 'User'} />
+                <AnalyticsDashboardClient analytics={analyticsData} />
             </div>
         </div>
     );

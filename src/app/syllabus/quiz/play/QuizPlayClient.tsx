@@ -12,6 +12,7 @@ interface QuizPlayClientProps {
     questions: Question[];
     mode: 'topic' | 'full' | 'pyq';
     testId: string;
+    title?: string;
     userId: string | null;
     maxRetries?: number | null;
     userAttempts?: number;
@@ -23,6 +24,7 @@ export function QuizPlayClient({
     questions, 
     mode, 
     testId, 
+    title,
     userId, 
     maxRetries = null, 
     userAttempts = 0, 
@@ -142,6 +144,7 @@ export function QuizPlayClient({
         questions={questions}
         mode={mode}
         testId={testId}
+        title={title}
         userId={userId || 'guest'}
         timeLimitInMinutes={mode === 'full' ? 120 : 20} // 2 hours for FLT, 20 mins for Unit
         onExit={() => router.push('/syllabus')}

@@ -29,6 +29,7 @@ export const tests = sqliteTable('tests', {
   topicId: text('topic_id'), // To link to specific topic ID from syllabusData
   tags: text('tags', { mode: 'json' }), // JSON array of related tags e.g., ['history', 'ancient']
   isPro: integer('is_pro', { mode: 'boolean' }).default(false),
+  displayOrder: integer('display_order').default(0),
   maxRetries: integer('max_retries'), // null = unlimited. Standard: Unit=5, FLT=3
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
@@ -49,6 +50,9 @@ export const questions = sqliteTable('questions', {
   idealTime: integer('ideal_time').default(60),  // Expected time in seconds
   order: integer('order').notNull(),
   subject: text('subject'), // e.g., 'Indian History', 'Polity'
+  // New fields for Matching Support
+  type: text('type', { enum: ['standard', 'matching'] }).default('standard'),
+  matchPairs: text('match_pairs', { mode: 'json' }), // JSON Array: [{ id: '1', label: 'A', match: 'B', ... }]
 });
 
 // User Attempts Table

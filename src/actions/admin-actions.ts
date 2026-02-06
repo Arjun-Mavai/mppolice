@@ -122,7 +122,9 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
             negativeMarks: q.negativeMarks || 0,
             idealTime: q.idealTime || 60,
             order: startOrder + idx + 1, // Continue from last order
-            subject: q.subject || 'General'
+            subject: q.subject || 'General',
+            type: q.type || 'standard',
+            matchPairs: q.matchPairs || null
         }));
 
         // Filter out duplicates (check against existing questions in this test)

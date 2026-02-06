@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Clock, Trophy } from 'lucide-react';
 
-export const revalidate = 0;
+// export const revalidate = 0;
 
 export default async function TestsPage({ searchParams }: { searchParams: Promise<{ tag?: string }> }) {
   const params = await searchParams;

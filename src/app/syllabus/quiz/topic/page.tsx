@@ -36,6 +36,7 @@ interface Topic {
     titleEn: string | null;
     description: string | null; // Back text
     descriptionEn: string | null; 
+    testId?: string;
 }
 
 interface Unit {
@@ -89,7 +90,8 @@ export default function TopicSelectionPage() {
                 title: language === 'hi' ? t.title : (t.titleEn || t.title),
                 titleEn: t.titleEn,
                 description: language === 'hi' ? t.description : (t.descriptionEn || t.description),
-                descriptionEn: t.descriptionEn
+                descriptionEn: t.descriptionEn,
+                testId: t.testId
             }))
         };
     }).sort((a,b) => a.index - b.index) : [];
@@ -104,17 +106,25 @@ export default function TopicSelectionPage() {
         const limit = PLAN_LIMITS[effectiveTier as keyof typeof PLAN_LIMITS]?.topic_tests_limit || 0;
         
         // Use order for locking logic (Top 5 free, etc)
-        const isLocked = topic.order > limit;
+        // Special override: Unit 1, Topic 1 & 2 are free for everyone
+        const isFreeOverride = unitId === 'unit_1' && topic.order <= 2;
+        const isLocked = !isFreeOverride && topic.order > limit;
         
         if (isLocked) {
+
             setPaywallOpen(true);
             return;
         }
         
-        // Navigation: Pass specific topicId (DB UUID)
-        // router.push(`/syllabus/quiz/play?unitId=${unitId}&topicId=${topic.id}`);
-        // User asked for "efficinet server fetching". The link navigation will trigger server fetch on new page.
-        router.push(`/syllabus/quiz/play?unitId=${unitId}&topicId=${topic.id}`);
+        // Navigation: Pass specific testId if available
+        if (topic.testId) {
+             router.push(`/syllabus/quiz/play?unitId=${unitId}&testId=${topic.testId}`);
+        } else {
+             // Fallback or Alert? 
+             // Ideally this shouldn't happen if topics are synced. 
+             // We can show a toast or just do nothing/log.
+             toast.error("Test coming soon!");
+        }
     };
 
     // Filter topics if inside a unit
@@ -238,7 +248,8 @@ export default function TopicSelectionPage() {
                                                 const effectiveTier = user?.is_subscribed ? (userTier === 'free' ? 'lite' : userTier) : 'free';
                                                 const limit = PLAN_LIMITS[effectiveTier as keyof typeof PLAN_LIMITS]?.topic_tests_limit || 0;
                                                 
-                                                const isLocked = topic.order > limit;
+                                                const isFreeOverride = selectedUnitId === 'unit_1' && topic.order <= 2;
+                                                const isLocked = !isFreeOverride && topic.order > limit;
                                                 
                                                 return (
                                                 <motion.div 

@@ -82,7 +82,7 @@ export default function TestInterface({ test, questions }: { test: Test, questio
     const timeTaken = (test.durationMinutes * 60) - timeLeft;
 
     // TODO: get user ID from session context if available, else 'anonymous'
-    const res = await submitTestAttempt(test.id, 'user-123', answers, timeTaken);
+    const res = await submitTestAttempt(test.id, 'user-123', answers, timeTaken, {});
     
     if (res.success) {
       toast.success("Test Submitted Successfully!");

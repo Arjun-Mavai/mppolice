@@ -15,9 +15,19 @@ interface QuestionPayload {
   explanationEn?: string;
   marks: number;
   negativeMarks: number;
-  idealTime: number;
+  idealTime: number; 
   subject?: string;
   order: number;
+  // New Unified Fields
+  type?: 'standard' | 'matching';
+  matchPairs?: {
+    id: string; // "(1)"
+    label: string; 
+    labelEn?: string;
+    match: string; 
+    matchId: string; // "(a)"
+    matchEn?: string;
+  }[];
 }
 
 interface TopicPayload {
@@ -106,10 +116,8 @@ export async function uploadTopicTestQuestions(data: BulkUploadPayload, adminSec
                 };
             });
             
-            let cleanAnswer = q.correctAnswer.trim();
-            if (cleanAnswer.toLowerCase().startsWith("option ")) {
-                cleanAnswer = cleanAnswer.split(" ")[1]; // "B"
-            }
+            // Simple storage of the number/string
+            const cleanAnswer = String(q.correctAnswer).trim();
             
             return {
                 id: crypto.randomUUID(),
@@ -125,6 +133,9 @@ export async function uploadTopicTestQuestions(data: BulkUploadPayload, adminSec
                 idealTime: q.idealTime,
                 subject: q.subject,
                 order: q.order,
+                // New Fields
+                type: q.type || 'standard',
+                matchPairs: q.matchPairs as unknown as string // Drizzle handles JSON
             };
         });
 

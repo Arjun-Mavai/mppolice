@@ -3,12 +3,17 @@ import React from 'react';
 import { MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { usePathname } from 'next/navigation';
 export function SupportButton() {
   const { user } = useSettingsStore();
+  const pathname = usePathname();
   const telegramBotLink = "https://t.me/mppss_26_bot";
 
   // Hide for logged in users
-  if (user) return null;  
+  if (user) return null;
+  
+  // Hide for Guest Users on Quiz Play (User Request)
+  if (pathname === '/syllabus/quiz/play') return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-3">

@@ -28,6 +28,7 @@ interface QuizInterfaceProps {
     mode: 'topic' | 'full' | 'pyq';
     timeLimitInMinutes: number; // 10 or 60
     testId: string;
+    title?: string;
     userId: string;
     onExit: () => void;
     onRetry?: () => void;
@@ -40,6 +41,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
         questions, 
         mode, 
         timeLimitInMinutes, 
+        title,
         onExit, 
         disablePalette = false 
     } = props;
@@ -113,7 +115,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
             mode={mode} 
             timeTaken={(timeLimitInMinutes * 60) - timeLeft}
             onRetry={handleRetry}
-            onExit={onExit}
+            title={title}
         />;
     }
 
@@ -129,7 +131,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
                     
                     <div className="flex items-center gap-2 hidden sm:flex">
                         <div className="h-6 w-px bg-slate-200 mx-2"></div>
-                        <span className="font-display font-bold text-slate-900 tracking-tight">MPPSC<span className="text-indigo-600">26</span></span>
+                        <span className="font-display font-bold text-slate-900 tracking-tight">{title || <>MPPSC<span className="text-indigo-600">26</span></>}</span>
                         <Badge variant="outline" className="ml-2 border-slate-200 text-slate-500 font-medium hidden sm:inline-flex">
                             {mode === 'full' ? t.fullTest : t.topicPractice}
                         </Badge>
@@ -274,6 +276,45 @@ export function QuizInterface(props: QuizInterfaceProps) {
                                  ? currentQuestion.questionEn 
                                  : currentQuestion.question}
                          </h2>
+                         
+                         {/* Matching Questions - Standard Exam Layout */}
+                         {currentQuestion.type === 'matching' && currentQuestion.matchPairs && (
+                            <div className="mb-8 mt-4 pl-1">
+                                <div className="grid grid-cols-2 gap-x-8 gap-y-4 max-w-2xl">
+                                    {/* Headers */}
+                                    <div className="font-bold text-slate-800 border-b-2 border-slate-800 pb-1 mb-2">
+                                        {language === 'hi' ? 'सूची-I' : 'List-I'}
+                                    </div>
+                                    <div className="font-bold text-slate-800 border-b-2 border-slate-800 pb-1 mb-2">
+                                        {language === 'hi' ? 'सूची-II' : 'List-II'}
+                                    </div>
+
+                                    {/* Content Column 1 */}
+                                    <div className="space-y-3">
+                                        {currentQuestion.matchPairs.map((pair, idx) => (
+                                            <div key={`col1-${idx}`} className="flex gap-2 items-start text-base sm:text-lg">
+                                                <span className="font-semibold text-slate-900 min-w-[24px]">{pair.id}</span>
+                                                <span className="text-slate-800">
+                                                    {language === 'en' && pair.labelEn ? pair.labelEn : pair.label}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Content Column 2 */}
+                                    <div className="space-y-3">
+                                        {currentQuestion.matchPairs.map((pair, idx) => (
+                                            <div key={`col2-${idx}`} className="flex gap-2 items-start text-base sm:text-lg">
+                                                <span className="font-semibold text-slate-900 min-w-[24px]">{pair.matchId}</span>
+                                                <span className="text-slate-800">
+                                                    {language === 'en' && pair.matchEn ? pair.matchEn : pair.match}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                         )}
 
                           <div className="space-y-3">
                               {/* Support Hindi Options if available */}

@@ -16,12 +16,16 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({ explanation, explanationEn, language }) => {
     const storeLanguage = useSettingsStore((state) => state.language);
     const finalLanguage = language || storeLanguage;
-    
     // Choose the right explanation text based on language
     // Default to 'explanation' (Hindi/Primary) if specific logic not met
-    const textToParse = (finalLanguage === 'en' && explanationEn) ? explanationEn : explanation;
+    const DEFAULT_MSG = finalLanguage === 'hi'
+        ? "यह प्रश्न सीधे अवधारणात्मक (Conceptual) है। यदि यह गलत हुआ है, तो कृपया संबंधित विषय के मूल तथ्यों (Basics) को दोहराएं।"
+        : "This question addresses core concepts. If answered incorrectly, please review the fundamental facts of this topic.";
+        
+    const textToParse = ((finalLanguage === 'en' && explanationEn) ? explanationEn : explanation) || DEFAULT_MSG;
     // Helper to extract sections
     const extractSection = (text: string, marker: string, nextMarkers: string[]) => {
+        if (!text) return null;
         const startIndex = text.indexOf(marker);
         if (startIndex === -1) return null;
 

@@ -148,16 +148,24 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
 
                              <ul className="space-y-4 mb-8 flex-1 text-left">
                                  <li className="flex items-start gap-3 text-sm text-slate-700 font-medium">
-                                     <CheckCircle2 className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
-                                     <span>{language === 'hi' ? 'बेसिक सिलेबस टॉपिक्स (10 यूनिट्स)' : 'Basic Understanding (10 Units)'}</span>
+                                     <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                                     <span>{language === 'hi' ? '10 यूनिट्स के टॉपिक का विश्लेषण' : '10 Units – Topic Analysis'}</span>
                                  </li>
                                  <li className="flex items-start gap-3 text-sm text-slate-700 font-medium">
-                                     <CheckCircle2 className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
-                                     <span>{language === 'hi' ? 'सभी ब्लॉग मुफ्त पढ़ें' : 'All Blogs Access'}</span>
+                                     <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                                     <span>{language === 'hi' ? 'PYQ आधारित प्रश्न अभ्यास' : 'PYQ-Based Question Mapping'}</span>
                                  </li>
                                  <li className="flex items-start gap-3 text-sm text-slate-700 font-medium">
-                                      <CheckCircle2 className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
-                                      <span>{language === 'hi' ? 'सीमित प्रैक्टिस टेस्ट' : 'Limited Practice Tests'}</span>
+                                     <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                                     <span>{language === 'hi' ? 'आसान व स्पष्ट कॉन्सेप्ट समझाइश' : 'Concept-Focused Explanations'}</span>
+                                 </li>
+                                 <li className="flex items-start gap-3 text-sm text-slate-700 font-medium">
+                                     <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                                     <span>{language === 'hi' ? 'प्रीमियम स्टडी ब्लॉग्स एक्सेस' : 'Premium Study Blogs Access'}</span>
+                                 </li>
+                                 <li className="flex items-start gap-3 text-sm text-slate-700 font-medium">
+                                      <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                                      <span>{language === 'hi' ? 'सीमित प्रैक्टिस टेस्ट्स' : 'Limited Practice Tests'}</span>
                                  </li>
                              </ul>
 
@@ -166,7 +174,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                                 variant="outline"
                                 className="w-full h-11 rounded-lg font-bold border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                              >
-                                 {language === 'hi' ? 'मूल बातें शुरू करें' : 'Start with Basics'}
+                                 {language === 'hi' ? 'बेसिक प्लान' : 'Start with Basics'}
                              </Button>
                          </CardContent>
                      </Card>
@@ -189,7 +197,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                                      {language === 'hi' ? 'प्रीमियम प्रो' : 'Premium Pro'} 
                                  </h3>
                                  <p className="text-sm text-indigo-600/80 font-medium mb-4">
-                                     {language === 'hi' ? 'सफलता के लिए संपूर्ण पैकेज' : 'Complete Success Package'}
+                                     {language === 'hi' ? 'शुरुआती स्तर' : 'Complete Success Package'}
                                  </p>
 
                                  <div className="flex items-baseline gap-2">

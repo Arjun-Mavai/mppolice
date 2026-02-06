@@ -116,14 +116,14 @@ export function ExitSurveyModal({
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
             Submit & Leave
           </Button>
-           <Button
+           {/* <Button
             type="button"
             variant="outline"
             onClick={() => onConfirmExit()}
             className="w-full sm:w-auto text-slate-500 hover:text-slate-900 border-slate-200 hover:bg-slate-50"
           >
             Skip Survey
-          </Button>
+          </Button> */}
         </DialogFooter>
       </DialogContent>
     </Dialog>

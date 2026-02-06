@@ -104,7 +104,7 @@ async function runSubmission(testId: string, userId: string, answers: Record<str
      console.log("\n📤 Submitting Test Attempt...");
      const timeTaken = 120; // 2 minutes
      
-     const result = await submitTestAttempt(testId, userId, answers, timeTaken);
+     const result = await submitTestAttempt(testId, userId, answers, timeTaken ,{});
      console.log("✅ Submission Result:", result);
 
      if (result.success) {
