@@ -74,10 +74,17 @@ export async function getUserAttempts(testIds: string[]) {
     }, {} as Record<string, number>);
 }
 
+import { z } from 'zod';
+
+const testIdSchema = z.string().uuid().or(z.string().min(1)); // Allow non-UUID IDs if legacy support needed, but prefer UUID
+const unitIdSchema = z.string().min(1);
+
 export async function getTestByUnitId(unitId: string) {
+    const validatedUnitId = unitIdSchema.parse(unitId);
+
     const test = await db.query.tests.findFirst({
         where: and(
-            eq(tests.unitId, unitId),
+            eq(tests.unitId, validatedUnitId),
             // We look for 'UNIT' type tests specifically. 
             // If multiple exist, we take the first one (usually there's only one "Unit Test" per unit).
             eq(tests.type, 'UNIT') 
@@ -93,16 +100,23 @@ export async function getTestByUnitId(unitId: string) {
 }
 
 export async function getTestWithQuestions(testId: string) {
-    const test = await db.query.tests.findFirst({
-        where: eq(tests.id, testId),
-        with: {
-            questions: {
-                orderBy: asc(questions.order)
+    try {
+        const validatedId = testIdSchema.parse(testId);
+        
+        const test = await db.query.tests.findFirst({
+            where: eq(tests.id, validatedId),
+            with: {
+                questions: {
+                    orderBy: asc(questions.order)
+                }
             }
-        }
-    });
-    
-    return test || null;
+        });
+        
+        return test || null;
+    } catch (error) {
+        console.error("Invalid Test ID or DB Error:", error);
+        return null;
+    }
 }
 
 export async function submitTestAttempt(

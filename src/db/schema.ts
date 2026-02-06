@@ -1,5 +1,5 @@
 
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 // MPPSC Users Table
@@ -64,7 +64,13 @@ export const userAttempts = sqliteTable('user_attempts', {
   endTime: integer('end_time', { mode: 'timestamp' }),
   score: real('score'),
   isCompleted: integer('is_completed', { mode: 'boolean' }).default(false),
-});
+}, (table) => [
+  index('user_id_idx').on(table.userId),
+  index('test_id_idx').on(table.testId),
+  index('user_test_idx').on(table.userId, table.testId),
+  index('completed_idx').on(table.isCompleted, table.endTime),
+]);
+
 
 // Attempt Answers (Granular tracking)
 export const attemptAnswers = sqliteTable('attempt_answers', {
@@ -74,7 +80,10 @@ export const attemptAnswers = sqliteTable('attempt_answers', {
   userAnswer: text('user_answer'),
   isCorrect: integer('is_correct', { mode: 'boolean' }),
   timeTakenSeconds: integer('time_taken_seconds'),
-});
+}, (table) => ({
+    attemptIdIdx: index('attempt_id_idx').on(table.attemptId),
+    questionIdIdx: index('question_id_idx').on(table.questionId),
+}));
 
 // Syllabus Topics Table (New)
 export const syllabusTopics = sqliteTable('syllabus_topics', {
@@ -93,7 +102,9 @@ export const syllabusTopics = sqliteTable('syllabus_topics', {
   isFree: integer('is_free', { mode: 'boolean' }).default(false),
   imgUrl: text('img_url'), // For image support
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
-});
+}, (table) => ({
+    unitOrderIdx: index('unit_order_idx').on(table.unitId, table.order),
+}));
 
 // Blog/Vlog Content Table
 export const contentBlogs = sqliteTable('content_blogs', {

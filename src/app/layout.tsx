@@ -25,8 +25,26 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Mindful MPPSC",
-  description: "Master your MPPSC Syllabus with Mnemonics and Flashcards.",
+  title: {
+    default: "Mindful MPPSC | Crack MPPSC 2026 with Mnemonics",
+    template: "%s | Mindful MPPSC"
+  },
+  description: "The #1 App for MPPSC 2026. Master the syllabus 10x faster with creative Mnemonics, Bilingual Notes (Hindi/English), and Daily Quizzes. Start for free today!",
+  keywords: ["MPPSC 2026", "MPPSC Mnemonics", "MPPSC Notes Hindi", "MPPSC Syllabus", "MPPSC PYQs", "Best MPPSC App", "Mindful MPPSC"],
+  metadataBase: new URL("https://www.mindfulmppsc.com"),
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    url: "https://www.mindfulmppsc.com",
+    title: "Mindful MPPSC - Crack MPPSC with Mnemonics",
+    description: "Don't just read, REMEMBER. The only app with dedicated mnemonics for the entire MPPSC syllabus in Hindi & English.",
+    siteName: "Mindful MPPSC",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Mindful MPPSC | Best App for MPPSC 2026",
+    description: "Master MPPSC with India's first Bilingual Mnemonic App.",
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

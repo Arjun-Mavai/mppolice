@@ -27,7 +27,7 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                     TECH STACK PYRAMID                       │
 ├─────────────────────────────────────────────────────────────┤
-│  Framework:    Next.js 14 (App Router)                      │
+│  Framework:    Next.js 16 (App Router)                      │
 │  Language:     TypeScript                                    │
 │  Database:     Turso (LibSQL) - Remote SQLite              │
 │  ORM:          Drizzle ORM                                   │
@@ -180,17 +180,16 @@
 
 ### 🔑 Key Field Meanings
 
-| Field | Purpose | Example Value |
-|-------|---------|---------------|
-| **tests.type** 🚨 | Determines test category | 'TOPIC', 'UNIT', 'FLT', 'CSAT', 'PYQ' |
-| **tests.unitId** | Links test to syllabus unit | 'unit_1', 'unit_5' |
-| **tests.topicId** | Links test to specific topic | UUID of topic from syllabus_topics |
-| **questions.subject** 🎯 | For analytics mastery breakdown | 'Indian Polity', 'History' |
-| **userAttempts.score** | Calculated score (can be negative) | 35.5, -2.0 |
-| **attemptAnswers.timeTakenSeconds** | Per-question time tracking | 45, 120 |
+| Field                               | Purpose                            | Example Value                         |
+| ----------------------------------- | ---------------------------------- | ------------------------------------- |
+| **tests.type** 🚨                   | Determines test category           | 'TOPIC', 'UNIT', 'FLT', 'CSAT', 'PYQ' |
+| **tests.unitId**                    | Links test to syllabus unit        | 'unit_1', 'unit_5'                    |
+| **tests.topicId**                   | Links test to specific topic       | UUID of topic from syllabus_topics    |
+| **questions.subject** 🎯            | For analytics mastery breakdown    | 'Indian Polity', 'History'            |
+| **userAttempts.score**              | Calculated score (can be negative) | 35.5, -2.0                            |
+| **attemptAnswers.timeTakenSeconds** | Per-question time tracking         | 45, 120                               |
 
 ---
-
 
 ## 3. Folder Structure Deep Dive
 
@@ -368,16 +367,16 @@
 
 ### 🔥 Critical Files (Red Alert)
 
-| File Path | Purpose | Why Critical |
-|-----------|---------|-------------|
-| **src/db/schema.ts** | Complete DB schema | All table definitions, single source of truth |
-| **src/lib/auth.ts** | `verifyAuth()` function | Used everywhere for auth checks |
-| **src/hooks/useQuizLogic.ts** | Quiz state + timer logic | Powers ALL test types |
-| **src/actions/analytics-actions.ts** | User analytics & test history | Dashboard ka backbone |
-| **src/actions/test-actions.ts** | Test CRUD + submission | Test lifecycle management |
-| **src/store/useSettingsStore.ts** | Global state (language, user) | Accessed in 50+ components |
-| **src/app/syllabus/quiz/play/QuizPlayClient.tsx** | Universal quiz player | Single player for all test types |
-| **src/config/plans.ts** | Free/Lite/Pro limits | Controls content access |
+| File Path                                         | Purpose                       | Why Critical                                  |
+| ------------------------------------------------- | ----------------------------- | --------------------------------------------- |
+| **src/db/schema.ts**                              | Complete DB schema            | All table definitions, single source of truth |
+| **src/lib/auth.ts**                               | `verifyAuth()` function       | Used everywhere for auth checks               |
+| **src/hooks/useQuizLogic.ts**                     | Quiz state + timer logic      | Powers ALL test types                         |
+| **src/actions/analytics-actions.ts**              | User analytics & test history | Dashboard ka backbone                         |
+| **src/actions/test-actions.ts**                   | Test CRUD + submission        | Test lifecycle management                     |
+| **src/store/useSettingsStore.ts**                 | Global state (language, user) | Accessed in 50+ components                    |
+| **src/app/syllabus/quiz/play/QuizPlayClient.tsx** | Universal quiz player         | Single player for all test types              |
+| **src/config/plans.ts**                           | Free/Lite/Pro limits          | Controls content access                       |
 
 ---
 
@@ -443,13 +442,13 @@ TEST PLAY ROUTE (UNIVERSAL):
 ──────────────────────────────────
 🎮 /syllabus/quiz/play
    Query Params: ?testId=xxx&mode=topic
-   
+
    Flow:
    1. Server component (page.tsx):
       ├─ Fetch: getTestWithQuestions(testId)
       ├─ Auth: verifyAuth()
       └─ Pass data → QuizPlayClient
-   
+
    2. Client component (QuizPlayClient.tsx):
       ├─ Hook: useQuizLogic()
       ├─ Renders: Questions, Timer, Options
@@ -494,6 +493,7 @@ POST /api/webhooks/dodo        → Payment webhook handler
 ### 🔀 Navigation Flow Examples
 
 #### **User Journey 1: Taking a Topic Test**
+
 ```
 1. User opens: /dashboard
    └─ Clicks "Take New Test" → /syllabus/quiz
@@ -524,10 +524,11 @@ POST /api/webhooks/dodo        → Payment webhook handler
 ```
 
 #### **User Journey 2: Viewing Test History**
+
 ```
 1. /dashboard
    └─ getUserAnalytics(userId) executed on server
-   
+
 2. Recent Test History card populated with:
    ├─ Unique tests (deduplicated)
    ├─ Latest attempt of each test
@@ -537,7 +538,6 @@ POST /api/webhooks/dodo        → Payment webhook handler
 ```
 
 ---
-
 
 ## 5. Test Types Management
 
@@ -937,19 +937,18 @@ Detailed review page shows:
 
 ### 📊 Test Type Comparison Matrix
 
-| Feature | TOPIC | UNIT | FLT | CSAT | PYQ |
-|---------|-------|------|-----|------|-----|
-| **Questions** | 10 | 30-50 | 100+ | 80 | 100 |
-| **Duration** | 10 min | 60 min | 120 min | 100 min | 120 min |
-| **Scope** | Single topic | Full unit | All 10 units | Aptitude | Past exam |
-| **Link Field** | `topicId` | `unitId` | None | None | None |
-| **Language** | Hindi/English | Hindi/English | Hindi/English | Mostly English | Hindi/English |
-| **Free Access** | First 5 topics | First 2 units | None (Pro) | Limited | Limited |
-| **Retry Limit** | Unlimited | 5 attempts | 3 attempts | Unlimited | Unlimited |
-| **Cache TTL** | On-demand | On-demand | 60 sec | 60 sec | 60 sec |
+| Feature         | TOPIC          | UNIT          | FLT           | CSAT           | PYQ           |
+| --------------- | -------------- | ------------- | ------------- | -------------- | ------------- |
+| **Questions**   | 10             | 30-50         | 100+          | 80             | 100           |
+| **Duration**    | 10 min         | 60 min        | 120 min       | 100 min        | 120 min       |
+| **Scope**       | Single topic   | Full unit     | All 10 units  | Aptitude       | Past exam     |
+| **Link Field**  | `topicId`      | `unitId`      | None          | None           | None          |
+| **Language**    | Hindi/English  | Hindi/English | Hindi/English | Mostly English | Hindi/English |
+| **Free Access** | First 5 topics | First 2 units | None (Pro)    | Limited        | Limited       |
+| **Retry Limit** | Unlimited      | 5 attempts    | 3 attempts    | Unlimited      | Unlimited     |
+| **Cache TTL**   | On-demand      | On-demand     | 60 sec        | 60 sec         | 60 sec        |
 
 ---
-
 
 ## 6. Data Flow & Caching Strategy
 
@@ -1087,13 +1086,13 @@ Example: src/app/dashboard/page.tsx
 
 export default async function DashboardPage() {
     const user = await verifyAuth();  // Auth check
-    
+
     if (!user) redirect('/login');
-    
+
     // 🔥 Data fetching on server
     const analyticsData = await getUserAnalytics(user.id);
     const syllabusProgress = await getUserSyllabusProgress();
-    
+
     // Pass data to client component
     return (
         <div>
@@ -1121,15 +1120,15 @@ Example: AnalyticsDashboardClient.tsx
 
 export default function AnalyticsDashboardClient({ analytics }) {
     const { recentActivity, mastery } = analytics;
-    
+
     // Client-side interactions
     const [activeTab, setActiveTab] = useState('ALL');
-    
+
     // Filtering (client-side, instant)
-    const filtered = recentActivity.filter(item => 
+    const filtered = recentActivity.filter(item =>
         activeTab === 'ALL' || item.type === activeTab
     );
-    
+
     return (
         <div>
             {/* Interactive UI */}
@@ -1159,10 +1158,10 @@ Database updated
     ↓
 Option 1: Router refresh
     router.refresh() → Re-fetches server component data
-    
+
 Option 2: Manual revalidation
     revalidateTag(`analytics-${userId}`)
-    
+
 Option 3: Optimistic update
     Update client state immediately, sync in background
 ```
@@ -1527,7 +1526,6 @@ Data Fields:
 
 ---
 
-
 ## 7. State Management
 
 ### 🗃️ State Architecture
@@ -1757,7 +1755,7 @@ Timer Logic (useEffect):
 ────────────────────────
 useEffect(() => {
     if (isSubmitted) return; // Don't run after submit
-    
+
     const timer = setInterval(() => {
         setTimeLeft(prev => {
             if (prev <= 1) {
@@ -1768,7 +1766,7 @@ useEffect(() => {
             return prev - 1;
         });
     }, 1000);
-    
+
     return () => clearInterval(timer); // Cleanup
 }, [isSubmitted]);
 
@@ -1796,7 +1794,7 @@ return {
     timeLeft,
     instantModeEnabled,
     language,
-    
+
     // Actions (functions)
     setInstantModeEnabled,
     handleOptionSelect,
@@ -1806,10 +1804,10 @@ return {
     toggleMarkForReview,
     handleSubmit,
     handleRetry,
-    
+
     // Helpers
     getParsedOptions,      // Parses JSON options safely
-    
+
     // Derived state
     currentQuestion,       // questions[currentQuestionIndex]
     isAnswered,            // Boolean: current question answered?
@@ -1838,7 +1836,7 @@ const {
 // Then in JSX:
 <div>
     <Timer seconds={timeLeft} />
-    <Question 
+    <Question
         data={currentQuestion}
         selectedOption={answers[currentQuestion.id]}
         onSelect={handleOptionSelect}
@@ -1875,14 +1873,14 @@ Purpose: Authenticates every protected request
 export const verifyAuth = cache(async () => {
     const cookieStore = await cookies();
     const token = cookieStore.get('mppsc_token');
-    
+
     if (!token) return null;
-    
+
     const userId = token.value;
     const users = await db.select().from(mppscUsers)
         .where(eq(mppscUsers.id, userId))
         .limit(1);
-    
+
     return users[0] || null;
 });
 
@@ -1915,7 +1913,7 @@ async function submitTestAttempt(
     const testQuestions = await db.select({
         id, correctAnswer, marks, negativeMarks
     }).from(questions).where(eq(questions.testId, testId));
-    
+
     // 2. Calculate score
     let totalScore = 0;
     testQuestions.forEach(q => {
@@ -1929,7 +1927,7 @@ async function submitTestAttempt(
             }
         }
     });
-    
+
     // 3. Create attempt record (transaction)
     await db.transaction(async (tx) => {
         await tx.insert(userAttempts).values({
@@ -1939,7 +1937,7 @@ async function submitTestAttempt(
             score: totalScore,
             isCompleted: true
         });
-        
+
         // 4. Save individual answers
         await tx.insert(attemptAnswers).values(
             answersList.map(a => ({
@@ -1949,7 +1947,7 @@ async function submitTestAttempt(
             }))
         );
     });
-    
+
     return { success: true, attemptId, score: totalScore };
 }
 
@@ -1979,14 +1977,14 @@ async function getUserAnalytics(userId) {
                 .from(userAttempts)
                 .leftJoin(tests, ...)
                 .where(eq(userAttempts.userId, userId));
-            
+
             // 2. Calculate subject mastery
             const answersData = await db.select({...})
                 .from(attemptAnswers)
                 .leftJoin(questions, ...);
-            
+
             // Process subject-wise performance...
-            
+
             // 3. Deduplicate test history
             const uniqueTests = new Map();
             attempts.forEach(a => {
@@ -1994,7 +1992,7 @@ async function getUserAnalytics(userId) {
                     uniqueTests.set(a.testId, a);
                 }
             });
-            
+
             // 4. Enrich topic names
             const syllabusTopics = await getSyllabusTopics();
             const enrichedHistory = Array.from(uniqueTests.values())
@@ -2003,10 +2001,10 @@ async function getUserAnalytics(userId) {
                     testTitle: resolveTopicName(a.topicId, syllabusTopics),
                     unitName: `Unit ${extractUnitNumber(a.unitId)}`
                 }));
-            
+
             // 5. Generate AI suggestion
             const aiSuggestion = generateAISuggestion(mastery);
-            
+
             return {
                 overallScore,
                 totalTests,
@@ -2062,7 +2060,7 @@ async function getTestWithQuestions(testId) {
             }
         }
     });
-    
+
     return test || null;
 }
 
@@ -2089,14 +2087,14 @@ async function getSyllabusTopics() {
             const topics = await db.select()
                 .from(syllabusTopics)
                 .orderBy(asc(syllabusTopics.order));
-            
+
             // Group by unitId
             const grouped: Record<string, Topic[]> = {};
             topics.forEach(t => {
                 if (!grouped[t.unitId]) grouped[t.unitId] = [];
                 grouped[t.unitId].push(t);
             });
-            
+
             return { success: true, data: grouped };
         },
         ['syllabus-topics-all'],
@@ -2228,7 +2226,6 @@ After admin uploads new test:
 
 ---
 
-
 ## 9. Authentication & Authorization
 
 ### 🔐 Auth System Architecture
@@ -2254,23 +2251,23 @@ File: src/app/api/auth/mppsc-login/route.ts
 
 export async function POST(req: Request) {
     const { email, password } = await req.json();
-    
+
     // 1. Find user by email
     const user = await db.select().from(mppscUsers)
         .where(eq(mppscUsers.email, email))
         .limit(1);
-    
+
     if (!user[0]) {
         return Response.json({ error: 'User not found' }, { status: 404 });
     }
-    
+
     // 2. Verify password (bcrypt)
     const isValid = await bcrypt.compare(password, user[0].password);
-    
+
     if (!isValid) {
         return Response.json({ error: 'Invalid password' }, { status: 401 });
     }
-    
+
     // 3. Set cookie with userId
     cookies().set('mppsc_token', user[0].id, {
         httpOnly: true,        // Cannot be accessed by JavaScript
@@ -2278,7 +2275,7 @@ export async function POST(req: Request) {
         sameSite: 'lax',       // CSRF protection
         maxAge: 60 * 60 * 24 * 7  // 7 days
     });
-    
+
     return Response.json({
         success: true,
         user: {
@@ -2321,17 +2318,17 @@ export const verifyAuth = cache(async () => {
     // 1. Read cookie
     const cookieStore = await cookies();
     const token = cookieStore.get('mppsc_token');
-    
+
     if (!token) return null;  // Not logged in
-    
+
     // 2. Token value = userId (simple design)
     const userId = token.value;
-    
+
     // 3. Fetch user from DB
     const users = await db.select().from(mppscUsers)
         .where(eq(mppscUsers.id, userId))
         .limit(1);
-    
+
     return users[0] || null;  // Return user object or null
 });
 
@@ -2339,11 +2336,11 @@ Usage in protected pages:
 ─────────────────────────
 export default async function DashboardPage() {
     const user = await verifyAuth();
-    
+
     if (!user) {
         redirect('/login');  // Redirect if not authenticated
     }
-    
+
     // User is authenticated, proceed with page logic
     return <div>Welcome {user.name}</div>;
 }
@@ -2376,11 +2373,11 @@ File: src/app/admin/layout.tsx
 
 export default async function AdminLayout({ children }) {
     const user = await verifyAuth();
-    
+
     if (!user || user.role !== 'admin') {
         redirect('/dashboard');  // Non-admin users redirected
     }
-    
+
     return <div>{children}</div>;
 }
 
@@ -2391,14 +2388,14 @@ File: src/app/syllabus/quiz/topic/page.tsx
 const handleTopicClick = (topic) => {
     const userTier = user?.plan_tier || 'free';
     const limit = PLAN_LIMITS[userTier].topic_tests_limit;
-    
+
     const isLocked = topic.order > limit;
-    
+
     if (isLocked) {
         setPaywallOpen(true);  // Show upgrade modal
         return;
     }
-    
+
     router.push(`/quiz/play?testId=${topic.testId}`);
 };
 
@@ -2413,7 +2410,7 @@ Query Example:
 const visibleTests = await db.select()
     .from(tests)
     .where(
-        user.isSubscribed 
+        user.isSubscribed
             ? undefined  // No filter, show all
             : eq(tests.isPro, false)  // Only free tests
     );
@@ -2520,7 +2517,7 @@ File: src/app/dashboard/page.tsx (Server)
 export default async function DashboardPage() {
     const user = await verifyAuth();
     const analytics = await getUserAnalytics(user.id);
-    
+
     return <AnalyticsDashboardClient analytics={analytics} />;
 }
 
@@ -2530,7 +2527,7 @@ File: src/app/syllabus/analytics/AnalyticsDashboardClient.tsx (Client)
 
 export default function AnalyticsDashboardClient({ analytics }) {
     const [activeTab, setActiveTab] = useState('ALL');
-    
+
     return (
         <div>
             <Tabs onChange={setActiveTab} />
@@ -2665,8 +2662,8 @@ Usage in Components:
 ────────────────────
 const { language } = useSettingsStore();
 
-const title = language === 'hi' 
-    ? question.questionText 
+const title = language === 'hi'
+    ? question.questionText
     : question.questionTextEn || question.questionText;
 
 return <h2>{title}</h2>;
@@ -2733,7 +2730,7 @@ import { toast } from 'sonner';
 
 const handleSubmit = async () => {
     const result = await submitTest();
-    
+
     if (result.success) {
         toast.success("Test submitted successfully!");
     } else {
@@ -2979,6 +2976,7 @@ Future Improvements:
 **Bhai, ab tumhare paas complete project ka 30-years-experience wala knowledge hai!**
 
 Yeh guide tumhe help karega:
+
 - 🔍 Kisi bhi feature ko quickly locate karne mein
 - 🛠️ Changes karne mein confidently
 - 🐛 Bugs debug karne mein efficiently
@@ -2987,4 +2985,3 @@ Yeh guide tumhe help karega:
 Agar koi specific part aur detail mein chahiye, just ask! Main tumhe uski separate deep-dive document bana dunga.
 
 **Happy Coding! 🎉**
-

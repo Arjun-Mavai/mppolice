@@ -2,8 +2,7 @@
 
 import { db } from '@/db';
 import { userAttempts, tests, questions, attemptAnswers } from '@/db/schema';
-import { eq, desc, sql } from 'drizzle-orm';
-import { syllabusData } from '@/data/syllabusData';
+import { eq, inArray } from 'drizzle-orm';
 import { unstable_cache, revalidateTag } from "next/cache";
 import { verifyAuth } from '@/lib/auth';
 
@@ -17,7 +16,7 @@ export const getUserAnalytics = async (userId: string) => {
              return await fetchAnalyticsInternal(uid);
         },
         [`user-analytics-${userId}`],
-        { revalidate: 1, tags: [`analytics-${userId}`] }
+        { revalidate: 300, tags: [`analytics-${userId}`] }
     );
     
     return await getCachedAnalytics(userId);
@@ -74,9 +73,10 @@ async function fetchAnalyticsInternal(userId: string) {
         let subjectStats: Record<string, { totalScore: number, totalMax: number, count: number, name: string }> = {};
         
         if (attemptIds.length > 0) {
-            // Limit to last 50 attempts for performance
+            // Limit to last 50 attempts for performance optimization
             const recentAttemptIds = attemptIds.slice(0, 50);
 
+            // Optimized query: Use inArray instead of raw SQL IN for safety and better Drizzle support
             const answersData = await db.select({
                 isCorrect: attemptAnswers.isCorrect,
                 marks: questions.marks,
@@ -84,20 +84,23 @@ async function fetchAnalyticsInternal(userId: string) {
             })
             .from(attemptAnswers)
             .leftJoin(questions, eq(attemptAnswers.questionId, questions.id))
-            .where(sql`${attemptAnswers.attemptId} IN ${recentAttemptIds}`);
+            .where(inArray(attemptAnswers.attemptId, recentAttemptIds));
             
             answersData.forEach(ans => {
-                const subject = ans.subject || 'General';
-                if (!subjectStats[subject]) {
-                    subjectStats[subject] = { totalScore: 0, totalMax: 0, count: 0, name: subject };
-                }
-                
                 const marks = ans.marks || 0;
-                subjectStats[subject].totalMax += marks;
-                if (ans.isCorrect) {
-                    subjectStats[subject].totalScore += marks;
+                // Only process if marks are valid numbers
+                if (typeof marks === 'number') {
+                    const subject = ans.subject || 'General';
+                    if (!subjectStats[subject]) {
+                        subjectStats[subject] = { totalScore: 0, totalMax: 0, count: 0, name: subject };
+                    }
+                    
+                    subjectStats[subject].totalMax += marks;
+                    if (ans.isCorrect) {
+                        subjectStats[subject].totalScore += marks;
+                    }
+                    subjectStats[subject].count++;
                 }
-                subjectStats[subject].count++;
             });
         }
         

@@ -1,6 +1,6 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { syllabusData } from '@/data/syllabusData';
+// import { syllabusData } from '@/data/syllabusData'; // Removed to prevent full bundle load
 import { db } from '@/db';
 import { syllabusTopics } from '@/db/schema';
 import { eq, asc } from 'drizzle-orm';
@@ -33,11 +33,28 @@ export default async function UnitPage({ params }: Props) {
 
   if (dbTopics.length > 0) {
       // Use DB Data
-      // We assume if DB has data, it has the unit titles stored somewhere or we default
-      // Ideally we should have a 'syllabus_units' table too, but for now we might still use static for titles
-      const staticUnit = syllabusData.units[unitId] || { title: "Unit " + unitId, title_en: "Unit " + unitId };
-      unitTitle = staticUnit.title || "Unit";
-      unitTitleEn = staticUnit.title_en || staticUnit.title || "Unit";
+      // Fetch dynamic unit data just for title metadata if needed
+      // Ideally we should have titles in DB too.
+      // We use syllabusmetadata here to avoid loading full heavy content if possible, 
+      // but current structure might not allow easy access without import.
+      // For now, let's just use hardcoded Fallback or minimal info to avoid heavy bundle.
+      // Optimally, we fetch metadata from DB or a lightweight config.
+      
+      try {
+        const { getSyllabusUnit } = await import('@/lib/syllabus-loader');
+        const staticUnit = await getSyllabusUnit(unitId);
+        
+        if (staticUnit) {
+            unitTitle = staticUnit.title || "Unit";
+            unitTitleEn = staticUnit.title_en || staticUnit.title || "Unit";
+        } else {
+             unitTitle = "Unit " + unitId;
+             unitTitleEn = "Unit " + unitId;
+        }
+      } catch (e) {
+         unitTitle = "Unit " + unitId;
+         unitTitleEn = "Unit " + unitId;
+      }
 
       // Process DB Topics
       finalTopics = dbTopics.map(t => {
@@ -78,8 +95,9 @@ export default async function UnitPage({ params }: Props) {
       });
 
   } else {
-      // Fallback: Use Static Data from syllabusData.ts
-      const unit = syllabusData.units[unitId];
+      // Fallback: Use Static Data via Dynamic Loader (Code Splitting)
+      const { getSyllabusUnit } = await import('@/lib/syllabus-loader');
+      const unit = await getSyllabusUnit(unitId);
 
       if (!unit) {
          notFound();
