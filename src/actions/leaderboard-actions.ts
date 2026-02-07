@@ -4,6 +4,8 @@ import { db } from '@/db';
 import { testLeaderboard, tests } from '@/db/schema';
 import { eq, desc, asc, sql, and } from 'drizzle-orm';
 import { FAKE_USERS } from '@/data/fakeUsers';
+import { questions } from '@/db/schema';
+import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 
 type LeaderboardEntry = typeof testLeaderboard.$inferSelect;
 
@@ -91,67 +93,86 @@ export async function getTestLeaderboard(testId: string, userId?: string) {
 const randomTime = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min);
 
 async function generateFakeLeaderboard(testId: string) {
-  // Get test info to know total marks
-  const test = await db.query.tests.findFirst({
-    where: eq(tests.id, testId)
-  });
+  // Get accurate total marks based on question count
+  const qCount = await db.select({ count: sql<number>`count(*)` })
+      .from(questions)
+      .where(eq(questions.testId, testId));
+      
+  const totalQuestions = qCount[0]?.count || 0;
+  // Fallback to 20 questions if count fails, but aim for accuracy
+  const totalMarks = totalQuestions > 0 ? totalQuestions * SCORING_CONFIG.MARKS_PER_QUESTION : 60; 
   
-  const totalMarks = test?.totalMarks || 20; // Default to 20 if not found
+  // Randomize count between 45 and 80
+  const minUsers = 45;
+  const maxUsers = 80;
+  const targetCount = Math.floor(Math.random() * (maxUsers - minUsers + 1)) + minUsers;
   
-  // Generate 50 fake entries
-  const fakeEntries = FAKE_USERS.map((user, index) => {
-    let percentage;
+  // Generate fake entries
+  const fakeEntries = [];
+  
+  for (let i = 0; i < targetCount; i++) {
+       // Cycle through fake users if we need more than we have
+       const baseUser = FAKE_USERS[i % FAKE_USERS.length];
+       const displayName = i >= FAKE_USERS.length ? `${baseUser.name} ${i+1}` : baseUser.name;
+       
+       let percentage;
     
-    // Distribution Logic
-    if (index < 5) {
-      // Top 10% (5 users) - Very high scores (80-100%)
-      percentage = 80 + Math.random() * 20; 
-    } else if (index < 20) {
-      // Next 30% (15 users) - Good scores (60-80%)
-      percentage = 60 + Math.random() * 20;
-    } else if (index < 40) {
-      // Next 40% (20 users) - Average scores (40-60%)
-      percentage = 40 + Math.random() * 20;
-    } else {
-      // Bottom 20% (10 users) - Low scores (20-40%)
-      percentage = 20 + Math.random() * 20;
-    }
-    
-    // Calculate raw score based on percentage
-    let rawScore = (percentage / 100) * totalMarks;
-    // Round to nearest 0.5 for realistic marking
-    rawScore = Math.round(rawScore * 2) / 2;
-    
-    // Ensure accurate percentage based on rounded score
-    const finalPercentage = (rawScore / totalMarks) * 100;
-    
-    // Dynamic Time Calculation based on Test Duration
-    // Bhai, ab time bhi asli lagega! Test ke duration ka 50% se 98% tak randomly lenge.
-    const durationMinutes = test?.durationMinutes || 15;
-    const totalDurationSeconds = durationMinutes * 60;
-    
-    // Minimum 50% time (Fastest valid attempt) -> Maximum 98% (Just made it)
-    const minSeconds = Math.floor(totalDurationSeconds * 0.5);
-    const maxSeconds = Math.floor(totalDurationSeconds * 0.98);
-
-    const timeTaken = randomTime(minSeconds, maxSeconds);
-    
-    return {
-      id: `fake_${testId}_${index}_${Date.now()}`,
-      testId,
-      userId: null, // Fake users have no real userId
-      displayName: user.name,
-      score: rawScore,
-      percentage: finalPercentage,
-      timeTakenSeconds: timeTaken,
-      rank: 0, // Will be calculated dynamically
-      isFake: 1,
-      createdAt: new Date()
-    };
-  });
+       // Distribution Logic - Bell Curve-ish
+       if (i < targetCount * 0.1) {
+         // Top 10% - Toppers (80-98%)
+         percentage = 80 + Math.random() * 18; 
+       } else if (i < targetCount * 0.4) {
+         // Next 30% - Good scores (60-80%)
+         percentage = 60 + Math.random() * 20;
+       } else if (i < targetCount * 0.8) {
+         // Next 40% - Average scores (35-60%)
+         percentage = 35 + Math.random() * 25;
+       } else {
+         // Bottom 20% - Low scores (15-35%)
+         percentage = 15 + Math.random() * 20;
+       }
+       
+       // Calculate raw score based on percentage
+       let rawScore = (percentage / 100) * totalMarks;
+       
+       // Round to reasonable steps (e.g. 0.33 or 1 or 0.5 depending on marking)
+       // Since marks are 3 and neg is 1, scores are usually integers.
+       rawScore = Math.round(rawScore);
+       
+       // Cap at totalMarks (Safety check)
+       if (rawScore > totalMarks) rawScore = totalMarks;
+       
+       // Ensure accurate percentage based on rounds
+       const finalPercentage = (rawScore / totalMarks) * 100;
+       
+       // Dynamic Time Calculation
+       // Assume 20 mins (1200s) default if DB fetch fails, to save query
+       // Or fetch test details if needed. For speed, we can assume standard times or fetch light.
+       // Let's use a standard range per question. 
+       // Fast: 30s/q, Slow: 90s/q.
+       const estTimeSeconds = totalQuestions * 60; // 1 min per question avg
+       const minSeconds = Math.floor(estTimeSeconds * 0.4); 
+       const maxSeconds = Math.floor(estTimeSeconds * 0.95);
+   
+       const timeTaken = randomTime(minSeconds, maxSeconds);
+       
+       fakeEntries.push({
+         id: `fake_${testId}_${i}_${Date.now()}`,
+         testId,
+         userId: null,
+         displayName,
+         score: rawScore,
+         percentage: finalPercentage,
+         timeTakenSeconds: timeTaken,
+         rank: 0,
+         isFake: 1,
+         createdAt: new Date()
+       });
+  }
   
   // Bulk insert
   if (fakeEntries.length > 0) {
+      // Chunking if massive (80 is fine for one go)
       await db.insert(testLeaderboard).values(fakeEntries);
   }
 }

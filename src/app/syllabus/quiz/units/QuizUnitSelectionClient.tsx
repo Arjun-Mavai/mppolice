@@ -20,6 +20,7 @@ interface QuizUnitSelectionClientProps {
         id: string; // real test id
         unitId: string | null;
         title: string;
+        titleEn?: string | null;
         maxRetries: number;
         attempts: number;
         totalQuestions: number | null;
@@ -87,10 +88,10 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
                     // Enrich with Syllabus Data if unitId matches
                     const unitData = test.unitId ? syllabusData.units[test.unitId] : null;
 
-                    const title = language === 'en' && unitData?.title_en 
-                        ? unitData.title_en 
-                        : (test.title || unitData?.title || 'Unknown Unit');
-                    
+                    const title =
+                        language === 'en'   
+                            ? (test.titleEn || unitData?.title_en || test.title || unitData?.title || 'Unknown Unit')
+                            : (test.title || unitData?.title || unitData?.title_en || 'Unknown Unit');                    
                     const topicCount = unitData?.topics?.length || test.totalQuestions || 0;
 
                     const isLocked = index >= limit;

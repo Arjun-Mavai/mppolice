@@ -22,6 +22,7 @@ export const mppscUsers = sqliteTable('mppsc_users', {
 export const tests = sqliteTable('tests', {
   id: text('id').primaryKey(),
   title: text('title').notNull(),
+  titleEn: text('title_en'),
   description: text('description'),
   slug: text('slug').unique().notNull(),
   durationMinutes: integer('duration_minutes').notNull(),
@@ -227,4 +228,33 @@ export const testLeaderboard = sqliteTable('test_leaderboard', {
   index('test_score_idx').on(table.testId, table.score),
   // Ranking index: Score DESC, Time ASC
   index('idx_leaderboard_ranking').on(table.testId, table.score, table.timeTakenSeconds),
+]);
+
+// User Feedback Table
+export const feedbacks = sqliteTable('feedbacks', {
+    id: text('id').primaryKey(),
+    userId: text('user_id'), // Optional, if user is logged in
+    name: text('name').notNull(),
+    email: text('email'),
+    phone: text('phone'), // Optional phone number
+    message: text('message').notNull(),
+    rating: integer('rating').notNull(), // 1 to 5
+    // Categories: 'bug', 'content', 'ui', 'feature_request', 'other'
+    category: text('category').default('other'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+}, (table) => [
+    index('idx_feedbacks_created_at').on(table.createdAt),
+    index('idx_feedbacks_category').on(table.category),
+]);
+
+// Guests Table (Lead Generation)
+export const guests = sqliteTable('guests', {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    email: text('email'),
+    mobile: text('mobile'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+}, (table) => [
+    index('idx_guests_email').on(table.email),
+    index('idx_guests_mobile').on(table.mobile),
 ]);

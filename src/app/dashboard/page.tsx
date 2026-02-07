@@ -4,9 +4,24 @@ import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { DashboardView } from "@/features/analytics/components/DashboardView";
 import { getUserAnalytics } from "@/features/analytics/actions";
-import AnalyticsDashboardClient from '@/app/syllabus/analytics/AnalyticsDashboardClient';
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🎯 CLIENT COMPONENT WRAPPER (Bhai, proper way to use dynamic imports)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 
+// Why Wrapper?
+// - Server components can't use dynamic() with ssr: false directly
+// - Next.js 13+ rule: ssr: false requires client component context
+// - Solution: Import a client wrapper that handles dynamic import
+// 
+// Flow:
+// Server Component → Client Wrapper → Dynamic Import → Actual Component
+// 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import AnalyticsDashboardWrapper from '@/app/syllabus/analytics/AnalyticsDashboardWrapper';
+
 import { Badge } from '@/components/ui/badge';
- import { syllabusData } from '@/data/syllabusData';
+import { syllabusData } from '@/data/syllabusData';
  
 import { verifyAuth } from '@/lib/auth';
 import { getUserSyllabusProgress } from '@/features/syllabus/actions/revision';
@@ -62,7 +77,7 @@ export default async function DashboardPage() {
                 <SyllabusProgressWidget data={syllabusProgress} totalTopics={totalTopics} />
 
                 {/* Dashboard Content */}
-                <AnalyticsDashboardClient analytics={analyticsData} />
+                <AnalyticsDashboardWrapper analytics={analyticsData} />
             </div>
         </div>
     );

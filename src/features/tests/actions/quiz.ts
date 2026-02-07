@@ -4,7 +4,7 @@ import { db } from '@/db';
 import { tests, userAttempts } from '@/db/schema';
 import { eq, and, sql, inArray } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
-import { cachedData, CACHE_TAGS } from '@/lib/cache';
+import { cachedData, CACHE } from '@/lib/cache';
 
 // Cache the unit tests query using our centralized policy (7 days)
 const getCachedUnitTests = cachedData(
@@ -13,6 +13,7 @@ const getCachedUnitTests = cachedData(
             id: tests.id,
             unitId: tests.unitId,
             title: tests.title,
+            titleEn: tests.titleEn,
             maxRetries: tests.maxRetries,
             totalQuestions: tests.totalQuestions
         })
@@ -20,7 +21,7 @@ const getCachedUnitTests = cachedData(
         .where(eq(tests.type, 'UNIT'));
     },
     ['unit-tests-list'],
-    [CACHE_TAGS.TESTS]
+    [CACHE.TESTS.TAGS.ALL]
 );
 
 export async function getAvailableUnitTests() {

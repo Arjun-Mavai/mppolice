@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import bcrypt from 'bcryptjs';
-import { rateLimit } from '@/lib/rate-limit';
+import { signupLimiter, checkRateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
   try {
     // Rate Limit Check
     const ip = request.headers.get('x-forwarded-for') || 'unknown';
-    if (rateLimit(ip, { limit: 5, windowMs: 60 * 1000 })) { // 5 requests per minute
+    const { success } = await checkRateLimit(signupLimiter, ip);
+    
+    if (!success) {
       return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
     }
 

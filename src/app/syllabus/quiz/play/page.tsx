@@ -5,6 +5,7 @@ import { verifyAuth } from '@/lib/auth';
 import { PLAN_LIMITS } from '@/config/plans';
 import { Question } from '@/types/quiz';
 import { logger } from "@/lib/logger";
+import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 
 interface PageProps {
     searchParams: Promise<{
@@ -58,8 +59,8 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
             subject: q.subject || undefined,
             type: (q.type as 'standard' | 'matching') || 'standard',
             matchPairs: (q.matchPairs as any) || undefined,
-            negativeMarks: q.negativeMarks ?? undefined,
-            marks: q.marks ?? undefined
+            negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING, // Force Global Config (1)
+            marks: SCORING_CONFIG.MARKS_PER_QUESTION // Force Global Config (3)
         };
     });
 

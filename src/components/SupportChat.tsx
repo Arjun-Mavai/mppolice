@@ -43,6 +43,7 @@ export function SupportChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"chat" | "faq">("chat");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
+  const [isNudgeOpen, setIsNudgeOpen] = useState(true);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -284,7 +285,7 @@ export function SupportChat() {
       <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-3">
         {/* Hover Nudge - Visual Lead Gen */}
         <AnimatePresence>
-          {!isOpen && (
+          {!isOpen && isNudgeOpen && (
              <motion.div 
                initial={{ opacity: 0, y: 10, scale: 0.9 }}
                animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -309,6 +310,7 @@ export function SupportChat() {
                         // but user said "click ke baad hat jaaye" (main button click).
                         // Adding a visual distinct close just in case, but functionally 
                         // clicking the main button is the primary dismissal.
+                        setIsNudgeOpen(false);
                     }} 
                     className="ml-2 p-1 hover:bg-slate-100 rounded-full text-slate-400"
                 >

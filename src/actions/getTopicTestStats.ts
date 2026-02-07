@@ -14,7 +14,7 @@ export interface TopicStat {
     lastUpdated: Date | null;
 }
 
-import { cachedData, CACHE_TAGS } from "@/lib/cache";
+import { cachedData, CACHE } from "@/lib/cache";
 
 export const getTopicTestStats = cachedData(
     async () => {
@@ -65,5 +65,5 @@ export const getTopicTestStats = cachedData(
         }
     },
     ['topic-test-stats'],
-    [CACHE_TAGS.SYLLABUS, CACHE_TAGS.TESTS] // Invalidate if either changes
+    [CACHE.SYLLABUS.TAGS.ALL, CACHE.TESTS.TAGS.ALL] // Invalidate if either changes
 );

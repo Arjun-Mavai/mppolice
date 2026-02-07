@@ -23,11 +23,20 @@ export interface RecentUpload {
     updatedAt: Date | null;
 }
 
+export interface RecentGuest {
+    id: string;
+    name: string;
+    email: string | null;
+    mobile: string | null;
+    createdAt: Date | null;
+}
+
 export interface AdminDashboardResponse {
     success: boolean;
     stats?: AdminDashboardStats;
     recentUploads?: RecentUpload[];
     recentBlogs?: any[];
+    recentGuests?: RecentGuest[];
     topicCoverage?: Record<string, string[]>;
     error?: string;
 }

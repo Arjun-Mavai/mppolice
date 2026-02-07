@@ -9,6 +9,25 @@ import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
+    // --- SECURITY CHECK: RATE LIMITING ---
+    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const { signupLimiter, checkRateLimit } = await import('@/lib/rate-limit');
+    
+    const { success, limit, remaining, reset } = await checkRateLimit(signupLimiter, ip);
+    
+    if (!success) {
+        return NextResponse.json({ 
+            error: 'Too many signup attempts. Please try again later.' 
+        }, { 
+            status: 429,
+            headers: {
+                'X-RateLimit-Limit': limit.toString(),
+                'X-RateLimit-Remaining': remaining.toString(),
+                'X-RateLimit-Reset': reset.toString()
+            }
+        });
+    }
+
     // --- SECURITY CHECK: ONLY ADMINS CAN CREATE USERS ---
     const cookieStore = await cookies();
     const token = cookieStore.get('mppsc_token')?.value;
@@ -18,8 +37,16 @@ export async function POST(request: Request) {
     }
 
     // Verify session user is an admin
+    // FIX: Decode token first! Previously we were comparing token string with user ID directly.
+    const { verifyToken } = await import('@/lib/jwt');
+    const decoded: any = verifyToken(token); // Using any temporarily, ideally typed
+
+    if (!decoded || !decoded.userId) {
+        return NextResponse.json({ error: 'Unauthorized: Invalid Admin session' }, { status: 401 });
+    }
+
     const adminUser = await db.query.mppscUsers.findFirst({
-        where: (users, { eq }) => eq(users.id, token)
+        where: (users, { eq }) => eq(users.id, decoded.userId)
     });
 
     if (!adminUser || adminUser.role !== 'admin') {
@@ -33,6 +60,15 @@ export async function POST(request: Request) {
     if (!email || !password || !name) {
       return NextResponse.json({ error: 'Name, email, and password are required' }, { status: 400 });
     }
+
+    // --- Bhai Password Validation Start ---
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+        return NextResponse.json({ 
+            error: 'Bhai password thoda strong rakho! Kam se kam 8 characters, ek bada akshar, ek chota akshar, ek number aur ek special character hona mangta hai.' 
+        }, { status: 400 });
+    }
+    // --- Bhai Password Validation End ---
 
     // Check if user already exists
     const existingUsers = await db.select().from(mppscUsers).where(eq(mppscUsers.email, email));

@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { syllabusTopics, tests } from "@/db/schema";
 import { asc, eq, inArray } from "drizzle-orm";
 import { logger } from "@/lib/logger";
-import { cachedData, CACHE_TAGS } from "@/lib/cache";
+import { CACHE, cachedData } from "@/lib/cache";
 
 export const getSyllabusTopics = cachedData(async () => {
   try {
@@ -50,4 +50,4 @@ export const getSyllabusTopics = cachedData(async () => {
     logger.error("Error fetching syllabus topics:", error);
     return { success: false, error: "Failed to fetch topics" };
   }
-}, ['syllabus-topics-grouped'], [CACHE_TAGS.SYLLABUS]);
+}, ['syllabus-topics-grouped'], CACHE.SYLLABUS.GET_ALL.tags, CACHE.SYLLABUS.GET_ALL.revalidate);

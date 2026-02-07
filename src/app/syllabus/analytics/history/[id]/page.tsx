@@ -48,8 +48,8 @@ console.log("logging attempt", attempt);
     // Categorize answers first to use lengths for calculation
     const correctAns = answers.filter(a => a.isCorrect);
     // Wrong answers are those that are NOT correct AND have a userAnswer (not skipped)
-    const wrongAns = answers.filter(a => !a.isCorrect && a.userAnswer !== null && a.userAnswer !== undefined && a.userAnswer !== ''); 
-    const skippedAns = answers.filter(a => !a.userAnswer || a.userAnswer === '');
+    const wrongAns = answers.filter(a => !a.isCorrect && a.userAnswer !== null && a.userAnswer !== undefined); 
+    const skippedAns = answers.filter(a => a.userAnswer === null || a.userAnswer === undefined);
 
     // Recalculate Score Dynamically to ensure 3/-1 Rule is always displayed
     const recalculated = calculateScore(answers.length, correctAns.length, wrongAns.length);

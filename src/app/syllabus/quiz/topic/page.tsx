@@ -14,8 +14,12 @@ import { toast } from "sonner";
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { PLAN_LIMITS } from '@/config/plans';
 import { getSyllabusTopics } from '@/actions/getSyllabusTopics';
+import { getUserTier } from '@/lib/access-control';
 
 const UNIT_COLORS = [
+    'bg-rose-50 text-rose-600 border-rose-100 group-hover:bg-rose-600 group-hover:text-white',
+    // ... (rest of UNIT_COLORS is unchanged, just showing context for import)
+
     'bg-rose-50 text-rose-600 border-rose-100 group-hover:bg-rose-600 group-hover:text-white',
     'bg-orange-50 text-orange-600 border-orange-100 group-hover:bg-orange-600 group-hover:text-white',
     'bg-amber-50 text-amber-600 border-amber-100 group-hover:bg-amber-600 group-hover:text-white',
@@ -48,7 +52,7 @@ interface Unit {
 
 export default function TopicSelectionPage() {
     const router = useRouter();
-    const { language } = useSettingsStore();
+    const { language, user } = useSettingsStore();
 
     const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -73,16 +77,11 @@ export default function TopicSelectionPage() {
     // Transform DB Data to UI Units
     const units: Unit[] = dbData ? Object.entries(dbData).map(([unitId, topicsData]) => {
         const unitIndex = parseInt(unitId.replace('unit_', '')) || 0;
-        // Simple titles based on index or hardcoded map if we had one. 
-        // For now, "Unit X" is fine, or we can use the first topic's unit info if available? No.
-        // We'll stick to "Unit X" unless we have a translations map. 
-        // Actually the previous mock `syllabusData` had titles. Maybe we should still use `syllabusData` JUST for Unit Titles?
-        // Let's assume Unit Titles are static for now or generic.
-        
+        // Simple titles based on index.
         return {
             id: unitId,
             index: unitIndex,
-            title: `Unit ${unitIndex}`, // We could map this to real titles if we kept a mapping.
+            title: `Unit ${unitIndex}`, 
             topics: topicsData.sort((a: any, b: any) => a.order - b.order).map((t: any) => ({
                 id: t.id,
                 unitId: t.unitId,
@@ -98,16 +97,14 @@ export default function TopicSelectionPage() {
 
 
     const handleTopicClick = (unitId: string, topic: Topic) => {
-        // Determine user tier
-        const user = (useSettingsStore.getState().user as any);
-        const userTier = user?.plan_tier || 'free';
-        const effectiveTier = !user ? 'guest' : (user?.is_subscribed ? (userTier === 'free' ? 'lite' : userTier) : 'free');
-        
+        const effectiveTier = getUserTier(user as any); // Cast only for compatibility with store types if needed, or fix store type import
         const limit = PLAN_LIMITS[effectiveTier as keyof typeof PLAN_LIMITS]?.topic_tests_limit || 0;
         
         // Use order for locking logic (Top 5 free, etc)
         // Special override: Unit 1, Topic 1 & 2 are free for everyone
-        const isFreeOverride = unitId === 'unit_1' && topic.order <= 2;
+        // Admin gets everything unlocked
+        const isAdmin = (user as any)?.role === 'admin';
+        const isFreeOverride = (unitId === 'unit_1' && topic.order <= 2) || isAdmin;
         const isLocked = !isFreeOverride && topic.order > limit;
         
         if (isLocked) {
@@ -243,12 +240,11 @@ export default function TopicSelectionPage() {
                                     <div className="p-4 grid gap-3 md:grid-cols-2">
                                         {filteredTopics.length > 0 ? (
                                             filteredTopics.map((topic, index) => {
-                                                const user = (useSettingsStore.getState().user as any);
-                                                const userTier = user?.plan_tier || 'free';
-                                                const effectiveTier = user?.is_subscribed ? (userTier === 'free' ? 'lite' : userTier) : 'free';
+                                                const effectiveTier = getUserTier(user as any);
                                                 const limit = PLAN_LIMITS[effectiveTier as keyof typeof PLAN_LIMITS]?.topic_tests_limit || 0;
                                                 
-                                                const isFreeOverride = selectedUnitId === 'unit_1' && topic.order <= 2;
+                                                const isAdmin = (user as any)?.role === 'admin';
+                                                const isFreeOverride = (selectedUnitId === 'unit_1' && topic.order <= 2) || isAdmin;
                                                 const isLocked = !isFreeOverride && topic.order > limit;
                                                 
                                                 return (

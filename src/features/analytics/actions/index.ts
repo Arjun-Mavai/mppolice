@@ -295,7 +295,9 @@ export const getAttemptDetails = cachedData(async (attemptId: string) => {
              idealTime: questions.idealTime,
              order: questions.order,
              marks: questions.marks, // Ensure marks are available
-             negativeMarks: questions.negativeMarks // Ensure negativeMarks are available
+             negativeMarks: questions.negativeMarks, // Ensure negativeMarks are available
+             type: questions.type,
+             matchPairs: questions.matchPairs
         })
         .from(questions)
         .where(eq(questions.testId, attempt[0].testId))
@@ -309,23 +311,54 @@ export const getAttemptDetails = cachedData(async (attemptId: string) => {
         // 4. Map answers to questions
         const answersMap = new Map(userAnswers.map(a => [a.questionId, a]));
 
-        const combinedData = allQuestions.map(q => {
+        const combinedData = allQuestions.map((q, order) => {
             const ua = answersMap.get(q.id);
+            
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            // 🎯 DATA CONVERSION (Bhai, database se aaya wo convert kar rahe hain)
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            
+            // Database se userAnswer string mein aata hai: "0", "1", "2", "3" ya null
+            // correctAnswer bhi string mein hai: "0", "1", "2", "3"
+            // UI ke liye dono ko NUMBER mein convert karna hai!
+            
+            let userAnswerNum = null;
+            if (ua && ua.userAnswer !== null && ua.userAnswer !== undefined) {
+                // Convert string to number: "0" → 0, "1" → 1, etc.
+                const parsed = parseInt(ua.userAnswer);
+                if (!isNaN(parsed)) {
+                    userAnswerNum = parsed;
+                }
+            }
+            
+            // correctAnswer ko bhi number mein convert karo
+            let correctAnswerNum = 0;
+            if (q.correctAnswer !== null && q.correctAnswer !== undefined) {
+                const parsed = parseInt(String(q.correctAnswer));
+                if (!isNaN(parsed)) {
+                    correctAnswerNum = parsed;
+                }
+            }
+            
             return {
-                id: ua?.id || crypto.randomUUID(), // Placeholder ID for skipped
+                id: ua?.id || crypto.randomUUID(),
                 questionId: q.id,
-                userAnswer: ua ? ua.userAnswer : null, // null if skipped
+                userAnswer: userAnswerNum,           // ✅ Now NUMBER or null
                 isCorrect: ua ? ua.isCorrect : false,
                 timeTaken: ua ? ua.timeTakenSeconds : 0,
+                order: q.order || order + 1,         // Question order for display
                 questionText: q.questionText,
                 questionTextEn: q.questionTextEn,
-                options: q.options,
-                correctAnswer: q.correctAnswer,
+                // Safe parsing for JSON fields
+                options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
+                correctAnswer: correctAnswerNum,     // ✅ Now NUMBER
                 explanation: q.explanation,
                 explanationEn: q.explanationEn,
                 idealTime: q.idealTime,
                 marks: q.marks,
-                negativeMarks: q.negativeMarks
+                negativeMarks: q.negativeMarks,
+                type: q.type,
+                matchPairs: typeof q.matchPairs === 'string' ? JSON.parse(q.matchPairs) : q.matchPairs
             };
         });
 

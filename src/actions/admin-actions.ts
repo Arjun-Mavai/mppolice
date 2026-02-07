@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/db';
-import { tests, questions, contentBlogs, paymentExitReasons } from '@/db/schema';
+import { tests, questions, contentBlogs, paymentExitReasons, guests } from '@/db/schema';
 import { nanoid } from 'nanoid';
 import { revalidatePath } from 'next/cache';
 import { eq, sql, desc } from 'drizzle-orm';
@@ -211,6 +211,17 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
             createdAt: contentBlogs.createdAt
         }).from(contentBlogs);
 
+        const recentGuests = await db.select({
+            id: guests.id,
+            name: guests.name,
+            email: guests.email,
+            mobile: guests.mobile,
+            createdAt: guests.createdAt
+        })
+        .from(guests)
+        .orderBy(desc(guests.createdAt))
+        .limit(10);
+
         const totalTests = testsData.length;
         const totalQuestions = testsData.reduce((acc, t) => acc + (t.totalQuestions || 0), 0);
         const totalBlogs = blogsData.length;
@@ -266,6 +277,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
             },
             recentUploads,
             recentBlogs,
+            recentGuests, // Added recentGuests to return
             topicCoverage: serializedCoverage
         };
 

@@ -12,13 +12,16 @@ export function AppFooter() {
                 </div>
                 
                 <div className="flex gap-6 text-sm font-medium text-slate-600">
+                    <Link href="/feedback" className="hover:text-indigo-600 transition-colors">
+                        Feedback
+                    </Link>
                     <Link href="/contact" className="hover:text-indigo-600 transition-colors">
                         Contact Us
                     </Link>
-                    <Link href="#" className="hover:text-indigo-600 transition-colors">
+                    <Link href="/privacy" className="hover:text-indigo-600 transition-colors">
                         Privacy Policy
                     </Link>
-                    <Link href="#" className="hover:text-indigo-600 transition-colors">
+                    <Link href="/terms" className="hover:text-indigo-600 transition-colors">
                         Terms
                     </Link>
                 </div>

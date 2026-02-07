@@ -8,6 +8,25 @@ import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
+    // --- SECURITY CHECK: RATE LIMITING ---
+    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const { loginLimiter, checkRateLimit } = await import('@/lib/rate-limit');
+    
+    const { success, limit, remaining, reset } = await checkRateLimit(loginLimiter, ip);
+    
+    if (!success) {
+        return NextResponse.json({ 
+            error: 'Too many login attempts. Please try again after 15 minutes.' 
+        }, { 
+            status: 429,
+            headers: {
+                'X-RateLimit-Limit': limit.toString(),
+                'X-RateLimit-Remaining': remaining.toString(),
+                'X-RateLimit-Reset': reset.toString()
+            }
+        });
+    }
+
     const { email, password } = await request.json();
 
     if (!email || !password) {
