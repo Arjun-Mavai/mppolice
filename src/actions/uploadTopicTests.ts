@@ -3,8 +3,9 @@
 import { db } from "@/db";
 import { tests, questions, mppscUsers, syllabusTopics } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { logger } from "@/lib/logger";
+import { CACHE } from "@/lib/cache";
 
 // Type definitions for the upload payload
 interface QuestionPayload {
@@ -44,10 +45,14 @@ interface BulkUploadPayload {
 export async function uploadTopicTestQuestions(data: BulkUploadPayload, adminSecret: string) {
   try {
     // 1. Validate Admin Secret
-    if (!process.env.ADMIN_SECRET && adminSecret !== "admin123") { 
-         if (process.env.ADMIN_SECRET_KEY && adminSecret !== process.env.ADMIN_SECRET_KEY) {
-             return { success: false, error: "Invalid Admin Secret" };
-         }
+    // 1. Validate Admin Secret
+    // CRITICAL FIX: Removed hardcoded "admin123" fallback. Using strict env var check.
+    if (!process.env.ADMIN_SECRET_KEY) {
+        throw new Error("Server Configuration Error: ADMIN_SECRET_KEY not set");
+    }
+
+    if (adminSecret !== process.env.ADMIN_SECRET_KEY) {
+        return { success: false, error: "Unauthorized: Invalid Admin Secret" };
     }
 
     const { unitId, topics } = data;
@@ -146,7 +151,11 @@ export async function uploadTopicTestQuestions(data: BulkUploadPayload, adminSec
       processedCount++;
     }
 
-    revalidatePath(`/syllabus/unit/${unitId}`); 
+    // Invalidate Caches
+    revalidatePath(`/syllabus/unit/${unitId}`);
+    revalidateTag(CACHE.TESTS.TAGS.ALL , {});      // Invalidate all test lists
+    revalidateTag(CACHE.SYLLABUS.TAGS.ALL,{});   // Invalidate syllabus stats (topic counts etc.)
+    
     return { success: true, message: `Successfully processed ${processedCount} topics.` };
 
   } catch (error: any) {

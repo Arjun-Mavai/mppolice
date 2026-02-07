@@ -34,7 +34,7 @@ export default function LoginPage() {
       if (res.ok) {
         // Update Global Store
         useSettingsStore.getState().setUser(data.user, true);
-        
+        router.refresh()
         toast.success("Welcome back!", {
           description: "Accessing your syllabus...",
         })
@@ -103,8 +103,8 @@ export default function LoginPage() {
          </div>
 
          <div className="absolute top-6 left-6 z-20">
-             <Link href="/syllabus" className="flex items-center gap-2 text-slate-500 lg:text-slate-500 text-slate-300 hover:text-white lg:hover:text-slate-900 transition-colors text-sm font-medium">
-                 <ArrowLeft className="w-4 h-4" /> Back to Syllabus
+             <Link href="/" className="flex items-center gap-2 text-slate-500 lg:text-slate-500 text-slate-300 hover:text-white lg:hover:text-slate-900 transition-colors text-sm font-medium">
+                 <ArrowLeft className="w-4 h-4" /> Back to Home
              </Link>
          </div>
 

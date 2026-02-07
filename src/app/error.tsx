@@ -57,6 +57,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useEffect } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { logger } from '@/lib/logger';
@@ -107,13 +108,17 @@ export default function Error({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 relative overflow-hidden flex items-center justify-center p-4">
-      {/* Floating background elements */}
+    <div className="min-h-screen bg-slate-950 relative overflow-hidden flex items-center justify-center p-4 selection:bg-indigo-500/30">
+      {/* Premium Dark Background Effects */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-indigo-900/20 via-slate-950 to-slate-950" />
+      <div className="absolute inset-0 bg-[grid-pattern] opacity-[0.03]" />
+      
+      {/* Floating Orbs */}
       <motion.div
-        className="absolute top-10 right-10 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20"
+        className="absolute top-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px]"
         animate={{
           scale: [1, 1.2, 1],
-          x: [0, 50, 0],
+          opacity: [0.1, 0.2, 0.1],
         }}
         transition={{
           duration: 8,
@@ -122,10 +127,10 @@ export default function Error({
         }}
       />
       <motion.div
-        className="absolute bottom-10 left-10 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20"
+        className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-violet-500/10 rounded-full blur-[100px]"
         animate={{
           scale: [1.2, 1, 1.2],
-          x: [-50, 0, -50],
+          opacity: [0.1, 0.2, 0.1],
         }}
         transition={{
           duration: 10,
@@ -141,14 +146,17 @@ export default function Error({
         animate="visible"
       >
         {/* Main Card */}
-        <div className="bg-white rounded-2xl shadow-2xl shadow-blue-900/10 border border-blue-100/50 backdrop-blur-xl overflow-hidden">
-          {/* Header with gradient */}
-          <div className="h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
+        <div className="bg-slate-900/50 rounded-3xl shadow-2xl shadow-black/50 border border-slate-800 backdrop-blur-xl overflow-hidden">
+          {/* Top Gradient Line */}
+          <div className="h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500" />
 
-          <div className="p-8 md:p-12">
+          <div className="p-8 md:p-12 relative">
+            {/* Background Glow inside card */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-indigo-500/5 blur-[80px] pointer-events-none" />
+
             {/* Error Icon */}
             <motion.div
-              className="flex justify-center mb-8"
+              className="flex justify-center mb-10"
               variants={itemVariants}
             >
               <motion.div
@@ -156,121 +164,77 @@ export default function Error({
                 variants={floatingVariants}
                 animate="animate"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl blur-xl opacity-30" />
-                <div className="relative bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-2xl shadow-lg">
-                  <AlertTriangle className="w-8 h-8 text-white" />
+                <div className="absolute inset-0 bg-indigo-500 rounded-full blur-2xl opacity-20" />
+                <div className="relative w-20 h-20 bg-slate-800 rounded-2xl border border-slate-700 shadow-xl flex items-center justify-center">
+                  <AlertTriangle className="w-10 h-10 text-rose-500" />
                 </div>
+                {/* Decorative dots */}
+                <div className="absolute -top-2 -right-2 w-4 h-4 bg-slate-700 rounded-full border-2 border-slate-900" />
+                <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-slate-700 rounded-full border-2 border-slate-900" />
               </motion.div>
             </motion.div>
 
             {/* Content */}
-            <motion.div className="text-center space-y-4 mb-8" variants={itemVariants}>
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Something went wrong!
+            <motion.div className="text-center space-y-6 mb-10" variants={itemVariants}>
+              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+                Something went wrong
               </h1>
-              <p className="text-lg text-slate-600 leading-relaxed">
+              <p className="text-lg text-slate-400 leading-relaxed max-w-lg mx-auto">
                 {error.message || 'An unexpected error occurred. Don\'t worry, your progress is safe.'}
               </p>
               {error.digest && (
-                <p className="text-sm text-slate-500 font-mono bg-slate-50 rounded-lg p-3 border border-slate-200">
-                  Error ID: {error.digest}
-                </p>
+                <div className="inline-block">
+                  <p className="text-xs text-slate-500 font-mono bg-slate-950/50 rounded-lg py-2 px-4 border border-slate-800">
+                    Error ID: <span className="text-slate-400">{error.digest}</span>
+                  </p>
+                </div>
               )}
-            </motion.div>
-
-            {/* Feature Cards */}
-            <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
-              variants={itemVariants}
-            >
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4 border border-blue-200/50">
-                <h3 className="font-semibold text-blue-900 mb-2">What happened?</h3>
-                <p className="text-sm text-blue-800">
-                  A momentary glitch. Usually resolved by retrying.
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl p-4 border border-indigo-200/50">
-                <h3 className="font-semibold text-indigo-900 mb-2">Need Help?</h3>
-                <p className="text-sm text-indigo-800">
-                  If this persists, our support team is ready to help.
-                </p>
-              </div>
             </motion.div>
 
             {/* Action Buttons */}
             <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md mx-auto"
               variants={itemVariants}
             >
               <motion.button
                 onClick={reset}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="group relative px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/50 transition-all duration-300 flex items-center justify-center gap-2"
+                className="group relative px-6 py-4 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all duration-300 flex items-center justify-center gap-3 overflow-hidden"
               >
-                <RotateCcw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-300" />
-                <span>Try Again</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <RotateCcw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500 relative z-10" />
+                <span className="relative z-10">Try Again</span>
               </motion.button>
 
               <motion.button
                 onClick={() => router.push('/syllabus')}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="group relative px-6 py-3 rounded-xl font-semibold text-blue-600 border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-300 flex items-center justify-center gap-2"
+                className="group px-6 py-4 rounded-xl font-bold text-slate-300 bg-slate-800/50 border border-slate-700 hover:bg-slate-800 hover:border-slate-600 hover:text-white transition-all duration-300 flex items-center justify-center gap-3"
               >
-                <Home className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                <Home className="w-5 h-5 group-hover:text-indigo-400 transition-colors" />
                 <span>Go to Syllabus</span>
               </motion.button>
             </motion.div>
 
             {/* Footer */}
             <motion.div
-              className="mt-8 pt-6 border-t border-slate-200 text-center"
+              className="mt-10 pt-8 border-t border-slate-800/50 text-center"
               variants={itemVariants}
             >
               <p className="text-sm text-slate-500">
                 Issues persisting?{' '}
-                <a
-                  href="mailto:support@mppsc.com"
-                  className="text-blue-600 hover:text-blue-700 font-semibold"
+                <Link
+                  href="/contact"
+                  className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors hover:underline decoration-indigo-500/30 underline-offset-4"
                 >
                   Contact Support
-                </a>
+                </Link>
               </p>
             </motion.div>
           </div>
         </div>
-
-        {/* Decorative cards floating around */}
-        <motion.div
-          className="absolute -top-4 -right-4 bg-white rounded-xl shadow-lg p-4 border border-slate-200 hidden md:block"
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-green-500" />
-            <span className="text-sm font-medium text-slate-700">
-              95% Pass Rate
-            </span>
-          </div>
-        </motion.div>
-
-        <motion.div
-          className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg p-4 border border-slate-200 hidden md:block"
-          animate={{ y: [0, -10, 0] }}
-          transition={{
-            duration: 3.5,
-            repeat: Number.POSITIVE_INFINITY,
-            delay: 0.5,
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-blue-500" />
-            <span className="text-sm font-medium text-slate-700">
-              4.9 ⭐ Rating
-            </span>
-          </div>
-        </motion.div>
       </motion.div>
     </div>
   );

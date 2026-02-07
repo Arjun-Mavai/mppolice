@@ -1,30 +1,55 @@
-import { NextResponse } from "next/server";
+import { Ratelimit } from "@upstash/ratelimit";
+import { redis } from "./redis";
 
-const rateLimitMap = new Map();
+// Rate Limiters Configuration
+// Bhai, har action ke liye alag alag limit lagayi hai taaki security tight rahe.
 
-interface RateLimitConfig {
-  limit: number; // Max requests
-  windowMs: number; // Time window in milliseconds
-}
+// 1. Signup API: 3 attempts per hour per IP
+// Koi script lagake fake accounts na banaye isliye strict rakha hai.
+export const signupLimiter = new Ratelimit({
+  redis: redis,
+  limiter: Ratelimit.slidingWindow(3, "1 h"),
+  prefix: "@upstash/ratelimit/signup",
+});
 
-export function rateLimit(ip: string, config: RateLimitConfig) {
-  const now = Date.now();
-  const windowStart = now - config.windowMs;
+// 2. Login API: 5 attempts per 15 minutes per IP
+// Brute force attacks rokne ke liye.
+export const loginLimiter = new Ratelimit({
+  redis: redis,
+  limiter: Ratelimit.slidingWindow(2, "1 m"),
+  prefix: "@upstash/ratelimit/login",
+});
 
-  const requestTimestamps = rateLimitMap.get(ip) || [];
-  const requestsInWindow = requestTimestamps.filter((timestamp: number) => timestamp > windowStart);
+// 3. General API routes: 100 requests per minute per IP
+// Normal usage ke liye kaafi hai, lekin DDoS se bachayega.
+export const genApiLimiter = new Ratelimit({
+  redis: redis,
+  limiter: Ratelimit.slidingWindow(100, "1 m"),
+  prefix: "@upstash/ratelimit/api",
+});
 
-  if (requestsInWindow.length >= config.limit) {
-    return true; // Rate limited
-  }
+// 4. Password Reset: 3 attempts per hour per Email (identifier hum email pass karenge)
+// Spam rokne ke liye jaruri hai.
+export const resetLimiter = new Ratelimit({
+  redis: redis,
+  limiter: Ratelimit.slidingWindow(3, "1 h"),
+  prefix: "@upstash/ratelimit/reset",
+});
 
-  requestTimestamps.push(now);
-  rateLimitMap.set(ip, requestTimestamps);
-  
-  // Cleanup old entries
-  if (rateLimitMap.size > 10000) {
-      rateLimitMap.clear(); // Simple GC
-  }
-  
-  return false; // Allowed
+/**
+ * Helper to check rate limit
+ * @param limiter - The specific Ratelimit instance
+ * @param identifier - IP address or Email or User ID
+ * @returns { success: boolean, limit: number, remaining: number, reset: number }
+ */
+export async function checkRateLimit(limiter: Ratelimit, identifier: string) {
+    try {
+        const { success, limit, remaining, reset } = await limiter.limit(identifier);
+        return { success, limit, remaining, reset };
+    } catch (error) {
+        // Bhai, agar Redis down hai to user ko block mat karo, jaane do.
+        // Fail open strategy better hai UX ke liye.
+        console.error("Rate Limit Error:", error);
+        return { success: true, limit: 100, remaining: 100, reset: 0 };
+    }
 }

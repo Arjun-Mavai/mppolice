@@ -1,6 +1,29 @@
 "use client"
 
-import React, { useState } from 'react';
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🎯 QUIZ INTERFACE - Ekdum Malaai-Style Component 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 
+// Bhai yeh component hai Quiz ka full UI handler! 
+// - Questions dikhata hai ek ek karke
+// - Timer chalta hai, options select hote hain
+// - Instant feedback dikha sakte ho (on/off toggle se)
+// - Guest user bhi khel sakte hain (without login)
+// - Submit karne pe result ya teaser dikhta hai
+//
+// Props ka chakkar:
+// - questions: Saare sawaal array me
+// - mode: 'topic' | 'full' | 'pyq' - kis type ka test hai
+// - userId: Agar null hai toh guest hai bhai, DB save nahi hoga
+// - testId: Test ki unique ID (result/leaderboard ke liye)
+//
+// Principal Engineer Note:
+// - State management clean hai, hook-based abstraction
+// - Guest flow properly separated (no DB pollution)
+// - Proper loading states, error boundaries add kar sakte ho agar production tight ho
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Clock, 
@@ -22,64 +45,235 @@ import { Question } from '@/types/quiz';
 import { QuizResult } from './QuizResult';
 import { useQuizLogic } from '@/hooks/useQuizLogic';
 import { PremiumExplanation } from './PremiumExplanation';
+import { Input } from '@/components/ui/input';
+import { createGuestEntry as createGuestUser } from '@/actions/guest-actions';
+import { GuestResultTeaser } from '@/app/syllabus/quiz/play/GuestResultTeaser';
 
+// ─────────────────────────────────────────────────────────────
+// 📋 INTERFACE DEFINITION
+// ─────────────────────────────────────────────────────────────
 interface QuizInterfaceProps {
-    questions: Question[];
-    mode: 'topic' | 'full' | 'pyq';
-    timeLimitInMinutes: number; // 10 or 60
-    testId: string;
-    title?: string;
-    userId: string;
-    onExit: () => void;
-    onRetry?: () => void;
-    isInstantMode?: boolean;
-    disablePalette?: boolean;
+    questions: Question[];              // Saare questions ka data
+    mode: 'topic' | 'full' | 'pyq';    // Test ka type
+    timeLimitInMinutes: number;         // 10 minutes (topic) ya 60 minutes (full)
+    testId: string;                     // Database me test ki ID
+    title?: string;                     // Test ka naam (display ke liye)
+    userId: string | null;              // User ID (null for guest) CRITICAL: null = guest, value = logged-in
+    onExit: () => void;                 // Exit handler  Exit button ka callback
+    onRetry?: () => void;               // Retry handlerne ka option Retry karne ka option
+    isInstantMode?: boolean;            // Instant feedback chahiye ki nahi
+    disablePalette?: boolean;           // Question palette hide karna hai?
 }
 
 export function QuizInterface(props: QuizInterfaceProps) {
+    // ─────────────────────────────────────────────────────────────
+    // 📦 PROPS DESTRUCTURING (Clean Variable Names)
+    // ─────────────────────────────────────────────────────────────
     const { 
-        questions, 
-        mode, 
-        timeLimitInMinutes, 
-        title,
-        onExit, 
-        disablePalette = false,
-        // Bhai, ye variables dhyan se uthana, inke bina Result page adhoora hai!
-        testId, // Test ka alag pehchan (ID)
-        userId  // User ka personal ID (Leaderboard ke liye)
+        questions,          // Saare questions
+        mode,              // Test type
+        timeLimitInMinutes, // Time limit
+        title,             // Display naam
+        onExit,            // Exit callback
+        disablePalette = false, // Default: palette dikhao
+        testId,            // Test ID (result/leaderboard ke liye)
+        userId             // 🚨 CRITICAL: null = guest user (DB save NAHI hoga)
     } = props;
 
-    // Use Custom Hook for Logic
+    // ─────────────────────────────────────────────────────────────
+    // 🧠 QUIZ LOGIC HOOK (Sab heavy-lifting yahan hai)
+    // ─────────────────────────────────────────────────────────────
+    // Bhai, useQuizLogic hook me sab kuch hai:
+    // - Navigation (Next/Prev/Jump)
+    // - Answers tracking (user ne kya select kiya)
+    // - Timer countdown
+    // - Submit logic (DB save sirf logged-in users ke liye)
+    // - Mark for review
+    // Dekho: src/hooks/useQuizLogic.ts
     const {
-        currentQuestionIndex,
-        answers,
-        markedforReview,
-        isSubmitted,
-        timeLeft,
-        instantModeEnabled,
-        language,
+        currentQuestionIndex,    // Konsa question dikha rahe ho (0-based index)
+        answers,                 // User ke answers { questionId: optionIndex }
+        markedforReview,         // Review ke liye marked questions ka array
+        isSubmitted,             // Test submit ho gaya?
+        timeLeft,                // Kitna time bacha (seconds me)
+        instantModeEnabled,      // Instant feedback on/off
+        language,                // 'hi' | 'en' - current language
         
-        setInstantModeEnabled,
-        handleOptionSelect,
-        handleNext,
-        handlePrev,
-        handleJump,
-        toggleMarkForReview,
-        handleSubmit,
-        handleRetry,
+        // Action handlers (user interactions)
+        setInstantModeEnabled,   // Instant mode toggle
+        handleOptionSelect,      // Option click kiya
+        handleNext,              // Next button
+        handlePrev,              // Previous button
+        handleJump,              // Question palette se jump
+        toggleMarkForReview,     // Mark/Unmark for review
+        handleSubmit,            // Submit quiz (hook internally checks userId)
+        handleRetry,             // Retry attempt
         
-        getParsedOptions,
+        // Helper functions
+        getParsedOptions,        // Options parse karna (string/object handle karta hai)
         
-        currentQuestion,
-        isAnswered,
-        totalQuestions
+        // Computed values
+        currentQuestion,         // Current question object
+        isAnswered,              // Current question answered hai?
+        totalQuestions          // Total kitne questions hain
     } = useQuizLogic(props);
 
-    // UI Local State
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [showExitConfirm, setShowExitConfirm] = useState(false);
+    // ─────────────────────────────────────────────────────────────
+    // 🎨 UI LOCAL STATE (Sirf UI ke liye, business logic nahi)
+    // ─────────────────────────────────────────────────────────────
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);         // Question palette drawer
+    const [showExitConfirm, setShowExitConfirm] = useState(false);   // Exit confirmation dialog
+    
+    // ─────────────────────────────────────────────────────────────
+    // 👤 GUEST USER STATE (Lead Generation Logic)
+    // ─────────────────────────────────────────────────────────────
+    // Bhai, guest users se naam/email/mobile lenge (optional)
+    // Lead generation ke liye - marketing team khush hogi 😎
+    const [showGuestTeaser, setShowGuestTeaser] = useState(false);   // Result teaser dikhaana hai?
+    const [guestName, setGuestName] = useState("");                  // Guest ka naam
+    const [guestEmail, setGuestEmail] = useState("");                // Email (optional)
+    const [guestMobile, setGuestMobile] = useState("");              // Mobile (optional)
+    const [showGuestEntryDialog, setShowGuestEntryDialog] = useState(false); // Entry dialog
+    const [isSubmittingGuest, setIsSubmittingGuest] = useState(false); // Loading state
 
-    // Translations
+    // ─────────────────────────────────────────────────────────────
+    // 🚀 GUEST ENTRY EFFECT
+    // ─────────────────────────────────────────────────────────────
+    // Jab component load ho aur userId nahi hai (guest user)
+    // AND guest ne abhi tak naam nahi diya -> Dialog dikhaao
+    useEffect(() => {
+        if (!userId && !guestName) {
+            setShowGuestEntryDialog(true);
+        }
+    }, [userId, guestName]);
+
+    // ─────────────────────────────────────────────────────────────
+    // 📝 GUEST ENTRY SUBMIT HANDLER
+    // ─────────────────────────────────────────────────────────────
+    // Guest user ne naam enter kiya, dialog close karo
+    // Email/Mobile optional hai, bas naam mandatory
+    // Note: Yeh data DB me guest_entries table me save hota hai
+    const handleGuestEntrySubmit = async () => {
+        if (!guestName.trim()) return; // Validation: Naam toh do bhai!
+        
+        setIsSubmittingGuest(true);
+        
+        // Save to DB (for marketing/lead gen)
+        await createGuestUser({ 
+            name: guestName, 
+            email: guestEmail, 
+            mobile: guestMobile 
+        }); 
+        
+        // Close dialog, user test shuru kar sakta hai
+        setShowGuestEntryDialog(false);
+        setIsSubmittingGuest(false);
+    };
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 🎯 GUEST RESULT TEASER (Non-logged users ke liye)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Agar guest user ne test submit kiya aur showGuestTeaser true hai
+    // toh unko limited result dikhate hain with CTA to login/signup
+    // 
+    // Why separate teaser?
+    // - Full result sirf logged-in users ke liye (DB me save hota hai)
+    // - Guest ko taste dete hain, full access ke liye login karwate hain
+    // - Conversion funnel: Free test → Show teaser → Login → Full access
+    if (showGuestTeaser) {
+        // ─────────────────────────────────────────────────────────────
+        // 📊 LOCAL SCORE CALCULATION (DB nahi, client-side)
+        // ─────────────────────────────────────────────────────────────
+        // Principal Engineer Note: Yeh calculation client-side hai
+        // Server-side wala calculation useQuizLogic > submitTestAttempt me hai
+        // Dono same logic use karte hain (SCORING_CONFIG)
+        
+        // Calculate earned score with negative marking
+        let earnedScore = 0;
+        Object.entries(answers).forEach(([qId, ansIdx]) => {
+            const q = questions.find(q => q.id === qId);
+            if (q) {
+                if (q.correctAnswer === ansIdx) {
+                    // Correct answer: Add marks (default 3 from SCORING_CONFIG)
+                    earnedScore += (q.marks || 3);
+                } else {
+                    // Wrong answer: Deduct negative marks (default 1)
+                    const negative = q.negativeMarks !== undefined ? q.negativeMarks : 1;
+                    earnedScore -= negative;
+                }
+            }
+        });
+
+        // Time taken calculation
+        const timeTaken = (timeLimitInMinutes * 60) - timeLeft;
+
+        return (
+            <GuestResultTeaser 
+                score={earnedScore} 
+                totalQuestions={questions.length} 
+                timeTaken={timeTaken}
+                guestName={guestName}
+                onLogin={() => window.location.href = '/login'}
+                onHome={() => window.location.href = '/'} 
+            />
+        );
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // ✅ LOGGED-IN USER RESULT (Full detailed result)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Agar test submit ho gaya HAI aur userId PRESENT hai
+    // toh QuizResult component dikhao (full analysis ke saath)
+    // 
+    // QuizResult shows:
+    // - Detailed score breakdown
+    // - Question-wise analysis
+    // - Time spent per question
+    // - Leaderboard rank
+    // - Explanations for all questions
+    if (isSubmitted && userId) {
+        return <QuizResult 
+            questions={questions} 
+            answers={answers} 
+            mode={mode} 
+            timeTaken={(timeLimitInMinutes * 60) - timeLeft}
+            onRetry={handleRetry}
+            title={title}
+            testId={testId}    // Leaderboard ke liye chahiye
+            userId={userId}    // User ki ranking dikhane ke liye
+        />;
+    }
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 🎬 SUBMIT HANDLER WRAPPER
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Submit button click karne pe yeh function call hota hai
+    // Guest vs Logged-in user ka logic yahan handle karte hain
+    //
+    // Flow:
+    // 1. Guest user (!userId) → Just show teaser (no DB save)
+    // 2. Logged-in user → Call hook's handleSubmit (saves to DB)
+    const handleQuizSubmitAction = () => {
+        if (!userId) {
+            // 🚨 GUEST USER PATH
+            // Bas local state set karo, teaser dikhaao
+            // useQuizLogic me bhi early return hai (!userId check)
+            // So DB save NAHI hoga - design is solid!
+            setShowGuestTeaser(true);
+        } else {
+            // ✅ LOGGED-IN USER PATH
+            // Hook ka handleSubmit call karo
+            // Woh internally submitTestAttempt() call karega
+            // DB me userAttempts + attemptAnswers save hoga
+            handleSubmit();
+        }
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 🌐 TRANSLATIONS (Hindi/English)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // UI text ko language ke according show karte hain
+    // Language state useQuizLogic hook se aa raha hai
     const t = {
         exit: language === 'hi' ? 'बाहर जाएं' : 'Exit',
         instantMode: language === 'hi' ? 'इंस्टेंट मोड' : 'Instant Mode',
@@ -105,37 +299,40 @@ export function QuizInterface(props: QuizInterfaceProps) {
         current: language === 'hi' ? 'वर्तमान' : 'Current',
     }
 
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // ⏱️ TIME FORMATTER
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Seconds ko MM:SS format me convert karta hai
+    // Example: 125 seconds → "02:05"
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    if (isSubmitted) {
-        return <QuizResult 
-            questions={questions} 
-            answers={answers} 
-            mode={mode} 
-            timeTaken={(timeLimitInMinutes * 60) - timeLeft}
-            onRetry={handleRetry}
-            title={title}
-            // Bhai, yahan se ye ID Result page pe ja rahe hain taaki Leaderboard ban sake!
-            // Agar ye miss hue toh Rank nahi dikhegi.
-            testId={testId} 
-            userId={userId}
-        />;
-    }
-
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 🎨 MAIN UI RENDER (Quiz Interface ka pura layout)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Layout structure:
+    // 1. Header: Exit button, Timer, Instant mode toggle, Question palette trigger
+    // 2. Main: Current question + options
+    // 3. Footer: Prev/Next navigation buttons
+    // 4. Dialogs: Exit confirmation, Guest entry form
     return (
         <div className="flex flex-col h-[100dvh] bg-slate-50 relative overflow-hidden font-sans">
             
-            {/* Header / Timer Bar */}
+            {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+            {/* 🎯 HEADER BAR - Top sticky header with controls */}
+            {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
             <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0 shadow-sm z-20">
+                {/* Left side: Exit button + Title */}
                 <div className="flex items-center gap-2">
+                    {/* Exit button - Shows confirmation dialog */}
                     <Button variant="ghost" size="icon" onClick={() => setShowExitConfirm(true)} className="text-slate-500 hover:text-slate-900 -ml-2">
                         <X className="w-6 h-6" />
                     </Button>
                     
+                    {/* Test title and badge */}
                     <div className="flex items-center gap-2 hidden sm:flex">
                         <div className="h-6 w-px bg-slate-200 mx-2"></div>
                         <span className="font-display font-bold text-slate-900 tracking-tight">{title || <>MPPSC<span className="text-indigo-600">26</span></>}</span>
@@ -145,8 +342,13 @@ export function QuizInterface(props: QuizInterfaceProps) {
                     </div>
                 </div>
 
+                {/* Right side: Instant Mode + Timer + Question Palette */}
                 <div className="flex items-center gap-3">
-                     {/* Instant Mode Toggle */}
+                     {/* ─────────────────────────────────────────────── */}
+                     {/* ⚡ INSTANT MODE TOGGLE (Real-time feedback) */}
+                     {/* ─────────────────────────────────────────────── */}
+                     {/* Bhai yeh toggle ON karne se answer select karte hi
+                          turant correct/wrong dikhega + explanation */}
                      {!isSubmitted && (
                         <div className="p-[2px] rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 shadow-sm animate-in fade-in zoom-in duration-300">
                             <div 
@@ -174,6 +376,10 @@ export function QuizInterface(props: QuizInterfaceProps) {
                         </div>
                      )}
 
+                    {/* ─────────────────────────────────────────────── */}
+                    {/* ⏱️ COUNTDOWN TIMER (Auto-submits at 0) */}
+                    {/* ─────────────────────────────────────────────── */}
+                    {/* Last 60 seconds me red + pulse animation */}
                     <div className={cn(
                         "px-3 py-1.5 rounded-lg font-mono font-bold text-lg flex items-center gap-2 transition-colors min-w-[100px] justify-center",
                         timeLeft < 60 ? "bg-red-50 text-red-600 animate-pulse" : "bg-slate-100 text-slate-900"
@@ -182,38 +388,47 @@ export function QuizInterface(props: QuizInterfaceProps) {
                         {formatTime(timeLeft)}
                     </div>
 
-                    {/* Mobile Menu Trigger */}
+                    {/* ─────────────────────────────────────────────── */}
+                    {/* 🎨 QUESTION PALETTE (Side drawer trigger) */}
+                    {/* ─────────────────────────────────────────────── */}
+                    {/* Mobile/Desktop drawer - Shows all questions at once
+                         Answered = Green, Marked = Yellow, Current = Blue */}
                      {!disablePalette && (
                         <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
                         <SheetTrigger asChild>
                             <Button variant="ghost" size="icon" className="hover:bg-slate-100 relative text-slate-700">
                                 <Menu className="w-6 h-6" />
-                                {/* Green Dot Indicator */}
+                                {/* Pulse dot - attracts user attention */}
                                 <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full animate-pulse shadow-sm"></span>
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="right" className="w-[85vw] sm:w-[400px] flex flex-col p-0">
+                            {/* Palette Header */}
                             <SheetHeader className="p-6 border-b border-slate-100 bg-slate-50/50">
                                 <SheetTitle className="flex justify-between items-center">
                                     <span>{t.questionPalette}</span>
+                                    {/* Progress badge - Shows attempted count */}
                                     <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
                                         {Object.keys(answers).length}/{totalQuestions} {t.attempted}
                                     </span>
                                 </SheetTitle>
                             </SheetHeader>
                             
+                            {/* ─────────────────────────────────────────────── */}
+                            {/* 📊 QUESTION GRID (Click to jump) */}
+                            {/* ─────────────────────────────────────────────── */}
                             <div className="flex-1 overflow-y-auto p-6 grid grid-cols-5 content-start gap-3">
                                 {questions.map((q, idx) => {
-                                    const isAns = answers[q.id] !== undefined;
-                                    const isMarked = markedforReview.includes(q.id);
-                                    const isCurrent = idx === currentQuestionIndex;
+                                    const isAns = answers[q.id] !== undefined;       // Answered?
+                                    const isMarked = markedforReview.includes(q.id); // Marked for review?
+                                    const isCurrent = idx === currentQuestionIndex;  // Current question?
                                     
                                     return (
                                         <button
                                             key={q.id}
                                             onClick={() => {
-                                                handleJump(idx);
-                                                setIsDrawerOpen(false);
+                                                handleJump(idx);       // Jump to question
+                                                setIsDrawerOpen(false); // Close drawer
                                             }}
                                             className={cn(
                                                 "aspect-square rounded-xl font-bold text-sm flex items-center justify-center transition-all border-2 relative select-none",
@@ -224,6 +439,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
                                             )}
                                         >
                                             {idx + 1}
+                                            {/* Flag icon for marked questions */}
                                             {isMarked && !isCurrent && (
                                                 <div className="absolute -top-1.5 -right-1.5 bg-amber-100 rounded-full p-0.5 border border-amber-200">
                                                     <Flag className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
@@ -241,7 +457,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
                                     <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-amber-50 border border-amber-300" /> {t.review}</span>
                                     <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-indigo-600" /> {t.current}</span>
                                 </div>
-                                <Button className="w-full h-12 text-lg font-bold bg-slate-900 hover:bg-slate-800 shadow-lg shadow-slate-900/10" onClick={handleSubmit}>
+                                <Button className="w-full h-12 text-lg font-bold bg-slate-900 hover:bg-slate-800 shadow-lg shadow-slate-900/10" onClick={handleQuizSubmitAction}>
                                     {t.submitTest}
                                 </Button>
                             </div>
@@ -460,7 +676,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
                 
                 {currentQuestionIndex === totalQuestions - 1 ? (
                    <Button 
-                        onClick={handleSubmit} 
+                        onClick={handleQuizSubmitAction} 
                         className="h-12 px-8 rounded-xl font-bold bg-slate-900 text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800 transition-all hover:scale-105 active:scale-95"
                     >
                         {t.submit}
@@ -498,6 +714,65 @@ export function QuizInterface(props: QuizInterfaceProps) {
              </DialogFooter>
            </DialogContent>
         </Dialog>
+
+         {/* Guest Entry Dialog (Lead Gen) */}
+         <Dialog open={showGuestEntryDialog} onOpenChange={() => {}}>
+            <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+                <DialogHeader>
+                    <DialogTitle className="text-xl font-bold text-slate-900">
+                         Welcome to MPPSC 2026! 🚀
+                    </DialogTitle>
+                    <DialogDescription className="text-slate-600">
+                        Please enter your name to start the test. We value your time!
+                    </DialogDescription>
+                </DialogHeader>
+                
+                <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Name <span className="text-red-500">*</span></label>
+                        <Input 
+                            placeholder="e.g. Rahul Sharma" 
+                            value={guestName}
+                            onChange={(e) => setGuestName(e.target.value)}
+                            className="h-11 border-slate-200 focus:border-indigo-500"
+                        />
+                    </div>
+                    
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Email (Optional)</label>
+                        <Input 
+                             type="email"
+                             placeholder="Get results via email" 
+                             value={guestEmail}
+                             onChange={(e) => setGuestEmail(e.target.value)}
+                             className="h-11 border-slate-200 focus:border-indigo-500"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Mobile (Optional)</label>
+                         <Input 
+                             type="tel"
+                             placeholder="For update alerts" 
+                             value={guestMobile}
+                             onChange={(e) => setGuestMobile(e.target.value)}
+                             className="h-11 border-slate-200 focus:border-indigo-500"
+                        />
+                    </div>
+                </div>
+
+                <DialogFooter>
+                    <Button 
+                        onClick={handleGuestEntrySubmit} 
+                        disabled={!guestName.trim() || isSubmittingGuest}
+                        className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold h-12 rounded-xl"
+                    >
+                        {isSubmittingGuest ? "Starting..." : "Start Test"}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+         </Dialog>
+
     </div>
   );
 }

@@ -158,7 +158,7 @@ export function QuizPlayClient({
         mode={mode}
         testId={testId}
         title={title}
-        userId={userId || 'guest'}
+        userId={userId}
         timeLimitInMinutes={mode === 'full' ? 120 : 20} // 2 hours for FLT, 20 mins for Unit
         onExit={() => router.push('/syllabus')}
         onRetry={() => {

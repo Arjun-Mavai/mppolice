@@ -12,6 +12,7 @@ import { PremiumExplanation } from './PremiumExplanation';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { getTestLeaderboard } from '@/actions/leaderboard-actions';
 import { revalidateAnalyticsAction } from '@/features/analytics/actions';
+import { LoadingQuotes } from '@/components/ui/LoadingQuotes';
 
 interface QuizResultProps {
     questions: Question[];
@@ -32,9 +33,11 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
     // Revalidate Analytics on Mount to ensure Dashboard is fresh
     // Bhai, data ekdum taaza hona mangta hai!
     const [leaderboard, setLeaderboard] = useState<any>(null);
+    const [isLoadingStats, setIsLoadingStats] = useState(true);
 
     useEffect(() => {
         const refreshData = async () => {
+            setIsLoadingStats(true);
             await revalidateAnalyticsAction();
             router.refresh(); // Refresh Client Router Cache
             
@@ -42,6 +45,9 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                 const data = await getTestLeaderboard(testId, userId);
                 setLeaderboard(data);
             }
+            // Add a small artificial delay for the "feel" if it's too fast, or just let it be natural
+            // "Bhai thoda suspense to banta hai"
+            setTimeout(() => setIsLoadingStats(false), 2000); 
         };
         refreshData();
     }, [router, testId, userId]);
@@ -125,7 +131,11 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                      </div>
 
                      {/* RANKING SECTION - Bhai ka Rank kya hai? */}
-                     {leaderboard && (
+                     {isLoadingStats ? (
+                        <div className="mt-6 mb-2">
+                             <LoadingQuotes />
+                        </div>
+                     ) : leaderboard && (
                         <div className="mt-6 mb-2">
                              <div className="inline-flex items-center gap-2 bg-slate-800/80 rounded-full px-6 py-2 border border-slate-700 shadow-lg backdrop-blur-sm animate-in zoom-in duration-500 delay-300">
                                  <span className="text-2xl">🏆</span>

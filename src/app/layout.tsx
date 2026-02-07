@@ -78,6 +78,21 @@ export default function RootLayout({
           <SupportButton />
         </Suspense>
         <Toaster position="top-right"  richColors/>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('Bhai: ServiceWorker registration successful with scope: ', registration.scope);
+                  }, function(err) {
+                    console.log('Bhai: ServiceWorker registration failed: ', err);
+                  });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

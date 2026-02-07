@@ -190,6 +190,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={false} 
                   className={cn(
                     "px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2",
                     isActive

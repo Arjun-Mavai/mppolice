@@ -61,6 +61,9 @@ export async function getUserAttempts(testIds: string[]) {
         count: sql<number>`count(*)`
     })
     .from(userAttempts)
+    // Optimization: Added limit to prevent massive fetching if user has 1000s of attempts
+    // Ideally this should be paginated from the client side, but capping it for safety here.
+    .limit(100)
     .where(
         and(
             eq(userAttempts.userId, user.id),

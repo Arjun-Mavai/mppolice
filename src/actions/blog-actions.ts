@@ -4,9 +4,10 @@ import { db } from "@/db";
 import { contentBlogs, mppscUsers } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { verifyAuth } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { logger } from "@/lib/logger";
-
+import { CACHE, cachedData } from "@/lib/cache";
+import { unstable_cache } from "next/cache";
 export async function uploadBlog(data: any) {
     const user = await verifyAuth();
     if (!user) return { success: false, error: "Unauthorized" };
@@ -55,6 +56,9 @@ export async function uploadBlog(data: any) {
         });
 
         revalidatePath('/blogs');
+        revalidateTag(CACHE.BLOGS.TAGS.ALL, 'default');
+        revalidateTag(CACHE.BLOGS.TAGS.DETAIL(metadata.slug), 'default');
+        
         return { success: true };
     } catch (error: any) {
         logger.error("Upload Blog Error:", error);
@@ -65,7 +69,7 @@ export async function uploadBlog(data: any) {
     }
 }
 
-import { cachedData, CACHE_TAGS } from "@/lib/cache";
+
 
 export const getCachedBlogs = cachedData(
     async () => {
@@ -78,19 +82,29 @@ export const getCachedBlogs = cachedData(
         }
     },
     ['blogs-list'],
-    [CACHE_TAGS.SYLLABUS] // Using SYLLABUS tag as proxy or create BLOGS tag if needed. Reuse minimizes complexity.
+    CACHE.BLOGS.GET_ALL.tags,
+    CACHE.BLOGS.GET_ALL.revalidate
 );
 
 export async function getBlogs() {
     return await getCachedBlogs();
 }
 
-export async function getBlogBySlug(slug: string) {
-    try {
-        const blog = await db.select().from(contentBlogs).where(eq(contentBlogs.slug, slug)).get();
-        return blog;
-    } catch (error) {
-        logger.error("Get Blog Error:", error);
-        return null;
-    }
-}
+export const getBlogBySlug = async (slug: string) => {
+    return await unstable_cache(
+        async () => {
+            try {
+                const blog = await db.select().from(contentBlogs).where(eq(contentBlogs.slug, slug)).get();
+                return blog;
+            } catch (error) {
+                logger.error("Get Blog Error:", error);
+                return null;
+            }
+        },
+        [`blog-${slug}`],
+        {
+            revalidate: CACHE.BLOGS.GET_BY_SLUG(slug).revalidate,
+            tags: CACHE.BLOGS.GET_BY_SLUG(slug).tags
+        }
+    )();
+};

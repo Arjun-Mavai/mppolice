@@ -13,7 +13,8 @@ export function SyllabusLockModal({ open, onOpenChange }: SyllabusLockModalProps
 
   // We don't need a handleUnlock per se, the PremiumMarketing component likely has buttons.
   // But if it emits an event, we handle it.
-  
+  // modal={false} is important to allow scrolling on the page while the modal is open.
+  // no jerk while opening the modal ,
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl p-0 overflow-hidden border-0 shadow-2xl bg-white max-h-[90vh] overflow-y-auto">

@@ -1,7 +1,5 @@
 "use client";
 
-import React from 'react';
-import { motion } from 'framer-motion';
 import { CheckCircle2, Star, Zap, BookOpen, Layers, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -39,9 +37,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                         : 'Upgrade to Pro and unlock Unlimited Quizzes, Tests, and Smart Analytics. Just pay the difference.'}
                 </p>
 
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                <div 
                     className="relative group w-full max-w-md"
                 >
                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-6 py-1 rounded-full text-xs font-bold shadow-lg shadow-indigo-500/20 z-20 whitespace-nowrap tracking-wide">
@@ -88,7 +84,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                              </Button>
                          </CardContent>
                      </Card>
-                </motion.div>
+                </div>
                 
                 {/* <p className="text-xs text-slate-400 mt-6">
                     Changes will reflect immediately after payment confirmation.
@@ -123,9 +119,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl px-4">
                 {/* Basic Plan */}
-                <motion.div 
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
+                <div 
                     className="relative group h-full"
                 >
                      <Card className="border border-slate-200 shadow-sm h-full hover:shadow-md transition-all bg-white">
@@ -178,12 +172,10 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                              </Button>
                          </CardContent>
                      </Card>
-                </motion.div>
+                </div>
 
                 {/* Premium Plan */}
-                <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
+                <div 
                     className="relative group h-full"
                 >
                      <Card className="border-2 border-indigo-600 shadow-xl h-full relative overflow-hidden bg-white">
@@ -236,7 +228,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                              </Button>
                          </CardContent>
                      </Card>
-                </motion.div>
+                </div>
             </div>
         </div>
     ); 
