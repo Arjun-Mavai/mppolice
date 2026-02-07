@@ -4,6 +4,8 @@ import { db } from '@/db';
 import { testLeaderboard, tests } from '@/db/schema';
 import { eq, desc, asc, sql, and } from 'drizzle-orm';
 import { FAKE_USERS } from '@/data/fakeUsers';
+import { questions } from '@/db/schema';
+import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 
 type LeaderboardEntry = typeof testLeaderboard.$inferSelect;
 
@@ -89,9 +91,6 @@ export async function getTestLeaderboard(testId: string, userId?: string) {
 
 // Helper to generate random time between min and max seconds
 const randomTime = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min);
-
-import { questions } from '@/db/schema';
-import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 
 async function generateFakeLeaderboard(testId: string) {
   // Get accurate total marks based on question count

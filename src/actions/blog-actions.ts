@@ -56,12 +56,12 @@ export async function uploadBlog(data: any) {
         });
 
         revalidatePath('/blogs');
-        revalidateTag(CACHE.BLOGS.TAGS.ALL, 'default');
-        revalidateTag(CACHE.BLOGS.TAGS.DETAIL(metadata.slug), 'default');
+        revalidateTag(CACHE.BLOGS.TAGS.ALL, { expire: 0 });
+        revalidateTag(CACHE.BLOGS.TAGS.DETAIL(metadata.slug), { expire: 0 });
         
         return { success: true };
     } catch (error: any) {
-        logger.error("Upload Blog Error:", error);
+        logger.error("Upload Blog Error:", error);  
         if (error.code === 'SQLITE_CONSTRAINT') {
             return { success: false, error: "Slug already exists" };
         }

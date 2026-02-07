@@ -153,8 +153,8 @@ export async function uploadTopicTestQuestions(data: BulkUploadPayload, adminSec
 
     // Invalidate Caches
     revalidatePath(`/syllabus/unit/${unitId}`);
-    revalidateTag(CACHE.TESTS.TAGS.ALL , {});      // Invalidate all test lists
-    revalidateTag(CACHE.SYLLABUS.TAGS.ALL,{});   // Invalidate syllabus stats (topic counts etc.)
+    revalidateTag(CACHE.TESTS.TAGS.ALL , { expire: 0 });      // Invalidate all test lists
+    revalidateTag(CACHE.SYLLABUS.TAGS.ALL,{ expire: 0 });   // Invalidate syllabus stats (topic counts etc.)
     
     return { success: true, message: `Successfully processed ${processedCount} topics.` };
 

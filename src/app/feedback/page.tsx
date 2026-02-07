@@ -19,7 +19,7 @@ const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
-  category: z.enum(["content", "bug", "ui", "feature", "other"]),
+  category: z.enum(["content", "bug", "ui", "feature_request", "other"]),
   rating: z.number().min(1).max(5),
   message: z.string().min(10, "Please share a bit more detail (min 10 chars)"),
 });
@@ -133,7 +133,7 @@ export default function FeedbackPage() {
                                 { value: "content", label: "Study Material", emoji: "📚" },
                                 { value: "ui", label: "App Design", emoji: "🎨" },
                                 { value: "bug", label: "Bug Report", emoji: "🐛" },
-                                { value: "feature", label: "Feature Idea", emoji: "💡" },
+                                { value: "feature_request", label: "Feature Idea", emoji: "💡" },
                                 { value: "other", label: "Other", emoji: "💭" },
                             ].map((item) => (
                                 <div key={item.value}>

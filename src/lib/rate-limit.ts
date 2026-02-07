@@ -36,6 +36,14 @@ export const resetLimiter = new Ratelimit({
   prefix: "@upstash/ratelimit/reset",
 });
 
+// 5. Feedback API: 5 attempts per hour per IP
+// Spam aur faaltu messages rokne ke liye.
+export const feedbackLimiter = new Ratelimit({
+  redis: redis,
+  limiter: Ratelimit.slidingWindow(5, "1 h"),
+  prefix: "@upstash/ratelimit/feedback",
+});
+
 /**
  * Helper to check rate limit
  * @param limiter - The specific Ratelimit instance

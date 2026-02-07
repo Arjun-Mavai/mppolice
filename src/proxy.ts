@@ -23,6 +23,7 @@ const PROTECTED_ROUTES = [ '/profile'];
 const AUTH_ROUTES = ['/login', '/signup', '/forgot-password'];
 
 export async function proxy(request: NextRequest) {
+  console.log("middleware running for the path",request.nextUrl.pathname);
   const { pathname,searchParams } = request.nextUrl;
   const token = request.cookies.get('mppsc_token')?.value;
 const testId = searchParams.get('testId');
@@ -55,6 +56,7 @@ console.log("middleware running for the path",pathname);
   }
  // Agar testId free wali list mein hai, toh jaane do (Allow)
     if (testId && FREE_TEST_IDS.includes(testId)) {
+      console.log("hello i am here" , testId , FREE_TEST_IDS.includes(testId))
       //https://share.google/aimode/zo09763VrWQotzvQU
 
       //https://share.google/aimode/JdmtXf6WUqWCKInbN
@@ -95,8 +97,8 @@ console.log("middleware running for the path",pathname);
 //
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\..*).*)',
+    '/((?!api|_next/static|_next/image|icon|favicon.ico|sitemap.xml|robots.txt|.*\\..*).*)',
     // '/syllabus/:path((?!quiz$|units$|pyq$|csat$|full-length$|topics$|auth$).+)',
-    '/syllabus/:path*',
+    // '/syllabus/:path*',
   ],
 };
