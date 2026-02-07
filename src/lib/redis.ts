@@ -4,9 +4,21 @@ import { Redis } from '@upstash/redis';
 // Ye Upstash se judega aur Rate Limiting/Caching handle karega.
 // Ensure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are in .env
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+// Strip any surrounding quotes from env vars (common issue)
+const stripQuotes = (str: string | undefined) => {
+  if (!str) return '';
+  return str.replace(/^["']|["']$/g, '');
+};
 
-export { redis };
+const redisUrl = stripQuotes(process.env.UPSTASH_REDIS_REST_URL);
+const redisToken = stripQuotes(process.env.UPSTASH_REDIS_REST_TOKEN);
+
+// Only initialize Redis if credentials are available
+// This prevents build errors when env vars are missing
+export const redis = redisUrl && redisToken 
+  ? new Redis({
+      url: redisUrl,
+      token: redisToken,
+    })
+  : null;
+
