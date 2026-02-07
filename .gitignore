@@ -46,3 +46,17 @@ next-env.d.ts
 *.db-shm
 *.db-wal
 local*.db
+
+# AI & IDE Folders
+.cursor
+.gemini
+.windsurf
+.agents
+.claude
+.codex
+.agent
+.vscode
+
+# Documentation
+*.md
+!README.md
