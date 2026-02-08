@@ -146,14 +146,17 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
           localStorage.removeItem('settings-storage');
         }
 
-        // 3. Hit server to delete httpOnly cookie
-        const response = await fetch('/api/auth/mppsc-logout', { method: 'POST' });
-        
-        if (response.ok) {
-          // 4. Hard reload to flush Next.js router cache + RSC cache completely
-          // router.push won't clear server component cache, so full reload is essential
-          window.location.href = '/';
+        // 3. Clear Service Worker cache to prevent stale HTML/API responses
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
         }
+
+        // 4. Hit server to delete httpOnly cookie
+        await fetch('/api/auth/mppsc-logout', { method: 'POST' });
+        
+        // 5. Hard reload — flush Next.js router cache + RSC cache completely
+        window.location.href = '/';
       } catch (error) {
         logger.error('Logout failed:', error);
         
@@ -164,6 +167,9 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
         
         // Even if API fails, nuke everything and redirect
         localStorage.removeItem('settings-storage');
+        if ('caches' in window) {
+          caches.keys().then(names => names.forEach(name => caches.delete(name)));
+        }
         window.location.href = '/';
       }
   };

@@ -373,7 +373,6 @@ export function QuizInterface(props: QuizInterfaceProps) {
                 totalQuestions={questions.length} 
                 timeTaken={timeTaken}
                 guestName={guestName}
-                onLogin={() => window.location.href = '/login'}
                 onHome={() => window.location.href = '/'} 
             />
         );

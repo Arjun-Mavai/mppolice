@@ -15,9 +15,9 @@ export function PricingSection() {
     const router = useRouter();
     const { user: globalUser } = useSettingsStore();
 
-    const handleUnlock = (amount: number) => {
-        router.push('/');
-    };
+   const handleUnlock = (amount: number) => {
+      router.push(`/payment?amount=${amount}`);
+  };
 
     if ((globalUser as any)?.is_subscribed) return null;
 

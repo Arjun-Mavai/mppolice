@@ -1,12 +1,12 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Sparkles, ArrowLeft, BookOpen, Layers, Lock, Play, BrainCircuit, AlertCircle } from 'lucide-react';
+import { Sparkles, ArrowLeft, BookOpen, Layers, Play, BrainCircuit, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { useRouter } from 'next/navigation';
@@ -25,6 +25,8 @@ export default function QuizSelectionPage() {
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
 
+  const popStateRef = useRef<(() => void) | null>(null);
+
   // Bhai browser ka back button dabaye to modal dikhao - user galti se bahar na chala jaaye
   useEffect(() => {
     window.history.pushState({ quizSection: true }, '');
@@ -34,17 +36,20 @@ export default function QuizSelectionPage() {
       setShowExitModal(true);
     };
 
+    popStateRef.current = handlePopState;
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Confirm exit → actually go back
+  // Confirm exit → remove the exact listener ref, then navigate back once
   const handleConfirmExit = useCallback(() => {
     setShowExitModal(false);
-    window.removeEventListener('popstate', () => {});
-    window.history.back();
-    window.history.back();
-  }, []);
+    if (popStateRef.current) {
+      window.removeEventListener('popstate', popStateRef.current);
+      popStateRef.current = null;
+    }
+    router.back();
+  }, [router]);
 
   // Bhai greeting SSR-safe rakhna h - server par kuch mat render karo
   // Client mount hone ke baad hi time-based greeting dikhao

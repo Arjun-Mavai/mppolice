@@ -10,11 +10,10 @@ interface GuestResultTeaserProps {
     totalQuestions: number;
     timeTaken: number;
     guestName?: string;
-    onLogin: () => void;
     onHome: () => void;
 }
 
-export function GuestResultTeaser({ score, totalQuestions, timeTaken, guestName, onLogin, onHome }: GuestResultTeaserProps) {
+export function GuestResultTeaser({ score, totalQuestions, timeTaken, guestName, onHome }: GuestResultTeaserProps) {
     const router = useRouter();
     
     // Use centralized ranking utility (deterministic - same score = same rank)

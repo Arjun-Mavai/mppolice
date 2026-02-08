@@ -20,7 +20,7 @@ const TESTIMONIALS = [
     name: "Shivam Gurjar",
     role: "Aspirant",
     location: "Ujjain",
-    comment: "Recent history and explanaiotn of answers is next level h.",
+    comment: "Recent history and explanation of answers is next level h.",
     image: "/testimonials/shivam.png",
     stars: 5,
   },

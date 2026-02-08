@@ -15,7 +15,7 @@ import { eq } from 'drizzle-orm';
  * jis se "MPPSC preparation", "MPPSC syllabus" etc search kare to mile
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '"https://mppsc.zenscroll.app';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppsc.zenscroll.app';
   
   // Static pages jo hamesha rahenge - ye h tumhara SEO ka backbone
   const staticPages: MetadataRoute.Sitemap = [

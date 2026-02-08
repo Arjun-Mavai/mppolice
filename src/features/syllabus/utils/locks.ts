@@ -49,8 +49,11 @@ export const ACCESS_CONFIG = {
  * Bhai jaise unit bada, lite user ko thoda zyada milta h
  */
 export function getLiteUnlockLimit(totalTopics: number): number {
-    if (totalTopics > ACCESS_CONFIG.LARGE_UNIT_THRESHOLD) return ACCESS_CONFIG.LITE_LIMITS.LARGE_UNIT;
+    // >= so a unit with exactly 10 topics gets LARGE_UNIT limit (5 free)
+    if (totalTopics >= ACCESS_CONFIG.LARGE_UNIT_THRESHOLD) return ACCESS_CONFIG.LITE_LIMITS.LARGE_UNIT;
     if (totalTopics < ACCESS_CONFIG.SMALL_UNIT_THRESHOLD) return ACCESS_CONFIG.LITE_LIMITS.SMALL_UNIT;
+    
+    // Covers 5, 6, 7, 8, 9
     return ACCESS_CONFIG.LITE_LIMITS.MEDIUM_UNIT; 
 }
 

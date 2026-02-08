@@ -112,14 +112,14 @@ export default async function UnitPage({ params }: Props) {
       finalTopics = (unit.topics || []).map((t, idx) => ({
           ...t,
           unitId,
-          // Sirf pehle 5 topics free - baaki lock
-          isFree: isUnit1 ? idx < 5 : false 
+          // Use centralized config for free topic limit — avoid hardcoded drift
+          isFree: isUnit1 ? idx < ACCESS_CONFIG.FREE_TOPICS_UNIT1 : false 
       }));
 
       finalTopicsEn = (unit.topics_en || unit.topics || []).map((t, idx) => ({
           ...t,
           unitId,
-          isFree: isUnit1 ? idx < 5 : false
+          isFree: isUnit1 ? idx < ACCESS_CONFIG.FREE_TOPICS_UNIT1 : false
       }));
   }
 

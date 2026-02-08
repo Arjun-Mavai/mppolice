@@ -17,7 +17,7 @@ export function SyllabusLockModal({ open, onOpenChange }: SyllabusLockModalProps
       <DialogContent className="sm:max-w-4xl p-0 overflow-hidden border-0 shadow-2xl bg-white max-h-[90vh] overflow-y-auto">
          <DialogTitle className="sr-only">Unlock Content</DialogTitle>
          {/* We should ideally pass the current plan here to show relevant options */}
-         <PremiumMarketing onUnlock={() => router.push('/')} />
+         <PremiumMarketing onUnlock={(amount) => router.push(`/payment?amount=${amount}`)} />
       </DialogContent>
     </Dialog>
   );

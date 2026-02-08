@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Loader2, Star, Send, ThumbsUp, ChevronLeft, MapPin, Briefcase } from "lucide-react";
+import { Loader2, Star, Send, ThumbsUp, ChevronLeft, MapPin } from "lucide-react";
 import { 
     Select, 
     SelectContent, 

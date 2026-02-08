@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import BlogContentRenderer from "./BlogContentRenderer";
 
-// ISR: Revalidate every hour
+// ISR: Revalidate every 7 days
 export const revalidate = 604800;
 export const dynamicParams = true; // Allow on-demand ISR for new blogs
 

@@ -7,7 +7,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Brain, FileText, CheckCircle2, Copy, Sparkles, Lightbulb, X, RefreshCw, Lock } from "lucide-react";
+import { Brain, FileText, CheckCircle2, Sparkles, Lightbulb, X, RefreshCw, Lock } from "lucide-react";
 import { TopicData } from "@/app/syllabus/[unitId]/UnitContent";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";

@@ -61,7 +61,24 @@ const nextConfig: NextConfig = {
             value: 'origin-when-cross-origin'
           }
         ]
-      }
+      },
+      // Auth-related pages must never be browser-cached
+      {
+        source: '/login',
+        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }]
+      },
+      {
+        source: '/signup',
+        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }]
+      },
+      {
+        source: '/dashboard',
+        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }]
+      },
+      {
+        source: '/api/auth/:path*',
+        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }]
+      },
     ];
   },
 };

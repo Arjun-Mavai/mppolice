@@ -16,7 +16,6 @@ export function FlashCardsSection() {
     const { language } = useSettingsStore();
 
     const [isFlipped, setIsFlipped] = React.useState(false);
-    const [hasInteracted, setHasInteracted] = React.useState(false);
 
     React.useEffect(() => {
         // Auto-flip demo sequence
@@ -29,7 +28,6 @@ export function FlashCardsSection() {
     }, []);
 
     const handleCardClick = () => {
-        setHasInteracted(true);
         setIsFlipped(!isFlipped);
     };
 
