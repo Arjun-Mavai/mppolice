@@ -20,7 +20,7 @@ export async function POST(request: Request) {
 
     // 2. Parse & Validate Body
     const body = await request.json();
-    const { name, email, phone, message, rating, category, userId } = body;
+    const { name, email, phone, message, rating, category, userId, role, location } = body;
 
     // Strict Validation
     if (!name || name.length < 2) {
@@ -47,6 +47,8 @@ export async function POST(request: Request) {
       message: message.trim(),
       rating: numRating,
       category: safeCategory,
+      role: role || null,
+      location: location || null,
     });
 
     logger.info("Feedback received from:", name);

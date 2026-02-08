@@ -14,16 +14,16 @@ export function FeatureShowcase() {
     <section className="py-32 bg-slate-900 text-white relative overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-[100px] pointer-events-none animate-pulse-slow"></div>
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-slate-500/20 rounded-full blur-[100px] pointer-events-none animate-pulse-slow"></div>
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[100px] pointer-events-none animate-pulse-slow delay-700"></div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="text-center max-w-3xl mx-auto mb-20">
-                <Badge className="bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 mb-6 px-4 py-1.5 rounded-full backdrop-blur-md">
+                <Badge className="bg-slate-500/10 text-slate-300 border border-slate-500/20 mb-6 px-4 py-1.5 rounded-full backdrop-blur-md">
                     <Crown size={14} className="mr-1.5" /> 
                     {language === 'hi' ? 'प्रीमियम अनुभव' : 'Premium Experience'}
                 </Badge>
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-br from-white via-indigo-100 to-indigo-300">
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-br from-white via-slate-100 to-slate-300">
                     {language === 'hi' ? 'टॉपर्स के लिए डिज़ाइन किया गया।' : 'Designed for Toppers.'}
                 </h2>
                 <p className="text-lg text-slate-400 leading-relaxed">
@@ -60,7 +60,7 @@ export function FeatureShowcase() {
                     transition={{ type: "spring", stiffness: 300, delay: 0.1 }}
                  >
                     <Card className="bg-white/5 border-white/10 p-8 h-full backdrop-blur-sm hover:bg-white/10 transition-colors group">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center mb-6 shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-400 to-purple-500 flex items-center justify-center mb-6 shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform">
                             <Smartphone className="w-7 h-7 text-white" />
                         </div>
                         <h3 className="text-xl font-bold text-white mb-3">

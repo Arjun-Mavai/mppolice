@@ -2,7 +2,7 @@ import { unstable_cache } from 'next/cache';
 import { revalidateTag } from 'next/cache';
 
 export const REVALIDATE_TIME = 60 * 60 * 24 * 7; // 7 Days (Default Long Cache)
-export const SHORT_CACHE = 60 * 60; // 1 Hour
+export const SHORT_CACHE = 60 * 60; // 1 Hour (for frequently updated content)
 
 // Centralized Cache System
 // Usage:
@@ -17,11 +17,11 @@ export const CACHE = {
         },
         GET_ALL: {
             tags: ['blogs-list'],
-            revalidate: REVALIDATE_TIME
+            revalidate: SHORT_CACHE // 1 hour for blogs
         },
         GET_BY_SLUG: (slug: string) => ({
             tags: [`blog-${slug}`],
-            revalidate: REVALIDATE_TIME
+            revalidate: SHORT_CACHE // 1 hour for blog details
         })
     },
     SYLLABUS: {
@@ -42,7 +42,7 @@ export const CACHE = {
         },
         GET_ALL: {
             tags: ['tests-list'],
-            revalidate: REVALIDATE_TIME
+            revalidate: SHORT_CACHE // 1 hour for tests
         }
     }
 };

@@ -60,7 +60,7 @@ export function HistoryLeaderboard({ leaderboard, currentUserId }: HistoryLeader
                                 key={entry.id} 
                                 className={cn(
                                     "flex items-center justify-between p-3.5 transition-colors",
-                                    isCurrentUser ? "bg-indigo-50/60" : "hover:bg-slate-50"
+                                    isCurrentUser ? "bg-slate-50/60" : "hover:bg-slate-50"
                                 )}
                             >
                                 <div className="flex items-center gap-4">
@@ -76,7 +76,7 @@ export function HistoryLeaderboard({ leaderboard, currentUserId }: HistoryLeader
                                     <div>
                                         <div className="font-bold text-slate-800 text-sm flex items-center gap-2">
                                             {isCurrentUser ? "YOU" : entry.displayName}
-                                            {isCurrentUser && <Badge className="h-5 px-1.5 bg-indigo-600 text-[10px]">ME</Badge>}
+                                            {isCurrentUser && <Badge className="h-5 px-1.5 bg-slate-800 text-[10px]">ME</Badge>}
                                         </div>
                                         <div className="text-[10px] text-slate-400 font-medium">
                                             ⏱️ {Math.floor(entry.timeTakenSeconds / 60)}m {entry.timeTakenSeconds % 60}s
@@ -84,7 +84,7 @@ export function HistoryLeaderboard({ leaderboard, currentUserId }: HistoryLeader
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="font-bold text-indigo-600 tabular-nums">{entry.score}</div>
+                                    <div className="font-bold text-slate-700 tabular-nums">{entry.score}</div>
                                     <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Score</div>
                                 </div>
                             </div>
@@ -98,9 +98,9 @@ export function HistoryLeaderboard({ leaderboard, currentUserId }: HistoryLeader
                             <div className="p-2 text-center text-xs text-slate-400 bg-slate-50/50 border-y border-slate-100 italic">
                                 ... skipping to your rank ...
                             </div>
-                            <div className="flex items-center justify-between p-3.5 bg-indigo-50 border-l-4 border-indigo-500">
+                            <div className="flex items-center justify-between p-3.5 bg-slate-50 border-l-4 border-slate-500">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm text-white bg-indigo-500 shadow-md">
+                                    <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm text-white bg-slate-500 shadow-md">
                                         {leaderboard.userRank}
                                     </div>
                                     <div>
@@ -114,7 +114,7 @@ export function HistoryLeaderboard({ leaderboard, currentUserId }: HistoryLeader
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="font-bold text-indigo-600 tabular-nums">{leaderboard.userEntry.score}</div>
+                                    <div className="font-bold text-slate-700 tabular-nums">{leaderboard.userEntry.score}</div>
                                     <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Score</div>
                                 </div>
                             </div>

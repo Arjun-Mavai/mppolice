@@ -1,7 +1,21 @@
 
-import { getTestBySlug, getTestQuestions } from '@/data/tests';
+import { getTestBySlug, getTestQuestions, getTests } from '@/data/tests';
 import { notFound } from 'next/navigation';
 import TestInterface from '@/components/test-interface';
+
+// ISR: Revalidate every week
+export const revalidate = 604800;
+
+// Enable on-demand ISR for new tests
+export const dynamicParams = true;
+
+// Pre-generate static pages for all tests
+export async function generateStaticParams() {
+  const allTests = await getTests();
+  return allTests.map((test) => ({
+    slug: test.slug,
+  }));
+}
 
 type Props = {
   params: Promise<{ slug: string }>;

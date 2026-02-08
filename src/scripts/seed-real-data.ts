@@ -26,7 +26,7 @@ async function seedSyllabus() {
                 title: topic.front,
                 titleEn: enTopic.front || topic.front,
                 order: index + 1,
-                isFree: unitId === 'unit_1' && index < 10, // First 10 of Unit 1 are Free
+                isFree: unitId === 'unit_1' && index < 5, // First 5 of Unit 1 are Free
                 imgUrl: null,
                 content: {
                     front: topic.front,

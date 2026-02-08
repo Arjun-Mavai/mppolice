@@ -1,46 +1,29 @@
 "use client"
 import { motion } from 'framer-motion';
-import { Lock, Crown, ChevronRight, BarChart3, Clock, Zap } from 'lucide-react';
+import { Crown, BarChart3, Clock, Zap, ChevronRight, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { calculateGuestRanking } from '@/lib/utils/quiz-ranking';
 
 interface GuestResultTeaserProps {
     score: number;
     totalQuestions: number;
     timeTaken: number;
     guestName?: string;
-    onLogin: () => void;
     onHome: () => void;
 }
 
-export function GuestResultTeaser({ score, totalQuestions, timeTaken, guestName, onLogin, onHome }: GuestResultTeaserProps) {
+export function GuestResultTeaser({ score, totalQuestions, timeTaken, guestName, onHome }: GuestResultTeaserProps) {
     const router = useRouter();
-    const percentage = Math.round((score / (totalQuestions * 3)) * 100) || 0; // Assuming 3 marks per question roughly for %
     
-    // Fake Rank Logic: Base 512.
-    // Top 10% score -> Rank 1-50
-    // Top 50% score -> Rank 51-250
-    // Else -> Rank 251-512
-    const totalParticipants = 512;
-    let rank = 0;
-    let beaten = 0;
-
-    if (percentage >= 80) {
-        rank = Math.floor(Math.random() * 40) + 1; // 1-40
-        beaten = Math.floor(totalParticipants * 0.95);
-    } else if (percentage >= 50) {
-        rank = Math.floor(Math.random() * 200) + 50; // 50-250
-        beaten = Math.floor(totalParticipants * 0.7);
-    } else {
-        rank = Math.floor(Math.random() * 200) + 250; // 250-450
-        beaten = Math.floor(totalParticipants * 0.3);
-    }
+    // Use centralized ranking utility (deterministic - same score = same rank)
+    const { beaten, percentage, rank } = calculateGuestRanking(score, totalQuestions);
 
     return (
         <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 font-sans relative overflow-hidden">
             
             {/* Background Ambience */}
-            <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-indigo-900/20 to-transparent pointer-events-none" />
+            <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-slate-900/20 to-transparent pointer-events-none" />
             <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute top-60 -left-20 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -90,8 +73,8 @@ export function GuestResultTeaser({ score, totalQuestions, timeTaken, guestName,
                             <div className="bg-slate-800/50 rounded-2xl p-4 flex flex-col items-center justify-center border border-slate-700/50 relative overflow-hidden group">
                                 {/* Blurred Effect */}
                                 <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-[2px] z-10 flex items-center justify-center flex-col gap-1">
-                                    <Lock className="w-6 h-6 text-indigo-400" />
-                                    <span className="text-[10px] text-indigo-300 font-bold uppercase tracking-wider">Unlock</span>
+                                    <Lock className="w-6 h-6 text-slate-400" />
+                                    <span className="text-[10px] text-slate-300 font-bold uppercase tracking-wider">Unlock</span>
                                 </div>
                                 
                                 <span className="text-3xl font-bold text-white blur-sm">#{rank}</span>
@@ -106,7 +89,7 @@ export function GuestResultTeaser({ score, totalQuestions, timeTaken, guestName,
                             </h3>
                             
                             {[
-                                { icon: BarChart3, label: "Subject-wise Weakness Analysis", color: "text-blue-400", bg: "bg-blue-500/10" },
+                                { icon: BarChart3, label: "Subject-wise Weakness Analysis", color: "text-slate-400", bg: "bg-slate-500/10" },
                                 { icon: Clock, label: "Time Management Report", color: "text-amber-400", bg: "bg-amber-500/10" },
                                 { icon: Zap, label: "Leaderboard & Percentile", color: "text-purple-400", bg: "bg-purple-500/10" }
                             ].map((item, i) => (
@@ -138,8 +121,8 @@ export function GuestResultTeaser({ score, totalQuestions, timeTaken, guestName,
                         {/* CTA Buttons */}
                         <div className="space-y-3 pt-2">
                              <Button 
-                                onClick={onLogin}
-                                className="w-full h-14 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-lg rounded-xl shadow-lg shadow-indigo-500/25 relative overflow-hidden group"
+                                onClick={() => router.push('/pricing')}
+                                className="w-full h-14 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-700 text-white font-bold text-lg rounded-xl shadow-lg shadow-slate-500/25 relative overflow-hidden group"
                             >
                                 <span className="relative z-10 flex items-center justify-center gap-2">
                                     Unlock Full Analysis <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

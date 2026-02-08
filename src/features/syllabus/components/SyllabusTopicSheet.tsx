@@ -7,12 +7,13 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Brain, FileText, CheckCircle2, Copy, Sparkles, Lightbulb, X, RefreshCw } from "lucide-react";
+import { Brain, FileText, CheckCircle2, Sparkles, Lightbulb, X, RefreshCw, Lock } from "lucide-react";
 import { TopicData } from "@/app/syllabus/[unitId]/UnitContent";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useEffect, useState, useTransition } from "react";
 import { getRevisionCount, markTopicRevised } from "@/features/syllabus/actions/revision";
+import { useSettingsStore } from "@/store/useSettingsStore";
 import { logger } from "@/lib/logger";
 
 interface SyllabusTopicSheetProps {
@@ -20,7 +21,7 @@ interface SyllabusTopicSheetProps {
   onOpenChange: (open: boolean) => void;
   topic: TopicData | null;
   unitTitle: string;
-  unitId: string; // Added explicit unitId
+  unitId: string;
   language?: 'hi' | 'en';
 }
 
@@ -33,57 +34,89 @@ export function SyllabusTopicSheet({
   language = 'hi'
 }: SyllabusTopicSheetProps) {
 
+  // Apun user ko store se utha raha — guest check ke liye
+  const { user } = useSettingsStore();
   const [revisionCount, setRevisionCount] = useState<number | undefined>(0);
   const [isPending, startTransition] = useTransition();
+  const [isRevising, setIsRevising] = useState(false);
 
+  // Jab sheet khule aur topic ho, tabhi revision count fetch kar — guest ke liye skip
   useEffect(() => {
-     if (open && topic) {
+     if (open && topic && user) {
          getRevisionCount(topic.id.toString()).then(count => {
              logger.debug("Fetched revision count:", count);
              setRevisionCount(count);
          });
+     } else {
+         setRevisionCount(0);
      }
-  }, [open, topic]);
+  }, [open, topic, user]);
 
   const handleMarkRevised = () => {
-      if (!topic) return;
-      // Use explicit unitId or fallback to topic.unitId
+      // Guest user? — premium feature batao, API call mat karo
+      if (!user) {
+          toast.info(
+              language === 'hi' 
+                  ? 'रिवीज़न ट्रैकिंग प्रीमियम फीचर है — लॉगिन करें!' 
+                  : 'Revision tracking is a premium feature — please login!',
+              { duration: 3000 }
+          );
+          return;
+      }
+      if (!topic || isRevising) return;
+      setIsRevising(true);
       const targetUnitId = unitId || topic.unitId;
       logger.debug("Marking revised:", topic.id, targetUnitId);
       
       startTransition(async () => {
-          const res = await markTopicRevised(topic.id.toString(), targetUnitId);
-          if (res.success && res.count) {
-              setRevisionCount(res.count);
-              toast.success(language === 'hi' ? 'पुनरीक्षण दर्ज किया गया!' : 'Revision recorded!');
-          } else {
+          try {
+              const res = await markTopicRevised(topic.id.toString(), targetUnitId);
+              if (res.success && res.count) {
+                  setRevisionCount(res.count);
+                  toast.success(language === 'hi' ? 'पुनरीक्षण दर्ज किया गया!' : 'Revision recorded!');
+              } else {
+                  toast.error(res.error || "Failed to save revision");
+              }
+          } catch {
               toast.error("Failed to save revision");
+          } finally {
+              setTimeout(() => setIsRevising(false), 1000);
           }
       });
   };
 
+  // Revision Button — guest ke liye lock icon, logged user ke liye proper count
   const RevisionButton = () => (
-    <Button 
-        size="sm"
-        onClick={handleMarkRevised}
-        disabled={isPending}
-        className={cn(
-            "rounded-full font-bold transition-all relative items-center gap-2 text-xs h-9 px-4 shadow-md hover:shadow-lg active:scale-95", // Increased height/padding
-            revisionCount && revisionCount > 0 
-                ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700 border-0" // Gradient for active
-                : "bg-slate-900 text-white hover:bg-slate-800"
+    <div className="flex items-center gap-3">
+        {/* Revision count — proper counter badge feel, sirf logged user ko dikhao */}
+        {user && revisionCount !== undefined && revisionCount > 0 && (
+            <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1.5">
+                <RefreshCw className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="text-sm font-black text-emerald-700 tabular-nums">{revisionCount}</span>
+                <span className="text-[10px] text-emerald-500 font-medium">
+                    {revisionCount === 1 
+                        ? (language === 'hi' ? 'बार' : 'time') 
+                        : (language === 'hi' ? 'बार' : 'times')}
+                </span>
+            </div>
         )}
+        <Button 
+            size="sm"
+            onClick={handleMarkRevised}
+            disabled={isPending || isRevising}
+            className={cn(
+                "rounded-full font-bold transition-all items-center gap-2 text-xs h-9 px-4 shadow-md hover:shadow-lg active:scale-95",
+                !user
+                    ? "bg-slate-200 text-slate-500 hover:bg-slate-300 border border-slate-300"
+                    : revisionCount && revisionCount > 0 
+                        ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700 border-0"
+                        : "bg-slate-900 text-white hover:bg-slate-800"
+            )}
         >
-        {isPending ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-        {language === 'hi' ? 'रिवाइज्ड' : 'Mark Revised'} 
-        
-        {/* Top Right Badge Count */}
-        {revisionCount && revisionCount > 0 && (
-            <span className="absolute -top-1.5 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white ring-2 ring-white animate-in zoom-in-50 duration-300">
-                {revisionCount}
-            </span>
-        )}
-    </Button>
+            {isPending ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : !user ? <Lock className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-4 h-4" />}
+            {language === 'hi' ? 'रिवाइज्ड' : 'Mark Revised'} 
+        </Button>
+    </div>
   );
 
   if (!topic) return null;
@@ -121,13 +154,13 @@ export function SyllabusTopicSheet({
                     </h2>
                      {topic.mnemonic && (
                         <div className="shrink-0">
-                             <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm border border-indigo-100" title="Mnemonic Available">
-                                <Lightbulb className="w-5 h-5 fill-indigo-600/20" />
+                             <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-sm border border-amber-100" title="Mnemonic Available">
+                                <Lightbulb className="w-5 h-5 fill-amber-600/20" />
                              </div>
                         </div>
                     )}
                 </div>
-                <p className="mt-2 text-slate-600 font-medium leading-relaxed border-l-4 border-indigo-500 pl-4 py-1 bg-indigo-50/50 rounded-r-lg text-sm sm:text-base">
+                <p className="mt-2 text-slate-600 font-medium leading-relaxed border-l-4 border-slate-400 pl-4 py-1 bg-slate-50/50 rounded-r-lg text-sm sm:text-base">
                     {topic.back}
                 </p>
              </div>
@@ -141,16 +174,16 @@ export function SyllabusTopicSheet({
                {topic.mnemonic ? (
                   <div className="space-y-3">
                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-indigo-700 font-bold text-sm uppercase tracking-wider">
+                        <div className="flex items-center gap-2 text-slate-700 font-bold text-sm uppercase tracking-wider">
                             <Brain className="w-4 h-4" /> {language === 'hi' ? 'याद रखने की ट्रिक' : 'Memory Trick'}
                         </div>
                         <RevisionButton />
                      </div>
-                     <div className="bg-gradient-to-br from-indigo-600 to-violet-600 p-6 rounded-2xl shadow-xl shadow-indigo-500/20 text-white relative overflow-hidden group">
+                     <div className="bg-gradient-to-br from-slate-700 to-slate-900 p-6 rounded-2xl shadow-xl shadow-slate-500/20 text-white relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                             <Brain className="w-24 h-24" />
                         </div>
-                        <h4 className="text-indigo-100 text-xs font-bold uppercase tracking-widest mb-1.5 opacity-80">MNEMONIC</h4>
+                        <h4 className="text-slate-300 text-xs font-bold uppercase tracking-widest mb-1.5 opacity-80">MNEMONIC</h4>
                         <div className="text-xl sm:text-2xl font-black tracking-wide font-mono leading-relaxed">
                            {topic.mnemonic}
                         </div>
@@ -219,7 +252,7 @@ export function SyllabusTopicSheet({
                        <div className="w-16 h-16 bg-slate-200 rounded-full mx-auto flex items-center justify-center">
                            <Sparkles className="w-8 h-8 text-slate-400" />
                        </div>
-                       <p className="text-slate-500 font-medium">Content is being curated by our AI Team.</p>
+                       <p className="text-slate-500 font-medium">Content is being curated by our Team.</p>
                        <p className="text-xs text-slate-400">Check back soon for deep notes on {topic.front}.</p>
                    </div>
                )}

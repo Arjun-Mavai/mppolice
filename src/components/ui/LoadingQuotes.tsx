@@ -3,16 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Bhai ye MPPSC related facts + motivation h - loading ke time user ko engage rakho
 const QUOTES = [
-   "MPPSC clear karna hai na? Sabr rakho...",
-  "Sabr ka phal rank hota hai...",
-  "Calculating your dominance...",
-  "Aapka result aa raha hai, wait kare...",
-  "Toppers are not born, they are calculated...",
-  "Checking if you beat the topper...",
-  "Thoda sa wait, result is loading...",
-  "Mehnat rang layegi, bas loading khatam hone do...",
- 
+  "🏛️ MP ka sabse bada jila: Chhindwara (area me)",
+  "📊 Tumhara rank calculate ho raha h...",
+  "📖 MPPSC Prelims me 2 papers hote h - GS + CSAT",
+  "🎯 MP me total 52 districts h (2024 tak)",
+  "⏳ Thoda sabr karo, result aa raha h...",
+  "🏆 Toppers bhi pehle fail hue the, consistency matters!",
+  "📝 MP ki rajdhani: Bhopal, judicial capital: Jabalpur",
+  "💡 Negative marking h 1/3 — guess mat karo!",
+  "🌊 Narmada MP ki sabse lambi nadi h",
+  "🔥 Mehnat rang layegi, bas loading khatam hone do...",
 ];
 
 export function LoadingQuotes() {
@@ -27,16 +29,16 @@ export function LoadingQuotes() {
 
   return (
     <div className="flex flex-col items-center justify-center p-8 text-center space-y-4 min-h-[200px]">
-      <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
+      <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-700 rounded-full animate-spin mx-auto mb-4"></div>
       <AnimatePresence mode="wait">
         <motion.p
           key={index}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="text-lg font-medium text-slate-600 italic"
+          className="text-base sm:text-lg font-medium text-slate-500 max-w-sm"
         >
-          &quot;{QUOTES[index]}&quot;
+          {QUOTES[index]}
         </motion.p>
       </AnimatePresence>
     </div>

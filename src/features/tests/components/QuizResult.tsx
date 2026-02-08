@@ -101,7 +101,7 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
             {/* Score Header */}
             <div className="bg-slate-900 text-white p-6 pb-24 relative overflow-hidden">
                 {/* Background effects */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-slate-700/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl -ml-20 -mb-20"></div>
 
                 <div className="relative z-10 max-w-3xl mx-auto text-center space-y-6">
@@ -171,7 +171,7 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                         transition={{ delay: 0.2 }}
                         className="max-w-xl mx-auto mt-8 relative group"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-2xl blur-xl opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-slate-700/20 to-slate-700/20 rounded-2xl blur-xl opacity-50 group-hover:opacity-100 transition-opacity"></div>
                         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 text-left border border-white/20 relative z-10 shadow-2xl">
                              <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-white font-bold uppercase text-xs tracking-widest flex items-center gap-2">
@@ -210,8 +210,8 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                                 </div>
                                 
                                 <div className="p-4 bg-slate-900/40 rounded-xl border border-white/5 shadow-inner">
-                                    <p className="text-indigo-100 text-sm leading-relaxed font-medium">
-                                        <Quote className="w-4 h-4 text-indigo-400 inline mr-2 -mt-1 transform rotate-180" />
+                                    <p className="text-slate-200 text-sm leading-relaxed font-medium">
+                                        <Quote className="w-4 h-4 text-slate-400 inline mr-2 -mt-1 transform rotate-180" />
                                         {scorePercentage >= 80 ? "Outstanding command! You have mastered the core concepts. Challenge yourself with a Full Length Mock Test to test endurance." :
                                          scorePercentage >= 60 ? "Solid effort. You have a good grasp, but missed some nuances. Review the explanations below, especially for dates and specific provisions." :
                                          "Don't be discouraged. Focus on the core definitions and timelines. Read the detailed explanations for each question below and retake this quiz."}
@@ -271,7 +271,7 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="font-bold text-indigo-600">{entry.score}</div>
+                                            <div className="font-bold text-slate-700">{entry.score}</div>
                                             <div className="text-[10px] text-slate-400">Score</div>
                                         </div>
                                     </div>
@@ -300,7 +300,7 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="font-bold text-indigo-600">{leaderboard.userEntry.score}</div>
+                                            <div className="font-bold text-slate-700">{leaderboard.userEntry.score}</div>
                                             <div className="text-[10px] text-slate-400">Score</div>
                                         </div>
                                     </div>
@@ -385,8 +385,8 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                                     </div>
 
                                     {/* Explanation */}
-                                    <div className="bg-white border border-indigo-100 p-4 rounded-xl text-sm shadow-sm">
-                                        <div className="font-bold text-indigo-700 mb-2 flex items-center gap-1.5 uppercase tracking-wide text-xs">
+                                    <div className="bg-white border border-slate-100 p-4 rounded-xl text-sm shadow-sm">
+                                        <div className="font-bold text-slate-800 mb-2 flex items-center gap-1.5 uppercase tracking-wide text-xs">
                                             <AlertCircle className="w-4 h-4" /> Explanation
                                         </div>
                                         

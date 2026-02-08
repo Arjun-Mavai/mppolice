@@ -132,7 +132,7 @@ export default function TopicSelectionPage() {
 
     if (loading) {
         return <div className="min-h-screen bg-slate-50 flex items-center justify-center pt-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
         </div>;
     }
 
@@ -174,7 +174,7 @@ export default function TopicSelectionPage() {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <Input 
                                 placeholder={language === 'hi' ? 'टॉपिक खोजें...' : 'Search topics...'}
-                                className="pl-9 bg-white shadow-sm border-slate-200 focus:border-indigo-500 rounded-xl"
+                                className="pl-9 bg-white shadow-sm border-slate-200 focus:border-slate-500 rounded-xl"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -258,7 +258,7 @@ export default function TopicSelectionPage() {
                                                         flex items-center justify-between p-4 rounded-xl border transition-all group
                                                         ${isLocked 
                                                             ? 'border-slate-200 bg-slate-50/50 opacity-70 cursor-not-allowed' 
-                                                            : 'border-slate-100 bg-slate-50/50 hover:bg-indigo-50 hover:border-indigo-100 cursor-pointer'
+                                                            : 'border-slate-100 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-100 cursor-pointer'
                                                         }
                                                     `}
                                                 >
@@ -266,7 +266,7 @@ export default function TopicSelectionPage() {
                                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center border font-bold text-sm shadow-sm transition-transform ${
                                                             isLocked 
                                                                 ? 'bg-slate-100 text-slate-400 border-slate-200' 
-                                                                : 'bg-white text-indigo-600 border-indigo-50 group-hover:scale-110'
+                                                                : 'bg-white text-slate-700 border-slate-50 group-hover:scale-110'
                                                         }`}>
                                                             {topic.order}
                                                         </div>
@@ -275,7 +275,7 @@ export default function TopicSelectionPage() {
                                                                 <span className={`font-semibold transition-colors line-clamp-2 leading-tight ${
                                                                     isLocked 
                                                                         ? 'text-slate-500' 
-                                                                        : 'text-slate-700 group-hover:text-indigo-900'
+                                                                        : 'text-slate-700 group-hover:text-slate-900'
                                                                 }`}>
                                                                     {topic.title}
                                                                 </span>
@@ -290,7 +290,7 @@ export default function TopicSelectionPage() {
                                                                 <p className={`text-xs line-clamp-1 ${
                                                                     isLocked 
                                                                         ? 'text-slate-400' 
-                                                                        : 'text-slate-400 group-hover:text-indigo-400'
+                                                                        : 'text-slate-400 group-hover:text-slate-400'
                                                                 }`}>
                                                                     {topic.description}
                                                                 </p>
@@ -300,7 +300,7 @@ export default function TopicSelectionPage() {
                                                     <ChevronRight className={`w-5 h-5 transition-transform ${
                                                         isLocked 
                                                             ? 'text-slate-300' 
-                                                            : 'text-slate-300 group-hover:text-indigo-400 group-hover:translate-x-1'
+                                                            : 'text-slate-300 group-hover:text-slate-400 group-hover:translate-x-1'
                                                     }`} />
                                                 </motion.div>
                                             )})

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect, Suspense, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import Link from "next/link"
@@ -35,6 +35,7 @@ function PaymentContent() {
   // Back Navigation Interception
   const [showExitModal, setShowExitModal] = useState(false)
   const isSurveyCompleted = typeof window !== 'undefined' ? localStorage.getItem('payment_exit_survey_completed') : null;
+  const handlePopStateRef = useRef<((event: PopStateEvent) => void) | null>(null);
 
   useEffect(() => {
     // If already surveyed, no need to intercept
@@ -52,23 +53,27 @@ function PaymentContent() {
           window.history.pushState(null, '', window.location.href);
           setShowExitModal(true);
        } 
-       // If it IS surveyed, we don't do anything, letting the browser's back action proceed?
-       // Actually, popstate happens AFTER the URL changes (but before page reload if SPA).
-       // If we don't pushState again, the URL has already changed to the previous one (e.g. /syllabus).
-       // So if surveyed, we just let it be.
     };
 
+    handlePopStateRef.current = handlePopState;
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+
+    return () => {
+        window.removeEventListener('popstate', handlePopState);
+    };
   }, [isSurveyCompleted]);
 
   const handleConfirmExit = () => {
       setShowExitModal(false);
       localStorage.setItem('payment_exit_survey_completed', 'true'); 
+      
+      // Remove listener immediately to prevent interception
+      if (handlePopStateRef.current) {
+          window.removeEventListener('popstate', handlePopStateRef.current);
+      }
+      
       // Force navigation back
       router.back(); 
-      // Fallback
-      setTimeout(() => router.push('/syllabus'), 100);
   };
 
   const paymentEmail = "mppscsyllabus@gmail.com"

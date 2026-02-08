@@ -1,41 +1,74 @@
 "use client"
 
-import React, { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Sparkles, ArrowLeft, BookOpen, Layers, Lock, Play, BrainCircuit } from 'lucide-react';
+import { Sparkles, ArrowLeft, BookOpen, Layers, Play, BrainCircuit, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { useRouter } from 'next/navigation';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function QuizSelectionPage() {
   const router = useRouter();
   const { language, isSubscribed, user } = useSettingsStore();
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
 
-  // Greeting State (SSR Safe)
-  const [welcomeMsg, setWelcomeMsg] = useState({
-      title: language === 'hi' ? 'नमस्ते 🙏' : 'Welcome 👋',
-      subtitle: isSubscribed 
-          ? (language === 'hi' ? 'आपकी प्रीमियम मेंबरशिप सक्रिय है।' : 'Your Premium Membership is Active.')
-          : (language === 'hi' ? 'अपनी तैयारी को एक नई दिशा दें।' : 'Kickstart your preparation today!')
-  });
+  const popStateRef = useRef<(() => void) | null>(null);
 
-  React.useEffect(() => {
+  // Bhai browser ka back button dabaye to modal dikhao - user galti se bahar na chala jaaye
+  useEffect(() => {
+    window.history.pushState({ quizSection: true }, '');
+    
+    const handlePopState = () => {
+      window.history.pushState({ quizSection: true }, '');
+      setShowExitModal(true);
+    };
+
+    popStateRef.current = handlePopState;
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Confirm exit → remove the exact listener ref, then navigate back once
+  const handleConfirmExit = useCallback(() => {
+    setShowExitModal(false);
+    if (popStateRef.current) {
+      window.removeEventListener('popstate', popStateRef.current);
+      popStateRef.current = null;
+    }
+    router.back();
+  }, [router]);
+
+  // Bhai greeting SSR-safe rakhna h - server par kuch mat render karo
+  // Client mount hone ke baad hi time-based greeting dikhao
+  // Warna React hydration error deta h (server ne kuch aur bheja, client ne kuch aur)
+  const [isMounted, setIsMounted] = useState(false);
+  const [welcomeMsg, setWelcomeMsg] = useState({ title: '', subtitle: '' });
+
+  useEffect(() => {
+    setIsMounted(true);
     const hour = new Date().getHours();
     const isHindi = language === 'hi';
     const name = user?.name ? user.name.split(' ')[0] : (isHindi ? 'विद्यार्थी' : 'Aspirant');
 
+    // Time ke hisab se greeting - subah/dopahar/shaam/raat
     let greeting = '';
-    
-    // Time based greeting
     if (hour >= 4 && hour < 12) greeting = isHindi ? 'सुप्रभात' : 'Good Morning';
-    else if (hour >= 12 && hour < 17) greeting = isHindi ? 'शाम की नमस्ते' : 'Good Afternoon';
-    else if (hour >= 17 && hour < 22) greeting = isHindi ? 'नमस्ते' : 'Good Evening';
-    else greeting = isHindi ? 'शुभ रात्रि' : 'Good Night'; // Late night (10 PM - 4 AM)
+    else if (hour >= 12 && hour < 17) greeting = isHindi ? 'दोपहर की नमस्ते' : 'Good Afternoon';
+    else if (hour >= 17 && hour < 22) greeting = isHindi ? 'शुभ संध्या' : 'Good Evening';
+    else greeting = isHindi ? 'शुभ रात्रि' : 'Good Night';
 
     setWelcomeMsg({
         title: `${greeting}, ${name}! ${isHindi ? '🙏' : '👋'}`,
@@ -56,30 +89,30 @@ export default function QuizSelectionPage() {
                         <ArrowLeft className="w-6 h-6 text-slate-600" />
                     </Button>
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 font-display pt-40 mb-2">
-                            {welcomeMsg.title}
+                        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 font-display pt-40 mb-2" suppressHydrationWarning>
+                            {isMounted ? welcomeMsg.title : '\u00A0'}
                         </h1>
-                        <p className={`text-sm sm:text-base font-medium ${isSubscribed ? 'text-indigo-600' : 'text-slate-500'}`}>
-                            {welcomeMsg.subtitle}
+                        <p className={`text-sm sm:text-base font-medium ${isSubscribed ? 'text-slate-700' : 'text-slate-500'}`} suppressHydrationWarning>
+                            {isMounted ? welcomeMsg.subtitle : '\u00A0'}
                         </p>
                     </div>
                </div>
                
                {/* Marketing Nudge for Non-Subscribed */}
                {!isSubscribed && (
-                   <div className="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-6 text-white relative overflow-hidden shadow-xl shadow-indigo-200 ">
+                   <div className="bg-gradient-to-r from-slate-700 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden shadow-xl shadow-slate-200 ">
                        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                            <div>
                                <h3 className="font-bold text-lg mb-1">
                                    {language === 'hi' ? 'फुल एक्सेस अनलॉक करें' : 'Unlock Full Access'}
                                </h3>
-                               <p className="text-indigo-100 text-sm max-w-md">
+                               <p className="text-slate-200 text-sm max-w-md">
                                    {language === 'hi' 
                                      ? 'सभी टेस्ट सीरीज़, विस्तृत विश्लेषण और अधिक के लिए प्रो बनें।' 
                                      : 'Get unlimited access to all Test Series, Detailed Analysis and more.'}
                                </p>
                            </div>
-                           <Button asChild className="bg-white text-indigo-600 hover:bg-indigo-50 font-bold border-0 shadow-lg">
+                           <Button asChild className="bg-white text-slate-700 hover:bg-slate-50 font-bold border-0 shadow-lg">
                                <Link href="/upgrade">
                                    {language === 'hi' ? 'अभी अपग्रेड करें' : 'Upgrade Now'}
                                </Link>
@@ -88,7 +121,7 @@ export default function QuizSelectionPage() {
                        
                        {/* Abstract Shapes */}
                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-32" />
-                       <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/30 rounded-full blur-xl -ml-10 -mb-10" />
+                       <div className="absolute bottom-0 left-0 w-32 h-32 bg-slate-500/30 rounded-full blur-xl -ml-10 -mb-10" />
                    </div>
                )}
            </div>
@@ -262,6 +295,31 @@ export default function QuizSelectionPage() {
        </div>
 
        <SyllabusLockModal open={unlockModalOpen} onOpenChange={setUnlockModalOpen} />
+
+       {/* Back button exit confirmation modal */}
+       <Dialog open={showExitModal} onOpenChange={setShowExitModal}>
+         <DialogContent className="sm:max-w-md">
+           <DialogHeader>
+             <DialogTitle className="flex items-center gap-2 text-amber-600">
+               <AlertCircle className="w-5 h-5" />
+               {language === 'hi' ? 'क्विज़ सेक्शन छोड़ें?' : 'Leave Quiz Section?'}
+             </DialogTitle>
+             <DialogDescription className="text-slate-600 pt-2">
+               {language === 'hi'
+                 ? 'क्या आप वाकई क्विज़ सेक्शन से बाहर जाना चाहते हैं?'
+                 : 'Are you sure you want to leave the quiz section?'}
+             </DialogDescription>
+           </DialogHeader>
+           <DialogFooter className="flex gap-2 sm:justify-end mt-4">
+             <Button variant="outline" onClick={() => setShowExitModal(false)} className="flex-1 sm:flex-none">
+               {language === 'hi' ? 'रहने दो' : 'Stay Here'}
+             </Button>
+             <Button variant="destructive" onClick={handleConfirmExit} className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700">
+               {language === 'hi' ? 'हाँ, बाहर जाओ' : 'Yes, Leave'}
+             </Button>
+           </DialogFooter>
+         </DialogContent>
+       </Dialog>
     </div>
   );
 }

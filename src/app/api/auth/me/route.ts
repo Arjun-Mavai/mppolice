@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 
-// export const dynamic = 'force-dynamic';
+// Auth endpoint must NEVER be cached — stale auth = broken app
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {

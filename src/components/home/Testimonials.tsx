@@ -4,15 +4,32 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { Star, Quote, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 // Real Aspirant Data (Hinglish + MP Locations)
 const TESTIMONIALS = [
+  {
+    name: "Arjun Gurjar",
+    role: "Aspirant",
+    location: "Gwalior",
+    comment: "Blogs ki quality next level h mindful prep par.",
+    image: "/testimonials/arjun.png",
+    stars: 5,
+  },
+  {
+    name: "Shivam Gurjar",
+    role: "Aspirant",
+    location: "Ujjain",
+    comment: "Recent history and explanation of answers is next level h.",
+    image: "/testimonials/shivam.png",
+    stars: 5,
+  },
   {
     name: "Rahul Tiwari",
     role: "Aspirant",
     location: "Satna",
     comment: "Bhai app ka analysis part bahut sahi hai. Har question ka timing dikhta hai, jo help karta hai speed badhane me.",
-    image: "https://i.pravatar.cc/150?img=11",
+    image: "/testimonials/rahul.png",
     stars: 5,
   },
   {
@@ -20,7 +37,7 @@ const TESTIMONIALS = [
     role: "Aspirant",
     location: "Rewa",
     comment: "बस एक ही शब्द में - बेहतरीन!",
-    image: "https://i.pravatar.cc/150?img=5",
+    image: "/testimonials/priya.png",
     stars: 5,
   },
   {
@@ -28,7 +45,7 @@ const TESTIMONIALS = [
     role: "Aspirant",
     location: "Bhopal",
     comment: "Syllabus ke har topic ka analysis acha laga. Pata chalta hai ki kaunsa topic strong hai aur kisme mehnat karni hai.",
-    image: "https://i.pravatar.cc/150?img=13",
+    image: "/testimonials/amit.png",
     stars: 5,
   },
   {
@@ -36,7 +53,7 @@ const TESTIMONIALS = [
     role: "Aspirant",
     location: "Gwalior",
     comment: "English medium walo ke liye hindi terms samajhna mushkil hota tha, par is app ne wo problem solve kar di.",
-    image: "https://i.pravatar.cc/150?img=9",
+    image: "/testimonials/sneha.png",
     stars: 5,
   },
   {
@@ -44,7 +61,7 @@ const TESTIMONIALS = [
     role: "Aspirant",
     location: "Shivpuri",
     comment: "Test series ka level actual exam jaisa hai. Analysis dekh kar weak areas clearly pata chal jate hain.",
-    image: "https://i.pravatar.cc/150?img=60",
+    image: "/testimonials/vikram.png",
     stars: 5,
   },
   {
@@ -52,7 +69,7 @@ const TESTIMONIALS = [
     role: "Aspirant",
     location: "Ashoknagar",
     comment: "Mnemonics wale flashcards bahut creative hain.",
-    image: "https://i.pravatar.cc/150?img=24",
+    image: "/testimonials/anjali.png",
     stars: 5,
   },
   {
@@ -60,7 +77,7 @@ const TESTIMONIALS = [
     role: "Aspirant",
     location: "Morena",
     comment: "Daily quizzes se continuity bani rahti hai. Question timings feature ne meri speed improve kar di.",
-    image: "https://i.pravatar.cc/150?img=69",
+    image: "/testimonials/sandeep.png",
     stars: 5,
   },
   {
@@ -68,7 +85,7 @@ const TESTIMONIALS = [
     role: "Aspirant",
     location: "Bhind",
     comment: "Syllabus ko cards ke form me and flashcards me convert karna bahut creative hai.",
-    image: "https://i.pravatar.cc/150?img=42",
+    image: "/testimonials/divya.png",
     stars: 5,
   },
 ];
@@ -122,7 +139,10 @@ export function Testimonials() {
                 
                 <div className="flex items-center gap-4 pt-6 border-t border-slate-50">
                     <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-slate-100 bg-slate-50 shrink-0">
-                        <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
+                        <Image
+                        height={48}
+                        width={48}
+                         src={user?.image || "/assets/images/user.png"} alt={user.name} className="w-full h-full object-cover" />
                     </div>
                     <div className="min-w-0">
                         <h4 className="font-bold text-slate-900 leading-tight truncate">{user.name}</h4>

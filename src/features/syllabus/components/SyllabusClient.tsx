@@ -38,7 +38,7 @@ function UnitCard({ unit, unitKey, index, language, onClick, themeClass, iconCol
             transition={{ type: "spring", stiffness: 300 }}
         >
             <div className={cn(
-                "absolute inset-0 h-full w-full bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden transition-all duration-300 group-hover:shadow-xl group-hover:border-indigo-200/50",
+                "absolute inset-0 h-full w-full bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden transition-all duration-300 group-hover:shadow-xl group-hover:border-slate-300",
                 isLocked && "grayscale-[0.8] opacity-90"
             )}>
                  {/* Decorative background gradients */}
@@ -46,7 +46,7 @@ function UnitCard({ unit, unitKey, index, language, onClick, themeClass, iconCol
                 
                 {isLocked && (
                     <div className="absolute top-4 right-4 z-20">
-                         <div className="bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                         <div className="bg-gradient-to-r from-red-500 via-pink-500 to-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
                              <Lock className="w-3 h-3" />
                              PREMIUM
                          </div>
@@ -67,14 +67,14 @@ function UnitCard({ unit, unitKey, index, language, onClick, themeClass, iconCol
                     <div className="flex justify-between items-start mb-6">
                         <div className={cn(
                             "w-12 h-12 rounded-2xl flex items-center justify-center font-display font-bold text-2xl shadow-sm border border-slate-100 transition-colors",
-                            isLocked ? "bg-slate-100 text-slate-400" : "bg-white text-slate-900 group-hover:bg-indigo-600 group-hover:text-white"
+                            isLocked ? "bg-slate-100 text-slate-400" : "bg-white text-slate-900 group-hover:bg-slate-900 group-hover:text-white"
                         )}>
                             {index + 1}
                         </div>
                         
                         <div className={cn(
                             "w-10 h-10 rounded-full flex items-center justify-center transition-all",
-                             isLocked ? "bg-slate-50 text-slate-300" : "bg-indigo-50 text-indigo-600 group-hover:bg-white group-hover:text-indigo-600"
+                             isLocked ? "bg-slate-50 text-slate-300" : "bg-slate-100 text-slate-600 group-hover:bg-white group-hover:text-slate-900"
                         )}>
                             {isLocked ? <Lock size={16} /> : <ArrowRight size={18} className="-rotate-45 group-hover:rotate-0 transition-transform duration-300" />}
                         </div>
@@ -97,7 +97,7 @@ function UnitCard({ unit, unitKey, index, language, onClick, themeClass, iconCol
                     {/* Visual Progress Bar (Fake for now, creates engagement) */}
                     {!isLocked && (
                         <div className="relative h-1.5 w-full bg-slate-100 rounded-full overflow-hidden mt-4">
-                            <div className="absolute top-0 left-0 h-full w-[0%] bg-indigo-500 group-hover:w-[15%] transition-all duration-1000 ease-out" />
+                            <div className="absolute top-0 left-0 h-full w-[0%] bg-emerald-500 group-hover:w-[15%] transition-all duration-1000 ease-out" />
                         </div>
                     )}
                 </div>
@@ -143,7 +143,7 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
   if (!isMounted) return null; // Prevent hydration mismatch
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-20 selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="min-h-screen bg-slate-50 font-sans pb-20 selection:bg-slate-200 selection:text-slate-900">
       
       {/* --- Main Content --- */}
       <div className="pt-32 px-4 md:px-8 max-w-7xl mx-auto space-y-12">
@@ -154,17 +154,17 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
             animate={{ opacity: 1, y: 0 }}
             className="text-center space-y-4"
           >
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-indigo-100 text-xs font-bold text-indigo-600 shadow-sm mb-4">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 text-xs font-bold text-slate-700 shadow-sm mb-4">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
                 {syllabusData.exam_name}
               </div>
 
               <h1 className="text-4xl md:text-6xl font-extrabold font-display tracking-tight text-slate-900 leading-[1.1]">
                 {language === 'hi' ? 'आपका सिलेबस,' : 'Your Syllabus,'} <br className="hidden md:block" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900">
                     {language === 'hi' ? 'स्मार्ट और सरल।' : 'Reimagined.'}
                 </span>
               </h1>
@@ -189,14 +189,14 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                 {Object.entries(syllabusData.units).map(([key, unit], index) => {
                     // Gradients for cards (hover states mostly now)
                     const gradients = [
-                      "from-blue-500/10 to-indigo-500/10",
+                      "from-slate-500/10 to-slate-400/10",
                       "from-purple-500/10 to-pink-500/10",
                       "from-emerald-500/10 to-teal-500/10",
                       "from-amber-500/10 to-orange-500/10",
                       "from-rose-500/10 to-red-500/10",
                     ];
                     const themeClass = gradients[index % gradients.length];
-                    const iconColor = ["text-blue-600", "text-purple-600", "text-emerald-600", "text-amber-600", "text-rose-600"][index % 5];
+                    const iconColor = ["text-slate-600", "text-purple-600", "text-emerald-600", "text-amber-600", "text-rose-600"][index % 5];
                     
                     // Logic: Unit 1 is always unlocked. Others depend on subscription.
                     const isLocked = key !== "unit_1" && !isSubscribed;
@@ -248,20 +248,20 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                               className="cursor-pointer"
                           >
                              <div className={cn(
-                                 "group bg-white border border-slate-200 rounded-xl p-5 hover:border-indigo-200 hover:shadow-md transition-all flex items-center gap-6 relative overflow-hidden",
+                                 "group bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 hover:shadow-md transition-all flex items-center gap-6 relative overflow-hidden",
                                  isLocked && "grayscale-[0.8]"
                              )}>
                                 
                                 <div className={cn(
                                     "flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center font-display font-bold text-xl z-10 transition-colors border",
-                                    isLocked ? "bg-slate-100 text-slate-400 border-slate-200" : "bg-white text-slate-900 border-slate-200 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600"
+                                    isLocked ? "bg-slate-100 text-slate-400 border-slate-200" : "bg-white text-slate-900 border-slate-200 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900"
                                 )}>
                                     {isLocked ? <Lock size={18} /> : (index + 1)}
                                 </div>
                                 
                                 <div className="flex-1 min-w-0 z-10">
                                     <div className="flex items-center gap-2">
-                                        <h3 className={cn("font-bold text-lg transition-colors truncate", isLocked ? "text-slate-500" : "text-slate-900 group-hover:text-indigo-700")}>
+                                        <h3 className={cn("font-bold text-lg transition-colors truncate", isLocked ? "text-slate-500" : "text-slate-900 group-hover:text-slate-700")}>
                                             {title}
                                         </h3>
                                         {!isLocked && key === 'unit_1' && (
@@ -280,7 +280,7 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
 
                                 <div className={cn(
                                     "transition-all z-10",
-                                    isLocked ? "text-slate-300" : "text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1"
+                                    isLocked ? "text-slate-300" : "text-slate-300 group-hover:text-slate-600 group-hover:translate-x-1"
                                 )}>
                                     <ArrowRight className="w-5 h-5" />
                                 </div>

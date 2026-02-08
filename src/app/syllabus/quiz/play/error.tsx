@@ -29,7 +29,7 @@ export default function QuizError({
             <div className="flex gap-3">
                 <button
                     onClick={reset}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors"
                 >
                     <RotateCcw className="w-4 h-4" />
                     Resume/Retry

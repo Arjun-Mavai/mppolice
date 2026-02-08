@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export function HeroSection() {
     const router = useRouter();
@@ -14,7 +15,7 @@ export function HeroSection() {
 
     return (
       <section className="pt-40 pb-20 px-6 relative overflow-hidden bg-slate-50 border-b border-slate-200 min-h-[90vh] flex flex-col justify-center">
-          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-100/50 rounded-full blur-3xl -mr-60 -mt-60 opacity-60 animate-pulse-slow"></div>
+          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-slate-100/50 rounded-full blur-3xl -mr-60 -mt-60 opacity-60 animate-pulse-slow"></div>
           <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-100/50 rounded-full blur-3xl -ml-40 -mb-40 opacity-60"></div>
           <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
           
@@ -26,7 +27,7 @@ export function HeroSection() {
                     "inline-flex items-center gap-2 px-6 py-2 rounded-full border text-sm font-bold shadow-lg min-h-[40px] justify-center",
                     (globalUser as any)?.is_pro 
                         ? "bg-amber-50 border-amber-200 text-amber-700 shadow-amber-100/50"
-                        : "bg-white border-indigo-100 text-indigo-600 shadow-indigo-100/50"
+                        : "bg-white border-slate-100 text-slate-700 shadow-slate-100/50"
                 )}
               >
                  {(globalUser as any)?.is_pro ? (
@@ -36,7 +37,7 @@ export function HeroSection() {
                      </>
                  ) : (
                      <>
-                        <Zap className="w-4 h-4 fill-indigo-600" />
+                        <Zap className="w-4 h-4 fill-slate-700" />
                         {language === 'hi' ? 'संपूर्ण MPPSC तैयारी सूट' : 'Complete MPPSC Preparation Suite'}
                      </>
                  )}
@@ -48,9 +49,9 @@ export function HeroSection() {
                 transition={{ delay: 0.1 }}
                 className="text-6xl md:text-8xl font-extrabold font-display tracking-tight text-slate-900 leading-[1.1] min-h-[3.5ch] flex flex-col justify-center"
               >
-                  {language === 'hi' ? 'सिलेबस से' : 'From Syllabus to'} <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 animate-gradient-x">
-                      {language === 'hi' ? 'चयन तक।' : 'Selection.'}
+                  {language === 'hi' ? 'आपकी MPPSC' : 'Your MPPSC'} <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-800 via-slate-600 to-slate-800 animate-gradient-x">
+                      {language === 'hi' ? 'टेस्ट सीरीज़।' : 'Test Series.'}
                   </span>
               </motion.h1>
               
@@ -60,11 +61,9 @@ export function HeroSection() {
                 transition={{ delay: 0.2 }}
                 className="text-xl md:text-2xl text-slate-600 max-w-3xl mx-auto leading-relaxed"
               >
-                  {language === 'hi' ? 'MPPSC के लिए सबसे उन्नत अध्ययन मंच।' : 'The most advanced study platform built for MPPSC.'}
-                  <br className="hidden md:block"/>
-                  <strong>
-                    {language === 'hi' ? 'प्रीमियम टेस्ट सीरीज़। स्मार्ट फ्लैशकार्ड्स। सटीक विश्लेषण।' : 'Premium Test Series. Smart Flashcards. Precise Analytics.'}
-                  </strong>
+                  {language === 'hi' 
+                    ? '100+ टॉपिक वाइज़ टेस्ट, फुल लेंथ मॉक, PYQ पेपर, और व्याख्या — हिंदी और अंग्रेजी दोनों में।' 
+                    : 'Practice with 100+ topic-wise tests, full-length mocks, PYQ papers, and instant explanations — all in Hindi & English.'}
               </motion.p>
 
               <motion.div 
@@ -84,7 +83,7 @@ export function HeroSection() {
                         </button>
                         <button 
                              onClick={() => setLanguage('hi')}
-                             className={cn("px-4 py-2 rounded-full text-sm font-bold transition-all duration-300", language === 'hi' ? "bg-indigo-600 text-white shadow-md relative z-10" : "text-slate-500 hover:text-indigo-600")}
+                             className={cn("px-4 py-2 rounded-full text-sm font-bold transition-all duration-300", language === 'hi' ? "bg-slate-800 text-white shadow-md relative z-10" : "text-slate-500 hover:text-slate-800")}
                          >
                             हिंदी
                         </button>
@@ -96,19 +95,20 @@ export function HeroSection() {
                   </div>
 
                   {!globalUser && (
+                  <Link href="/syllabus/quiz">
                       <Button 
-                          onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
                           className="h-16 px-12 rounded-full text-xl font-bold bg-slate-900 text-white hover:bg-slate-800 shadow-2xl shadow-slate-900/30 hover:scale-105 active:scale-95 transition-all w-full sm:w-auto ring-4 ring-slate-100"
                       >
-                          {language === 'hi' ? 'प्रीमियम एक्सेस प्राप्त करें' : 'Get Premium Access'}
+                          {language === 'hi' ? 'फ्री टेस्ट शुरू करें' : 'Start Free Test'}
                       </Button>
+                  </Link>
                   )}
 
                   {globalUser && (
                       <div className="flex gap-4">
                           <Button 
                               onClick={() => router.push('/dashboard')}
-                              className="h-16 px-8 rounded-full text-lg font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl shadow-indigo-200 hover:scale-105 transition-all"
+                              className="h-16 px-8 rounded-full text-lg font-bold bg-slate-800 text-white hover:bg-slate-700 shadow-xl shadow-slate-200 hover:scale-105 transition-all"
                           >
                              {language === 'hi' ? 'डैशबोर्ड पर जाएँ' : 'Go to Dashboard'}
                           </Button>

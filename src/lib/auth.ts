@@ -30,7 +30,10 @@ export const verifyAuth = cache(async () => {
         const users = await db.select().from(mppscUsers).where(eq(mppscUsers.id, userId)).limit(1);
         return users[0] || null;
     } catch (error) {
-        logger.error("Auth verification failed:", error);
+        // DB errors should NOT throw — callers (server components/pages) expect null
+        // Throwing here would turn transient DB issues into hard 500s across the app
+        // Return null so user gets redirected to login (graceful degradation)
+        logger.error("Database error during auth verification:", error);
         return null;
     }
 });

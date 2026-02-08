@@ -13,6 +13,14 @@ export async function GET() {
       return NextResponse.json({ authenticated: false });
     }
 
+    // CRITICAL FIX: Decode the JWT to get the actual user ID
+    const { verifyToken } = await import('@/lib/jwt');
+    const decoded: any = verifyToken(token.value);
+    
+    if (!decoded || !decoded.userId) {
+      return NextResponse.json({ authenticated: false });
+    }
+
     // Verify user exists and is subscribed
     const users = await db.select({ 
       id:mppscUsers.id,
@@ -24,7 +32,7 @@ export async function GET() {
         
     })
     .from(mppscUsers)
-    .where(eq(mppscUsers.id, token.value))
+    .where(eq(mppscUsers.id, decoded.userId)) // Use decoded userId, not token string
     .limit(1);
 
     const user = users[0];

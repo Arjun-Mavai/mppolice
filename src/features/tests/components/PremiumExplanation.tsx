@@ -70,13 +70,18 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({ explanat
     
     coreLogic = coreLogic.slice(0, firstMarkerIndex).trim();
 
-    // Clean up markdown bolding from the extracted values if present (e.g. "**:**" artifacts)
-    // The regex strategy in planning was robust, but simple string slicing is safer against slight variations in AI output often.
-    // However, AI usually outputs `**💡 Exam Fact**: Content`. Our slice removed `**💡 Exam Fact`. 
-    // We might still have `**: Content` or `: Content`.
+    // Bhai markdown ke ## hashes aur ** bold markers hatao - clean text dikhao user ko
     const cleanContent = (s: string | null) => {
         if (!s) return null;
-        return s.replace(/^(\s*(\(High Value\)|\(Mnemonic\)|\(Elimination\))?\s*)?(\*\*|:)?\s*:?\s*/, '').trim();
+        return s
+            .replace(/^(\s*(\(High Value\)|\(Mnemonic\)|\(Elimination\))?\s*)?(\*\*|:)?\s*:?\s*/, '')
+            .replace(/#{1,6}\s*/g, '')       // ## heading markers hatao
+            .replace(/\*\*([^*]+)\*\*/g, '$1') // **bold** se sirf text rakho
+            .replace(/\*([^*]+)\*/g, '$1')     // *italic* se sirf text rakho
+            .replace(/`([^`]+)`/g, '$1')       // `code` se sirf text rakho
+            .replace(/---+/g, '')              // horizontal rules hatao
+            .replace(/^\s*[-*]\s+/gm, '• ')    // list markers ko bullet me badlo
+            .trim();
     };
 
     const sections = {
@@ -117,10 +122,10 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({ explanat
                         <h4 className="flex items-center gap-2 text-sm font-bold text-emerald-700 mb-1 uppercase tracking-wider">
                             <CheckCircle2 size={16} /> {finalLanguage === 'hi' ? 'तर्क' : 'Core Logic'}
                         </h4>
-                        <div className="text-sm text-slate-700 leading-relaxed font-medium">
-                            {/* Render simple newlines as breaks */}
-                            {sections.logic.split('\n').map((line, i) => (
-                                <p key={i} className={i > 0 ? "mt-1" : ""}>{line}</p>
+                        <div className="text-sm text-slate-700 leading-relaxed font-medium space-y-1.5">
+                            {/* Bhai line by line render karo - clean newlines, hashes hatao */}
+                            {cleanContent(sections.logic)?.split('\n').filter(l => l.trim()).map((line, i) => (
+                                <p key={i}>{line}</p>
                             ))}
                         </div>
                     </div>
@@ -130,9 +135,9 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({ explanat
             {/* 2. Exam Fact */}
             {sections.fact && (
                 <motion.div variants={item} className="flex gap-4">
-                    <div className="w-1 bg-blue-500 rounded-full shrink-0 mt-1.5 h-auto min-h-[1.5rem]" />
+                    <div className="w-1 bg-slate-700 rounded-full shrink-0 mt-1.5 h-auto min-h-[1.5rem]" />
                     <div className="flex-1">
-                        <h4 className="flex items-center gap-2 text-sm font-bold text-blue-700 mb-1 uppercase tracking-wider">
+                        <h4 className="flex items-center gap-2 text-sm font-bold text-slate-800 mb-1 uppercase tracking-wider">
                             <Lightbulb size={16} /> {finalLanguage === 'hi' ? 'एग्जाम फैक्ट' : 'Exam Fact'}
                         </h4>
                         <p className="text-sm text-slate-700 leading-relaxed">
