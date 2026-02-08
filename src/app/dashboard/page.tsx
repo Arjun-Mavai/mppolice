@@ -3,6 +3,9 @@ import { redirect } from 'next/navigation';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { DashboardView } from "@/features/analytics/components/DashboardView";
+
+// Dashboard is user-specific — must NEVER serve cached/stale page
+export const dynamic = 'force-dynamic';
 import { getUserAnalytics } from "@/features/analytics/actions";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

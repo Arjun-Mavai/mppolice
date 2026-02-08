@@ -113,7 +113,7 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
                                     "cursor-pointer hover:shadow-xl transition-all border-2 overflow-hidden relative group active:scale-[0.98]",
                                     isLocked ? "border-slate-200 bg-slate-50 opacity-90" : 
                                     isCompleted ? "border-emerald-200 bg-emerald-50/30" :
-                                    "border-slate-200 bg-white hover:border-indigo-500/50"
+                                    "border-slate-200 bg-white hover:border-slate-500/50"
                                 )}
                             >
                                 <CardContent className="p-5">
@@ -122,7 +122,7 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
                                             "w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold font-display shrink-0 transition-colors shadow-sm",
                                             isLocked ? "bg-slate-200 text-slate-400" : 
                                             isCompleted ? "bg-emerald-100 text-emerald-600" :
-                                            "bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white"
+                                            "bg-slate-50 text-slate-700 group-hover:bg-slate-800 group-hover:text-white"
                                         )}>
                                             {isLocked ? <Lock className="w-5 h-5" /> : 
                                              isCompleted ? <CheckCircle2 className="w-6 h-6" /> :
@@ -157,7 +157,7 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
                                                     </div>
                                                     <Progress value={(test.attempts / test.maxRetries) * 100} className="h-1.5 bg-slate-100" 
                                                         indicatorClassName={cn(
-                                                            attemptsLeft > 0 ? "bg-indigo-500" : "bg-red-500"
+                                                            attemptsLeft > 0 ? "bg-slate-700" : "bg-red-500"
                                                         )}
                                                     />
                                                 </div>
@@ -174,7 +174,7 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
                                             className={cn(
                                                 "h-8 text-xs font-bold rounded-lg transition-colors",
                                                 isLocked ? "bg-slate-200 text-slate-400 hover:bg-slate-200 cursor-not-allowed" :
-                                                "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200"
+                                                "bg-slate-800 hover:bg-slate-700 text-white shadow-md shadow-slate-200"
                                             )}
                                             disabled={isLocked}
                                          >

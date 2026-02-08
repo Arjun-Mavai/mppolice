@@ -79,21 +79,28 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
   const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
   const { isSubscribed, user } = useSettingsStore();
 
-  const isTopicLocked = (topic: TopicData, index: number) => {
-      // Use the centralized logic
+  const isTopicLocked = (topic: TopicData, _filteredIndex: number) => {
+      // Use the original index in rawTopics (not the filtered index) so
+      // search filtering doesn't accidentally unlock premium topics.
+      const originalIndex = rawTopics.findIndex(t => t.id === topic.id);
       return isSyllabusTopicLocked(
           topic,
-          index,
+          originalIndex >= 0 ? originalIndex : _filteredIndex,
           { isSubscribed: !!isSubscribed, plan_tier: user?.plan_tier },
           unitId,
-          currentTopics.length // Pass the total count of filtered/current topics
+          rawTopics.length
       );
   };
 
   const handleQuizClick = (type: 'topic' | 'unit', topicId?: string | number) => {
       if (type === 'unit') {
-           // Unit Test: Allowed for Unit 1 OR Subscribed Users
-           if (unitId === 'unit_1' || isSubscribed) {
+           // Unit Test: Free users can only access first 5 topics in Unit 1, logged users get full access
+           if (user || isSubscribed) {
+               router.push(`/syllabus/quiz/play?mode=topic&unit=${unitId}`);
+               return;
+           }
+           // Free non-logged users: Only Unit 1 allowed
+           if (unitId === 'unit_1') {
                router.push(`/syllabus/quiz/play?mode=topic&unit=${unitId}`);
                return;
            }
@@ -176,71 +183,57 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
 
   return (
     <div className="min-h-screen bg-slate-50/50 font-sans pb-24">
-      {/* Premium Header */}
-      <header className="sticky top-0 z-50 transition-all duration-300">
-        <div className="bg-white/70 backdrop-blur-2xl border-b border-indigo-100/50 shadow-[0_2px_20px_-10px_rgba(79,70,229,0.1)]">
-          <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between gap-4">
-             <div className="flex items-center gap-4">
-               <button 
-                 onClick={() => router.back()}
-                 className="p-3 rounded-2xl bg-indigo-50/50 text-indigo-600 hover:bg-indigo-100 hover:scale-105 transition-all active:scale-95 group"
-               >
-                 <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-               </button>
-               <div className="flex flex-col">
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400/80 mb-0.5">MPPSC PRELIMS 2026</span>
-                  <h1 className="text-lg sm:text-2xl font-black text-slate-900 truncate max-w-[160px] sm:max-w-xl font-display leading-tight italic">
-                    {currentTitle}
-                  </h1>
-               </div>
-             </div>
-
-             <div className="flex items-center gap-3">
-                {/* <button 
-                  onClick={() => setIsSearchOpen(true)}
-                  className="p-3 rounded-2xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all group hidden md:block"
-                >
-                  <Search className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                </button> */}
-
-                <div className="flex bg-slate-200/50 p-1.5 rounded-2xl border border-slate-200/40">
-                  <button
-                    onClick={() => setLanguage('hi')}
-                    className={cn(
-                      "px-4 py-1.5 text-xs font-black rounded-xl transition-all duration-300",
-                      language === 'hi' 
-                        ? "bg-white text-indigo-600 shadow-xl shadow-indigo-500/10 scale-105" 
-                        : "text-slate-500 hover:text-slate-800"
-                    )}
-                  >
-                    हिन्दी
-                  </button>
-                  <button
-                    onClick={() => setLanguage('en')}
-                    className={cn(
-                      "px-4 py-1.5 text-xs font-black rounded-xl transition-all duration-300",
-                      language === 'en' 
-                        ? "bg-white text-indigo-600 shadow-xl shadow-indigo-500/10 scale-105" 
-                        : "text-slate-500 hover:text-slate-800"
-                    )}
-                  >
-                    ENG
-                  </button>
-                </div>
-             </div>
+      {/* Sub-header: Unit title + Language toggle + Progress bar */}
+      <div className="sticky top-[64px] z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <button 
+              onClick={() => router.push('/syllabus')}
+              className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-all shrink-0"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-base sm:text-lg font-bold text-slate-900 truncate max-w-[200px] sm:max-w-xl">
+              {currentTitle}
+            </h1>
           </div>
-          
-          {/* Progress Bar (Study Engagement) */}
-          <div className="h-1 w-full bg-slate-100 overflow-hidden">
-             <motion.div 
-               className="h-full bg-gradient-to-r from-indigo-500 to-violet-500"
-               initial={{ width: 0 }}
-               animate={{ width: `${progressPercent}%` }}
-               transition={{ duration: 1.5, ease: "easeOut" }}
-             />
+
+          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/50">
+            <button
+              onClick={() => setLanguage('hi')}
+              className={cn(
+                "px-3 py-1 text-xs font-bold rounded-lg transition-all",
+                language === 'hi' 
+                  ? "bg-white text-slate-900 shadow-sm" 
+                  : "text-slate-500 hover:text-slate-800"
+              )}
+            >
+              हिन्दी
+            </button>
+            <button
+              onClick={() => setLanguage('en')}
+              className={cn(
+                "px-3 py-1 text-xs font-bold rounded-lg transition-all",
+                language === 'en' 
+                  ? "bg-white text-slate-900 shadow-sm" 
+                  : "text-slate-500 hover:text-slate-800"
+              )}
+            >
+              ENG
+            </button>
           </div>
         </div>
-      </header>
+        
+        {/* Progress Bar */}
+        <div className="h-0.5 w-full bg-slate-100">
+          <motion.div 
+            className="h-full bg-emerald-500"
+            initial={{ width: 0 }}
+            animate={{ width: `${progressPercent}%` }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+          />
+        </div>
+      </div>
 
       <SyllabusSearch open={isSearchOpen} setOpen={setIsSearchOpen} />
 
@@ -252,10 +245,10 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
               animate={{ scale: 1, opacity: 1 }}
               className="relative"
             >
-              <div className="absolute inset-0 bg-indigo-500/20 blur-3xl rounded-full" />
-              <span className="relative inline-flex items-center px-6 py-2 rounded-full bg-indigo-600 text-white text-xs font-black tracking-widest uppercase shadow-2xl shadow-indigo-600/40">
+              <div className="absolute inset-0 bg-slate-500/10 blur-3xl rounded-full" />
+              <span className="relative inline-flex items-center px-6 py-2 rounded-full bg-slate-900 text-white text-xs font-black tracking-widest uppercase shadow-lg">
                   <Sparkles className="w-4 h-4 mr-2" />
-                  {currentTopics.length} TOPICS UNLOCKED
+                  {currentTopics.length} TOPICS
               </span>
             </motion.div>
             
@@ -263,10 +256,10 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
                  <Button 
                     size="lg"
                     onClick={() => handleQuizClick('unit')}
-                    className="h-16 bg-slate-900 text-white hover:bg-slate-800 rounded-3xl shadow-2xl shadow-slate-900/20 font-black px-10 text-lg group transition-all"
+                    className="h-14 bg-slate-900 text-white hover:bg-slate-800 rounded-2xl shadow-lg font-bold px-8 text-base group transition-all"
                  >
-                     <PlayCircle className="w-6 h-6 mr-3 text-indigo-400 group-hover:scale-110 transition-transform" />
-                     {language === 'hi' ? 'यूनिट टेस्ट शुरू करें' : 'START REVISION TEST'}                 </Button>
+                     <PlayCircle className="w-5 h-5 mr-2 text-emerald-400 group-hover:scale-110 transition-transform" />
+                     {language === 'hi' ? 'यूनिट टेस्ट शुरू करें' : 'Start Revision Test'}                 </Button>
 
                  <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
             </div>
@@ -280,8 +273,21 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
           key={`grid-${language}`} 
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 mb-16"
         >
-          {currentTopics.map((topic) => (
-            <motion.div key={topic.id} variants={item}>
+          {currentTopics.map((topic, idx) => {
+            const locked = isTopicLocked(topic, idx);
+            // FREE badge: show for unlocked topics that are in the free tier,
+            // but ONLY for non-logged-in users (logged-in users don't need to see it)
+            const showFreeBadge = !locked && !isSubscribed && !user && topic.isFree;
+            
+            return (
+            <motion.div key={topic.id} variants={item} className="relative">
+              {showFreeBadge && (
+                <div className="absolute top-3 right-3 z-20">
+                  <span className="bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm">
+                    FREE
+                  </span>
+                </div>
+              )}
               <FlipCard
                 id={topic.id}
                 className="h-[520px] w-full"
@@ -321,51 +327,56 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
                 }}
               />
             </motion.div>
-          ))}
+            );
+          })}
         </motion.div>
         ) : viewMode === 'list' ? (
              <div className="max-w-4xl mx-auto space-y-4 mb-12">
-                {currentTopics.map((topic) => (
+                {currentTopics.map((topic, idx) => {
+                    const locked = isTopicLocked(topic, idx);
+                    const showFreeBadge = !locked && !isSubscribed && !user && topic.isFree;
+                    
+                    return (
                     <motion.div 
                         key={topic.id} 
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         className={cn(
-                            "border-2 rounded-[2.5rem] p-8 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all group flex items-start gap-8 cursor-pointer relative overflow-hidden",
-                            isTopicLocked(topic, currentTopics.indexOf(topic)) ? "bg-slate-50/50 border-slate-100 opacity-75 grayscale-[0.5]" : "bg-white border-slate-100 hover:border-indigo-200"
+                            "border-2 rounded-[2.5rem] p-8 hover:shadow-lg transition-all group flex items-start gap-8 cursor-pointer relative overflow-hidden",
+                            locked ? "bg-slate-50/50 border-slate-100 opacity-75 grayscale-[0.5]" : "bg-white border-slate-100 hover:border-slate-300"
                         )}
-                        onClick={() => handleOpenDetails(topic, currentTopics.indexOf(topic))}
+                        onClick={() => handleOpenDetails(topic, idx)}
                     >
-                         <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-40" />
+                         <div className="absolute top-0 right-0 w-48 h-48 bg-slate-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-40" />
                         
                         <div className={cn(
                             "flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center font-black text-2xl shadow-xl transition-transform group-hover:scale-110",
-                            isTopicLocked(topic, currentTopics.indexOf(topic)) ? "bg-slate-200 text-slate-400" : "bg-slate-900 text-white shadow-slate-900/20"
+                            locked ? "bg-slate-200 text-slate-400" : "bg-emerald-100 text-slate-900 shadow-emerald-100/40"
                         )}>
-                            {/* {topic.id.toString().split('_').pop()?.replace('t', '') || topic.id} */}
                         </div>
                         <div className="flex-1 relative z-10">
-                            <h3 className="text-2xl font-black text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{topic.front}</h3>
+                            <h3 className="text-2xl font-black text-slate-900 mb-2 group-hover:text-slate-700 transition-colors uppercase tracking-tight">{topic.front}</h3>
                             <p className="text-slate-500 leading-relaxed mb-4 text-base line-clamp-2 italic font-medium">"{topic.back}"</p>
                             
                             <div className="flex items-center gap-3">
-                                {isTopicLocked(topic, currentTopics.indexOf(topic)) ? (
+                                {locked ? (
                                     <span className="inline-flex items-center text-[10px] font-black text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100 uppercase tracking-widest">
                                         <Lock className="w-3.5 h-3.5 mr-2" /> PREMIUM LOCKED
                                     </span>
-                                ) : (
-                                    <span className="inline-flex items-center text-[10px] font-black text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 uppercase tracking-widest">
-                                        <Sparkles className="w-3.5 h-3.5 mr-2" /> UNLOCKED
+                                ) : showFreeBadge ? (
+                                    <span className="inline-flex items-center text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 uppercase tracking-widest">
+                                        <Sparkles className="w-3.5 h-3.5 mr-2" /> FREE
                                     </span>
-                                )}
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 group-hover:border-indigo-100 group-hover:bg-indigo-50 transition-colors">
+                                ) : null}
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 group-hover:border-slate-200 group-hover:bg-slate-100 transition-colors">
                                     Click for Deep Dive
                                 </span>
                             </div>
                         </div>
-                        <ArrowRight className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-2 transition-all" size={24} />
+                        <ArrowRight className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-2 transition-all" size={24} />
                     </motion.div>
-                ))}
+                    );
+                })}
             </div>
         ) : (
             /* REVISION MODE: Single Swipeable Card */
@@ -373,21 +384,21 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
                {currentTopics.length > 0 ? (
                 <div className="space-y-10">
                    <div className="flex items-center justify-between mb-2">
-                       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">
+                       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                           CARD {revisionIndex + 1} OF {currentTopics.length}
                        </span>
                        <div className="flex gap-2">
                           <button 
                             disabled={revisionIndex === 0}
                             onClick={() => setRevisionIndex(Math.max(0, revisionIndex - 1))}
-                            className="p-3 rounded-2xl bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 disabled:opacity-30 transition-all shadow-sm"
+                            className="p-3 rounded-2xl bg-white border border-slate-200 text-slate-400 hover:text-slate-700 disabled:opacity-30 transition-all shadow-sm"
                           >
                              <ArrowLeft className="w-5 h-5" />
                           </button>
                           <button 
                             disabled={revisionIndex === currentTopics.length - 1}
                             onClick={() => setRevisionIndex(Math.min(currentTopics.length - 1, revisionIndex + 1))}
-                            className="p-3 rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-30 transition-all shadow-xl shadow-indigo-600/20"
+                            className="p-3 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-30 transition-all shadow-lg"
                           >
                              <ArrowRight className="w-5 h-5" />
                           </button>

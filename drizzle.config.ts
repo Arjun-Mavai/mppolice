@@ -1,15 +1,20 @@
 
 import { defineConfig } from 'drizzle-kit';
-import * as dotenv from 'dotenv';
+import path from 'path';
+// import * as dotenv from 'dotenv';
 
-dotenv.config();
+// dotenv.config();
+
+const localDbPath = `file:${path.resolve(process.cwd(), 'db.sqlite')}`;
+const isDev = process.env.NODE_ENV === 'development';
 
 export default defineConfig({
   schema: './src/db/schema.ts',
   out: './drizzle',
-  dialect: 'turso',
+  dialect: isDev ? 'sqlite' : 'turso', 
   dbCredentials: {
-    url: process.env.TURSO_DATABASE_URL!,
-    authToken: process.env.TURSO_AUTH_TOKEN!,
+    // Agar development hai toh local file uthao, warna cloud URL
+    url: isDev ? localDbPath : (process.env.TURSO_DATABASE_URL || ''),
+    authToken: isDev ? undefined : process.env.TURSO_AUTH_TOKEN,
   },
 });

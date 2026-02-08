@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Clock, Trophy } from 'lucide-react';
 
-// export const revalidate = 0;
+// ISR: Revalidate every week
+export const revalidate = 604800;
 
 export default async function TestsPage({ searchParams }: { searchParams: Promise<{ tag?: string }> }) {
   const params = await searchParams;
@@ -25,7 +26,7 @@ export default async function TestsPage({ searchParams }: { searchParams: Promis
           </div>
           {/* Admin Link for convenience during dev */}
           {process.env.NODE_ENV === 'development' && (
-             <Link href="/admin/upload" className="text-xs text-blue-500 hover:underline">
+             <Link href="/admin/content-manager" className="text-xs text-blue-500 hover:underline">
                Admin Upload
              </Link>
           )}
@@ -83,7 +84,7 @@ export default async function TestsPage({ searchParams }: { searchParams: Promis
             <div className="col-span-full py-20 text-center bg-white dark:bg-neutral-900 rounded-3xl border border-dashed border-neutral-300 dark:border-neutral-700">
               <h3 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">No Tests Available Yet</h3>
               <p className="text-neutral-500 mt-2 mb-6">Tests are being prepared. Check back soon!</p>
-              <Link href="/admin/upload">
+              <Link href="/admin/content-manager">
                 <Button variant="outline">Upload Test Data</Button>
               </Link>
             </div>

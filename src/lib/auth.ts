@@ -30,7 +30,9 @@ export const verifyAuth = cache(async () => {
         const users = await db.select().from(mppscUsers).where(eq(mppscUsers.id, userId)).limit(1);
         return users[0] || null;
     } catch (error) {
-        logger.error("Auth verification failed:", error);
-        return null;
+        // CRITICAL FIX: Don't treat DB errors as "user not logged in"
+        // If DB is down/slow, we should throw an error, not logout the user
+        logger.error("Database error during auth verification:", error);
+        throw new Error("Database connection failed during authentication");
     }
 });

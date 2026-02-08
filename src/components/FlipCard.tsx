@@ -125,7 +125,7 @@ const FlipCard: React.FC<FlipCardProps> = ({
             "absolute w-full h-full backface-hidden rounded-[2.5rem]",
             "bg-white border border-slate-200 shadow-xl",
             "flex flex-col items-center justify-between p-8 sm:p-10",
-            "transition-all duration-500 group-hover:border-indigo-200 group-hover:shadow-indigo-500/10",
+            "transition-all duration-500 group-hover:border-slate-200 group-hover:shadow-slate-500/10",
             isLocked && "grayscale-[0.8] opacity-90"
         )}>
              <div className="w-full flex justify-between items-start opacity-30">
@@ -142,14 +142,14 @@ const FlipCard: React.FC<FlipCardProps> = ({
                 </h3>
 
                 {isLocked && (
-                    <div className="inline-flex items-center text-xs font-black text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100 uppercase tracking-widest">
+                    <div className="inline-flex items-center text-xs font-black text-amber-600 bg-gradient-to-r from-red-100 via-pink-100 to-amber-100 px-3 py-1.5 rounded-lg border border-pink-200 uppercase tracking-widest">
                         <Lock className="w-3.5 h-3.5 mr-2 animate-pulse" /> Premium
                     </div>
                 )}
             </div>
 
             <div className="w-full flex justify-center">
-                <span className="px-5 py-2 bg-slate-50 border border-slate-100 rounded-full text-slate-500 text-xs font-bold uppercase tracking-wider flex items-center gap-2 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                <span className="px-5 py-2 bg-slate-50 border border-slate-100 rounded-full text-slate-500 text-xs font-bold uppercase tracking-wider flex items-center gap-2 group-hover:bg-slate-50 group-hover:text-slate-700 transition-colors">
                     <RotateCw size={14} className="group-hover:rotate-180 transition-transform duration-700" /> 
                     {labels.tapToFlip}
                 </span>
@@ -160,13 +160,13 @@ const FlipCard: React.FC<FlipCardProps> = ({
         {/* BACK SIDE (REDESIGNED) */}
         <div className={cn(
             "absolute w-full h-full backface-hidden rotate-y-180 rounded-[2.5rem]",
-            "bg-[#0F172A] border border-slate-800 shadow-2xl shadow-indigo-950/20", // Darker premium bg
+            "bg-[#0F172A] border border-slate-800 shadow-2xl shadow-slate-950/20", // Darker premium bg
             "p-8 flex flex-col justify-between overflow-hidden"
         )}>
              {/* Header */}
              <div className="relative z-10 space-y-2 shrink-0">
                  <div className="text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-700 animate-pulse" />
                     {labels.topicAnalysis}
                  </div>
                  <h4 className="text-2xl font-bold text-white tracking-tight leading-snug line-clamp-1">
@@ -182,7 +182,7 @@ const FlipCard: React.FC<FlipCardProps> = ({
                     <ul className="space-y-3">
                         {facts.slice(0, 3).map((fact, idx) => (
                              <li key={idx} className="flex items-start gap-4 p-4 rounded-2xl bg-slate-800/50 border border-white/5 hover:bg-slate-800 transition-colors">
-                                <div className="w-2 h-2 rounded-full bg-indigo-500 mt-1.5 shrink-0 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
+                                <div className="w-2 h-2 rounded-full bg-slate-700 mt-1.5 shrink-0 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
                                 <span className="text-sm text-slate-300 font-medium leading-relaxed">
                                     {fact.includes(':') ? (
                                         <>
@@ -226,7 +226,7 @@ const FlipCard: React.FC<FlipCardProps> = ({
                   {/* Practice Button */}
                   <button 
                     onClick={handlePracticeClick}
-                    className="h-12 w-full rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[10px] font-black uppercase tracking-wider shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/40 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                    className="h-12 w-full rounded-xl bg-gradient-to-r from-slate-800 to-violet-600 text-white text-[10px] font-black uppercase tracking-wider shadow-lg shadow-slate-600/20 hover:shadow-slate-600/40 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
                   >
                     <Zap size={14} className="fill-white" />
                     {labels.practiceTest}

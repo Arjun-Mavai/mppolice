@@ -77,7 +77,8 @@ export async function getRevisionCount(topicId: string) {
             .where(and(
                 eq(topicRevisions.userId, userId),
                 eq(topicRevisions.topicId, topicId)
-            ))
+            ));
+        return record[0]?.count ?? 0;
     } catch (error) {
         return 0;
     }

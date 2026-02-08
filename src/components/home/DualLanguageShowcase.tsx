@@ -46,16 +46,16 @@ export function DualLanguageShowcase() {
   };
 
   return (
-    <section className="py-24 bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white overflow-hidden relative">
+    <section className="py-24 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 text-white overflow-hidden relative">
       {/* Background FX */}
       <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20"></div>
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-slate-500/10 rounded-full blur-[100px] pointer-events-none"></div>
       
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
             
             <div className="order-2 lg:order-1 space-y-8">
-                <Badge variant="outline" className="px-4 py-1 border-indigo-400/30 bg-indigo-500/10 text-indigo-300">
+                <Badge variant="outline" className="px-4 py-1 border-slate-400/30 bg-slate-500/10 text-slate-300">
                     <Globe size={12} className="mr-2" /> 
                     {lang === 'en' ? 'Seamlessly Inclusive' : 'सभी के लिए समावेशी'}
                 </Badge>
@@ -64,12 +64,12 @@ export function DualLanguageShowcase() {
                     {lang === 'en' ? (
                         <>
                             Language is no <br/>
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Barrier.</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-400 to-purple-400">Barrier.</span>
                         </>
                     ) : (
                         <>
                             भाषा अब कोई <br/>
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">बाधा नहीं।</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-400 to-purple-400">बाधा नहीं।</span>
                         </>
                     )}
                 </h2>
@@ -78,13 +78,13 @@ export function DualLanguageShowcase() {
                     {lang === 'en' ? (
                         <>
                             Experience the <span className="text-white font-bold">First-in-Class</span> seamless language toggle. 
-                            Unlike simple translations, our content is <span className="text-indigo-300">curated natively for both Hindi and English mediums</span>. 
+                            Unlike simple translations, our content is <span className="text-slate-300">curated natively for both Hindi and English mediums</span>. 
                             Switch instantly without losing context or progress.
                         </>
                     ) : (
                         <>
                             <span className="text-white font-bold">फर्स्ट-इन-क्लास</span> सीमलेस भाषा टॉगल का अनुभव करें।
-                            साधारण अनुवादों के विपरीत, हमारी सामग्री <span className="text-indigo-300">हिंदी और अंग्रेजी दोनों माध्यमों के लिए</span> मूल रूप से तैयार की गई है।
+                            साधारण अनुवादों के विपरीत, हमारी सामग्री <span className="text-slate-300">हिंदी और अंग्रेजी दोनों माध्यमों के लिए</span> मूल रूप से तैयार की गई है।
                             संदर्भ या प्रगति खोए बिना तुरंत स्विच करें।
                         </>
                     )}
@@ -92,7 +92,7 @@ export function DualLanguageShowcase() {
                 
                 <div className="grid sm:grid-cols-2 gap-4 pt-4">
                     <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                        <RefreshCcw className="w-8 h-8 text-indigo-400 mb-3" />
+                        <RefreshCcw className="w-8 h-8 text-slate-400 mb-3" />
                         <h4 className="font-bold text-white mb-1">{lang === 'en' ? 'Zero Latency' : 'शून्य विलंबता'}</h4>
                         <p className="text-sm text-slate-400">{lang === 'en' ? 'Instant toggle between mediums.' : 'माध्यमों के बीच तुरंत टॉगल।'}</p>
                     </div>
@@ -107,16 +107,16 @@ export function DualLanguageShowcase() {
             <div className="order-1 lg:order-2 flex justify-center perspective-1000">
                 <div className="relative w-full max-w-md group">
                     {/* Glow Effect */}
-                    <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl opacity-50 blur-lg group-hover:opacity-75 transition-opacity duration-1000"></div>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-slate-500 to-purple-600 rounded-3xl opacity-50 blur-lg group-hover:opacity-75 transition-opacity duration-1000"></div>
 
                     <Card className="relative bg-slate-900 border-0 shadow-2xl rounded-3xl overflow-hidden ring-1 ring-white/10">
                         {/* Header */}
                         <div className="bg-slate-950/50 p-4 flex items-center justify-between border-b border-white/5">
                             <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                                    <Languages size={14} className="text-indigo-400" />
+                                <div className="w-8 h-8 rounded-full bg-slate-500/20 flex items-center justify-center">
+                                    <Languages size={14} className="text-slate-400" />
                                 </div>
-                                <span className="text-xs font-bold text-indigo-300 uppercase tracking-widest">
+                                <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">
                                     {lang === 'en' ? 'Mode: English' : 'मोड: हिंदी'}
                                 </span>
                             </div>
@@ -124,7 +124,7 @@ export function DualLanguageShowcase() {
                             {/* Toggle Switch Visual */}
                             <div className="flex bg-slate-800 rounded-full p-1 relative w-24 h-8 items-center cursor-pointer" onClick={() => setLang(l => l === 'en' ? 'hi' : 'en')}>
                                 <motion.div 
-                                    className="absolute h-6 w-10 bg-indigo-500 rounded-full shadow-lg"
+                                    className="absolute h-6 w-10 bg-slate-500 rounded-full shadow-lg"
                                     layout
                                     initial={false}
                                     animate={{ left: lang === 'en' ? '4px' : 'calc(100% - 44px)' }}
@@ -173,10 +173,10 @@ export function DualLanguageShowcase() {
                                     </div>
 
                                     <div className="pt-4 border-t border-white/10">
-                                         <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+                                         <div className="p-3 bg-slate-500/10 border border-slate-500/20 rounded-xl">
                                              <div className="flex items-center gap-2 mb-2">
-                                                 <Sparkles size={14} className="text-indigo-400" />
-                                                 <span className="text-xs font-bold text-indigo-300 uppercase">
+                                                 <Sparkles size={14} className="text-slate-400" />
+                                                 <span className="text-xs font-bold text-slate-300 uppercase">
                                                      {lang === 'en' ? 'Smart Explanation' : 'स्मार्ट व्याख्या'}
                                                  </span>
                                              </div>

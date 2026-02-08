@@ -99,7 +99,7 @@ export default function PYQPageClient({ initialTests }: PYQPageClientProps) {
                                                 {test.durationMinutes} {language === 'hi' ? 'मिनट' : 'min'}
                                             </span>
                                         </div>
-                                        <CardTitle className={cn("text-lg transition-colors", !isLocked && "group-hover:text-indigo-600")}>
+                                        <CardTitle className={cn("text-lg transition-colors", !isLocked && "group-hover:text-slate-700")}>
                                             {test.title}
                                         </CardTitle>
                                         <CardDescription className="line-clamp-2">

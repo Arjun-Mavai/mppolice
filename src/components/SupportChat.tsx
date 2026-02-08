@@ -24,16 +24,16 @@ type QA = {
 
 const FAQS: QA[] = [
   {
-    question: "Do you provide notes in both languages?",
-    answer: "Yes! All our content is available in both Hindi & English with a seamless toggle.",
+    question: "Do you provide test series in both languages?",
+    answer: "Yes! All our test series are available in both Hindi & English with a seamless language toggle.",
   },
   {
     question: "Is this helpful for MPPSC Pre & Mains?",
-    answer: "Absolutely. Our Mnemonics and detailed syllabus coverage are designed for comprehensive preparation.",
+    answer: "Absolutely. We provide comprehensive test series coverage for MPPSC Pre with topic-wise tests, full-length tests, PYQs, and instant feedback mode.",
   },
   {
-    question: "Can I access it on multiple devices?",
-    answer: "Yes, your progress syncs across your devices via your secure login.",
+    question: "What is Instant Mode in tests?",
+    answer: "Instant Mode gives you immediate feedback after each question - see correct answers instantly and learn as you practice!",
   },
 ];
 
@@ -44,6 +44,49 @@ export function SupportChat() {
   const [activeTab, setActiveTab] = useState<"chat" | "faq">("chat");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
   const [isNudgeOpen, setIsNudgeOpen] = useState(true);
+
+  /**
+   * Enterprise-grade user name detection with multiple fallback strategies
+   * Priority: Guest localStorage > Authenticated User > Default
+   * 
+   * @returns Sanitized user name or default greeting
+   */
+  const getUserDisplayName = (): string => {
+    try {
+      // Strategy 1: Check localStorage for guest name (from quiz)
+      // This is set when guest users take tests
+      if (typeof window !== 'undefined') {
+        const guestName = localStorage.getItem('mppsc_guest_name');
+        if (guestName && guestName.trim()) {
+          // Sanitize and validate
+          const sanitized = guestName.trim().slice(0, 50); // Max 50 chars
+          if (sanitized.length > 0) {
+            return sanitized;
+          }
+        }
+      }
+
+      // Strategy 2: Check authenticated user from store
+      // This comes from NextAuth session
+      if (user?.name && typeof user.name === 'string') {
+        const sanitized = user.name.trim().slice(0, 50);
+        if (sanitized.length > 0) {
+          return sanitized;
+        }
+      }
+
+      // Strategy 3: Fallback to default
+      return 'there';
+    } catch (error) {
+      // Fail gracefully - never crash the UI
+      console.error('[SupportChat] Error getting user name:', error);
+      return 'there';
+    }
+  };
+
+  // Get display name once on mount and when user changes
+  // Memoize to prevent unnecessary re-renders
+  const displayName = React.useMemo(() => getUserDisplayName(), [user?.name]);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -99,30 +142,44 @@ export function SupportChat() {
     <>
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-24 overscroll-y-none right-6 z-[100] w-[90vw] max-w-[380px] bg-white rounded-2xl shadow-2xl border border-indigo-100 overflow-hidden flex flex-col max-h-[600px]"
-          >
+          <>
+            {/* Backdrop Overlay - Prevents background clicks and closes chat */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-[99]"
+              aria-hidden="true"
+            />
+            
+            {/* Chat Modal */}
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.9 }}
+              className="fixed bottom-24 overscroll-y-none right-6 z-[100] w-[90vw] max-w-[380px] bg-white rounded-2xl shadow-2xl border border-indigo-100 overflow-hidden flex flex-col max-h-[600px]"
+            >
             {/* Header */}
-            <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white relative overflow-hidden">
+            <div className="bg-gradient-to-r from-[#00F0FF] to-[#00D1E0] p-6 text-slate-900 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-4 opacity-10">
                 <MessageCircle size={100} />
               </div>
-              <h3 className="text-xl font-bold font-serif mb-1 relative z-10">Hello! 👋</h3>
-              <p className="text-indigo-100 text-sm relative z-10">
-                We usually reply within a few minutes.
+              <h3 className="text-xl font-bold font-sans mb-1 relative z-10 text-slate-900">
+                Hello{displayName !== 'there' ? `, ${displayName}` : ''}! 👋
+              </h3>
+              <p className="text-slate-700 text-sm relative z-10 font-medium">
+                We usually reply within a few hours.
               </p>
               
               <div className="flex gap-2 mt-4 relative z-10">
                 <button
                   onClick={() => setActiveTab("chat")}
                   className={cn(
-                    "flex-1 py-1.5 px-3 rounded-full text-xs font-medium transition-all",
+                    "flex-1 py-1.5 px-3 rounded-full text-xs font-semibold transition-all",
                     activeTab === "chat" 
-                      ? "bg-white text-indigo-600 shadow-sm" 
-                      : "bg-indigo-700/50 text-indigo-100 hover:bg-indigo-700/70"
+                      ? "bg-slate-900 text-white shadow-md" 
+                      : "bg-white/30 text-slate-800 hover:bg-white/50 backdrop-blur-sm"
                   )}
                 >
                   Contact Us
@@ -130,10 +187,10 @@ export function SupportChat() {
                 <button
                   onClick={() => setActiveTab("faq")}
                   className={cn(
-                    "flex-1 py-1.5 px-3 rounded-full text-xs font-medium transition-all",
+                    "flex-1 py-1.5 px-3 rounded-full text-xs font-semibold transition-all",
                     activeTab === "faq" 
-                      ? "bg-white text-indigo-600 shadow-sm" 
-                      : "bg-indigo-700/50 text-indigo-100 hover:bg-indigo-700/70"
+                      ? "bg-slate-900 text-white shadow-md" 
+                      : "bg-white/30 text-slate-800 hover:bg-white/50 backdrop-blur-sm"
                   )}
                 >
                   FAQs
@@ -279,6 +336,7 @@ export function SupportChat() {
               )}
             </div>
           </motion.div>
+          </>
         )}
       </AnimatePresence>
 

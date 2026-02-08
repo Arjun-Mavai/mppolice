@@ -88,8 +88,8 @@ export default function FLTPageClient({ tests }: FLTPageClientProps) {
                                 className={cn(
                                     "transition-all hover:shadow-lg border-2 cursor-pointer",
                                     isLocked ? "border-slate-200 bg-slate-50 opacity-90" : 
-                                    isCompleted ? "border-indigo-200 bg-indigo-50/20" :
-                                    "border-slate-200 bg-white hover:border-indigo-400"
+                                    isCompleted ? "border-slate-200 bg-slate-50/20" :
+                                    "border-slate-200 bg-white hover:border-slate-400"
                                 )}
                                 onClick={() => handleTestClick(id, isLocked, attemptsLeft)}
                             >
@@ -101,7 +101,7 @@ export default function FLTPageClient({ tests }: FLTPageClientProps) {
                                             </h3>
                                             {isLocked && <Lock className="w-4 h-4 text-slate-400 mt-1" />}
                                             {showFreeBadge && <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">Free</Badge>}
-                                            {isCompleted && <Badge variant="secondary" className="bg-indigo-100 text-indigo-700">Completed</Badge>}
+                                            {isCompleted && <Badge variant="secondary" className="bg-slate-100 text-slate-800">Completed</Badge>}
                                         </div>
                                         
                                         <p className="text-sm text-slate-500 line-clamp-2">{description || "Comprehensive mock test covering all units."}</p>
@@ -128,7 +128,7 @@ export default function FLTPageClient({ tests }: FLTPageClientProps) {
                                                     </span>
                                                 </div>
                                                 <Progress value={(attemptsCount / safeMaxRetries) * 100} className="h-1.5 bg-slate-100" 
-                                                    indicatorClassName={cn(attemptsLeft > 0 ? "bg-indigo-500" : "bg-red-500")}
+                                                    indicatorClassName={cn(attemptsLeft > 0 ? "bg-slate-700" : "bg-red-500")}
                                                 />
                                             </div>
                                         )}
@@ -140,11 +140,11 @@ export default function FLTPageClient({ tests }: FLTPageClientProps) {
                                                 <Lock className="w-4 h-4 mr-2" /> Locked
                                             </Button>
                                         ) : isCompleted ? (
-                                             <Button className="w-full md:w-32 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 font-bold shadow-none">
+                                             <Button className="w-full md:w-32 bg-slate-100 text-slate-800 hover:bg-slate-200 font-bold shadow-none">
                                                 Review
                                             </Button>
                                         ) : (
-                                            <Button className="w-full md:w-32 bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-lg shadow-indigo-200">
+                                            <Button className="w-full md:w-32 bg-slate-800 hover:bg-slate-700 text-white font-bold shadow-lg shadow-slate-200">
                                                 <Play className="w-4 h-4 mr-2" /> Start Test
                                             </Button>
                                         )}

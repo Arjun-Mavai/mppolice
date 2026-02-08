@@ -9,7 +9,7 @@ const QuizInterface = dynamic(() => import('@/features/tests/components/QuizInte
   loading: () => (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="flex flex-col items-center gap-2">
-        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-slate-700 animate-spin" />
         <p className="text-slate-500 font-medium">Loading Quiz...</p>
       </div>
     </div>
@@ -54,7 +54,7 @@ export function QuizPlayClient({
           <>
               <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
                   <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-xl text-center space-y-6">
-                       <div className="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                       <div className="w-16 h-16 bg-slate-50 text-slate-600 rounded-full flex items-center justify-center mx-auto mb-4">
                            <Lock size={32} />
                        </div>
                        
@@ -71,7 +71,7 @@ export function QuizPlayClient({
                        <div className="pt-4 space-y-3">
                            <Button 
                                onClick={() => setPaywallOpen(true)}
-                               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-indigo-200"
+                               className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-slate-200"
                            >
                                Upgrade to Premium
                            </Button>
@@ -111,7 +111,7 @@ export function QuizPlayClient({
           <div className="min-h-screen flex items-center justify-center bg-slate-50 flex-col gap-4 pt-[80px]">
               <div className="text-xl font-bold text-slate-900">No questions found.</div>
               <p className="text-slate-500">Please try another unit or check back later.</p>
-              <button onClick={() => router.back()} className="text-indigo-600 hover:underline">Go Back</button>
+              <button onClick={() => router.back()} className="text-slate-700 hover:underline">Go Back</button>
           </div>
       );
   }
@@ -138,7 +138,7 @@ export function QuizPlayClient({
 
                    <div className="pt-4 space-y-3">
                        {!isPro && (
-                           <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-indigo-200">
+                           <Button className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-slate-200">
                                Upgrade to Pro
                            </Button>
                        )}

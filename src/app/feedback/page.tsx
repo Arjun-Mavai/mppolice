@@ -10,7 +10,14 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Loader2, Star, Send, ThumbsUp, ChevronLeft } from "lucide-react";
+import { Loader2, Star, Send, ThumbsUp, ChevronLeft, MapPin, Briefcase } from "lucide-react";
+import { 
+    Select, 
+    SelectContent, 
+    SelectItem, 
+    SelectTrigger, 
+    SelectValue 
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -22,6 +29,8 @@ const formSchema = z.object({
   category: z.enum(["content", "bug", "ui", "feature_request", "other"]),
   rating: z.number().min(1).max(5),
   message: z.string().min(10, "Please share a bit more detail (min 10 chars)"),
+  role: z.string().optional(),
+  location: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -172,6 +181,37 @@ export default function FeedbackPage() {
                             <div className="space-y-1.5">
                                 <Label htmlFor="phone">Phone (Optional)</Label>
                                 <Input id="phone" type="tel" placeholder="+91..." {...register("phone")} />
+                            </div>
+                        </div>
+
+                        {/* Role & Location */}
+                        <div className="grid sm:grid-cols-2 gap-4">
+                             <div className="space-y-1.5">
+                                <Label>Role (Optional)</Label>
+                                <Select onValueChange={(val) => setValue("role", val)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select your role" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Aspirant">Aspirant</SelectItem>
+                                        <SelectItem value="Selected Officer">Selected Officer</SelectItem>
+                                        <SelectItem value="Teacher">Teacher</SelectItem>
+                                        <SelectItem value="Parent">Parent</SelectItem>
+                                        <SelectItem value="Other">Other</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="location">Location (Optional)</Label>
+                                <div className="relative">
+                                    <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                                    <Input 
+                                        id="location" 
+                                        placeholder="Indore, Bhopal..." 
+                                        className="pl-9"
+                                        {...register("location")} 
+                                    />
+                                </div>
                             </div>
                         </div>
 

@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { syllabusTopics } from '@/db/schema';
 import { eq, asc } from 'drizzle-orm';
 import UnitContent, { TopicData } from './UnitContent';
+import { ACCESS_CONFIG } from '@/features/syllabus/utils/locks';
 import { logger } from "@/lib/logger";
 
 type Props = {
@@ -56,7 +57,7 @@ export default async function UnitPage({ params }: Props) {
       }
 
       // Process DB Topics
-      finalTopics = dbTopics.map(t => {
+      finalTopics = dbTopics.map((t, idx) => {
            const c = t.content as any;               // Official Syllabus (Old)
            const ai = t.aiContent as any;            // Rich AI Content (New)
 
@@ -70,12 +71,12 @@ export default async function UnitPage({ params }: Props) {
                impact_emoji: ai?.impact_emoji || c?.impact_emoji,
                important_facts: ai?.points || c?.important_facts, // "Points" from AI -> "important_facts" in UI
                pyq: ai?.pyq, // New field
-               isFree: t.isFree ?? false
+               isFree: (t.isFree ?? false) || (unitId === 'unit_1' && idx < ACCESS_CONFIG.FREE_TOPICS_UNIT1)
            };
       });
 
       // Process English (if exists in DB, otherwise check contentEn)
-      finalTopicsEn = dbTopics.map(t => {
+      finalTopicsEn = dbTopics.map((t, idx) => {
            const c = (t.contentEn as any) || (t.content as any); 
            const ai = (t.aiContentEn as any) || (t.aiContent as any);
 
@@ -89,7 +90,7 @@ export default async function UnitPage({ params }: Props) {
                impact_emoji: ai?.impact_emoji || c?.impact_emoji,
                important_facts: ai?.points || c?.important_facts,
                pyq: ai?.pyq,
-               isFree: t.isFree ?? false
+               isFree: (t.isFree ?? false) || (unitId === 'unit_1' && idx < ACCESS_CONFIG.FREE_TOPICS_UNIT1)
            };
       });
 
@@ -105,20 +106,20 @@ export default async function UnitPage({ params }: Props) {
       unitTitle = unit.title || "";
       unitTitleEn = unit.title_en || unit.title || "";
 
-      // Smart Mapping: Unit 1 topics 1-10 are FREE
+      // Bhai Unit 1 ke pehle 5 topics hi free h - baaki sab premium
       const isUnit1 = unitId === 'unit_1';
 
       finalTopics = (unit.topics || []).map((t, idx) => ({
           ...t,
           unitId,
-          // Unit 1 First 10 are Free
-          isFree: isUnit1 ? idx < 10 : false 
+          // Sirf pehle 5 topics free - baaki lock
+          isFree: isUnit1 ? idx < 5 : false 
       }));
 
       finalTopicsEn = (unit.topics_en || unit.topics || []).map((t, idx) => ({
           ...t,
           unitId,
-          isFree: isUnit1 ? idx < 10 : false
+          isFree: isUnit1 ? idx < 5 : false
       }));
   }
 

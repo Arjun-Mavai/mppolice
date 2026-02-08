@@ -39,10 +39,12 @@ export const useSettingsStore = create<SettingsState>()(
       authCheckStatus: 'idle',
       setAuthCheckStatus: (status) => set({ authCheckStatus: status }),
       setLockModalOpen: (isOpen) => set({ isLockModalOpen: isOpen }),
+      // On logout: caller must also localStorage.removeItem('settings-storage')
+      // to trigger cross-tab sync via the 'storage' event in AppNavbar
       setUser: (user, isSubscribed) => set({ user, isSubscribed, authCheckStatus: 'checked' }),
     }),
     {
-      name: 'settings-storage', // name of the item in the storage (must be unique)
+      name: 'settings-storage', // localStorage key — removing this key triggers cross-tab logout
     }
   )
 );

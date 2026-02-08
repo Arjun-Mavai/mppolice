@@ -81,7 +81,7 @@ export function SyllabusSearch({ open, setOpen }: SyllabusSearchProps) {
                         }}
                         className="cursor-pointer"
                         >
-                            <BookOpen className="mr-2 h-4 w-4 text-indigo-500" />
+                            <BookOpen className="mr-2 h-4 w-4 text-slate-500" />
                             <span className="font-medium mr-2">Unit {idx + 1}:</span> {title}
                         </CommandItem>
                     )

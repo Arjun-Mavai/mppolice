@@ -32,20 +32,20 @@ export default function LoginPage() {
       const data = await res.json()
 
       if (res.ok) {
-        // Update Global Store
+        // Update Global Store with fresh user data
         useSettingsStore.getState().setUser(data.user, true);
-        router.refresh()
         toast.success("Welcome back!", {
           description: "Accessing your syllabus...",
         })
+        // Hard reload to flush all server component cache and ensure fresh auth state
+        // router.push + router.refresh can leave stale RSC payloads
         setTimeout(() => {
-          // Redirect logic based on subscription
           if (data.user?.is_subscribed) {
-             router.push("/syllabus/quiz");
+             window.location.href = "/syllabus/quiz";
           } else {
-             router.push("/");
+             window.location.href = "/";
           }
-        }, 800)
+        }, 600)
       } else {
         setError(data.error || "Login failed")
         toast.error("Login failed", {
@@ -54,6 +54,12 @@ export default function LoginPage() {
       }
     } catch (err) {
       setError("Something went wrong. Please try again.")
+      
+      // Notify user about unexpected error
+      toast.error("Connection Error", {
+          description: "Unable to connect to server. Please check your internet connection.",
+          duration: 5000,
+      })
     } finally {
       setLoading(false)
     }
@@ -91,7 +97,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side: Form */}
-      <div className="flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
+      <div className="flex flex-col items-center justify-center px-4 py-12 sm:p-12 relative overflow-hidden">
          {/* Mobile Background Image (Visible only on small screens) */}
          <div className="absolute inset-0 lg:hidden z-0">
              <div className="absolute inset-0 bg-slate-900/90 z-10"></div>
@@ -103,7 +109,7 @@ export default function LoginPage() {
          </div>
 
          <div className="absolute top-6 left-6 z-20">
-             <Link href="/" className="flex items-center gap-2 text-slate-500 lg:text-slate-500 text-slate-300 hover:text-white lg:hover:text-slate-900 transition-colors text-sm font-medium">
+             <Link href="/" className="flex items-center gap-2 text-slate-300 lg:text-slate-500 hover:text-white lg:hover:text-slate-900 transition-colors text-sm font-medium">
                  <ArrowLeft className="w-4 h-4" /> Back to Home
              </Link>
          </div>
@@ -111,7 +117,7 @@ export default function LoginPage() {
          <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-md space-y-8 bg-white p-8 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 relative z-20"
+            className="w-full max-w-md space-y-8 bg-white p-6 sm:p-8 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 relative z-20"
          >
              <div className="text-center space-y-2">
                  <h2 className="text-2xl font-bold text-slate-900">Sign in to MPPSC Prep</h2>

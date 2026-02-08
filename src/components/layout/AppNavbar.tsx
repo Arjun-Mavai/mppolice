@@ -35,11 +35,13 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetClose,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useEffect } from "react";
 import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 
 interface AppNavbarProps {
   user: {
@@ -67,18 +69,32 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   // ------------------------------------------------------------------
   // EFFECT 1: SCROLL LISTENER (The "Visuals")
   // ------------------------------------------------------------------
-  // Why: Toggles the background style of the navbar when the user scrolls down.
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
-    
-    // Add listener on mount
     window.addEventListener("scroll", handleScroll);
-    
-    // Cleanup on unmount to prevent memory leaks
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // ------------------------------------------------------------------
+  // EFFECT 1.5: CROSS-TAB LOGOUT SYNC
+  // ------------------------------------------------------------------
+  // When user logs out in one tab, localStorage is cleared.
+  // This listener detects that change in other tabs and forces a reload
+  // so stale auth state doesn't persist across browser tabs.
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'settings-storage' && e.newValue === null) {
+        // Another tab cleared auth — reload this tab to reflect logged-out state
+        setUser(null, false);
+        setAuthCheckStatus('checked');
+        window.location.href = '/';
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [setUser, setAuthCheckStatus]);
 
   // ------------------------------------------------------------------
   // EFFECT 2: SESSION RESTORATION (The "Hydration")
@@ -109,37 +125,54 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
             .catch(err => {
                 logger.error("Failed to restore session:", err);
                 setAuthCheckStatus('checked'); // Stop retrying on error
+                
+                // Notify user about authentication error
+                toast.error("Authentication Error", {
+                    description: "Unable to verify your session. Please try refreshing the page.",
+                    duration: 5000,
+                });
             });
     }
   }, [initialUser, globalUser, setUser, authCheckStatus, setAuthCheckStatus]);
 
   const handleLogout = async () => {
       try {
-        // Clear Client Store FIRST to update UI immediately
+        // 1. Clear Zustand store + localStorage immediately
         setUser(null, false);
+        setAuthCheckStatus('checked');
         
+        // 2. Nuke persisted Zustand state from localStorage so other tabs don't restore stale user
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('settings-storage');
+        }
+
+        // 3. Hit server to delete httpOnly cookie
         const response = await fetch('/api/auth/mppsc-logout', { method: 'POST' });
         
         if (response.ok) {
-          // Redirect to login without callback to prevent auto-redirect loop
-          router.push('/login');
-          // Force a hard refresh to clear any cached state
-          setTimeout(() => {
-            window.location.href = '/login';
-          }, 100);
+          // 4. Hard reload to flush Next.js router cache + RSC cache completely
+          // router.push won't clear server component cache, so full reload is essential
+          window.location.href = '/';
         }
       } catch (error) {
         logger.error('Logout failed:', error);
-        // Even if API fails, redirect to login
-        window.location.href = '/login';
+        
+        toast.error("Logout Error", {
+            description: "Failed to logout properly. Redirecting...",
+            duration: 3000,
+        });
+        
+        // Even if API fails, nuke everything and redirect
+        localStorage.removeItem('settings-storage');
+        window.location.href = '/';
       }
   };
 
   const navItems = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Syllabus", href: "/syllabus", icon: BookOpen },
-    { name: "Test Series", href: "/syllabus/quiz", icon: GraduationCap },
-    { name: "Blogs", href: "/blogs", icon: BookOpen },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, color: "text-slate-700" },
+    { name: "Syllabus", href: "/syllabus", icon: BookOpen, color: "text-emerald-600" },
+    { name: "Test Series", href: "/syllabus/quiz", icon: GraduationCap, color: "text-amber-600" },
+    { name: "Blogs", href: "/blogs", icon: BookOpen, color: "text-sky-600" },
   ];
 
   // Only hide on the actual quiz play interface
@@ -168,7 +201,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                  <span className="font-bold text-xs tracking-tighter">MP</span>
             </div>
             <div className="flex flex-col">
-                <span className="font-bold text-lg font-display text-slate-900 leading-none">MPPSC<span className="text-indigo-600">26</span></span>
+                <span className="font-bold text-lg font-display text-slate-900 leading-none">MPPSC<span className="text-slate-500">26</span></span>
                 <span className="text-[10px] text-slate-500 font-medium tracking-wider uppercase">Mindful Prep</span>
             </div>
           </div>
@@ -194,31 +227,46 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                   className={cn(
                     "px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2",
                     isActive
-                      ? "bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200"
+                      ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
                       : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
                   )}
                 >
-                  <Icon size={16} className={cn(isActive && "fill-indigo-600/10")} />
+                  <Icon size={16} className={cn(isActive && "fill-slate-600/10")} />
                   {item.name}
                 </Link>
               );
             })}
-                  {(user && user.is_subscribed) ? (
-                    <div className="px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-gradient-to-r from-slate-900 to-slate-800 text-white border border-slate-700 shadow-lg cursor-default relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent,25%,rgba(255,255,255,0.1),50%,transparent)] bg-[length:250%_100%] animate-shimmer" />
-                        <Sparkles size={12} className="text-yellow-400 fill-yellow-400" />
-                        <span className="tracking-wide uppercase text-[10px] relative z-10 font-black">Premium</span>
+                  {user && user.is_subscribed && (user as any)?.plan_tier === 'pro' ? (
+                    /* Pro Badge — seamless golden-red-pink conic border, no gap */
+                    <div className="relative p-[1.5px] rounded-full overflow-hidden">
+                        <div className="absolute inset-0 bg-[conic-gradient(from_0deg,#fbbf24,#f59e0b,#ef4444,#ec4899,#f59e0b,#fbbf24,#d97706,#ef4444,#ec4899,#fbbf24)] animate-spin-slow" />
+                        <div className="relative px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-gradient-to-r from-slate-900 to-slate-800 text-white cursor-default overflow-hidden">
+                            <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent,25%,rgba(255,255,255,0.1),50%,transparent)] bg-[length:250%_100%] animate-shimmer" />
+                            <Sparkles size={12} className="text-yellow-400 fill-yellow-400 relative z-10" />
+                            <span className="tracking-wide uppercase text-[10px] relative z-10 font-black">Pro</span>
+                        </div>
+                    </div>
+                  ) : user && user.is_subscribed && (user as any)?.plan_tier === 'lite' ? (
+                    /* Lite Badge — tag style on desktop (no button), animated border */
+                    <div className="relative p-[1.5px] rounded-full overflow-hidden">
+                        <div className="absolute inset-0 bg-[conic-gradient(from_0deg,#ec4899,#ef4444,#f59e0b,#8b5cf6,#3b82f6,#ec4899,#ef4444,#f59e0b,#ec4899)] animate-spin-slow" />
+                        <div className="relative px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-black text-white cursor-default">
+                            <Sparkles size={12} className="text-pink-500 fill-pink-500" />
+                            <span className="tracking-wide uppercase text-[10px] font-black">Lite</span>
+                        </div>
                     </div>
                   ) : user ? (
-                    <Link
-                        href="/upgrade"
-                        className={cn(
-                        "px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-md hover:scale-105",
-                        )}
-                    >
-                        <Sparkles size={14} className="fill-white/20" />
-                        Upgrade
-                    </Link>
+                    /* Free user — Upgrade button with animated red-pink border */
+                    <div className="relative p-[1.5px] rounded-full overflow-hidden">
+                        <div className="absolute inset-0 bg-[conic-gradient(from_0deg,#ec4899,#ef4444,#f59e0b,#8b5cf6,#3b82f6,#ec4899,#ef4444,#f59e0b,#ec4899)] animate-spin-slow" />
+                        <Link
+                            href="/upgrade"
+                            className="relative px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-2 bg-slate-900 text-white hover:shadow-md hover:scale-105"
+                        >
+                            <Sparkles size={14} className="fill-white/20" />
+                            Upgrade
+                        </Link>
+                    </div>
                   ) : null}
           </nav>
 
@@ -248,13 +296,17 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
 
              <div className="w-px h-6 bg-slate-200 hidden sm:block"></div>
 
-            {user ? (
+            {/* LOADING STATE FIX: Don't show login button while checking auth */}
+            {authCheckStatus === 'idle' || authCheckStatus === 'loading' ? (
+              // Show skeleton while checking auth to prevent flash
+              <div className="hidden md:flex h-10 w-10 rounded-full bg-slate-100 animate-pulse" />
+            ) : user ? (
                <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full ring-2 ring-slate-100 hover:ring-indigo-100 transition-all p-0 hidden md:flex">
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full ring-2 ring-slate-100 hover:ring-slate-200 transition-all p-0 hidden md:flex">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={(user as any)?.image || ""} alt={user.name || "User"} />
-                      <AvatarFallback className="bg-indigo-50 text-indigo-600 font-bold border border-indigo-100">
+                      <AvatarFallback className="bg-slate-50 text-slate-700 font-bold border border-slate-100">
                         {user.name?.charAt(0).toUpperCase() || "U"}
                       </AvatarFallback>
                     </Avatar>
@@ -269,11 +321,8 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                       </p>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push('/app/profile')}>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </DropdownMenuItem>
+                 
+                   
                   
                   {(user && user.role === 'admin') && (
                     <>
@@ -283,13 +332,13 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                             <LayoutDashboard className="mr-2 h-4 w-4" />
                             <span>Dashboard</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => router.push('/admin/upload')}>
+                        <DropdownMenuItem onClick={() => router.push('/admin/content-manager')}>
                             <Upload className="mr-2 h-4 w-4" />
-                            <span>Upload Content</span>
+                            <span>Content Manager</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => router.push('/admin/upload-syllabus')}>
+                        <DropdownMenuItem onClick={() => router.push('/admin/syllabus-upload')}>
                             <BookOpen className="mr-2 h-4 w-4" />
-                            <span>Upload Syllabus</span>
+                            <span>Syllabus Upload</span>
                         </DropdownMenuItem>
                     </>
                   )}
@@ -304,7 +353,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
             ) : (
                 <div className="flex gap-2">
                     <Button asChild className="rounded-full bg-slate-900 text-white hover:bg-slate-800 hidden sm:flex px-6 font-bold shadow-lg shadow-slate-900/20">
-                        <Link href="/login">Log in</Link>
+                        <Link href="/login" prefetch={false}>Log in</Link>
                     </Button>
                 </div>
             )}
@@ -319,7 +368,17 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                 <SheetContent side="right" className="w-[300px] sm:w-[360px] p-0 flex flex-col">
                     <SheetHeader className="p-6 border-b border-slate-100 text-left bg-slate-50/50">
                          <div className="flex items-center gap-3">
-                            {user ? (
+                            {/* LOADING STATE FIX: Show skeleton in mobile menu too */}
+                            {authCheckStatus === 'idle' || authCheckStatus === 'loading' ? (
+                                <>
+                                    <div className="h-10 w-10 rounded-full bg-slate-200 animate-pulse" />
+                                    <div className="flex flex-col gap-2 flex-1">
+                                        <div className="h-4 w-24 bg-slate-200 rounded animate-pulse" />
+                                        <div className="h-3 w-32 bg-slate-200 rounded animate-pulse" />
+                                    </div>
+                                    <SheetTitle className="sr-only">Loading...</SheetTitle>
+                                </>
+                            ) : user ? (
                                 <>
                                     <div className="relative">
                                         <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
@@ -358,138 +417,154 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                         </div>
                     </SheetHeader>
                     
-                    <div className="flex-1 overflow-y-auto px-6 py-6 space-y-2">
+                    <div className="flex-1 overflow-y-auto px-4 py-5 space-y-1">
                          {navItems
                             .filter(item => {
-                                // Hide Dashboard if user is not logged in
-                                if (item.name === "Dashboard") {
-                                    return !!user;
-                                }
+                                if (item.name === "Dashboard") return !!user;
                                 return true;
                             })
                             .map((item) => {
                                 const isActive = pathname === item.href;
                                 const Icon = item.icon;
                                 return (
-                                    <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={cn(
-                                        "px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-3",
-                                        isActive
-                                        ? "bg-slate-100 text-indigo-600"
-                                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                                    )}
-                                    >
-                                    <Icon size={18} />
-                                    {item.name}
-                                    </Link>
+                                    <SheetClose asChild key={item.href}>
+                                        <Link
+                                            href={item.href}
+                                            className={cn(
+                                                "px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-3",
+                                                isActive
+                                                    ? "bg-slate-900 text-white shadow-sm"
+                                                    : "text-slate-700 hover:bg-slate-100 active:bg-slate-200"
+                                            )}
+                                        >
+                                            <Icon size={18} className={cn(isActive ? "text-white" : item.color)} />
+                                            {item.name}
+                                        </Link>
+                                    </SheetClose>
                                 );
                             })}
                         
-                        <a
-                            href="https://t.me/MPPSC2026_Mission"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-sky-50 hover:text-sky-600 transition-all duration-200 flex items-center gap-3"
-                        >
-                            <Send size={18} />
-                            Join Telegram Mission
-                        </a>
-
-                        {!(user as any)?.is_subscribed ? (
-                            <Link
-                                href="/upgrade"
-                                className="px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-3 bg-slate-900 text-white mt-4 shadow-lg shadow-slate-900/20"
+                        <SheetClose asChild>
+                            <a
+                                href="https://t.me/MPPSC2026_Mission"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-sky-50 hover:text-sky-600 transition-all duration-200 flex items-center gap-3"
                             >
-                                <Crown size={18} className="text-yellow-400" />
-                                Become Premium Member
-                            </Link>
-                        ) : (
-                             <div className="mt-4 p-4 rounded-xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden group">
-                                <div className="relative z-10 flex items-center gap-3 mb-2">
-                                     <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shadow-sm">
-                                         <Crown size={14} className="text-yellow-400 fill-yellow-400" />
-                                     </div>
-                                     <div>
-                                         <h4 className="font-bold text-white text-sm leading-tight">Premium Active</h4>
-                                         <p className="text-[10px] text-slate-400 font-medium">All Features Unlocked</p>
-                                     </div>
-                                </div>
-                            </div>
-                        )}
+                                <Send size={18} />
+                                Join Telegram
+                            </a>
+                        </SheetClose>
 
-                        {/* Admin Mobile Menu - Explicitly for Admin Role */}
+                        <div className="pt-3">
+                            {(user as any)?.is_subscribed && (user as any)?.plan_tier === 'pro' ? (
+                                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
+                                    <div className="relative z-10 flex items-center gap-3">
+                                         <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                                             <Crown size={14} className="text-yellow-400 fill-yellow-400" />
+                                         </div>
+                                         <div>
+                                             <h4 className="font-bold text-white text-sm leading-tight">Pro Active</h4>
+                                             <p className="text-[10px] text-slate-400 font-medium">All Features Unlocked</p>
+                                         </div>
+                                    </div>
+                                </div>
+                            ) : (user as any)?.is_subscribed && (user as any)?.plan_tier === 'lite' ? (
+                                <>
+                                    {/* Lite tag in mobile menu */}
+                                    <div className="p-4 rounded-xl bg-slate-100 border border-slate-200">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-slate-200 flex items-center justify-center">
+                                                <Crown size={14} className="text-pink-500" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-slate-900 text-sm">Lite Member</h4>
+                                                <p className="text-[10px] text-slate-500">Limited Access</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* Animated Upgrade button — red/pink spinning border */}
+                                    <SheetClose asChild>
+                                        <Link href="/upgrade" className="mt-2 block">
+                                            <div className="relative p-[1.5px] rounded-xl overflow-hidden">
+                                                <div className="absolute inset-0 bg-[conic-gradient(from_0deg,#ec4899,#ef4444,#f59e0b,#8b5cf6,#3b82f6,#ec4899,#ef4444,#f59e0b,#ec4899)] animate-spin-slow" />
+                                                <div className="relative px-4 py-3.5 rounded-xl text-sm font-bold flex items-center gap-3 bg-slate-900 text-white">
+                                                    <Sparkles size={18} className="text-pink-400" />
+                                                    Upgrade to Pro
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    </SheetClose>
+                                </>
+                            ) : (
+                                <>
+                                <SheetClose asChild>
+                                    <Link
+                                        href="/pricing"
+                                        className="px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-3 text-slate-700 hover:bg-amber-50 active:bg-amber-100"
+                                    >
+                                        <Sparkles size={18} className="text-amber-500" />
+                                        Pricing
+                                    </Link>
+                                </SheetClose>
+                                <SheetClose asChild>
+                                    <Link
+                                        href="/upgrade"
+                                        className="px-4 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-3 bg-slate-900 text-white shadow-lg shadow-slate-900/20 active:scale-[0.98]"
+                                    >
+                                        <Crown size={18} className="text-yellow-400" />
+                                        Become Premium Member
+                                    </Link>
+                                </SheetClose>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Admin Controls */}
                         {(user as any)?.role === 'admin' && (
                             <div className="pt-4 border-t border-slate-100 mt-4">
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Admin Controls</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-4">Admin</p>
                                 <div className="space-y-1">
-                                    <Link
-                                        href="/admin/dashboard"
-                                        className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-3"
-                                        onClick={() => document.body.click()}
-                                    >
-                                        <LayoutDashboard size={18} />
-                                        Dashboard
-                                    </Link>
-                                    <Link
-                                        href="/admin/upload"
-                                        className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-3"
-                                        onClick={() => document.body.click()}
-                                    >
-                                        <Upload size={18} />
-                                        Upload Center
-                                    </Link>
-                                    <Link
-                                        href="/admin/upload-syllabus"
-                                        className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-3"
-                                        onClick={() => document.body.click()}
-                                    >
-                                        <BookOpen size={18} />
-                                        Syllabus Manager
-                                    </Link>
-                                    {/* Admin-only Signup Access (if manual route needed, though we disabled the page redirect) 
-                                        Since we redirected /signup to /login, this link would also just go to login. 
-                                        If admin needs to create user, they should use DB as per guide. 
-                                        But if we wanted a UI, we'd need a separate admin-only creation page. 
-                                        For now, user asked to see the button, but the page is redirected.
-                                        I will remove the specific "Sign up" button for clean UI as per first interpretation, 
-                                        but if "admin user ko signup ka button dikhe" means they need a way to create users UI, 
-                                        that contradicts "endpoint only admin...". 
-                                        Let's stick to the Guide for creation and hide the button for public. 
-                                    */}
+                                    <SheetClose asChild>
+                                        <Link href="/admin/dashboard" className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-3">
+                                            <LayoutDashboard size={18} /> Dashboard
+                                        </Link>
+                                    </SheetClose>
+                                    <SheetClose asChild>
+                                        <Link href="/admin/content-manager" className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-3">
+                                            <Upload size={18} /> Content Manager
+                                        </Link>
+                                    </SheetClose>
+                                    <SheetClose asChild>
+                                        <Link href="/admin/syllabus-upload" className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-3">
+                                            <BookOpen size={18} /> Syllabus Upload
+                                        </Link>
+                                    </SheetClose>
                                 </div>
                             </div>
                         )}
 
                     </div>
 
-                    <div className="p-6 border-t border-slate-100 bg-slate-50/50">
+                    <div className="p-4 border-t border-slate-100 bg-slate-50/50">
                          {user ? (
-                             <div className="flex items-center gap-2">
-                                <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                    onClick={handleLogout}
-                                >
-                                    <LogOut size={16} className="mr-2" />
-                                    Logout
-                                </Button>
-                             </div>
-                         ) : (
-                             <div className="grid grid-cols-2 gap-3">
-                                 <Button variant="outline" asChild className="rounded-xl">
-                                     <Link href="/login">Log in</Link>
+                             <SheetClose asChild>
+                                 <Button 
+                                     variant="ghost" 
+                                     size="sm"
+                                     className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full justify-start"
+                                     onClick={handleLogout}
+                                 >
+                                     <LogOut size={16} className="mr-2" />
+                                     Logout
                                  </Button>
-                                 {/* Only show Sign up if we decide to allow it later or for admins finding a backdoor, 
-                                     but effectively disabling it for regular users as per request. 
-                                     However, the prompt says "endpoint only admin user ke liye open hoga... mobile me signup ka button h use hata do".
-                                     So we remove it entirely for guest users. */}
-                                 {/* <Button asChild className="rounded-xl bg-slate-900 text-white hover:bg-slate-800">
-                                     <Link href="/signup">Sign up</Link>
-                                 </Button> */}
-                             </div>
+                             </SheetClose>
+                         ) : (
+                             <SheetClose asChild>
+                                 <Button asChild className="rounded-xl bg-slate-900 text-white hover:bg-slate-800 w-full font-bold">
+                                     <Link href="/login" prefetch={false}>Log in</Link>
+                                 </Button>
+                             </SheetClose>
                          )}
                     </div>
                 </SheetContent>

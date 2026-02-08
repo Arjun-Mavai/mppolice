@@ -241,10 +241,14 @@ export const feedbacks = sqliteTable('feedbacks', {
     rating: integer('rating').notNull(), // 1 to 5
     // Categories: 'bug', 'content', 'ui', 'feature_request', 'other'
     category: text('category').default('other'),
+    // Alignment with Testimonials
+    role: text('role'), // e.g., 'Aspirant', 'Selected Officer', 'Teacher'
+    location: text('location'), // e.g., 'Indore', 'Bhopal'
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
 }, (table) => [
     index('idx_feedbacks_created_at').on(table.createdAt),
     index('idx_feedbacks_category').on(table.category),
+    index('idx_feedbacks_role').on(table.role),
 ]);
 
 // Guests Table (Lead Generation)
