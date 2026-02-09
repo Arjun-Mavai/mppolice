@@ -346,6 +346,10 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                             <BookOpen className="mr-2 h-4 w-4" />
                             <span>Syllabus Upload</span>
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push('/admin/blogs')}>
+                            <BookOpen className="mr-2 h-4 w-4" />
+                            <span>Blog Management</span>
+                        </DropdownMenuItem>
                     </>
                   )}
 
@@ -546,6 +550,11 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                                             <BookOpen size={18} /> Syllabus Upload
                                         </Link>
                                     </SheetClose>
+                                    <SheetClose asChild>
+                                        <Link href="/admin/blogs" className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-3">
+                                            <BookOpen size={18} /> Blog Management
+                                        </Link>
+                                    </SheetClose>
                                 </div>
                             </div>
                         )}
@@ -581,3 +590,4 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     </header>
   );
 }
+// trigger rebuild

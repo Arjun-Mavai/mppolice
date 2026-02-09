@@ -138,6 +138,9 @@ export const contentBlogs = sqliteTable('content_blogs', {
   imageUrl: text('image_url'),
   readingTime: integer('reading_time'), // in minutes
   contentType: text('content_type', { enum: ['blog', 'vlog'] }).default('blog').notNull(),
+  unitId: text('unit_id'), // Linked to syllabusUnit e.g., 'unit_1', 'unit_10'
+  topicId: text('topic_id'), // Linked to syllabusData topic.id (e.g. '1', '2')
+  isPremium: integer('is_premium', { mode: 'boolean' }).default(true), // Content is premium by default
   isPublished: integer('is_published', { mode: 'boolean' }).default(false),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),

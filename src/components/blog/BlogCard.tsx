@@ -37,13 +37,26 @@ export function BlogCard({ blog, featured, isLocked }: BlogCardProps) {
     return <Link href={`/blogs/${blog.slug}`} className="group h-full block">{children}</Link>;
   };
 
+  // Fallback Gradients (beautiful, modern)
+  const fallbackGradients = [
+    "bg-gradient-to-br from-rose-400 to-orange-300",
+    "bg-gradient-to-br from-indigo-500 to-cyan-400", 
+    "bg-gradient-to-br from-emerald-400 to-teal-600",
+    "bg-gradient-to-br from-violet-500 to-fuchsia-500",
+    "bg-gradient-to-br from-amber-400 to-orange-500",
+    "bg-gradient-to-br from-blue-500 to-indigo-600"
+  ];
+  
+  // Deterministic random gradient based on title length
+  const gradientClass = fallbackGradients[blog.title.length % fallbackGradients.length];
+
   return (
     <Wrapper>
       <Card className={cn(
         "h-full border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white relative",
         featured ? "border-indigo-100 shadow-md" : ""
       )}>
-        <div className="aspect-[16/9] w-full bg-slate-100 relative overflow-hidden">
+        <div className={cn("aspect-[16/9] w-full relative overflow-hidden", !blog.imageUrl && gradientClass)}>
           {blog.imageUrl ? (
             <img 
               src={blog.imageUrl} 
@@ -51,8 +64,10 @@ export function BlogCard({ blog, featured, isLocked }: BlogCardProps) {
               className={cn("w-full h-full object-cover transition-transform duration-700", !isLocked && "group-hover:scale-110", isLocked && "blur-[2px] grayscale-[50%]")} 
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-slate-300 bg-slate-50">
-              <BookOpen size={48} />
+             /* Fallback Design when no image */
+            <div className="flex flex-col items-center justify-center h-full text-white/90 p-6 text-center">
+              <BookOpen size={40} className="mb-2 opacity-80" />
+              <span className="font-bold text-lg leading-tight line-clamp-2 opacity-90">{blog.title}</span>
             </div>
           )}
           
@@ -66,10 +81,18 @@ export function BlogCard({ blog, featured, isLocked }: BlogCardProps) {
           )}
 
           {!isLocked && (
-            <div className="absolute top-3 left-3">
-                <Badge className="bg-white/95 backdrop-blur-md text-slate-900 font-bold shadow-sm hover:bg-white capitalize px-3 py-1">
-                {blog.category.replace(/_/g, ' ')}
-                </Badge>
+            <div className="absolute top-3 left-3 flex gap-2">
+                {blog.unitId && (
+                    <Badge className="bg-white/90 backdrop-blur-md text-indigo-700 font-bold shadow-sm capitalize px-2 py-0.5 text-[10px] border border-white/50">
+                        Unit {blog.unitId.replace('unit_', '')}
+                    </Badge>
+                )}
+                 {/* Logic change: don't show Free badge if premium. If Free, show explicit Free badge */}
+                 {blog.isPremium === false && (
+                    <Badge className="bg-emerald-500 text-white font-bold shadow-sm px-2 py-0.5 text-[10px]">
+                        FREE
+                    </Badge>
+                 )}
             </div>
           )}
           
