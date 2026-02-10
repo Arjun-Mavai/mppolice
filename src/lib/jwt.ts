@@ -11,7 +11,7 @@ function getJwtSecret(): string {
 
 export function signToken(payload: object) {
     try {
-        return jwt.sign(payload, getJwtSecret(), { expiresIn: '30d' });
+        return jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });
     } catch (error) {
         console.error("Token sign error:", error);
         return null;

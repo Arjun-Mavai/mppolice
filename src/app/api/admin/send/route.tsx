@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import EmailTemplate from '../../../../components/email-template';
 import { cookies } from 'next/headers';
-import { db } from '@/db';
-
+import {db} from '@/db';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
