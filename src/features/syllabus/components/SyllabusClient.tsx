@@ -217,7 +217,7 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                                 iconColor={iconColor}
                                 isLocked={isLocked}
                                 onLockClick={() => setUnlockModalOpen(true)}
-                                onClick={() => router.push(`/syllabus/${key}?lang=${language}`)}
+                                onClick={() => router.push(`/syllabus/${key}`)}
                             />
                         </motion.div>
                     )
@@ -242,7 +242,7 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                                   if (isLocked) {
                                       setUnlockModalOpen(true);
                                   } else {
-                                      router.push(`/syllabus/${key}?lang=${language}`);
+                                      router.push(`/syllabus/${key}`);
                                   }
                               }}
                               className="cursor-pointer"

@@ -1,0 +1,209 @@
+"use client";
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 💰 ADMIN PRICING — Update prices from dashboard, no deploy needed
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Mobile-first card layout. Changes reflect immediately on /pricing.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Loader2, IndianRupee, Save, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
+import { type PricingData, PRICING_DEFAULTS } from '@/config/pricing';
+import { API } from '@/config/endpoints';
+
+export default function AdminPricingPage() {
+  const [data, setData] = useState<PricingData>(PRICING_DEFAULTS);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const fetchPricing = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(API.PRICING, { cache: "no-store" });
+      const json = await res.json();
+      if (json.pricing) setData(json.pricing);
+    } catch { /* defaults stay */ }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchPricing(); }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(API.PRICING, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      toast.success(json.message || "Pricing updated!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update");
+    } finally { setSaving(false); }
+  };
+
+  const inputClass = "w-full h-10 px-3 rounded-lg border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all text-sm bg-white";
+  const labelClass = "text-xs font-semibold text-slate-600 uppercase tracking-wider";
+
+  const updateField = (key: keyof PricingData, value: string | number) => {
+    setData(prev => ({ ...prev, [key]: value }));
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>;
+  }
+
+  return (
+    <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold flex items-center gap-2">
+            <IndianRupee className="w-5 h-5 text-emerald-600" />
+            Pricing Manager
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Prices change karo — turant /pricing par reflect hoga, deploy nahi karna
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={fetchPricing} disabled={loading}>
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+        </Button>
+      </div>
+
+      {/* ── Lite Plan Card ─────────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-6 space-y-3">
+        <h2 className="font-bold text-slate-800 flex items-center gap-2">
+          ⚡ Lite Plan
+        </h2>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className={labelClass}>Current Price (₹)</label>
+            <input type="number" value={data.litePrice} onChange={(e) => updateField("litePrice", Number(e.target.value))}
+              className={inputClass} />
+          </div>
+          <div className="space-y-1">
+            <label className={labelClass}>Original / Strike (₹)</label>
+            <input type="number" value={data.liteOriginalPrice} onChange={(e) => updateField("liteOriginalPrice", Number(e.target.value))}
+              className={inputClass} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className={labelClass}>Validity Text</label>
+            <input type="text" value={data.liteValidityText} onChange={(e) => updateField("liteValidityText", e.target.value)}
+              className={inputClass} />
+          </div>
+          <div className="space-y-1">
+            <label className={labelClass}>Duration (months)</label>
+            <input type="number" value={data.liteMonths} onChange={(e) => updateField("liteMonths", Number(e.target.value))}
+              className={inputClass} />
+          </div>
+        </div>
+        {/* Live preview */}
+        <div className="bg-slate-50 rounded-lg p-3 text-sm">
+          <span className="text-slate-400 line-through">₹{data.liteOriginalPrice}</span>
+          <span className="text-xl font-black text-slate-900 ml-2">₹{data.litePrice}</span>
+          <span className="text-xs text-emerald-600 font-bold ml-2">
+            {Math.round((1 - data.litePrice / data.liteOriginalPrice) * 100)}% OFF
+          </span>
+          <span className="text-xs text-slate-400 ml-2">
+            ~ ₹{Math.round(data.litePrice / data.liteMonths)}/mo • {data.liteMonths} months
+          </span>
+        </div>
+      </div>
+
+      {/* ── Pro Plan Card ──────────────────────────────────── */}
+      <div className="bg-white rounded-xl border-2 border-slate-800 shadow-sm p-4 md:p-6 space-y-3">
+        <h2 className="font-bold text-slate-800 flex items-center gap-2">
+          👑 Pro Plan
+        </h2>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className={labelClass}>Current Price (₹)</label>
+            <input type="number" value={data.proPrice} onChange={(e) => updateField("proPrice", Number(e.target.value))}
+              className={inputClass} />
+          </div>
+          <div className="space-y-1">
+            <label className={labelClass}>Original / Strike (₹)</label>
+            <input type="number" value={data.proOriginalPrice} onChange={(e) => updateField("proOriginalPrice", Number(e.target.value))}
+              className={inputClass} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className={labelClass}>Validity Text</label>
+            <input type="text" value={data.proValidityText} onChange={(e) => updateField("proValidityText", e.target.value)}
+              className={inputClass} />
+          </div>
+          <div className="space-y-1">
+            <label className={labelClass}>Duration (months)</label>
+            <input type="number" value={data.proMonths} onChange={(e) => updateField("proMonths", Number(e.target.value))}
+              className={inputClass} />
+          </div>
+        </div>
+        <div className="bg-slate-50 rounded-lg p-3 text-sm">
+          <span className="text-slate-400 line-through">₹{data.proOriginalPrice}</span>
+          <span className="text-xl font-black text-slate-900 ml-2">₹{data.proPrice}</span>
+          <span className="text-xs text-emerald-600 font-bold ml-2">
+            {Math.round((1 - data.proPrice / data.proOriginalPrice) * 100)}% OFF
+          </span>
+          <span className="text-xs text-slate-400 ml-2">
+            ~ ₹{Math.round(data.proPrice / data.proMonths)}/mo • {data.proMonths} months
+          </span>
+        </div>
+      </div>
+
+      {/* ── Upgrade Pricing Card ───────────────────────────── */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-6 space-y-3">
+        <h2 className="font-bold text-slate-800">🔄 Upgrade (Lite → Pro)</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className={labelClass}>Upgrade Price (₹)</label>
+            <input type="number" value={data.upgradePrice} onChange={(e) => updateField("upgradePrice", Number(e.target.value))}
+              className={inputClass} />
+          </div>
+          <div className="space-y-1">
+            <label className={labelClass}>Original (₹)</label>
+            <input type="number" value={data.upgradeOriginalPrice} onChange={(e) => updateField("upgradeOriginalPrice", Number(e.target.value))}
+              className={inputClass} />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Urgency Text ───────────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-6 space-y-3">
+        <h2 className="font-bold text-slate-800">🔥 Urgency Banner</h2>
+        <div className="space-y-1">
+          <label className={labelClass}>Students Bought (FOMO Number)</label>
+          <input type="number" value={data.studentsBought} onChange={(e) => updateField("studentsBought", Number(e.target.value))}
+            className={inputClass} />
+          <p className="text-[11px] text-slate-400">Ye number pricing page par dikhega — &quot;23 students already joined&quot;</p>
+        </div>
+        <div className="space-y-1">
+          <label className={labelClass}>Urgency Text (English)</label>
+          <input type="text" value={data.urgencyText} onChange={(e) => updateField("urgencyText", e.target.value)}
+            className={inputClass} />
+        </div>
+        <div className="space-y-1">
+          <label className={labelClass}>Urgency Text (Hindi)</label>
+          <input type="text" value={data.urgencyTextHi} onChange={(e) => updateField("urgencyTextHi", e.target.value)}
+            className={inputClass} />
+        </div>
+      </div>
+
+      {/* ── Save Button ────────────────────────────────────── */}
+      <Button onClick={handleSave} disabled={saving}
+        className="w-full h-12 font-bold bg-slate-900 hover:bg-slate-800 text-white">
+        {saving ? (
+          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+        ) : (
+          <><Save className="w-4 h-4 mr-2" /> Save Pricing</>
+        )}
+      </Button>
+    </div>
+  );
+}

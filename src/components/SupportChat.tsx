@@ -18,27 +18,37 @@ import { toast } from "sonner";
 import { submitSupportTicket } from "@/actions/support-actions";
 
 type QA = {
-  question: string;
-  answer: string;
+  question: { en: string; hi: string };
+  answer: { en: string; hi: string };
 };
 
 const FAQS: QA[] = [
   {
-    question: "Do you provide test series in both languages?",
-    answer: "Yes! All our test series are available in both Hindi & English with a seamless language toggle.",
+    question: { en: "How do I get Lite or Pro access?", hi: "Lite या Pro एक्सेस कैसे मिलेगा?" },
+    answer: { en: "Contact us on WhatsApp to get your plan activated instantly. Lite is for Prelims prep, Pro covers till Mains with unlimited tests.", hi: "WhatsApp पर संपर्क करें, आपका प्लान तुरंत एक्टिव हो जाएगा। Lite प्रीलिम्स तक, Pro मेन्स तक अनलिमिटेड टेस्ट के साथ।" },
   },
   {
-    question: "Is this helpful for MPPSC Pre & Mains?",
-    answer: "Absolutely. We provide comprehensive test series coverage for MPPSC Pre with topic-wise tests, full-length tests, PYQs, and instant feedback mode.",
+    question: { en: "Can I upgrade from Lite to Pro?", hi: "क्या Lite से Pro में अपग्रेड कर सकते हैं?" },
+    answer: { en: "Yes! Just pay the difference amount. Your old account gets linked to the new Pro account automatically.", hi: "हाँ! सिर्फ़ अंतर राशि भरें। आपका पुराना अकाउंट नए Pro अकाउंट से ऑटोमैटिक जुड़ जाएगा।" },
   },
   {
-    question: "What is Instant Mode in tests?",
-    answer: "Instant Mode gives you immediate feedback after each question - see correct answers instantly and learn as you practice!",
+    question: { en: "What if my access expires or exam gets delayed?", hi: "अगर एक्सेस समाप्त हो जाए या परीक्षा देरी से हो?" },
+    answer: { en: "If MPPSC delays the exam, we extend your access — no extra charge. Admin can also extend your access anytime from the dashboard.", hi: "अगर MPPSC परीक्षा में देरी करता है, तो हम आपका एक्सेस बढ़ा देंगे — कोई अतिरिक्त शुल्क नहीं।" },
+  },
+  {
+    question: { en: "Is this available in Hindi & English?", hi: "क्या यह हिंदी और अंग्रेजी दोनों में उपलब्ध है?" },
+    answer: { en: "Yes! All tests, blogs, and explanations are available in both Hindi & English with a one-click language toggle.", hi: "हाँ! सभी टेस्ट, ब्लॉग्स और एक्सप्लेनेशन हिंदी और अंग्रेजी दोनों में एक क्लिक से उपलब्ध हैं।" },
+  },
+  {
+    question: { en: "What's included in the test series?", hi: "टेस्ट सीरीज़ में क्या-क्या शामिल है?" },
+    answer: { en: "Topic-wise tests, Unit tests, Full Length Tests (100Q), CSAT papers, PYQ papers (2020-2025), smart explanations, and Analytics dashboard.", hi: "टॉपिक वाइज़ टेस्ट, यूनिट टेस्ट, फुल लेंथ टेस्ट (100 प्रश्न), CSAT पेपर, PYQ पेपर (2020-2025), स्मार्ट एक्सप्लेनेशन और एनालिटिक्स डैशबोर्ड।" },
   },
 ];
 
 export function SupportChat() {
   const user = useSettingsStore((state) => state.user);
+  const language = useSettingsStore((state) => state.language);
+  const hi = language === 'hi';
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"chat" | "faq">("chat");
@@ -99,6 +109,8 @@ export function SupportChat() {
   if(user && pathname !== "/") return null;
   // Hide on Quiz Play for focus
   if (pathname === "/syllabus/quiz/play" ) return null;
+  // Hide on unit detail pages — sheet opens here, SupportChat z-index conflicts
+  if (pathname?.startsWith("/syllabus/unit_")) return null;
 
   const handleWhatsApp = () => {
     const message = "Hi, I need help with the MPPSC App. My query is:";
@@ -166,10 +178,10 @@ export function SupportChat() {
                 <MessageCircle size={100} />
               </div>
               <h3 className="text-xl font-bold font-sans mb-1 relative z-10 text-slate-900">
-                Hello{displayName !== 'there' ? `, ${displayName}` : ''}! 👋
+                {hi ? 'नमस्ते' : 'Hello'}{displayName !== 'there' ? `, ${displayName}` : ''}! 👋
               </h3>
               <p className="text-slate-700 text-sm relative z-10 font-medium">
-                We usually reply within a few hours.
+                {hi ? 'हम आमतौर पर कुछ ही घंटों में जवाब देते हैं।' : 'We usually reply within a few hours.'}
               </p>
               
               <div className="flex gap-2 mt-4 relative z-10">
@@ -299,7 +311,7 @@ export function SupportChat() {
                         onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
                         className="w-full flex items-center justify-between p-3 text-left"
                       >
-                        <span className="text-sm font-semibold text-slate-700">{faq.question}</span>
+                        <span className="text-sm font-semibold text-slate-700">{hi ? faq.question.hi : faq.question.en}</span>
                         {expandedFaq === idx ? (
                           <ChevronUp size={16} className="text-indigo-600 flex-shrink-0 ml-2" />
                         ) : (
@@ -315,7 +327,7 @@ export function SupportChat() {
                             className="overflow-hidden"
                           >
                             <div className="p-3 pt-0 text-sm text-slate-600 bg-slate-50/50 border-t border-slate-100">
-                              {faq.answer}
+                              {hi ? faq.answer.hi : faq.answer.en}
                             </div>
                           </motion.div>
                         )}
@@ -324,12 +336,12 @@ export function SupportChat() {
                   ))}
 
                     <div className="mt-6 p-4 bg-indigo-50 rounded-xl text-center border border-indigo-100">
-                        <p className="text-sm text-indigo-900 font-medium mb-2">Still have questions?</p>
+                        <p className="text-sm text-indigo-900 font-medium mb-2">{hi ? 'और सवाल हैं?' : 'Still have questions?'}</p>
                         <button 
                             onClick={() => setActiveTab('chat')}
                             className="bg-white text-indigo-600 text-xs font-bold py-2 px-4 rounded-full border border-indigo-200 hover:bg-indigo-50 transition-colors"
                         >
-                            Chat with Support
+                            {hi ? 'सपोर्ट से बात करें' : 'Chat with Support'}
                         </button>
                     </div>
                 </div>
@@ -348,15 +360,15 @@ export function SupportChat() {
                initial={{ opacity: 0, y: 10, scale: 0.9 }}
                animate={{ opacity: 1, y: 0, scale: 1 }}
                exit={{ opacity: 0, y: 10, scale: 0.9 }}
-               className="bg-white px-4 py-3 rounded-xl shadow-xl border border-indigo-100 hidden md:flex items-center gap-3 origin-bottom-right mb-1 mr-1"
+               className="bg-white px-4 py-3 rounded-xl shadow-xl border border-indigo-100 flex items-center gap-3 origin-bottom-right mb-1 mr-1"
              >
                 <div className="relative flex h-3 w-3 shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                 </div>
                 <div>
-                    <p className="text-sm font-bold text-slate-800 leading-tight">Need Help?</p>
-                    <p className="text-xs text-slate-500 font-medium whitespace-nowrap">Chat with our support team</p>
+                    <p className="text-sm font-bold text-slate-800 leading-tight">{hi ? 'मदद चाहिए?' : 'Need Help?'}</p>
+                    <p className="text-xs text-slate-500 font-medium whitespace-nowrap">{hi ? 'सपोर्ट टीम से बात करें' : 'Chat with our support team'}</p>
                 </div>
                 
                 {/* Close Button for Nudge */}

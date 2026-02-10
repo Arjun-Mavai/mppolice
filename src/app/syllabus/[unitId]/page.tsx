@@ -71,7 +71,10 @@ export default async function UnitPage({ params }: Props) {
                impact_emoji: ai?.impact_emoji || c?.impact_emoji,
                important_facts: ai?.points || c?.important_facts, // "Points" from AI -> "important_facts" in UI
                pyq: ai?.pyq, // New field
-               isFree: (t.isFree ?? false) || (unitId === 'unit_1' && idx < ACCESS_CONFIG.FREE_TOPICS_UNIT1)
+               isFree: (t.isFree ?? false) || (unitId === 'unit_1' && idx < ACCESS_CONFIG.FREE_TOPICS_UNIT1),
+               // ── DB access flags → client ko pass karo ──────────
+               isLiteAccess: t.isLiteAccess ?? null,
+               isProAccess: t.isProAccess ?? null,
            };
       });
 
@@ -90,7 +93,9 @@ export default async function UnitPage({ params }: Props) {
                impact_emoji: ai?.impact_emoji || c?.impact_emoji,
                important_facts: ai?.points || c?.important_facts,
                pyq: ai?.pyq,
-               isFree: (t.isFree ?? false) || (unitId === 'unit_1' && idx < ACCESS_CONFIG.FREE_TOPICS_UNIT1)
+               isFree: (t.isFree ?? false) || (unitId === 'unit_1' && idx < ACCESS_CONFIG.FREE_TOPICS_UNIT1),
+               isLiteAccess: t.isLiteAccess ?? null,
+               isProAccess: t.isProAccess ?? null,
            };
       });
 

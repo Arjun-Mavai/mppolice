@@ -541,7 +541,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
                             <div 
                                 className={cn(
                                 "flex items-center gap-2 rounded-full px-3 py-1.5 border transition-all cursor-pointer select-none",
-                                instantModeEnabled ? "bg-amber-50 border-amber-200" : "bg-slate-50 border-slate-200 hover:bg-slate-100"
+                                instantModeEnabled ? "bg-amber-50 border-amber-200" : "bg-slate-50 border-amber-200 hover:bg-slate-100"
                                 )}
                                 onClick={() => setInstantModeEnabled(!instantModeEnabled)}
                                 title="Toggle Instant Feedback"

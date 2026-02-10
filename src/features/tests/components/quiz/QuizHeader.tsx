@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react';
-import { Clock, X, Zap } from 'lucide-react';
+import { Clock, X, Zap, Languages } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -12,7 +12,9 @@ interface QuizHeaderProps {
   timeLeft: number;
   instantModeEnabled: boolean;
   isSubmitted: boolean;
+  language: string;
   onInstantModeToggle: () => void;
+  onLanguageToggle: () => void;
   onExit: () => void;
   translations: {
     instantMode: string;
@@ -28,7 +30,9 @@ export function QuizHeader({
   timeLeft,
   instantModeEnabled,
   isSubmitted,
+  language,
   onInstantModeToggle,
+  onLanguageToggle,
   onExit,
   translations: t,
   paletteButton,
@@ -101,6 +105,22 @@ export function QuizHeader({
             </div>
           </div>
         )}
+
+        {/* Compact Language Switcher */}
+        <button
+          onClick={onLanguageToggle}
+          className="flex items-center gap-1 rounded-full px-2 py-1 border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-all select-none"
+          title={language === 'hi' ? 'Switch to English' : 'हिंदी में बदलें'}
+        >
+          <span className={cn(
+            "text-[10px] font-bold px-1 rounded transition-colors",
+            language === 'hi' ? "bg-slate-800 text-white" : "text-slate-400"
+          )}>अ</span>
+          <span className={cn(
+            "text-[10px] font-bold px-1 rounded transition-colors",
+            language === 'en' ? "bg-slate-800 text-white" : "text-slate-400"
+          )}>A</span>
+        </button>
 
         {/* Timer */}
         <div className={cn(

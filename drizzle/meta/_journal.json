@@ -8,6 +8,48 @@
       "when": 1770353986027,
       "tag": "0000_ambiguous_meteorite",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1770623937804,
+      "tag": "0001_wonderful_zarek",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1770625681656,
+      "tag": "0002_last_major_mapleleaf",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1770629030135,
+      "tag": "0003_awesome_forge",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1770630885550,
+      "tag": "0004_tiresome_black_queen",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1770632998152,
+      "tag": "0005_uneven_dreaming_celestial",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1770659234900,
+      "tag": "0006_cooing_power_man",
+      "breakpoints": true
     }
   ]
 }

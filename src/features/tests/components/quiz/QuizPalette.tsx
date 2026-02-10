@@ -126,9 +126,19 @@ export function QuizPaletteMobile(props: QuizPaletteProps) {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <PaletteDrawerButton />
+        <button
+          type="button"
+          className="hover:bg-slate-100 relative text-slate-700 inline-flex items-center justify-center rounded-md h-10 w-10"
+        >
+          <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-pink-400 border-2 border-white rounded-full animate-[pulse_3s_ease-in-out_infinite] opacity-70 shadow-sm" />
+        </button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-[85vw] sm:w-[400px] flex flex-col p-0">
+      <SheetContent
+        side="right"
+        className="w-[85vw] sm:w-[400px] flex flex-col p-0 !z-[9999]"
+        overlayClassName="!z-[9998]"
+      >
         <SheetHeader className="p-6 border-b border-slate-100 bg-slate-50/50">
           <SheetTitle className="sr-only">{props.translations.questionPalette}</SheetTitle>
         </SheetHeader>

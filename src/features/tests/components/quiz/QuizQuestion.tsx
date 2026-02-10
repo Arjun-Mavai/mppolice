@@ -5,6 +5,7 @@ import { CheckCircle2, X, Flag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Question } from '@/types/quiz';
+import { FormattedQuestionText } from '../../utils/questionFormatter';
 
 interface QuizQuestionProps {
   question: Question;
@@ -67,12 +68,11 @@ export function QuizQuestion({
         </Button>
       </div>
 
-      {/* Question Text */}
-      <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-slate-900 leading-relaxed">
-        {language === 'en' && question.questionEn
-          ? question.questionEn
-          : question.question}
-      </h2>
+      {/* Question Text - Smart Formatted */}
+      <FormattedQuestionText 
+        text={language === 'en' && question.questionEn ? question.questionEn : question.question}
+        className="text-lg sm:text-xl md:text-2xl font-semibold text-slate-900 leading-relaxed"
+      />
 
       {/* Matching Questions */}
       {question.type === 'matching' && question.matchPairs && (

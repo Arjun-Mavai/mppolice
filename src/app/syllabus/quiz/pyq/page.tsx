@@ -1,11 +1,31 @@
-import { getCachedPYQTests } from '@/features/tests/actions/submission';
+import { getCachedPYQTests, getUserAttempts } from '@/features/tests/actions/submission';
 import PYQPageClient from './PYQPageClient';
+import { verifyAuth } from '@/lib/auth';
+import { getUserTier } from '@/lib/access-control';
 
-// Server Component
+// Server Component — DB flags se access control
 export default async function PYQPage() {
-    // 1. Fetch Data (Cached)
-    const tests = await getCachedPYQTests();
+    const [tests, user] = await Promise.all([
+        getCachedPYQTests(),
+        verifyAuth()
+    ]);
 
-    // 2. Pass to Client Component
-    return <PYQPageClient initialTests={tests} />;
+    const tier = getUserTier(user);
+
+    // Har test ko access info ke saath enrich karo
+    const enrichedTests = tests.map((test) => {
+        const hasAccess = tier === 'pro'
+            ? (test.isProAccess ?? true)
+            : tier === 'lite'
+                ? ((test.isLiteAccess ?? false) || (test.isFreeAccess ?? false))
+                : (test.isFreeAccess ?? false);
+
+        return {
+            ...test,
+            isLocked: !hasAccess && user?.role !== 'admin',
+            showFreeBadge: (test.isFreeAccess ?? false) && !user?.isSubscribed,
+        };
+    });
+
+    return <PYQPageClient initialTests={enrichedTests} />;
 }

@@ -1,0 +1,1 @@
+ALTER TABLE `pricing_config` ADD `students_bought` integer DEFAULT 23;

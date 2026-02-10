@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Question } from '@/types/quiz';
 import { QuizResult } from './QuizResult';
 import { useQuizLogic } from '@/hooks/useQuizLogic';
+import { useSettingsStore } from '@/store/useSettingsStore';
 import { createGuestEntry as createGuestUser } from '@/actions/guest-actions';
 import { GuestResultTeaser } from '@/app/syllabus/quiz/play/GuestResultTeaser';
 
@@ -38,6 +39,8 @@ export function QuizInterface(props: QuizInterfaceProps) {
         handleNext, handlePrev, handleJump, toggleMarkForReview, handleSubmit,
         handleRetry, getParsedOptions, currentQuestion, isAnswered, totalQuestions,
     } = useQuizLogic(props);
+
+    const { setLanguage } = useSettingsStore();
 
     // UI state
     const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -244,7 +247,9 @@ export function QuizInterface(props: QuizInterfaceProps) {
                 timeLeft={timeLeft}
                 instantModeEnabled={instantModeEnabled}
                 isSubmitted={isSubmitted}
+                language={language}
                 onInstantModeToggle={() => setInstantModeEnabled(!instantModeEnabled)}
+                onLanguageToggle={() => setLanguage(language === 'hi' ? 'en' : 'hi')}
                 onExit={showExitModal}
                 translations={{ instantMode: t.instantMode, fullTest: t.fullTest, topicPractice: t.topicPractice }}
                 paletteButton={!disablePalette ? <QuizPaletteMobile {...paletteProps} /> : undefined}

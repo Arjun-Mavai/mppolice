@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, BookOpen, Sparkles, Brain, Lightbulb, Search, RotateCw, PlayCircle, Lock } from 'lucide-react';
 import FlipCard from '@/components/FlipCard';
@@ -28,6 +28,9 @@ export interface TopicData {
   important_facts?: string[];
   pyq?: { year: number | string; question: string; strategy?: string; type?: string }[];
   isFree?: boolean;
+  // ── Access control flags (DB se aate hain) ──────────────────
+  isLiteAccess?: boolean | null;
+  isProAccess?: boolean | null;
   image_url?: string;
 }
 
@@ -41,12 +44,15 @@ interface UnitContentProps {
 
 export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, topicsEn }: UnitContentProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   
-  // Get language from URL param, default to Hindi
-  const langParam = searchParams.get('lang');
-  const [language, setLanguage] = useState<'hi' | 'en'>(langParam === 'en' ? 'en' : 'hi');
+  // Language from global Zustand store — same toggle as navbar
+  // This replaces the old ?lang= URL param approach for consistency
+  const globalLanguage = useSettingsStore((state) => state.language);
+  const language = globalLanguage;
   
+  // Language setter from global store
+  const setLanguage = useSettingsStore((state) => state.setLanguage);
+
   // Search State
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -118,12 +124,6 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
       }
   };
 
-  useEffect(() => {
-     if (langParam === 'en' || langParam === 'hi') {
-         setLanguage(langParam as 'hi' | 'en');
-     }
-  }, [langParam]);
-
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -184,7 +184,7 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
   return (
     <div className="min-h-screen bg-slate-50/50 font-sans pb-24">
       {/* Sub-header: Unit title + Language toggle + Progress bar */}
-      <div className="sticky top-[64px] z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
+      <div className="sticky top-14 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <button 
@@ -270,7 +270,6 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
           variants={container}
           initial="hidden"
           animate="show"
-          key={`grid-${language}`} 
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 mb-16"
         >
           {currentTopics.map((topic, idx) => {

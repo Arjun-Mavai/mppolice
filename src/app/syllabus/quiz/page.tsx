@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { Sparkles, ArrowLeft, BookOpen, Layers, Play, BrainCircuit, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -99,7 +98,7 @@ export default function QuizSelectionPage() {
                </div>
                
                {/* Marketing Nudge for Non-Subscribed */}
-               {!isSubscribed && (
+               {/* {!isSubscribed && (
                    <div className="bg-gradient-to-r from-slate-700 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden shadow-xl shadow-slate-200 ">
                        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                            <div>
@@ -119,22 +118,18 @@ export default function QuizSelectionPage() {
                            </Button>
                        </div>
                        
-                       {/* Abstract Shapes */}
+                       
                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-32" />
                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-slate-500/30 rounded-full blur-xl -ml-10 -mb-10" />
                    </div>
-               )}
+               )} */}
            </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 
                 {/* Option 1: Topic Wise */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.05 }}
-                >
-                    <Card className="h-full border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-xl transition-all cursor-pointer group" onClick={() => router.push('/syllabus/quiz/topic')}>
+                <div>
+                    <Card className="h-full border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-xl transition-all cursor-pointer group active:scale-[0.98]" onClick={() => router.push('/syllabus/quiz/topic')}>
                         <CardContent className="p-8 space-y-6 flex flex-col h-full items-center text-center">
                             <div className="w-20 h-20 rounded-2xl bg-slate-50 text-slate-900 flex items-center justify-center group-hover:scale-110 transition-transform">
                                 <Sparkles className="w-10 h-10" />
@@ -154,15 +149,11 @@ export default function QuizSelectionPage() {
                             </Button>
                         </CardContent>
                     </Card>
-                </motion.div>
+                </div>
 
                 {/* Option 2: Unit Wise */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                    <Card className="h-full border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-xl transition-all cursor-pointer group">
+                <div>
+                    <Card className="h-full border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-xl transition-all cursor-pointer group active:scale-[0.98]">
                         <CardContent className="p-8 space-y-6 flex flex-col h-full items-center text-center">
                             <div className="w-20 h-20 rounded-2xl bg-slate-50 text-slate-900 flex items-center justify-center group-hover:scale-110 transition-transform">
                                 <BookOpen className="w-10 h-10" />
@@ -191,16 +182,12 @@ export default function QuizSelectionPage() {
                             </div>
                         </CardContent>
                     </Card>
-                </motion.div>
+                </div>
 
                 {/* Option 3: Full Length Mock */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
+                <div>
                     <Card 
-                      className="h-full border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden" 
+                      className="h-full border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden active:scale-[0.98]" 
                       onClick={() => router.push('/syllabus/quiz/full-length')}
                     >
                         <CardContent className="p-8 space-y-6 flex flex-col h-full items-center text-center relative z-0">
@@ -224,16 +211,12 @@ export default function QuizSelectionPage() {
                             </Button>
                         </CardContent>
                     </Card>
-                </motion.div>
+                </div>
 
                 {/* CSAT Tests */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.22 }}
-                >
+                <div>
                     <Card 
-                      className="h-full border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden" 
+                      className="h-full border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden active:scale-[0.98]" 
                       onClick={() => router.push('/syllabus/quiz/csat')}
                     >
                         <CardContent className="p-8 space-y-6 flex flex-col h-full items-center text-center relative z-0">
@@ -257,16 +240,12 @@ export default function QuizSelectionPage() {
                             </Button>
                         </CardContent>
                     </Card>
-                </motion.div>
+                </div>
 
                 {/* Option 4: PYQs */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25 }}
-                >
+                <div>
                     <Card 
-                      className="h-full border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden" 
+                      className="h-full border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden active:scale-[0.98]" 
                       onClick={() => router.push('/syllabus/quiz/pyq')}
                     >
                          <CardContent className="p-8 space-y-6 flex flex-col h-full items-center text-center relative z-0">
@@ -290,7 +269,7 @@ export default function QuizSelectionPage() {
                             </Button>
                         </CardContent>
                     </Card>
-                </motion.div>
+                </div>
             </div>
        </div>
 

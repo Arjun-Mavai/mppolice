@@ -17,7 +17,9 @@ import {
   Send,
   GraduationCap,
   Crown,
-  Upload
+  Info,
+  History,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -42,6 +44,7 @@ import { useSettingsStore } from "@/store/useSettingsStore";
 import { useEffect } from "react";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
+import { usePwa } from "@/hooks/usePwa";
 
 interface AppNavbarProps {
   user: {
@@ -61,6 +64,9 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   
   // Use Global Store
   const { language, setLanguage, user: globalUser, setUser, authCheckStatus, setAuthCheckStatus } = useSettingsStore();
+
+  const { isInstallable, installPwa } = usePwa();
+
   
   // Create a merged user object (prop + global), favoring global if updated
   // Actually, usually global store should be source of truth if we set it on mount in layout
@@ -179,6 +185,8 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     { name: "Syllabus", href: "/syllabus", icon: BookOpen, color: "text-emerald-600" },
     { name: "Test Series", href: "/syllabus/quiz", icon: GraduationCap, color: "text-amber-600" },
     { name: "Blogs", href: "/blogs", icon: BookOpen, color: "text-sky-600" },
+    { name: "Test History", href: "/syllabus/test-history", icon: History, color: "text-violet-600" },
+    { name: "About Us", href: "/", icon: Info, color: "text-slate-500" },
   ];
 
   // Only hide on the actual quiz play interface
@@ -195,11 +203,11 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
-          {/* Logo */}
+          {/* Logo — logged in users go to quiz, others go home */}
           <div 
             onClick={() => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
-                router.push('/');
+                router.push(user ? '/syllabus/quiz' : '/');
             }}
             className="flex items-center gap-2 group cursor-pointer"
           >
@@ -217,9 +225,9 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
             {navItems
               .filter(item => {
                 // Hide Dashboard if user is not logged in
-                if (item.name === "Dashboard") {
-                  return !!user;
-                }
+                if (item.name === "Dashboard") return !!user;
+                // Test History & About Us — sidebar only, not in desktop top nav
+                if (item.name === "Test History" || item.name === "About Us") return false;
                 return true;
               })
               .map((item) => {
@@ -333,22 +341,9 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                   {(user && user.role === 'admin') && (
                     <>
                         <DropdownMenuSeparator />
-                        <DropdownMenuLabel>Admin</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => router.push('/admin/dashboard')}>
                             <LayoutDashboard className="mr-2 h-4 w-4" />
-                            <span>Dashboard</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => router.push('/admin/content-manager')}>
-                            <Upload className="mr-2 h-4 w-4" />
-                            <span>Content Manager</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => router.push('/admin/syllabus-upload')}>
-                            <BookOpen className="mr-2 h-4 w-4" />
-                            <span>Syllabus Upload</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => router.push('/admin/blogs')}>
-                            <BookOpen className="mr-2 h-4 w-4" />
-                            <span>Blog Management</span>
+                            <span>Admin Dashboard</span>
                         </DropdownMenuItem>
                     </>
                   )}
@@ -430,7 +425,10 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                     <div className="flex-1 overflow-y-auto px-4 py-5 space-y-1">
                          {navItems
                             .filter(item => {
-                                if (item.name === "Dashboard") return !!user;
+                                // Dashboard & Test History — logged-in users only
+                                if (item.name === "Dashboard" || item.name === "Test History") return !!user;
+                                // About Us — logged-in users only (they see home as about page)
+                                if (item.name === "About Us") return !!user;
                                 return true;
                             })
                             .map((item) => {
@@ -530,32 +528,32 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                             )}
                         </div>
 
-                        {/* Admin Controls */}
+                        {/* Admin Controls — single link to admin panel (sidebar handles rest) */}
                         {(user as any)?.role === 'admin' && (
                             <div className="pt-4 border-t border-slate-100 mt-4">
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-4">Admin</p>
                                 <div className="space-y-1">
                                     <SheetClose asChild>
                                         <Link href="/admin/dashboard" className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-3">
-                                            <LayoutDashboard size={18} /> Dashboard
-                                        </Link>
-                                    </SheetClose>
-                                    <SheetClose asChild>
-                                        <Link href="/admin/content-manager" className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-3">
-                                            <Upload size={18} /> Content Manager
-                                        </Link>
-                                    </SheetClose>
-                                    <SheetClose asChild>
-                                        <Link href="/admin/syllabus-upload" className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-3">
-                                            <BookOpen size={18} /> Syllabus Upload
-                                        </Link>
-                                    </SheetClose>
-                                    <SheetClose asChild>
-                                        <Link href="/admin/blogs" className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-3">
-                                            <BookOpen size={18} /> Blog Management
+                                            <LayoutDashboard size={18} /> Admin Dashboard
                                         </Link>
                                     </SheetClose>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Install App Button */}
+                        {isInstallable && (
+                            <div className="pt-4 border-t border-slate-100 mt-4">
+                                <SheetClose asChild>
+                                    <button
+                                        onClick={installPwa}
+                                        className="w-full px-4 py-3 rounded-xl text-sm font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 transition-all duration-200 flex items-center gap-3"
+                                    >
+                                        <Download size={18} />
+                                        Install App
+                                    </button>
+                                </SheetClose>
                             </div>
                         )}
 

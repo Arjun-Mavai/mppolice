@@ -1,6 +1,6 @@
 {
-  "name": "Mindful MPPSC",
-  "short_name": "Mindful",
+  "name": "MPPSC ZEN",
+  "short_name": "MPPSC ZEN",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -8,14 +8,9 @@
   "description": "Master your MPPSC Syllabus with Mnemonics and Flashcards.",
   "icons": [
     {
-      "src": "/globe.svg",
-      "sizes": "192x192",
-      "type": "image/svg+xml"
-    },
-    {
-      "src": "/globe.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml"
+      "src": "/icon.png",
+      "sizes": "any",
+      "type": "image/png"
     }
   ],
   "orientation": "portrait-primary"

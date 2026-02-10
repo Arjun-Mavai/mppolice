@@ -1,0 +1,81 @@
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 💰 CENTRALIZED PRICING — Single source of truth
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Used by: PremiumMarketing, /pricing page, /admin/pricing, /api/pricing
+// Change features/defaults here → reflects everywhere.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export interface PricingData {
+  litePrice: number;
+  liteOriginalPrice: number;
+  liteValidityText: string;
+  liteMonths: number;
+  proPrice: number;
+  proOriginalPrice: number;
+  proValidityText: string;
+  proMonths: number;
+  upgradePrice: number;
+  upgradeOriginalPrice: number;
+  urgencyText: string;
+  urgencyTextHi: string;
+  studentsBought: number;
+}
+
+export const PRICING_DEFAULTS: PricingData = {
+  litePrice: 99,
+  liteOriginalPrice: 299,
+  liteValidityText: "Valid till MPPSC 2026 Prelims",
+  liteMonths: 8,
+  proPrice: 299,
+  proOriginalPrice: 999,
+  proValidityText: "Valid till MPPSC 2026 Mains",
+  proMonths: 12,
+  upgradePrice: 199,
+  upgradeOriginalPrice: 299,
+  urgencyText: "Special pricing for first 100 students",
+  urgencyTextHi: "पहले 100 छात्रों के लिए विशेष मूल्य",
+  studentsBought: 23,
+};
+
+// Icon types for pricing page (lucide icon components)
+export interface PlanFeature {
+  en: string;
+  hi: string;
+}
+
+export interface PlanFeatureWithIcon extends PlanFeature {
+  icon?: string; // lucide icon name for mapping
+}
+
+// ── Lite Plan Features ────────────────────────────────────
+export const LITE_FEATURES: PlanFeatureWithIcon[] = [
+  { en: 'PYQ Papers ×2', hi: 'PYQ पेपर ×2', icon: 'BookOpen' },
+  { en: 'CSAT Mock Papers ×2', hi: 'CSAT मॉक पेपर ×2', icon: 'BookOpen' },
+  { en: 'Full Length Tests ×2', hi: 'फुल लेंथ टेस्ट ×2', icon: 'FileText' },
+  { en: '2 Topic Tests per Unit', hi: '2 टॉपिक टेस्ट प्रति यूनिट', icon: 'Target' },
+  { en: 'Limited Tests in Topic-wise', hi: 'टॉपिक वाइज़ में सीमित टेस्ट', icon: 'Target' },
+  { en: 'Limited Syllabus Topics Analysis', hi: 'सीमित सिलेबस टॉपिक्स एनालिसिस', icon: 'BarChart3' },
+  { en: 'Premium Study Blogs (Limited)', hi: 'प्रीमियम स्टडी ब्लॉग्स (सीमित)', icon: 'FileText' },
+  { en: 'Smart Explanations', hi: 'स्मार्ट एक्सप्लेनेशन', icon: 'Sparkles' },
+];
+
+// ── Pro Plan Features ─────────────────────────────────────
+export const PRO_FEATURES: PlanFeatureWithIcon[] = [
+  { en: 'Everything in Lite +', hi: 'लाइट की सभी सुविधाएँ +', icon: 'Zap' },
+  { en: 'Unlimited Topic & Unit Tests', hi: 'अनलिमिटेड टॉपिक और यूनिट टेस्ट', icon: 'Target' },
+  { en: 'Full Length Mock Tests (100Q)', hi: 'फुल लेंथ मॉक टेस्ट (100 प्रश्न)', icon: 'FileText' },
+  { en: 'CSAT Mock Papers', hi: 'CSAT मॉक पेपर', icon: 'BookOpen' },
+  { en: 'PYQ Papers (2020-2025)', hi: 'PYQ पेपर (2020-2025)', icon: 'BookOpen' },
+  { en: 'Smart Analytics Dashboard', hi: 'स्मार्ट एनालिटिक्स डैशबोर्ड', icon: 'BarChart3' },
+  { en: 'Test History for Revision', hi: 'रिवीज़न के लिए टेस्ट हिस्ट्री', icon: 'History' },
+];
+
+// Helper: compute discount percentage
+export function calcDiscount(price: number, originalPrice: number): number {
+  return Math.round((1 - price / originalPrice) * 100);
+}
+
+// Helper: compute monthly cost
+export function calcMonthly(price: number, months: number): number {
+  return Math.round(price / months);
+}

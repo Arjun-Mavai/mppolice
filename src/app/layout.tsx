@@ -58,6 +58,7 @@ import { AppFooter } from "@/components/layout/AppFooter";
 import { GlobalLockModal } from "@/components/GlobalLockModal";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { Toaster } from "@/components/ui/sonner";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 export default function RootLayout({
   children,
@@ -111,6 +112,7 @@ export default function RootLayout({
           <SupportButton />
         </Suspense>
         <Toaster position="top-right"  richColors/>
+        <InstallPrompt />
         <script
           dangerouslySetInnerHTML={{
             __html: `

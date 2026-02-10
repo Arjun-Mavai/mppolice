@@ -133,61 +133,77 @@ export function getUserTier(user: User): PlanTier | 'guest' {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /**
- * canAccessTopic
+ * canAccessTopic — DB FLAGS based access control
  * ─────────────────────────────────────────────────────────────────────
- * Bhai, topic khulega ya nahi?
+ * Ab sab kuch DB flags se decide hota hai — admin panel se toggle karo
  * 
- * Free Users Ko Kya Milta Hai?
- * - Unit 1 ke pehle 10 topics (Sample ke liye)
- * - Koi bhi 'isFree' marked topic
+ * DB Flags:
+ * - isFree = true → FREE/GUEST bhi dekh sakte
+ * - isLiteAccess = true → LITE user dekh sakta
+ * - isProAccess = true → PRO user dekh sakta (default sab true)
  * 
- * Paid Users Ko Kya Milta Hai?
- * - Sab kuch! (All units, all topics)
- * 
- * Priority Order:
- * 1. Admin? → YES (sab open)
- * 2. Topic free hai? → YES (prasad samajh ke)
- * 3. Unit 1 pehle 10? → YES (sample)
- * 4. Subscribed? → YES (paisa diya hai)
- * 5. Baaki → NO (locked)
- * 
- * @param topic - Topic object to check
- * @param user - Current user (can be null)
- * @returns true if user can access, false if locked
- * 
- * @example
- * if (canAccessTopic(topic, user)) {
- *   <TopicContent />
- * } else {
- *   <LockedBadge />
- * }
+ * Priority:
+ * 1. Admin? → YES (boss hai)
+ * 2. isFree = true → YES (sabke liye khula)
+ * 3. Pro + isProAccess → YES
+ * 4. Lite + (isLiteAccess OR isFree) → YES
+ * 5. Free/Guest → sirf isFree wale
+ * 6. Default → LOCKED 🔒
  */
 export function canAccessTopic(topic: Topic, user: User): boolean {
-    // ───────────────────────────────────────────────────────────────
-    // CHECK 1: Admin Access
-    // ───────────────────────────────────────────────────────────────
+    // ── Admin → bypass sab ──────────────────────────────────────
     if (user?.role === 'admin') return true;
     
-    // ───────────────────────────────────────────────────────────────
-    // CHECK 2: Free Topic (Marked by admin)
-    // ───────────────────────────────────────────────────────────────
+    // ── Free topic → sabke liye open ────────────────────────────
     if (topic.isFree) return true;
     
-    // ───────────────────────────────────────────────────────────────
-    // CHECK 3: Unit 1 Sample Topics (1-10)
-    // ───────────────────────────────────────────────────────────────
-    // Prasad samajh ke dete hain, sabko taste milna chahiye!
-    if (topic.unitId === 'unit_1' && topic.order <= 10) return true;
+    // ── User ka tier nikalo ─────────────────────────────────────
+    const tier = getUserTier(user);
     
-    // ───────────────────────────────────────────────────────────────
-    // CHECK 4: Subscription Status
-    // ───────────────────────────────────────────────────────────────
-    if (user?.isSubscribed) return true;
+    // ── Pro user — isProAccess check (default true if null) ─────
+    if (tier === 'pro') {
+        return topic.isProAccess !== false;
+    }
     
-    // ───────────────────────────────────────────────────────────────
-    // DEFAULT: Locked!
-    // ───────────────────────────────────────────────────────────────
+    // ── Lite user — isLiteAccess check ──────────────────────────
+    if (tier === 'lite') {
+        return topic.isLiteAccess === true;
+    }
+    
+    // ── Free/Guest — sirf isFree wale (already checked above) ───
     return false;
+}
+
+/**
+ * canAccessBlog — DB FLAGS based blog access control
+ * ─────────────────────────────────────────────────────────────────────
+ * Same pattern as topics/tests — admin panel se toggle karo
+ * 
+ * DB Flags on contentBlogs:
+ * - isFreeAccess = true → FREE user bhi padh sakta
+ * - isLiteAccess = true → LITE user padh sakta
+ * - isProAccess = true → PRO user padh sakta (default true)
+ * - isPremium = legacy flag (backward compat — NOT used in logic anymore)
+ */
+export function canAccessBlog(blog: { isFreeAccess: boolean | null; isLiteAccess: boolean | null; isProAccess: boolean | null; isPremium: boolean | null }, user: User): boolean {
+    // ── Admin → sab khula ───────────────────────────────────────
+    if (user?.role === 'admin') return true;
+    
+    // ── User ka tier nikalo ─────────────────────────────────────
+    const tier = getUserTier(user);
+    
+    // ── Pro user — isProAccess check ────────────────────────────
+    if (tier === 'pro') {
+        return blog.isProAccess !== false;
+    }
+    
+    // ── Lite user — isLiteAccess OR isFreeAccess ────────────────
+    if (tier === 'lite') {
+        return blog.isLiteAccess === true || blog.isFreeAccess === true;
+    }
+    
+    // ── Free/Guest — sirf isFreeAccess wale ─────────────────────
+    return blog.isFreeAccess === true;
 }
 
 
@@ -198,68 +214,58 @@ export function canAccessTopic(topic: Topic, user: User): boolean {
 /**
  * canAccessTest
  * ─────────────────────────────────────────────────────────────────────
- * Bhai, test de payega ya nahi?
+ * Bhai, test de payega ya nahi? — DB FLAGS se decide hota hai ab!
  * 
- * Test Types:
- * 1. Premium Tests (isPro = true) → Subscription chahiye
- * 2. Regular Tests → Logged in user ko mil jayega
+ * Pehle kaise tha (OLD — Index-Based):
+ *   tests.map((test, index) => isLocked = index >= limit)
+ *   Problem: Naye test add kiye to order change, access bhi change 😱
  * 
- * Access Rules:
- * - Admin → Sab access
- * - Pro User → Sab tests (Premium bhi)
- * - Lite User → Sab tests (but attempt limits alag check honge)
- * - Free User → Only non-premium tests
- * - Guest → No access
+ * Ab kaise hai (NEW — DB Flag-Based):
+ *   Har test pe 3 boolean flags hain DB me:
+ *   - isFreeAccess → Free/Guest users ke liye khula
+ *   - isLiteAccess → Lite plan users ke liye khula
+ *   - isProAccess  → Pro plan users ke liye khula (default true)
  * 
- * @param test - Test object to check
- * @param user - Current user (can be null)
- * @returns true if user can see test, false if hidden
+ *   Admin panel se toggle karo → turant reflect hoga frontend pe
+ *   No code change needed, no redeployment! 🎯
  * 
- * @example
- * if (canAccessTest(test, user)) {
- *   <TestCard />
- * } else {
- *   <PremiumBadge />
- * }
+ * Access Check Priority:
+ *   1. Admin? → YES (Boss mode — sab open)
+ *   2. Pro user? → isProAccess flag check
+ *   3. Lite user? → isLiteAccess ya isFreeAccess (dono me se ek true ho)
+ *   4. Free/Guest? → sirf isFreeAccess flag
+ * 
+ * @param test - Test object (DB se aaya, flags included)
+ * @param user - Current user (null = guest)
+ * @returns true = test accessible, false = locked 🔒
  */
 export function canAccessTest(test: Test, user: User): boolean {
     // ───────────────────────────────────────────────────────────────
-    // CHECK 1: Admin Access (Unlimited)
+    // CHECK 1: Admin = Baap hai, sab khula
     // ───────────────────────────────────────────────────────────────
     if (user?.role === 'admin') return true;
-    
+
     // ───────────────────────────────────────────────────────────────
-    // CHECK 2: Regular Test (Non-Premium)
+    // CHECK 2: User ki tier nikalo
     // ───────────────────────────────────────────────────────────────
-    // Agar test premium nahi hai, koi bhi logged in user de sakta
-    if (!test.isPro && user) return true;
-    
+    const tier = getUserTier(user);
+
     // ───────────────────────────────────────────────────────────────
-    // CHECK 3: Premium Test (isPro = true)
+    // CHECK 3: DB flags se access decide karo
+    // Pro → isProAccess check (almost always true)
+    // Lite → isLiteAccess OR isFreeAccess (koi bhi true ho to OK)
+    // Free/Guest → sirf isFreeAccess (agar admin ne free mark kiya)
     // ───────────────────────────────────────────────────────────────
-    // Premium test ke liye subscription mandatory hai
-    if (test.isPro && !user?.isSubscribed) return false;
-    
-    // ───────────────────────────────────────────────────────────────
-    // CHECK 4: Subscribed User Access
-    // ───────────────────────────────────────────────────────────────
-    if (user?.isSubscribed) {
-        const tier = getUserTier(user);
-        
-        // Pro users → Full access (no questions asked!)
-        if (tier === 'pro') return true;
-        
-        // Lite users → Can ACCESS tests (attempts limited separately)
-        // Note: Access control alag hai, attempt limits alag
-        // Lite users ko test dikhai dega, but kitni baar de sakte wo
-        // canAttemptTest() se check hoga
-        if (tier === 'lite') return true;
+    switch (tier) {
+        case 'pro':
+            return test.isProAccess ?? true;
+        case 'lite':
+            return (test.isLiteAccess ?? false) || (test.isFreeAccess ?? false);
+        case 'free':
+        case 'guest':
+        default:
+            return test.isFreeAccess ?? false;
     }
-    
-    // ───────────────────────────────────────────────────────────────
-    // DEFAULT: Check subscription status
-    // ───────────────────────────────────────────────────────────────
-    return user?.isSubscribed || false;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

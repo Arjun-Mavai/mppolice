@@ -4,11 +4,13 @@ import UpgradePage from "./upgrade/page";
 import { AppNavbar } from "@/components/layout/AppNavbar";
 import { Testimonials } from "@/components/home/Testimonials";
 
+
 export default function Home() {
   return (
     <main>
       <AppNavbar user={null} />
       <UpgradePage />
+      {/* AppInstallGuide moved to UpgradePage */}
       <Testimonials />
     </main>
   );

@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 
 // Real Aspirant Data (Hinglish + MP Locations)
+import { useSettingsStore } from "@/store/useSettingsStore";
+
 const TESTIMONIALS = [
   {
     name: "Arjun Gurjar",
@@ -91,18 +93,38 @@ const TESTIMONIALS = [
 ];
 
 export function Testimonials() {
-  return (
+  const { language } = useSettingsStore();
+  const hi = language === 'hi';
+
+  const t = {
+    tag: hi ? "छात्रों की सफलता की कहानियाँ" : "Student Success Stories",
+    titleStart: hi ? "लगनशील उम्मीदवारों" : "Loved by",
+    titleHighlight: hi ? "का भरोसा" : "Serious Aspirants",
+    subtitle: hi 
+      ? "मध्य प्रदेश के कोने-कोने से जुड़े उन छात्रों के साथ शामिल हों जो स्मार्ट तरीके से सिलेबस पूरा कर रहे हैं।" 
+      : "Join students from every corner of Madhya Pradesh who are mastering the syllabus smarter, not harder."
+  };
+
+  return ( 
     <section className="py-24 bg-slate-50 border-t border-slate-100 overflow-hidden">
       <div className="container px-4 mx-auto mb-16 text-center">
          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-wider mb-6">
             <Star className="w-3.5 h-3.5 fill-indigo-700" />
-            Student Success Stories
+            {t.tag}
          </div>
         <h2 className="text-3xl md:text-5xl font-black font-display text-slate-900 mb-6 tracking-tight leading-tight">
-          Loved by <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Serious Aspirants</span>
+          {hi ? (
+             <>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">{t.titleStart}</span> {t.titleHighlight}
+             </>
+          ) : (
+             <>
+                {t.titleStart} <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">{t.titleHighlight}</span>
+             </>
+          )}
         </h2>
         <p className="text-slate-500 max-w-2xl mx-auto text-lg md:text-xl leading-relaxed">
-          Join students from every corner of Madhya Pradesh who are mastering the syllabus smarter, not harder.
+          {t.subtitle}
         </p>
       </div>
 

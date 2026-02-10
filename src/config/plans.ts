@@ -13,7 +13,7 @@ export const PLAN_LIMITS = {
     unit_tests_limit: 5, // 5 total across units (as per request "units tests me 5 milenge")
     flt_limit: 2,
     pyq_limit: 2,
-    tier_name: 'Lite (₹99)'
+    tier_name: 'Lite'
   },
   pro: {
     blog_limit: 10000,
@@ -21,7 +21,7 @@ export const PLAN_LIMITS = {
     unit_tests_limit: 10000,
     flt_limit: 10000,
     pyq_limit: 10000,
-    tier_name: 'Pro (₹299)'
+    tier_name: 'Pro'
   },
   guest: {
     blog_limit: 4,

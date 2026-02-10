@@ -1,0 +1,133 @@
+import { NextResponse } from 'next/server';
+import { db } from '@/db';
+import { mppscUsers } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
+import { cookies } from 'next/headers';
+import { z } from 'zod';
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🎁 GRANT PLAN — Admin gives Lite/Pro without payment
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Use case: Referrals, test accounts, support cases, giveaways.
+// Creates user if email doesn't exist, upgrades if it does.
+// No payment record created — metadata tracks admin grant.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const PLAN_MONTHS: Record<string, number> = { lite: 4, pro: 7 };
+
+const grantSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(2).max(100),
+  phone: z.string().min(10).max(15).optional(),
+  planTier: z.enum(['lite', 'pro']),
+  password: z.string()
+    .min(8, 'Min 8 characters')
+    .regex(/[a-z]/, 'Need lowercase')
+    .regex(/[A-Z]/, 'Need uppercase')
+    .regex(/\d/, 'Need digit'),
+  accessMonths: z.number().min(1).max(24).optional(),
+  reason: z.string().max(500).optional(),
+});
+
+export async function POST(request: Request) {
+  try {
+    // Admin Auth
+    const cookieStore = await cookies();
+    const token = cookieStore.get('mppsc_token')?.value;
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { verifyToken } = await import('@/lib/jwt');
+    const decoded: any = verifyToken(token);
+    if (!decoded?.userId) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
+    const adminUser = await db.query.mppscUsers.findFirst({
+      where: (users, { eq }) => eq(users.id, decoded.userId)
+    });
+    if (!adminUser || adminUser.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { email, name, phone, planTier, password, accessMonths, reason } = grantSchema.parse(body);
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const months = accessMonths || PLAN_MONTHS[planTier] || 7;
+    const accessExpiresAt = new Date();
+    accessExpiresAt.setMonth(accessExpiresAt.getMonth() + months);
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Check existing user
+    const existing = await db.query.mppscUsers.findFirst({
+      where: eq(mppscUsers.email, normalizedEmail),
+    });
+
+    const grantMeta = {
+      grantedBy: decoded.userId,
+      grantedAt: new Date().toISOString(),
+      grantReason: reason || 'Admin grant (no payment)',
+      previousTier: existing?.planTier || null,
+    };
+
+    if (existing) {
+      // Upgrade existing user
+      await db.update(mppscUsers).set({
+        name: name.trim(),
+        phone: phone?.trim(),
+        password: hashedPassword,
+        planTier,
+        isSubscribed: true,
+        isActive: true,
+        accessExpiresAt,
+        deletedAt: null,
+        metadata: JSON.stringify({
+          ...(typeof existing.metadata === 'string' ? JSON.parse(existing.metadata || '{}') : (existing.metadata || {})),
+          ...grantMeta,
+        }),
+      }).where(eq(mppscUsers.id, existing.id));
+
+      return NextResponse.json({
+        success: true,
+        message: `${name} upgraded to ${planTier} (${months} months) — existing user updated`,
+        userId: existing.id,
+        isNew: false,
+      });
+    }
+
+    // Create new user
+    const { v4: uuidv4 } = await import('uuid');
+    const userId = uuidv4();
+
+    await db.insert(mppscUsers).values({
+      id: userId,
+      email: normalizedEmail,
+      name: name.trim(),
+      phone: phone?.trim(),
+      password: hashedPassword,
+      planTier,
+      isSubscribed: true,
+      isActive: true,
+      role: 'guest',
+      accessExpiresAt,
+      metadata: JSON.stringify(grantMeta),
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `${name} created with ${planTier} plan (${months} months) — no payment required`,
+      userId,
+      isNew: true,
+    });
+
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.issues[0]?.message || 'Invalid input' }, { status: 400 });
+    }
+    console.error('Grant plan error:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}

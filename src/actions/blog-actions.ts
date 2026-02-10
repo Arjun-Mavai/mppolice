@@ -55,7 +55,10 @@ export async function uploadBlog(data: any) {
             contentType: metadata.type || 'blog',
             unitId: metadata.unit || null, 
             topicId: metadata.topic || null, // Store the topic string directly as provided
-            isPremium: true, // Default to premium
+            isPremium: true, // Legacy flag — backward compat
+            isFreeAccess: false, // Default: not free
+            isLiteAccess: false, // Default: not for lite
+            isProAccess: true,   // Default: pro users can access
             isPublished: true,
             createdAt: new Date(),
             updatedAt: new Date(),

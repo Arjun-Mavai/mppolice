@@ -30,8 +30,12 @@ export default function BlogsClient({ initialBlogs, initialPagination }: BlogsCl
     const [isPending, startTransition] = useTransition();
     const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-    // Units 1 to 10 + All
-    const units = ['All', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)];
+    const isGuest = !(currentUser as any)?.is_subscribed;
+
+    // Units: Free tab first for non-subscribed users
+    const units = isGuest
+        ? ['All', 'Free', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)]
+        : ['All', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)];
 
     // Initial Fetch / Filter Change
     const fetchBlogs = async (reset = false) => {
@@ -39,7 +43,7 @@ export default function BlogsClient({ initialBlogs, initialPagination }: BlogsCl
             const result = await getBlogs({
                 page: 1,
                 limit: 10,
-                unitId: activeUnit,
+                unitId: activeUnit === 'Free' ? 'All' : activeUnit,
                 search: searchQuery
             });
             
@@ -57,7 +61,7 @@ export default function BlogsClient({ initialBlogs, initialPagination }: BlogsCl
         const result = await getBlogs({
             page: nextPage,
             limit: 10,
-            unitId: activeUnit,
+            unitId: activeUnit === 'Free' ? 'All' : activeUnit,
             search: searchQuery
         });
 
@@ -81,7 +85,7 @@ export default function BlogsClient({ initialBlogs, initialPagination }: BlogsCl
     };
 
     return (
-        <div className="min-h-screen bg-slate-50/50">
+        <div className="min-h-screen bg-white">
             {/* Header Section */}
             <div className="bg-white border-b border-slate-200 sticky top-16 z-30 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
@@ -108,7 +112,7 @@ export default function BlogsClient({ initialBlogs, initialPagination }: BlogsCl
                          </div>
                     </div>
 
-                    {/* Unit Tabs (Scrollable) */}
+                    {/* Unit Tabs (Scrollable) — clean slate style */}
                     <div className="flex overflow-x-auto pb-2 mt-4 -mx-4 px-4 md:mx-0 md:px-0 gap-2 no-scrollbar snap-x pt-2">
                         {units.map((unit) => (
                             <button 
@@ -116,20 +120,24 @@ export default function BlogsClient({ initialBlogs, initialPagination }: BlogsCl
                                 onClick={() => handleUnitChange(unit)}
                                 className={`
                                     px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap snap-start border transition-all
-                                    ${activeUnit === unit 
-                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 scale-105' 
+                                    ${unit === 'Free' && activeUnit === 'Free'
+                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-100 scale-105'
+                                        : unit === 'Free' && activeUnit !== 'Free'
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                        : activeUnit === unit 
+                                        ? 'bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-200 scale-105' 
                                         : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'}
                                 `}
                             >
-                                {unit === 'All' ? 'All Units' : `Unit ${unit.split('_')[1]}`}
+                                {unit === 'All' ? 'All Units' : unit === 'Free' ? '🎁 Free' : `Unit ${unit.split('_')[1]}`}
                             </button>
                         ))}
                     </div>
                 
-                    {/* Active Unit Breadcrumb/Indicator */}
+                    {/* Active Unit Breadcrumb */}
                     {activeUnit !== 'All' && (
                         <div className="mt-3 flex items-center gap-2 text-sm text-slate-600 animate-in fade-in slide-in-from-top-1">
-                             <span className="font-bold text-indigo-600">Unit {activeUnit.split('_')[1]}</span>
+                             <span className="font-bold text-slate-800">Unit {activeUnit.split('_')[1]}</span>
                         </div>
                     )}
                 </div>
@@ -137,32 +145,32 @@ export default function BlogsClient({ initialBlogs, initialPagination }: BlogsCl
 
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8 px-4 md:px-8 py-8">
                 
-                {/* Sidebar (Desktop Only) */}
+                {/* Sidebar (Desktop Only) — clean dark style */}
                 <div className="hidden lg:col-span-1 lg:block space-y-6">
                     <div className="sticky top-44 space-y-6">
-                         <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-xl shadow-indigo-200 relative overflow-hidden group">
+                         <div className="p-6 rounded-2xl bg-slate-900 text-white shadow-xl relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                 <BookOpen size={80} />
                             </div>
                             <h3 className="font-bold text-lg mb-2 relative z-10">Ace MPPSC 2026</h3>
                             {(currentUser as any)?.is_subscribed ? (
                                 <>
-                                    <p className="text-indigo-100 text-sm mb-4 relative z-10">Premium access active! Master your preparation with full mock tests.</p>
-                                    <Button variant="secondary" className="w-full text-indigo-700 font-bold hover:bg-white shadow-lg" asChild>
+                                    <p className="text-slate-300 text-sm mb-4 relative z-10">Premium access active! Master your preparation with full mock tests.</p>
+                                    <Button variant="secondary" className="w-full text-slate-900 font-bold hover:bg-white shadow-lg" asChild>
                                         <Link href="/syllabus/quiz">Start Practicing</Link>
                                     </Button>
                                 </>
                             ) : (currentUser as any)?.plan_tier === 'lite' ? (
                                 <>
-                                    <p className="text-indigo-100 text-sm mb-4 relative z-10">Upgrade to Pro for full Mock Tests.</p>
-                                    <Button variant="secondary" className="w-full text-indigo-700 font-bold hover:bg-white shadow-lg" asChild>
+                                    <p className="text-slate-300 text-sm mb-4 relative z-10">Upgrade to Pro for full Mock Tests.</p>
+                                    <Button variant="secondary" className="w-full text-slate-900 font-bold hover:bg-white shadow-lg" asChild>
                                         <Link href="/upgrade">Upgrade to Pro</Link>
                                     </Button>
                                 </>
                             ) : (
                                 <>
-                                    <p className="text-indigo-100 text-sm mb-4 relative z-10">Unlock premium mock tests, analytics, and exclusive content.</p>
-                                    <Button variant="secondary" className="w-full text-indigo-700 font-bold hover:bg-white shadow-lg" asChild>
+                                    <p className="text-slate-300 text-sm mb-4 relative z-10">Unlock premium mock tests, analytics, and exclusive content.</p>
+                                    <Button variant="secondary" className="w-full text-slate-900 font-bold hover:bg-white shadow-lg" asChild>
                                         <Link href="/upgrade">Get Premium</Link>
                                     </Button>
                                 </>
@@ -183,43 +191,62 @@ export default function BlogsClient({ initialBlogs, initialPagination }: BlogsCl
                              </div>
                          ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in">
-                                {blogs.length === 0 ? (
-                                    <div className="col-span-2 py-20 text-center text-slate-400 flex flex-col items-center gap-4">
-                                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-2">
-                                            <Search className="w-8 h-8 text-slate-300" />
+                                {(() => {
+                                    const displayBlogs = activeUnit === 'Free' 
+                                        ? blogs.filter(b => b.isFreeAccess === true)
+                                        : blogs;
+                                    
+                                    if (displayBlogs.length === 0) return (
+                                        <div className="col-span-2 py-20 text-center text-slate-400 flex flex-col items-center gap-4">
+                                            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-2">
+                                                <Search className="w-8 h-8 text-slate-300" />
+                                            </div>
+                                            <h3 className="text-lg font-bold text-slate-600">
+                                                {activeUnit === 'Free' ? 'No free articles yet' : 'No content found'}
+                                            </h3>
+                                            <p className="max-w-xs mx-auto">
+                                                {activeUnit === 'Free' 
+                                                    ? 'Free articles will appear here soon.'
+                                                    : <>No articles found for <span className="font-bold text-slate-800">
+                                                        {activeUnit === 'All' ? 'any unit' : `Unit ${activeUnit.split('_')[1]}`}
+                                                      </span>
+                                                      {searchQuery && <span> matching &quot;{searchQuery}&quot;</span>}.</>
+                                                }
+                                            </p>
+                                            {(activeUnit !== 'All' || searchQuery) && (
+                                                <Button variant="outline" onClick={() => { setActiveUnit('All'); setSearchQuery(''); }}>
+                                                    Clear Filters
+                                                </Button>
+                                            )}
                                         </div>
-                                        <h3 className="text-lg font-bold text-slate-600">No content found</h3>
-                                        <p className="max-w-xs mx-auto">
-                                            No articles found for <span className="font-bold text-indigo-600">
-                                                {activeUnit === 'All' ? 'any unit' : `Unit ${activeUnit.split('_')[1]}`}
-                                            </span>
-                                            {searchQuery && <span> matching "{searchQuery}"</span>}.
-                                        </p>
-                                        {(activeUnit !== 'All' || searchQuery) && (
-                                            <Button variant="outline" onClick={() => { setActiveUnit('All'); setSearchQuery(''); }}>
-                                                Clear Filters
-                                            </Button>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <>
-                                        {blogs.map((blog, i) => {
-                                            // Logic: Check user subscription vs blog premium status
-                                            const isPremiumContent = blog.isPremium !== undefined ? blog.isPremium : true; 
-                                            const isUserSubscribed = (currentUser as any)?.is_subscribed;
-                                            const isLocked = isPremiumContent && !isUserSubscribed;
+                                    );
 
-                                            return (
-                                                <BlogCard 
-                                                    key={blog.id} 
-                                                    blog={blog} 
-                                                    featured={i === 0 && !isAuthenticatedFilter && activeUnit === 'All' && !searchQuery} 
-                                                    isLocked={isLocked}
-                                                />
-                                            );
-                                        })}
-                                    </>
-                                )}
+                                    return displayBlogs.map((blog, i) => {
+                                        const userTier = (currentUser as any)?.plan_tier || 'free';
+                                        const isUserSubscribed = (currentUser as any)?.is_subscribed;
+                                        const isAdmin = (currentUser as any)?.role === 'admin';
+                                        
+                                        let isLocked = true;
+                                        if (isAdmin) {
+                                            isLocked = false;
+                                        } else if (isUserSubscribed && userTier === 'pro') {
+                                            isLocked = blog.isProAccess === false;
+                                        } else if (isUserSubscribed && userTier === 'lite') {
+                                            isLocked = !(blog.isLiteAccess || blog.isFreeAccess);
+                                        } else {
+                                            isLocked = !blog.isFreeAccess;
+                                        }
+
+                                        return (
+                                            <BlogCard 
+                                                key={blog.id} 
+                                                blog={blog} 
+                                                featured={i === 0 && !isAuthenticatedFilter && activeUnit === 'All' && !searchQuery} 
+                                                isLocked={isLocked}
+                                            />
+                                        );
+                                    });
+                                })()}
                             </div>
                          )}
 
@@ -231,7 +258,7 @@ export default function BlogsClient({ initialBlogs, initialPagination }: BlogsCl
                                     size="lg" 
                                     onClick={handleLoadMore}
                                     disabled={isLoadingMore}
-                                    className="min-w-[160px] rounded-full font-bold text-slate-600 hover:text-indigo-600 hover:border-indigo-200"
+                                    className="min-w-[160px] rounded-full font-bold text-slate-600 hover:text-slate-900 hover:border-slate-400"
                                 >
                                     {isLoadingMore ? (
                                         <>

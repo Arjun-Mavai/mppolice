@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, FileText, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { PLAN_LIMITS } from '@/config/plans';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 
 interface PYQTest {
@@ -18,6 +17,8 @@ interface PYQTest {
     totalQuestions: number | null;
     durationMinutes: number;
     description: string | null;
+    isLocked: boolean;
+    showFreeBadge: boolean;
 }
 
 interface PYQPageClientProps {
@@ -26,7 +27,7 @@ interface PYQPageClientProps {
 
 export default function PYQPageClient({ initialTests }: PYQPageClientProps) {
     const router = useRouter();
-    const { language, user: currentUser } = useSettingsStore();
+    const { language } = useSettingsStore();
     const [paywallOpen, setPaywallOpen] = useState(false);
 
     return (
@@ -66,11 +67,8 @@ export default function PYQPageClient({ initialTests }: PYQPageClientProps) {
                     </Card>
                 ) : (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {initialTests.map((test, index) => {
-                            const userTier = (currentUser as any)?.plan_tier || 'free';
-                            const effectiveTier = !currentUser ? 'guest' : ((currentUser as any)?.is_subscribed ? (userTier === 'free' ? 'lite' : userTier) : 'free');
-                            const limit = PLAN_LIMITS[effectiveTier as keyof typeof PLAN_LIMITS]?.pyq_limit || 0;
-                            const isLocked = index >= limit;
+                        {initialTests.map((test) => {
+                            const isLocked = test.isLocked;
 
                             return (
                                 <Card 
