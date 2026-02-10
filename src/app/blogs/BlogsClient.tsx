@@ -241,7 +241,7 @@ export default function BlogsClient({ initialBlogs, initialPagination }: BlogsCl
                                             <BlogCard 
                                                 key={blog.id} 
                                                 blog={blog} 
-                                                featured={i === 0 && !isAuthenticatedFilter && activeUnit === 'All' && !searchQuery} 
+                                                featured={i === 0 && activeUnit === 'All' && !searchQuery} 
                                                 isLocked={isLocked}
                                             />
                                         );
@@ -279,6 +279,5 @@ export default function BlogsClient({ initialBlogs, initialPagination }: BlogsCl
     );
 }
 
-// Helper to fix the 'isAuthenticatedFilter' typo in BlogCard prop (assumed meant to check if filter is active)
-const isAuthenticatedFilter = false; // Placeholder if variable was missing, logic replaced by 'searchQuery' checks above
+
 
