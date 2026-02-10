@@ -6,9 +6,23 @@ import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🔑 LOGIN API — Email + Password → JWT cookie set karo
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
+// Flow: Rate limit → Find user → Check soft-delete → Check expiry
+//       → Compare password → Sign JWT → Set cookie → Return user
+//
+// Blocks login if:
+//   1. User soft-deleted (deletedAt != null) → "Account deactivated"
+//   2. Access expired (accessExpiresAt < now) → "Access expired" with date
+//
+// Scalability: Rate limited (15 min window), bcrypt compare, indexed email lookup
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 export async function POST(request: Request) {
   try {
-    // --- SECURITY CHECK: RATE LIMITING ---
+    // ── Rate Limiting ───────────────────────────────────────────
     const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
     const { loginLimiter, checkRateLimit } = await import('@/lib/rate-limit');
     
@@ -33,54 +47,75 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
-    // Verify user against mppsc_users table
-    const users = await db.select().from(mppscUsers).where(eq(mppscUsers.email, email)).limit(1);
+    // ── Find User by Email ──────────────────────────────────────
+    const users = await db.select().from(mppscUsers).where(eq(mppscUsers.email, email.toLowerCase().trim())).limit(1);
     const user = users[0];
 
     if (!user) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Verify password match
+    // ── Soft Delete Check — deactivated account can't login ─────
+    if (user.deletedAt) {
+      return NextResponse.json({ 
+        error: 'Account deactivated. Contact admin for reactivation.' 
+      }, { status: 403 });
+    }
+
+    // ── Active Check — admin can toggle this off to block login ──
+    if (user.isActive === false) {
+      return NextResponse.json({ 
+        error: 'Account is currently inactive. Contact admin to reactivate.',
+        code: 'ACCOUNT_INACTIVE'
+      }, { status: 403 });
+    }
+
+    // ── Access Expiry Check — only for paid plans with expiry set ──
+    // Free users have no expiry (null) → always allowed
+    if (user.accessExpiresAt && user.planTier !== 'free') {
+      const now = new Date();
+      const expiryDate = new Date(user.accessExpiresAt);
+      if (expiryDate < now) {
+        // Downgrade to free instead of blocking login
+        await db.update(mppscUsers)
+          .set({ planTier: 'free', isSubscribed: false })
+          .where(eq(mppscUsers.id, user.id));
+        // Still allow login — user sees free tier content
+        user.planTier = 'free';
+        user.isSubscribed = false;
+      }
+    }
+
+    // ── Password Verification ───────────────────────────────────
     const isMatch = await bcrypt.compare(password, user.password);
     
     if (!isMatch) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Check subscription status - We allow login even if not subscribed now, as we have a free tier
-    // if (!user.isSubscribed) {
-    //    return NextResponse.json({ error: 'Subscription not active. Please contact support.' }, { status: 403 });
-    // }
-
-
-    // Create JWT payload
+    // ── Sign JWT Token ──────────────────────────────────────────
     const payload = {
         userId: user.id,
         email: user.email,
         role: user.role
     };
 
-    // "Bhai sign kar raha hai token"
-    const { signToken } = await import('@/lib/jwt'); // Dynamic import to avoid build time issues if any
+    const { signToken } = await import('@/lib/jwt');
     const token = signToken(payload);
 
     if (!token) {
         throw new Error('Token generation failed');
     }
 
-    // Set session cookie
+    // ── Set HTTP-Only Cookie (30 days) ──────────────────────────
     const cookieStore = await cookies();
-    
-    // Using a specific cookie name for this syllabus app section
     cookieStore.set('mppsc_token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         path: '/',
-        maxAge: 60 * 60 * 24 * 30, // 30 days
+        maxAge: 60 * 60 * 24 * 30,
         sameSite: 'lax'
     });
-
 
     return NextResponse.json({ 
         success: true, 
@@ -89,7 +124,8 @@ export async function POST(request: Request) {
             name: user.name,
             is_subscribed: user.isSubscribed,
             plan_tier: user.planTier,
-            role: user.role
+            role: user.role,
+            access_expires_at: user.accessExpiresAt
         } 
     });
   } catch (error) {

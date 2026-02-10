@@ -112,68 +112,55 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({ explanat
             variants={container}
             initial="hidden"
             animate="show"
-            className="space-y-4 font-sans text-left"
+            className="space-y-5 font-sans text-left"
         >
-            {/* 1. Core Logic */}
+            {/* 1. Core Logic — left accent bar flush, generous line-height */}
             {sections.logic && (
-                <motion.div variants={item} className="flex gap-4">
-                    <div className="w-1 bg-emerald-500 rounded-full shrink-0 mt-1.5 h-auto min-h-[1.5rem]" />
-                    <div className="flex-1">
-                        <h4 className="flex items-center gap-2 text-sm font-bold text-emerald-700 mb-1 uppercase tracking-wider">
-                            <CheckCircle2 size={16} /> {finalLanguage === 'hi' ? 'तर्क' : 'Core Logic'}
-                        </h4>
-                        <div className="text-sm text-slate-700 leading-relaxed font-medium space-y-1.5">
-                            {/* Bhai line by line render karo - clean newlines, hashes hatao */}
-                            {cleanContent(sections.logic)?.split('\n').filter(l => l.trim()).map((line, i) => (
-                                <p key={i}>{line}</p>
-                            ))}
-                        </div>
+                <motion.div variants={item} className="border-l-[3px] border-emerald-500 pl-3.5 sm:pl-4">
+                    <h4 className="text-[11px] font-bold text-emerald-600 mb-2 uppercase tracking-[0.08em] flex items-center gap-1.5">
+                        <CheckCircle2 size={13} className="shrink-0" /> {finalLanguage === 'hi' ? 'तर्क' : 'Core Logic'}
+                    </h4>
+                    <div className="text-[14px] sm:text-[15px] text-slate-800 leading-[1.8] tracking-[-0.005em] font-normal space-y-2.5">
+                        {cleanContent(sections.logic)?.split('\n').filter(l => l.trim()).map((line, i) => (
+                            <p key={i}>{line}</p>
+                        ))}
                     </div>
                 </motion.div>
             )}
 
             {/* 2. Exam Fact */}
             {sections.fact && (
-                <motion.div variants={item} className="flex gap-4">
-                    <div className="w-1 bg-slate-700 rounded-full shrink-0 mt-1.5 h-auto min-h-[1.5rem]" />
-                    <div className="flex-1">
-                        <h4 className="flex items-center gap-2 text-sm font-bold text-slate-800 mb-1 uppercase tracking-wider">
-                            <Lightbulb size={16} /> {finalLanguage === 'hi' ? 'एग्जाम फैक्ट' : 'Exam Fact'}
-                        </h4>
-                        <p className="text-sm text-slate-700 leading-relaxed">
-                            {sections.fact}
-                        </p>
-                    </div>
+                <motion.div variants={item} className="border-l-[3px] border-slate-700 pl-3.5 sm:pl-4">
+                    <h4 className="text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-[0.08em] flex items-center gap-1.5">
+                        <Lightbulb size={13} className="shrink-0" /> {finalLanguage === 'hi' ? 'एग्जाम फैक्ट' : 'Exam Fact'}
+                    </h4>
+                    <p className="text-[14px] sm:text-[15px] text-slate-800 leading-[1.8] tracking-[-0.005em]">
+                        {sections.fact}
+                    </p>
                 </motion.div>
             )}
 
             {/* 3. Memory Tip */}
             {sections.tip && (
-                <motion.div variants={item} className="flex gap-4">
-                    <div className="w-1 bg-amber-500 rounded-full shrink-0 mt-1.5 h-auto min-h-[1.5rem]" />
-                    <div className="flex-1">
-                        <h4 className="flex items-center gap-2 text-sm font-bold text-amber-700 mb-1 uppercase tracking-wider">
-                            <Brain size={16} /> {finalLanguage === 'hi' ? 'मेमोरी टिप' : 'Memory Tip'}
-                        </h4>
-                        <p className="text-sm text-slate-700 leading-relaxed italic bg-amber-50 p-2 rounded-lg border border-amber-100">
-                            {sections.tip}
-                        </p>
-                    </div>
+                <motion.div variants={item} className="border-l-[3px] border-amber-500 pl-3.5 sm:pl-4">
+                    <h4 className="text-[11px] font-bold text-amber-600 mb-2 uppercase tracking-[0.08em] flex items-center gap-1.5">
+                        <Brain size={13} className="shrink-0" /> {finalLanguage === 'hi' ? 'मेमोरी टिप' : 'Memory Tip'}
+                    </h4>
+                    <p className="text-[14px] sm:text-[15px] text-slate-700 leading-[1.8] tracking-[-0.005em] italic bg-amber-50/60 px-3 py-2.5 rounded-lg border border-amber-100/80">
+                        {sections.tip}
+                    </p>
                 </motion.div>
             )}
 
             {/* 4. Scam Alert */}
             {sections.scam && (
-                <motion.div variants={item} className="flex gap-4">
-                    <div className="w-1 bg-red-500 rounded-full shrink-0 mt-1.5 h-auto min-h-[1.5rem]" />
-                    <div className="flex-1">
-                        <h4 className="flex items-center gap-2 text-sm font-bold text-red-700 mb-1 uppercase tracking-wider">
-                            <AlertTriangle size={16} /> {finalLanguage === 'hi' ? 'स्कैम अलर्ट' : 'Scam Alert'}
-                        </h4>
-                        <p className="text-sm text-slate-700 leading-relaxed">
-                            {sections.scam}
-                        </p>
-                    </div>
+                <motion.div variants={item} className="border-l-[3px] border-red-500 pl-3.5 sm:pl-4">
+                    <h4 className="text-[11px] font-bold text-red-600 mb-2 uppercase tracking-[0.08em] flex items-center gap-1.5">
+                        <AlertTriangle size={13} className="shrink-0" /> {finalLanguage === 'hi' ? 'स्कैम अलर्ट' : 'Scam Alert'}
+                    </h4>
+                    <p className="text-[14px] sm:text-[15px] text-slate-800 leading-[1.8] tracking-[-0.005em]">
+                        {sections.scam}
+                    </p>
                 </motion.div>
             )}
         </motion.div>

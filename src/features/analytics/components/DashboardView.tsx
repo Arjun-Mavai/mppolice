@@ -18,6 +18,7 @@ import {
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useSettingsStore } from "@/store/useSettingsStore";
 
 interface DashboardViewProps {
     data: {
@@ -38,6 +39,8 @@ interface DashboardViewProps {
 
 export function DashboardView({ data, userName }: DashboardViewProps) {
     const router = useRouter();
+    const { language } = useSettingsStore();
+    const hi = language === 'hi';
     
     if (!data) {
         return <div className="p-8 text-center text-slate-500">Loading analytics...</div>;
@@ -167,7 +170,7 @@ export function DashboardView({ data, userName }: DashboardViewProps) {
                                                         </div>
                                                         <div>
                                                             <div className="font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors">
-                                                                {activity.testTitle || "Practice Test"}
+                                                                {hi ? (activity.testTitleHi || activity.testTitle || "Practice Test") : (activity.testTitle || "Practice Test")}
                                                             </div>
                                                             <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
                                                                 <Clock size={12} />

@@ -1,0 +1,1 @@
+ALTER TABLE `mppsc_users` ADD `is_active` integer DEFAULT true;

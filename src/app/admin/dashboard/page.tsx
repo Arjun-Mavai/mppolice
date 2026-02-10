@@ -52,17 +52,17 @@ export default function AdminDashboardPage() {
     const { typeCount } = metrics;
 
     return (
-        <div className="min-h-screen bg-slate-50/50 p-6 md:p-12 font-sans">
-            <div className="max-w-7xl mx-auto space-y-8">
+        <div className="min-h-screen bg-slate-50/50 p-4 md:p-8 lg:p-12 font-sans">
+            <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
                 
                 {/* Header */}
                 <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Admin Dashboard</h1>
-                    <p className="text-slate-500 font-medium">Overview of content ingestion and test coverage.</p>
+                    <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Admin Dashboard</h1>
+                    <p className="text-sm text-slate-500 font-medium">Overview of content ingestion and test coverage.</p>
                 </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {/* Stats Grid — 2 cols on mobile, scales up */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
                     <StatCard icon={<Activity />} title="Total Tests" value={metrics.totalTests} color="blue" />
                     <StatCard icon={<ListChecks />} title="Total Questions" value={metrics.totalQuestions} color="indigo" />
                     <StatCard icon={<FileText />} title="Total Blogs" value={metrics.totalBlogs} color="violet" />
@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
                     <StatCard icon={<ListChecks />} title="PYQs" value={typeCount?.PYQ || 0} color="slate" />
                 </div>
 
-                <div className="grid lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                     
                     {/* Column 1: Recent Uploads & Guests */}
                     <div className="space-y-8 lg:col-span-1">
@@ -130,7 +130,7 @@ export default function AdminDashboardPage() {
                 </div>
                 
                 {/* Support Tickets & Feedback Section */}
-                <div className="grid lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
                      <div className="w-full space-y-8">
                         <div>
                             <h2 className="text-xl font-bold mb-4">Payment Exit Reasons</h2>
@@ -160,16 +160,17 @@ function StatCard({ icon, title, value, color }: any) {
         orange: "bg-orange-50 text-orange-600",
         cyan: "bg-cyan-50 text-cyan-600",
         slate: "bg-slate-50 text-slate-600",
+        violet: "bg-violet-50 text-violet-600",
     };
     return (
         <Card className="shadow-sm border-slate-100">
-            <CardContent className="p-6 flex items-center gap-4">
-                <div className={`p-3 rounded-full ${colors[color] || colors.blue}`}>
+            <CardContent className="p-3 md:p-5 flex items-center gap-3">
+                <div className={`p-2 md:p-3 rounded-full shrink-0 ${colors[color] || colors.blue}`}>
                     {icon}
                 </div>
-                <div>
-                    <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">{title}</p>
-                    <p className="text-2xl font-black text-slate-900">{value}</p>
+                <div className="min-w-0">
+                    <p className="text-slate-500 text-[10px] md:text-xs font-bold uppercase tracking-wider truncate">{title}</p>
+                    <p className="text-xl md:text-2xl font-black text-slate-900">{value}</p>
                 </div>
             </CardContent>
         </Card>

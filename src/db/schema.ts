@@ -14,6 +14,19 @@ export const mppscUsers = sqliteTable('mppsc_users', {
   role: text('role').default('guest'), // 'guest' | 'admin'
   adminSecret: text('admin_secret'), // Secure key for admin operations (nullable)
   deletedAt: integer('deleted_at', { mode: 'timestamp' }), // Soft delete support
+  // Active flag — admin toggle. Inactive = can't login. Default ON.
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  // ── New Fields ────────────────────────────────────────────────
+  // Access expiry — after this timestamp, user can't access content
+  // Default: 6 months from creation. Admin can extend per user.
+  accessExpiresAt: integer('access_expires_at', { mode: 'timestamp' }),
+  // Phone number — optional, for contact
+  phone: text('phone'),
+  // Metadata — JSON field for location, notes, any extra info admin wants to store
+  metadata: text('metadata', { mode: 'json' }),
+  // Previous user ID — when lite→pro upgrade happens via soft-delete+recreate
+  // Links to the old record for tracking migration history
+  previousUserId: text('previous_user_id'),
 }, (table) => [
   index('idx_users_email').on(table.email),
 ]);
@@ -33,6 +46,15 @@ export const tests = sqliteTable('tests', {
   topicId: text('topic_id'), // To link to specific topic ID from syllabusData
   tags: text('tags', { mode: 'json' }), // JSON array of related tags e.g., ['history', 'ancient']
   isPro: integer('is_pro', { mode: 'boolean' }).default(false),
+  // ── Access Control Flags ──────────────────────────────────────────
+  // Ye 3 flags admin panel se control hote hain
+  // isFreeAccess = true → Free/Guest users bhi de sakte hain test
+  // isLiteAccess = true → Lite plan wale de sakte hain
+  // isProAccess = true  → Pro plan wale de sakte hain (default true)
+  // Admin ko ye check nahi lagta — wo sab de sakta hai
+  isFreeAccess: integer('is_free_access', { mode: 'boolean' }).default(false),
+  isLiteAccess: integer('is_lite_access', { mode: 'boolean' }).default(false),
+  isProAccess: integer('is_pro_access', { mode: 'boolean' }).default(true),
   displayOrder: integer('display_order').default(0),
   maxRetries: integer('max_retries'), // null = unlimited. Standard: Unit=5, FLT=3
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
@@ -120,7 +142,12 @@ export const syllabusTopics = sqliteTable('syllabus_topics', {
   aiContent: text('ai_content', { mode: 'json' }),
   aiContentEn: text('ai_content_en', { mode: 'json' }), 
   order: integer('order').notNull(),
+  // ── Access Control Flags ──────────────────────────────────────
+  // isFree = old flag (backward compat) — same as isFreeAccess
   isFree: integer('is_free', { mode: 'boolean' }).default(false),
+  // New tier-based flags — admin panel se control karo
+  isLiteAccess: integer('is_lite_access', { mode: 'boolean' }).default(false),
+  isProAccess: integer('is_pro_access', { mode: 'boolean' }).default(true),
   imgUrl: text('img_url'), // For image support
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
 }, (table) => [
@@ -138,6 +165,14 @@ export const contentBlogs = sqliteTable('content_blogs', {
   imageUrl: text('image_url'),
   readingTime: integer('reading_time'), // in minutes
   contentType: text('content_type', { enum: ['blog', 'vlog'] }).default('blog').notNull(),
+  unitId: text('unit_id'), // Linked to syllabusUnit e.g., 'unit_1', 'unit_10'
+  topicId: text('topic_id'), // Linked to syllabusData topic.id (e.g. '1', '2')
+  isPremium: integer('is_premium', { mode: 'boolean' }).default(true), // Legacy flag (kept for backward compat)
+  // ── Access Control Flags ──────────────────────────────────────
+  // Same pattern as tests — admin panel se toggle karo
+  isFreeAccess: integer('is_free_access', { mode: 'boolean' }).default(false),
+  isLiteAccess: integer('is_lite_access', { mode: 'boolean' }).default(false),
+  isProAccess: integer('is_pro_access', { mode: 'boolean' }).default(true),
   isPublished: integer('is_published', { mode: 'boolean' }).default(false),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
@@ -262,3 +297,67 @@ export const guests = sqliteTable('guests', {
     index('idx_guests_email').on(table.email),
     index('idx_guests_mobile').on(table.mobile),
 ]);
+
+// Payments Table
+export const payments = sqliteTable('payments', {
+    id: text('id').primaryKey(),
+    userId: text('user_id').references(() => mppscUsers.id).notNull(),
+    orderId: text('order_id').notNull(),
+    paymentId: text('payment_id').unique(),
+    signature: text('signature'),
+    amount: integer('amount').notNull(),
+    planTier: text('plan_tier', { enum: ['lite', 'pro'] }),
+    status: text('status', { enum: ['created', 'captured', 'failed'] }).default('created').notNull(),
+    currency: text('currency').default('INR').notNull(),
+    receipt: text('receipt'),
+    notes: text('notes', { mode: 'json' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+}, (table) => [
+    index('idx_payments_order_id').on(table.orderId),
+    index('idx_payments_user_id').on(table.userId),
+    index('idx_payments_status').on(table.status),
+    index('idx_payments_payment_id').on(table.paymentId),
+]);
+
+// Verification Tokens Table (for set password / email verification)
+export const verificationTokens = sqliteTable('verification_tokens', {
+    identifier: text('identifier').notNull(), // email or userId
+    token: text('token').notNull(),
+    expires: integer('expires', { mode: 'timestamp' }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+}, (table) => [
+    index('idx_verification_tokens_identifier').on(table.identifier),
+    index('idx_verification_tokens_token').on(table.token),
+]);
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 💰 PRICING CONFIG TABLE — Dynamic pricing, admin se change karo
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Single row table (key-value style) — stores current pricing.
+// Admin updates → cache busts → pricing page shows new prices.
+// No deploy needed to change prices!
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+export const pricingConfig = sqliteTable('pricing_config', {
+  id: text('id').primaryKey().default('default'), // Single row — always 'default'
+  // Lite plan pricing
+  litePrice: integer('lite_price').default(99),           // Current price ₹99
+  liteOriginalPrice: integer('lite_original_price').default(299), // Strikethrough ₹299
+  liteValidityText: text('lite_validity_text').default('Valid till MPPSC 2026 Prelims'),
+  liteMonths: integer('lite_months').default(8),          // Shown as "~8 months"
+  // Pro plan pricing
+  proPrice: integer('pro_price').default(299),            // Current price ₹299
+  proOriginalPrice: integer('pro_original_price').default(999), // Strikethrough ₹999
+  proValidityText: text('pro_validity_text').default('Valid till MPPSC 2026 Mains'),
+  proMonths: integer('pro_months').default(12),           // Shown as "~12 months"
+  // Upgrade pricing
+  upgradePrice: integer('upgrade_price').default(199),    // Lite→Pro difference
+  upgradeOriginalPrice: integer('upgrade_original_price').default(299),
+  // Urgency text
+  urgencyText: text('urgency_text').default('Special pricing for first 100 students'),
+  urgencyTextHi: text('urgency_text_hi').default('पहले 100 छात्रों के लिए विशेष मूल्य'),
+  // Dynamic student count for FOMO
+  studentsBought: integer('students_bought').default(23),
+  // Last updated
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+});

@@ -11,9 +11,9 @@ import { Progress } from '@/components/ui/progress';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useRouter } from 'next/navigation';
-import { PLAN_LIMITS } from '@/config/plans';
 import { getUserAttempts } from '@/features/tests/actions/submission';
  
+// Server se enriched data aata hai — isLocked aur showFreeBadge already set
 interface Test {
     id: string;
     title: string;
@@ -25,6 +25,8 @@ interface Test {
     maxRetries: number | null;
     isPro: boolean | null;
     createdAt: Date | null;
+    isLocked: boolean;
+    showFreeBadge: boolean;
 }
 
 interface CSATPageClientProps {
@@ -33,7 +35,7 @@ interface CSATPageClientProps {
 
 export default function CSATPageClient({ initialTests }: CSATPageClientProps) {
     const router = useRouter();
-    const { isSubscribed, language } = useSettingsStore();
+    const { language } = useSettingsStore();
     const [attempts, setAttempts] = useState<Record<string, number>>({});
     const [paywallOpen, setPaywallOpen] = useState(false);
 
@@ -44,21 +46,14 @@ export default function CSATPageClient({ initialTests }: CSATPageClientProps) {
         }
     }, [initialTests]);
 
-    const handleTestClick = (testIndex: number, testId: string, attemptsLeft: number) => {
-        const user = (useSettingsStore.getState().user as any);
-        const userTier = user?.plan_tier || 'free';
-        const effectiveTier = !user ? 'guest' : (user?.is_subscribed ? (userTier === 'free' ? 'lite' : userTier) : 'free');
-        const limit = PLAN_LIMITS[effectiveTier as keyof typeof PLAN_LIMITS]?.flt_limit || 0;
-        
-        const isOpen = testIndex < limit;
-        
-        if (!isOpen) {
+    const handleTestClick = (test: Test, attemptsLeft: number) => {
+        // DB flags se locked hai to paywall dikha do
+        if (test.isLocked) {
             setPaywallOpen(true);
             return;
         }
-
         if (attemptsLeft > 0) {
-            router.push(`/syllabus/quiz/play?mode=full&testId=${testId}`);
+            router.push(`/syllabus/quiz/play?mode=full&testId=${test.id}`);
         }
     };
 
@@ -84,13 +79,8 @@ export default function CSATPageClient({ initialTests }: CSATPageClientProps) {
                 </div>
 
                 <div className="grid gap-4">
-                    {initialTests.length > 0 ? initialTests.map((test, testIndex) => {
-                        const user = (useSettingsStore.getState().user as any);
-                        const userTier = user?.plan_tier || 'free';
-                        const effectiveTier = user?.is_subscribed ? (userTier === 'free' ? 'lite' : userTier) : 'free';
-                        const limit = PLAN_LIMITS[effectiveTier as keyof typeof PLAN_LIMITS]?.flt_limit || 0;
-                        
-                        const isOpen = testIndex < limit;
+                    {initialTests.length > 0 ? initialTests.map((test) => {
+                        const isOpen = !test.isLocked;
                         
                         const attemptsCount = attempts[test.id] || 0;
                         const maxRetries = test.maxRetries || 3;
@@ -106,7 +96,7 @@ export default function CSATPageClient({ initialTests }: CSATPageClientProps) {
                                     isCompleted ? "border-slate-200 bg-slate-50/20" :
                                     "border-slate-200 bg-white hover:border-slate-400"
                                 )}
-                                onClick={() => handleTestClick(testIndex, test.id, attemptsLeft)}
+                                onClick={() => handleTestClick(test, attemptsLeft)}
                             >
                                 <CardContent className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
                                     <div className="space-y-2 flex-1">
@@ -115,7 +105,7 @@ export default function CSATPageClient({ initialTests }: CSATPageClientProps) {
                                                 {test.title}
                                             </h3>
                                             {!isOpen && <Lock className="w-4 h-4 text-slate-400 mt-1" />}
-                                            {isOpen && !isSubscribed && testIndex === 0 && <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">Free</Badge>}
+                                            {test.showFreeBadge && <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">Free</Badge>}
                                             {isCompleted && <Badge variant="secondary" className="bg-slate-100 text-slate-800">Completed</Badge>}
                                         </div>
                                         

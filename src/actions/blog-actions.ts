@@ -4,7 +4,7 @@
 // revalidateTag se on-demand cache bust hota h, unstable_cache se data cache hota h
 import { db } from "@/db";
 import { contentBlogs, mppscUsers } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+// import { eq, desc, and, like, count, sql } from "drizzle-orm"; -- Removing this as it's defined later or will be cleaned up
 import { verifyAuth } from "@/lib/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { logger } from "@/lib/logger";
@@ -53,6 +53,12 @@ export async function uploadBlog(data: any) {
             readingTime: parseInt(metadata.readingTime) || 5,
             content,
             contentType: metadata.type || 'blog',
+            unitId: metadata.unit || null, 
+            topicId: metadata.topic || null, // Store the topic string directly as provided
+            isPremium: true, // Legacy flag — backward compat
+            isFreeAccess: false, // Default: not free
+            isLiteAccess: false, // Default: not for lite
+            isProAccess: true,   // Default: pro users can access
             isPublished: true,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -60,8 +66,8 @@ export async function uploadBlog(data: any) {
 
         // Cache bust — blog list aur specific slug dono ka cache hata do
         revalidatePath('/blogs');
-        revalidateTag(CACHE.BLOGS.TAGS.ALL, { expire: 0 });
-        revalidateTag(CACHE.BLOGS.TAGS.DETAIL(metadata.slug), { expire: 0 });
+        revalidateTag(CACHE.BLOGS.TAGS.ALL,{ expire: 0 }); // Bust list cache
+        revalidateTag(CACHE.BLOGS.TAGS.DETAIL(metadata.slug) , { expire: 0 }); // Bust detail cache
 
         return { success: true };
     } catch (error: any) {
@@ -74,8 +80,45 @@ export async function uploadBlog(data: any) {
 }
 
 /**
+ * toggleBlogPremium — Toggle premium status of a blog
+ */
+export async function toggleBlogPremium(blogId: string, isPremium: boolean) {
+    const user = await verifyAuth();
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    // Admin check
+    const dbUser = await db.select().from(mppscUsers).where(eq(mppscUsers.id, user.id)).get();
+    if (!dbUser || dbUser.role !== 'admin') {
+        return { success: false, error: "Forbidden: Admin only" };
+    }
+
+    try {
+        await db.update(contentBlogs)
+            .set({ 
+                isPremium, 
+                updatedAt: new Date() 
+            })
+            .where(eq(contentBlogs.id, blogId));
+
+        revalidatePath('/blogs');
+        revalidateTag(CACHE.BLOGS.TAGS.ALL,{ expire: 0 });
+        
+        // Also fetch slug to revalidate detail page
+        const blog = await db.select({ slug: contentBlogs.slug }).from(contentBlogs).where(eq(contentBlogs.id, blogId)).get();
+        if (blog) {
+             revalidateTag(CACHE.BLOGS.TAGS.DETAIL(blog.slug),{ expire: 0 });
+        }
+
+        return { success: true };
+    } catch (error: any) {
+        logger.error("Toggle Blog Premium Error:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
  * getCachedBlogs — unstable_cache se wrapped, 1 hour cache
- * revalidateTag('blogs-list') se on-demand bust hoga
+ * Used for generateStaticParams to fetch ALL blogs
  */
 export const getCachedBlogs = cachedData(
     async () => {
@@ -91,9 +134,86 @@ export const getCachedBlogs = cachedData(
     CACHE.BLOGS.GET_ALL.revalidate
 );
 
-// Wrapper — consistent interface for blog list fetch
-export async function getBlogs() {
-    return await getCachedBlogs();
+import { eq, desc, and, like, count, sql } from "drizzle-orm";
+
+/**
+ * getBlogs — Paginated, filtered blog fetcher
+ * Replaces simple getCachedBlogs
+ */
+export async function getBlogs({
+    page = 1,
+    limit = 10,
+    search = '',
+    unitId = 'All',
+    isPremium = undefined // undefined = all, true = premium, false = free
+}: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    unitId?: string;
+    isPremium?: boolean;
+} = {}) {
+    try {
+        const offset = (page - 1) * limit;
+        
+        // Build Where Clause
+        const whereConditions = [];
+        
+        // Filter by Published (always)
+        whereConditions.push(eq(contentBlogs.isPublished, true));
+
+        // Filter by Unit
+        if (unitId && unitId !== 'All') {
+            whereConditions.push(eq(contentBlogs.unitId, unitId));
+        }
+
+        // Filter by Search
+        if (search) {
+            whereConditions.push(
+                sql`(${contentBlogs.title} LIKE ${`%${search}%`} OR ${contentBlogs.description} LIKE ${`%${search}%`})`
+            );
+        }
+
+        // Filter by Premium Status (if specified)
+        if (isPremium !== undefined) {
+             whereConditions.push(eq(contentBlogs.isPremium, isPremium));
+        }
+
+        const whereClause = and(...whereConditions);
+
+        // Fetch Data
+        const blogs = await db.select()
+            .from(contentBlogs)
+            .where(whereClause)
+            .orderBy(desc(contentBlogs.createdAt))
+            .limit(limit)
+            .offset(offset);
+
+        // Fetch Total Count (for pagination math)
+        const totalResult = await db.select({ count: count() })
+            .from(contentBlogs)
+            .where(whereClause);
+            
+        const total = totalResult[0]?.count || 0;
+        const hasMore = offset + blogs.length < total;
+
+        return {
+            blogs,
+            pagination: {
+                page,
+                limit,
+                total,
+                hasMore
+            }
+        };
+
+    } catch (error) {
+        logger.error("Get Blogs Error:", error);
+        return { 
+            blogs: [], 
+            pagination: { page: 1, limit: 10, total: 0, hasMore: false } 
+        };
+    }
 }
 
 /**

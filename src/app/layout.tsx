@@ -23,7 +23,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
 };
- const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://mppsc.vercel.app/";
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://mppsc.zenscroll.app";
 export const metadata: Metadata = {
   title: {
     default: "Mindful MPPSC | Crack MPPSC 2026 with Mnemonics",
@@ -58,14 +58,48 @@ import { AppFooter } from "@/components/layout/AppFooter";
 import { GlobalLockModal } from "@/components/GlobalLockModal";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { Toaster } from "@/components/ui/sonner";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // JSON-LD structured data — helps Google show rich results
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Mindful MPPSC",
+    url: baseUrl,
+    description: "The #1 App for MPPSC 2026 Preparation with Mnemonics, Bilingual Notes & Quizzes",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${baseUrl}/blogs?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    name: "Mindful MPPSC",
+    url: baseUrl,
+    description: "India's first bilingual mnemonic-based MPPSC preparation platform",
+    sameAs: [],
+  };
+
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+      </head>
       <body
         className={`${outfit.variable} ${playfair.variable} antialiased font-sans bg-gray-50 text-gray-900`}
       >
@@ -78,6 +112,7 @@ export default function RootLayout({
           <SupportButton />
         </Suspense>
         <Toaster position="top-right"  richColors/>
+        <InstallPrompt />
         <script
           dangerouslySetInnerHTML={{
             __html: `

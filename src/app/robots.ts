@@ -21,7 +21,7 @@ import { MetadataRoute } from 'next';
  * 
  * Testing:
  * - Dev: http://localhost:3000/robots.txt
- * - Prod: https://mppsc.vercel.app/robots.txt
+ * - Prod: https://mppsc.zenscroll.app/robots.txt
  */
 export default function robots(): MetadataRoute.Robots {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mppsc.zenscroll.app";
@@ -39,7 +39,6 @@ export default function robots(): MetadataRoute.Robots {
           '/dashboard/',        // User dashboard - private
           '/syllabus/analytics/',  // User analytics - private
           '/syllabus/quiz/play/',  // Quiz play - dynamic, private
-          '/tests/',            // Old test routes - behind auth
           '/_next/static/css/',
           '/_next/static/media/',
           '/signup',            // Redirected page
@@ -49,14 +48,14 @@ export default function robots(): MetadataRoute.Robots {
       // Googlebot - main traffic source
       {
         userAgent: 'Googlebot',
-        allow: ['/', '/syllabus/', '/blogs/', '/syllabus/quiz/'],
-        disallow: ['/api/', '/admin/', '/app/', '/dashboard/', '/syllabus/analytics/', '/syllabus/quiz/play/', '/tests/'],
+        allow: ['/', '/syllabus/', '/blogs/', '/syllabus/quiz/', '/tests/'],
+        disallow: ['/api/', '/admin/', '/app/', '/dashboard/', '/syllabus/analytics/', '/syllabus/quiz/play/'],
       },
       // Bing - India me bhi use hota h
       {
         userAgent: 'Bingbot',
-        allow: ['/', '/syllabus/', '/blogs/'],
-        disallow: ['/api/', '/admin/', '/app/', '/dashboard/', '/syllabus/quiz/play/', '/tests/'],
+        allow: ['/', '/syllabus/', '/blogs/', '/tests/'],
+        disallow: ['/api/', '/admin/', '/app/', '/dashboard/', '/syllabus/quiz/play/'],
       },
       // Bad bots - scraper block
       {

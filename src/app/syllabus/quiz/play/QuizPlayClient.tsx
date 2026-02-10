@@ -160,7 +160,7 @@ export function QuizPlayClient({
         title={title}
         userId={userId}
         timeLimitInMinutes={mode === 'full' ? 120 : 20} // 2 hours for FLT, 20 mins for Unit
-        onExit={() => router.push('/syllabus')}
+        onExit={() => router.push('/syllabus/quiz')}
         onRetry={() => {
             // Optimistic update, server should re-validate
             setRetryCount(r => r + 1);

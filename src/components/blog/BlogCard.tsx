@@ -37,13 +37,14 @@ export function BlogCard({ blog, featured, isLocked }: BlogCardProps) {
     return <Link href={`/blogs/${blog.slug}`} className="group h-full block">{children}</Link>;
   };
 
+  // Fallback — clean white placeholder when no image
   return (
     <Wrapper>
       <Card className={cn(
         "h-full border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white relative",
-        featured ? "border-indigo-100 shadow-md" : ""
+        featured ? "border-slate-300 shadow-md" : ""
       )}>
-        <div className="aspect-[16/9] w-full bg-slate-100 relative overflow-hidden">
+        <div className={cn("aspect-[16/9] w-full relative overflow-hidden", !blog.imageUrl && "bg-slate-100")}>
           {blog.imageUrl ? (
             <img 
               src={blog.imageUrl} 
@@ -51,8 +52,10 @@ export function BlogCard({ blog, featured, isLocked }: BlogCardProps) {
               className={cn("w-full h-full object-cover transition-transform duration-700", !isLocked && "group-hover:scale-110", isLocked && "blur-[2px] grayscale-[50%]")} 
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-slate-300 bg-slate-50">
-              <BookOpen size={48} />
+             /* Clean white/grey fallback — no colored gradient */
+            <div className="flex flex-col items-center justify-center h-full text-slate-500 p-6 text-center">
+              <BookOpen size={40} className="mb-2 opacity-60" />
+              <span className="font-bold text-base leading-tight line-clamp-2 text-slate-700">{blog.title}</span>
             </div>
           )}
           
@@ -65,13 +68,20 @@ export function BlogCard({ blog, featured, isLocked }: BlogCardProps) {
             </div>
           )}
 
-          {!isLocked && (
-            <div className="absolute top-3 left-3">
-                <Badge className="bg-white/95 backdrop-blur-md text-slate-900 font-bold shadow-sm hover:bg-white capitalize px-3 py-1">
-                {blog.category.replace(/_/g, ' ')}
-                </Badge>
-            </div>
-          )}
+          {/* Unit badge — always visible (z-20 so it appears above lock overlay) */}
+          <div className="absolute top-3 left-3 flex gap-2 z-20">
+              {blog.unitId && (
+                  <Badge className="bg-white/90 backdrop-blur-md text-slate-700 font-bold shadow-sm capitalize px-2 py-0.5 text-[10px] border border-white/50">
+                      Unit {blog.unitId.replace('unit_', '')}
+                  </Badge>
+              )}
+               {/* isFreeAccess = true → FREE badge dikhao (DB flag based) */}
+               {(blog.isFreeAccess === true) && (
+                  <Badge className="bg-emerald-500 text-white font-bold shadow-sm px-2 py-0.5 text-[10px]">
+                      FREE
+                  </Badge>
+               )}
+          </div>
           
           {/* Overlay gradient for text legibility if needed, or hover effect */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
@@ -80,7 +90,7 @@ export function BlogCard({ blog, featured, isLocked }: BlogCardProps) {
         <CardContent className="p-5 md:p-6 space-y-4">
           <div className="flex items-center gap-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">
             <div className="flex items-center gap-1">
-               <Clock size={12} className="text-indigo-500" />
+               <Clock size={12} className="text-slate-500" />
                <span>{blog.readingTime || 5} min</span>
             </div>
             <span>•</span>
@@ -88,7 +98,7 @@ export function BlogCard({ blog, featured, isLocked }: BlogCardProps) {
           </div>
           
           <div className="space-y-2">
-            <h3 className={cn("font-bold text-slate-900 leading-tight transition-colors", featured ? "text-2xl" : "text-xl", !isLocked && "group-hover:text-indigo-600")}>
+            <h3 className={cn("font-bold text-slate-900 leading-tight transition-colors", featured ? "text-2xl" : "text-xl", !isLocked && "group-hover:text-slate-700")}>
                 {blog.title}
             </h3>
             <p className="text-slate-600 text-sm line-clamp-2 leading-relaxed">
@@ -97,7 +107,7 @@ export function BlogCard({ blog, featured, isLocked }: BlogCardProps) {
           </div>
 
           {!isLocked && (
-            <div className="pt-2 flex items-center text-indigo-600 font-bold text-sm opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+            <div className="pt-2 flex items-center text-slate-800 font-bold text-sm opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
                 Read Article <ChevronRight size={16} className="ml-1" />
             </div>
           )}

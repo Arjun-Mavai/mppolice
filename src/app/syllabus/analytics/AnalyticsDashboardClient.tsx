@@ -57,25 +57,25 @@ function TestRow({ activity, onClick, showType }: { activity: any; onClick: () =
   return (
     <div
       onClick={onClick}
-      className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors cursor-pointer group"
+      className="flex items-center justify-between px-4 py-4 sm:px-5 sm:py-5 hover:bg-slate-50 transition-colors cursor-pointer group"
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
         {/* Accuracy badge — rang se pata chalta hai kaisa gaya */}
         <div className={cn(
-          "w-11 h-11 rounded-xl flex items-center justify-center font-bold text-xs border shrink-0",
+          "w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm border shrink-0",
           accuracyStyle(accuracy),
         )}>
           {accuracy}%
         </div>
 
-        <div className="min-w-0">
+        <div className="min-w-0 space-y-1">
           {/* Type label + date — test ka type aur kab diya */}
           {showType && (
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200">
                 {typeLabel(activity.type)}
               </span>
-              <span className="text-xs text-slate-400 flex items-center gap-1">
+              <span className="text-[11px] text-slate-400 flex items-center gap-1">
                 <Clock size={10} />
                 {new Date(activity.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
               </span>
@@ -83,27 +83,27 @@ function TestRow({ activity, onClick, showType }: { activity: any; onClick: () =
           )}
 
           {!showType && (
-            <div className="text-[10px] text-slate-400 flex items-center gap-1">
+            <div className="text-[11px] text-slate-400 flex items-center gap-1">
               <Clock size={10} />
               {new Date(activity.createdAt).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
             </div>
           )}
 
-          <div className="font-bold text-slate-900 text-sm group-hover:text-slate-700 transition-colors truncate pr-4">
+          <div className="font-semibold text-slate-900 text-sm sm:text-[15px] leading-snug group-hover:text-slate-700 transition-colors truncate pr-2">
             {activity.testTitle || "Practice Test"}
           </div>
 
           {/* Time liya kitna — agar data hai toh dikhao */}
           {activity.timeTaken && (
-            <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5 font-medium">
-              <span className="bg-slate-100 px-1.5 rounded-sm flex items-center gap-1 border border-slate-200">
+            <div className="text-[11px] text-slate-500 flex items-center gap-1 font-medium">
+              <span className="bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1 border border-slate-200">
                 ⏱️ {activity.timeTaken} / {activity.totalDuration}
               </span>
             </div>
           )}
         </div>
       </div>
-      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 group-hover:translate-x-1 transition-all shrink-0" />
+      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 group-hover:translate-x-1 transition-all shrink-0 ml-2" />
     </div>
   );
 }
@@ -184,16 +184,16 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans pb-20">
-      <div className="pt-24 px-4 md:px-8 max-w-7xl mx-auto space-y-8">
+      <div className="pt-20 px-4 md:px-8 max-w-7xl mx-auto space-y-6">
 
-        {/* ===== Header + Take New Test button ===== */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* ===== Header — clean, compact, mobile-first ===== */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 font-display">Performance Analytics</h1>
-            <p className="text-slate-500">Track your progress and identify areas for improvement.</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display leading-tight">Performance Analytics</h1>
+            <p className="text-slate-500 text-sm mt-0.5">Track your progress and identify areas for improvement.</p>
           </div>
           <Button
-            className="bg-slate-800 hover:bg-slate-700 text-white font-bold shadow-lg shadow-slate-200"
+            className="bg-slate-800 hover:bg-slate-700 text-white font-bold shadow-lg shadow-slate-200 w-full sm:w-auto"
             onClick={() => router.push('/syllabus/quiz')}
           >
             <TrendingUp className="w-4 h-4 mr-2" /> Take New Test
@@ -348,7 +348,7 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
               </CardHeader>
 
               <CardContent className="p-0">
-                <ScrollArea className="h-[300px]">
+                <ScrollArea className="h-[360px] sm:h-[400px]">
                   {activeTab === 'TOPIC' ? (
                     <TopicGroupedList history={filteredHistory} onNavigate={(id) => router.push(`/syllabus/analytics/history/${id}`)} />
                   ) : (

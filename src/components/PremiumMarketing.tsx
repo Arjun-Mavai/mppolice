@@ -1,12 +1,38 @@
 "use client";
 
-// Home page ka pricing section — same style as /pricing page
-// ₹ price strikethrough ke saath, monthly breakdown, "first 100 users" urgency
-import { CheckCircle2, Star, Clock, Users, Zap, Crown } from 'lucide-react';
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🏠 HOME PAGE PRICING — Dynamic from /api/pricing, same DB as /pricing
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Admin changes prices in dashboard → reflects here instantly.
+// All ₹ amounts are dynamic — no hardcoded prices.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import { useState, useEffect } from 'react';
+import { CheckCircle2, Star, Clock, Users, Zap, Crown, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useSettingsStore } from '@/store/useSettingsStore';
+
+// Pricing data shape — matches /api/pricing response
+interface PricingData {
+    litePrice: number; liteOriginalPrice: number;
+    liteValidityText: string; liteMonths: number;
+    proPrice: number; proOriginalPrice: number;
+    proValidityText: string; proMonths: number;
+    upgradePrice: number; upgradeOriginalPrice: number;
+    urgencyText: string; urgencyTextHi: string;
+}
+
+// Hardcoded fallback — used only if API fails (first paint)
+const DEFAULTS: PricingData = {
+    litePrice: 99, liteOriginalPrice: 299,
+    liteValidityText: "Valid till MPPSC 2026 Prelims", liteMonths: 8,
+    proPrice: 299, proOriginalPrice: 999,
+    proValidityText: "Valid till MPPSC 2026 Mains", proMonths: 12,
+    upgradePrice: 199, upgradeOriginalPrice: 299,
+    urgencyText: "Special pricing for first 100 students",
+    urgencyTextHi: "पहले 100 छात्रों के लिए विशेष मूल्य",
+};
 
 interface PremiumMarketingProps {
     onUnlock: (amount: number) => void;
@@ -17,7 +43,21 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
     const hi = language === 'hi';
     const isLiteUser = user?.plan_tier === 'lite';
 
-    // Lite user ko Pro upgrade dikhao — seedha point pe aao
+    // Dynamic pricing — fetch from backend, fallback to defaults
+    const [p, setP] = useState<PricingData>(DEFAULTS);
+    useEffect(() => {
+        fetch('/api/pricing').then(r => r.json()).then(d => {
+            if (d.pricing) setP(d.pricing);
+        }).catch(() => {/* defaults stay */});
+    }, []);
+
+    // Calculated values from dynamic prices
+    const liteDiscount = Math.round((1 - p.litePrice / p.liteOriginalPrice) * 100);
+    const proDiscount = Math.round((1 - p.proPrice / p.proOriginalPrice) * 100);
+    const liteMonthly = Math.round(p.litePrice / p.liteMonths);
+    const proMonthly = Math.round(p.proPrice / p.proMonths);
+
+    // Lite user ko Pro upgrade dikhao — dynamic price
     if (isLiteUser) {
         return (
             <div className="p-6 md:p-8 bg-gradient-to-br from-slate-50 via-slate-100/50 to-slate-50 min-h-[500px] flex flex-col items-center text-center justify-center">
@@ -35,8 +75,8 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
 
                 <p className="text-slate-500 mb-8 max-w-md mx-auto text-lg leading-relaxed">
                     {hi
-                        ? 'प्रो प्लान पर अपग्रेड करें और अनलिमिटेड क्विज़, टेस्ट और स्मार्ट एनालिसिस अनलॉक करें। केवल ₹199 में।'
-                        : 'Upgrade to Pro and unlock Unlimited Quizzes, Tests, and Smart Analytics. Just pay the difference.'}
+                        ? `प्रो प्लान पर अपग्रेड करें और अनलिमिटेड क्विज़, टेस्ट और स्मार्ट एनालिसिस अनलॉक करें। केवल ₹${p.upgradePrice} में।`
+                        : `Upgrade to Pro and unlock Unlimited Quizzes, Tests, and Smart Analytics. Just pay the difference.`}
                 </p>
 
                 <div className="relative group w-full max-w-md">
@@ -53,8 +93,8 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                                     <p className="text-xs text-slate-500">From Lite Plan</p>
                                 </div>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-sm text-slate-400 line-through">₹299</span>
-                                    <span className="text-3xl font-black text-slate-800">₹199</span>
+                                    <span className="text-sm text-slate-400 line-through">₹{p.upgradeOriginalPrice}</span>
+                                    <span className="text-3xl font-black text-slate-800">₹{p.upgradePrice}</span>
                                 </div>
                             </div>
 
@@ -68,10 +108,10 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                             </ul>
 
                             <Button
-                                onClick={() => onUnlock(199)}
+                                onClick={() => onUnlock(p.upgradePrice)}
                                 className="w-full h-12 rounded-xl font-bold bg-slate-800 hover:bg-slate-700 text-white shadow-lg shadow-slate-300 transition-all"
                             >
-                                Upgrade Now for ₹199
+                                {hi ? `₹${p.upgradePrice} में अपग्रेड करें` : `Upgrade Now for ₹${p.upgradePrice}`}
                             </Button>
                         </CardContent>
                     </Card>
@@ -80,26 +120,26 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
         );
     }
 
-    // Free users — same layout as /pricing page: strikethrough price, monthly breakdown, urgency
+    // Free users — dynamic pricing cards
     const liteFeatures = [
         { en: 'Topic-wise Tests (5 per unit)', hi: 'टॉपिक वाइज़ टेस्ट (5 प्रति यूनिट)' },
         { en: 'Unit Tests with Explanations', hi: 'यूनिट टेस्ट और व्याख्या' },
-        { en: 'AI-Powered Concept Explanations', hi: 'AI कांसेप्ट एक्सप्लेनेशन' },
-        { en: 'Study Blogs Access', hi: 'स्टडी ब्लॉग्स एक्सेस' },
-        { en: 'Valid till MPPSC 2026 Prelims', hi: 'MPPSC 2026 प्रीलिम्स तक वैध' },
+        { en: 'Smart Explanations', hi: 'स्मार्ट एक्सप्लेनेशन' },
+        { en: 'Premium Study Blogs', hi: 'प्रीमियम स्टडी ब्लॉग्स' },
+        { en: p.liteValidityText, hi: 'MPPSC 2026 प्रीलिम्स तक वैध' },
     ];
     const proFeatures = [
         { en: 'Everything in Lite +', hi: 'लाइट की सभी सुविधाएँ +' },
         { en: 'Unlimited Topic & Unit Tests', hi: 'अनलिमिटेड टॉपिक और यूनिट टेस्ट' },
         { en: 'Full Length Mock Tests (100Q)', hi: 'फुल लेंथ मॉक टेस्ट (100 प्रश्न)' },
         { en: 'CSAT Mock Papers', hi: 'CSAT मॉक पेपर' },
-        { en: 'PYQ Papers (2020-2024)', hi: 'PYQ पेपर (2020-2024)' },
+        { en: 'PYQ Papers (2020-2025)', hi: 'PYQ पेपर (2020-2025)' },
         { en: 'Smart Analytics Dashboard', hi: 'स्मार्ट एनालिटिक्स डैशबोर्ड' },
-        { en: 'Valid till MPPSC 2026 Mains', hi: 'MPPSC 2026 मेन्स तक वैध' },
+        { en: p.proValidityText, hi: 'MPPSC 2026 मेन्स तक वैध' },
     ];
 
     return (
-        <div className="p-6 md:p-12 bg-slate-50 min-h-[500px] flex flex-col items-center text-center">
+        <div className="p-6 md:p-10 bg-slate-50 flex flex-col items-center text-center">
             {/* Header */}
             <h2 className="text-3xl md:text-4xl font-black font-display text-slate-900 mb-2 tracking-tight">
                 MPPSC 2026 Test Series
@@ -108,17 +148,20 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                 {hi ? 'परीक्षा तक पूरी तैयारी' : 'Complete preparation until the exam'}
             </p>
 
-            {/* Urgency banner — "first 100 users" */}
-            <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-5 py-2 mb-10">
-                <Users className="w-4 h-4 text-amber-600" />
-                <span className="text-sm font-semibold text-amber-800">
-                    {hi ? 'पहले 100 छात्रों के लिए विशेष मूल्य' : 'Special pricing for first 100 students'}
+            {/* FOMO — first 100 students with joined count badge */}
+            <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-4 py-2 mb-8">
+                <Flame className="w-3.5 h-3.5 text-red-500" />
+                <span className="text-xs font-semibold text-amber-800">
+                    {hi ? p.urgencyTextHi : p.urgencyText}
                 </span>
-                <Clock className="w-4 h-4 text-amber-500" />
+                <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] font-bold px-1.5 py-0 h-5 hover:bg-emerald-100">
+                    <Users className="w-2.5 h-2.5 mr-0.5" />
+                    23 joined
+                </Badge>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl px-4">
-                {/* Lite Plan */}
+                {/* Lite Plan — dynamic prices */}
                 <div className="relative group h-full">
                     <Card className="border border-slate-200 shadow-sm h-full hover:shadow-md transition-all bg-white">
                         <CardContent className="p-8 flex flex-col h-full">
@@ -131,19 +174,23 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                                     {hi ? 'स्मार्ट शुरुआत' : 'Start Smart'}
                                 </p>
                                 <div className="flex items-baseline gap-2">
-                                    <span className="text-sm text-slate-400 line-through">₹299</span>
-                                    <span className="text-4xl font-black text-slate-900 tracking-tighter">₹99</span>
+                                    <span className="text-sm text-slate-400 line-through">₹{p.liteOriginalPrice}</span>
+                                    <span className="text-4xl font-black text-slate-900 tracking-tighter">₹{p.litePrice}</span>
                                 </div>
                                 <div className="flex items-center gap-3 mt-2">
                                     <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-bold">
-                                        67% OFF
+                                        {liteDiscount}% OFF
                                     </Badge>
-                                    <span className="text-xs text-slate-400">
-                                        {hi ? '~ ₹12/महीना • 8 महीने' : '~ ₹12/month • 8 months'}
+                                    {/* Monthly breakdown badge — gradient border */}
+                                    <span className="relative inline-flex items-center">
+                                        <span className="absolute inset-0 rounded-full bg-gradient-to-r from-red-500 via-pink-500 to-green-500 p-[1.5px]" />
+                                        <span className="relative bg-black text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full">
+                                            ₹{liteMonthly}/mo
+                                        </span>
                                     </span>
                                 </div>
                                 <p className="text-[11px] text-slate-400 mt-1.5">
-                                    {hi ? 'एक बार भुगतान, प्रीलिम्स तक वैध' : 'One-time, valid till Prelims'}
+                                    {hi ? 'एक बार भुगतान, प्रीलिम्स तक वैध' : `One-time, ${p.liteValidityText}`}
                                 </p>
                             </div>
                             <div className="w-full h-px bg-slate-100 mb-6" />
@@ -158,19 +205,19 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                             </ul>
 
                             <Button
-                                onClick={() => onUnlock(99)}
+                                onClick={() => onUnlock(p.litePrice)}
                                 variant="outline"
                                 className="w-full h-11 rounded-lg font-bold border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                             >
-                                {hi ? 'लाइट एक्सेस लें' : 'Get Lite Access'}
+                                {hi ? `₹${p.litePrice} में लाइट लें` : `Get Lite Access — ₹${p.litePrice}`}
                             </Button>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* Pro Plan — highlighted, pulse glow */}
+                {/* Pro Plan — highlighted, dynamic prices */}
                 <div className="relative group h-full">
-                    <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-r from-slate-700 to-slate-900 opacity-20 blur-sm animate-pulse" />
+                    <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-r from-slate-700 to-slate-900 opacity-15 blur-sm" />
 
                     <Card className="border-2 border-slate-800 shadow-xl h-full relative overflow-hidden bg-white">
                         <div className="absolute top-0 right-0 bg-slate-800 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-widest">
@@ -187,19 +234,32 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                                     {hi ? 'पूरी ताकत' : 'Full Power'}
                                 </p>
                                 <div className="flex items-baseline gap-2">
-                                    <span className="text-sm text-slate-400 line-through">₹999</span>
-                                    <span className="text-4xl font-black text-slate-900 tracking-tighter">₹299</span>
+                                    <span className="text-sm text-slate-400 line-through">₹{p.proOriginalPrice}</span>
+                                    <span className="text-4xl font-black text-slate-900 tracking-tighter">₹{p.proPrice}</span>
                                 </div>
                                 <div className="flex items-center gap-3 mt-2">
                                     <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-bold">
-                                        70% OFF
+                                        {proDiscount}% OFF
                                     </Badge>
-                                    <span className="text-xs text-slate-400">
-                                        {hi ? '~ ₹25/महीना • 12 महीने' : '~ ₹25/month • 12 months'}
+                                    {/* Monthly breakdown badge — gradient border */}
+                                    <span className="relative inline-flex items-center">
+                                        <span className="absolute inset-0 rounded-full bg-gradient-to-r from-red-500 via-pink-500 to-green-500 p-[1.5px]" />
+                                        <span className="relative bg-black text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full">
+                                            ₹{proMonthly}/mo
+                                        </span>
+                                    </span>
+                                </div>
+                                {/* "Just ₹X more" comparison badge */}
+                                <div className="mt-2">
+                                    <span className="relative inline-flex items-center">
+                                        <span className="absolute inset-0 rounded-full bg-gradient-to-r from-red-500 via-pink-500 to-green-500 p-[1.5px]" />
+                                        <span className="relative bg-white text-slate-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full">
+                                            {hi ? `सिर्फ ₹${p.proPrice - p.litePrice} ज़्यादा` : `just ₹${p.proPrice - p.litePrice} more than Lite`}
+                                        </span>
                                     </span>
                                 </div>
                                 <p className="text-[11px] text-slate-400 mt-1.5">
-                                    {hi ? 'एक बार भुगतान, मेन्स तक वैध' : 'One-time, valid till Mains'}
+                                    {hi ? 'एक बार भुगतान, मेन्स तक वैध' : `One-time, ${p.proValidityText}`}
                                 </p>
                             </div>
                             <div className="w-full h-px bg-slate-100 mb-6" />
@@ -214,10 +274,10 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                             </ul>
 
                             <Button
-                                onClick={() => onUnlock(299)}
+                                onClick={() => onUnlock(p.proPrice)}
                                 className="w-full h-11 rounded-lg font-bold bg-slate-800 hover:bg-slate-700 text-white shadow-md shadow-slate-300"
                             >
-                                {hi ? 'प्रो एक्सेस लें' : 'Get Pro Access'}
+                                {hi ? `₹${p.proPrice} में प्रो लें` : `Get Pro Access — ₹${p.proPrice}`}
                             </Button>
                         </CardContent>
                     </Card>
@@ -226,7 +286,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
 
             {/* Trust signals */}
             <p className="text-xs text-slate-400 mt-8">
-                Secure Payment • No Auto-Renewal • Instant Access
+                {hi ? 'सुरक्षित भुगतान • कोई ऑटो-रिन्यूअल नहीं • WhatsApp से एक्टिवेट' : 'Secure Payment • No Auto-Renewal • Activate via WhatsApp'}
             </p>
         </div>
     );

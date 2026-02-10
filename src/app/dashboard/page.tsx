@@ -47,8 +47,8 @@ export default async function DashboardPage() {
     }, 0);
 
     return (
-        <div className="min-h-screen bg-slate-50 pt-24 pb-20 font-sans">
-            <div className="max-w-7xl mx-auto px-6 space-y-8">
+        <div className="min-h-screen bg-slate-50 pt-16 pb-20 font-sans">
+            <div className="max-w-7xl mx-auto px-6 flex flex-col gap-8">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
@@ -76,11 +76,15 @@ export default async function DashboardPage() {
 
                 <div className="h-px bg-slate-200 w-full" />
                 
-                {/* Syllabus Progress Widget */}
-                <SyllabusProgressWidget data={syllabusProgress} totalTopics={totalTopics} />
+                {/* Dashboard Content — Performance analytics first on mobile */}
+                <div className="order-first md:order-none">
+                    <AnalyticsDashboardWrapper analytics={analyticsData} />
+                </div>
 
-                {/* Dashboard Content */}
-                <AnalyticsDashboardWrapper analytics={analyticsData} />
+                {/* Syllabus Progress Widget — revision progress below analytics on mobile */}
+                <div className="order-last md:order-none">
+                    <SyllabusProgressWidget data={syllabusProgress} totalTopics={totalTopics} />
+                </div>
             </div>
         </div>
     );

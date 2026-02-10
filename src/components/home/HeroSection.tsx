@@ -38,7 +38,7 @@ export function HeroSection() {
                  ) : (
                      <>
                         <Zap className="w-4 h-4 fill-slate-700" />
-                        {language === 'hi' ? 'संपूर्ण MPPSC तैयारी सूट' : 'Complete MPPSC Preparation Suite'}
+                        {language === 'hi' ? 'संपूर्ण MPPSC टेस्ट सीरीज़' : 'Complete MPPSC Preparation Test Series'}
                      </>
                  )}
               </motion.div>

@@ -1,9 +1,27 @@
 import { cookies } from 'next/headers';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, isNull, and } from 'drizzle-orm';
 import { cache } from 'react';
 import { logger } from '@/lib/logger';
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🔐 AUTH VERIFICATION — har server component me use hota h
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
+// React cache() wrapper — ek request me multiple baar call
+// hone par bhi DB query sirf EK baar chalega (dedup magic!)
+//
+// Checks:
+//   1. Cookie exists? → nahi to null (not logged in)
+//   2. JWT valid? → nahi to null (tampered/expired token)
+//   3. User exists in DB? → nahi to null
+//   4. User soft-deleted? → haan to null (deactivated account)
+//
+// Note: Expiry check is NOT done here — it's done at login time.
+// Once logged in, user stays logged in until cookie expires (30 days).
+// This prevents mid-session kicks which is bad UX.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export const verifyAuth = cache(async () => {
     const cookieStore = await cookies();
@@ -13,26 +31,28 @@ export const verifyAuth = cache(async () => {
         return null;
     }
 
-
-    // "Bhai token verify kar raha hai"
     const { verifyToken } = await import('@/lib/jwt');
     const decoded: any = verifyToken(token.value);
 
     if (!decoded || !decoded.userId) {
-        // "Nakli maal ya expired"
         return null;
     }
 
     const userId = decoded.userId;
 
-
     try {
-        const users = await db.select().from(mppscUsers).where(eq(mppscUsers.id, userId)).limit(1);
+        // Only fetch active users — soft-deleted + inactive users are treated as non-existent
+        const users = await db.select()
+            .from(mppscUsers)
+            .where(and(
+                eq(mppscUsers.id, userId),
+                isNull(mppscUsers.deletedAt),
+                eq(mppscUsers.isActive, true)
+            ))
+            .limit(1);
         return users[0] || null;
     } catch (error) {
-        // DB errors should NOT throw — callers (server components/pages) expect null
-        // Throwing here would turn transient DB issues into hard 500s across the app
-        // Return null so user gets redirected to login (graceful degradation)
+        // DB errors → null (graceful degradation, user redirected to login)
         logger.error("Database error during auth verification:", error);
         return null;
     }

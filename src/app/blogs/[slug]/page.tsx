@@ -37,7 +37,35 @@ export default async function BlogDetailPage({ params }: PageProps) {
         notFound();
     }
 
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mppsc.zenscroll.app";
+
+    // JSON-LD Article schema — helps Google show rich results for blog posts
+    const articleSchema = {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        headline: blog.title,
+        description: blog.description || "",
+        url: `${baseUrl}/blogs/${slug}`,
+        datePublished: blog.createdAt || new Date().toISOString(),
+        dateModified: blog.updatedAt || blog.createdAt || new Date().toISOString(),
+        author: {
+            "@type": "Organization",
+            name: "Mindful MPPSC",
+        },
+        publisher: {
+            "@type": "Organization",
+            name: "Mindful MPPSC",
+            url: baseUrl,
+        },
+    };
+
     return (
-        <BlogContentRenderer blog={blog} />
+        <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+            />
+            <BlogContentRenderer blog={blog} />
+        </>
     );
 }

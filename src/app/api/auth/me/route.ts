@@ -5,12 +5,22 @@ import { logger } from '@/lib/logger';
 // Auth endpoint must NEVER be cached — stale auth = broken app
 export const dynamic = 'force-dynamic';
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 👤 ME ENDPOINT — Frontend calls this to check current session
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Returns user data including access_expires_at so frontend
+// can show expiry warnings. Cache-Control: no-store ensures
+// browsers never cache this response.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 export async function GET() {
   try {
     const user = await verifyAuth();
 
     if (!user) {
-      return NextResponse.json({ user: null });
+      return NextResponse.json({ user: null }, {
+        headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+      });
     }
 
     return NextResponse.json({ 
@@ -21,7 +31,10 @@ export async function GET() {
         role: user.role,
         is_subscribed: user.isSubscribed,
         plan_tier: user.planTier,
+        access_expires_at: user.accessExpiresAt,
       }
+    }, {
+      headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
     });
   } catch (error) {
     logger.error('Session check failed:', error);

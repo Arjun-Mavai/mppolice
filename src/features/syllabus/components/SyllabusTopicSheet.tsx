@@ -122,8 +122,8 @@ export function SyllabusTopicSheet({
   if (!topic) return null;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:w-[540px] sm:max-w-none p-0 border-l border-slate-200 shadow-2xl outline-none">
+    <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
+      <SheetContent side="right" className="w-full sm:w-[540px] sm:max-w-none p-0 border-l border-slate-200 shadow-2xl outline-none" showCloseButton={false}>
         <div className="sr-only">
           <SheetTitle>{topic.front}</SheetTitle>
         </div>

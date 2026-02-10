@@ -50,6 +50,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     },
     {
+      url: `${baseUrl}/tests`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.85, // "MPPSC test series free" — high search volume
+    },
+    {
       url: `${baseUrl}/contact`,
       lastModified: new Date(),
       changeFrequency: 'monthly',

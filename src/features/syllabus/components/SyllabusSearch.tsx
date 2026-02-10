@@ -53,12 +53,12 @@ export function SyllabusSearch({ open, setOpen }: SyllabusSearchProps) {
   }, [language]);
 
   const handleUnitClick = (key: string) => {
-    router.push(`/syllabus/${key}?lang=${language}`);
+    router.push(`/syllabus/${key}`);
   };
 
   const handleTopicSelect = (unitKey: string) => {
       setOpen(false);
-      router.push(`/syllabus/${unitKey}?lang=${language}`);
+      router.push(`/syllabus/${unitKey}`);
   };
 
   return (

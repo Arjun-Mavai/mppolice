@@ -183,12 +183,13 @@ async function fetchAnalyticsInternal(userId: string) {
                  unitName = `Unit ${unitIndex}`;
              }
 
-             // 2. Resolve Dynamic Topic Name from DB
+             // 2. Resolve Dynamic Topic Name from DB — send both languages
              let displayTitle = activity.testTitle;
+             let displayTitleHi = activity.testTitle;
              if (activity.topicId && topicMap.has(activity.topicId)) {
                  const topic = topicMap.get(activity.topicId);
-                 // Prefer English title or Fallback to generic title
                  displayTitle = topic.titleEn || topic.title || activity.testTitle;
+                 displayTitleHi = topic.title || activity.testTitle;
              }
              
              // 3. Time Calculations
@@ -214,6 +215,7 @@ async function fetchAnalyticsInternal(userId: string) {
                  ...activity,
                  unitName,
                  testTitle: displayTitle,
+                 testTitleHi: displayTitleHi,
                  // Ensure unitId is preserved for grouping
                  unitId,
                  timeTaken: timeTakenFormatted,

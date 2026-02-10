@@ -1,8 +1,15 @@
 
+import { Metadata } from 'next';
 import { getTests } from '@/data/tests';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Clock, Trophy } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: "MPPSC 2026 Test Series — Practice Quizzes & Mock Tests",
+  description: "Free MPPSC 2026 test series with unit-wise quizzes, PYQs, CSAT practice, and full-length mock tests. Track your score and improve daily!",
+  keywords: ["MPPSC Test Series", "MPPSC Mock Test", "MPPSC Quiz", "MPPSC PYQ", "MPPSC Practice"],
+};
 
 // ISR: Revalidate every week
 export const revalidate = 604800;
