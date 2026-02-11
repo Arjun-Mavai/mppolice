@@ -2,6 +2,9 @@ import { getBlogBySlug, getCachedBlogs } from "@/actions/blog-actions";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import BlogContentRenderer from "./BlogContentRenderer";
+import { verifyAuth } from "@/lib/auth";
+import { canAccessBlog } from "@/lib/access-control";
+import { BlogAccessDenied } from "@/components/blog/BlogAccessDenied";
 
 // ISR: Revalidate every 7 days
 export const revalidate = 604800;
@@ -35,6 +38,15 @@ export default async function BlogDetailPage({ params }: PageProps) {
 
     if (!blog) {
         notFound();
+    }
+
+    // 🔒 ACCESS CONTROL Logic
+    // Server-side check to prevent leakage of premium content
+    const user = await verifyAuth();
+    const hasAccess = canAccessBlog(blog, user as any);
+
+    if (!hasAccess) {
+        return <BlogAccessDenied />;
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mppsc.zenscroll.app";

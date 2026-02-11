@@ -25,7 +25,7 @@ export function AppFooter() {
     if (pathname.startsWith('/syllabus/quiz/play')) return null;
 
     return (
-        <footer className="bg-slate-50 border-t border-slate-200 py-12">
+        <footer className="bg-slate-50 border-t border-slate-200 py-12 min-h-[250px] sm:min-h-[200px]">
             <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="text-center md:text-left">
                     <p className="font-bold text-slate-900">Mindful MPPSC</p>

@@ -4,6 +4,7 @@ import { motion, useScroll, useSpring } from 'framer-motion';
 import { Badge } from "@/components/ui/badge";
 import { Clock, Calendar, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import NextImage from "next/image";
 import { Button } from "@/components/ui/button";
 import { useSettingsStore } from "@/store/useSettingsStore";
 
@@ -209,8 +210,16 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
 
                 case 'img':
                     return (
-                        <div key={idx} className="my-6 rounded-xl overflow-hidden shadow-md border border-slate-100">
-                             <img src={block.src} alt={block.alt} className="w-full h-auto" />
+                        <div key={idx} className="my-6 rounded-xl overflow-hidden shadow-md border border-slate-100 relative">
+                             <div className="relative aspect-video w-full">
+                                <NextImage 
+                                    src={block.src} 
+                                    alt={block.alt || "Blog image"} 
+                                    fill 
+                                    className="object-cover"
+                                    sizes="(max-width: 768px) 100vw, 800px"
+                                />
+                             </div>
                              {block.caption && <p className="text-center text-sm text-slate-500 py-2 italic bg-slate-50">{block.caption}</p>}
                         </div>
                     );
@@ -448,7 +457,14 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
             <div className="relative min-h-[280px] sm:min-h-[360px] w-full flex items-end bg-slate-900 overflow-hidden">
                 <div className="absolute inset-0 z-0 opacity-40">
                     {blog.imageUrl ? (
-                         <img src={blog.imageUrl} alt={blog.title} className="w-full h-full object-cover" />
+                         <NextImage 
+                            src={blog.imageUrl} 
+                            alt={blog.title} 
+                            fill 
+                            priority 
+                            className="object-cover"
+                            sizes="100vw"
+                        />
                     ) : (
                         <div className="w-full h-full bg-slate-800" />
                     )}
