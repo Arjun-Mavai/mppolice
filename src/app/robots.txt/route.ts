@@ -56,7 +56,7 @@ Sitemap: ${baseUrl}/sitemap.xml`;
     return new Response(content, {
         headers: {
             'Content-Type': 'text/plain',
-            'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate',
+            'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=600',
         },
     });
 }
