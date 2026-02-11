@@ -104,9 +104,9 @@ export default function RootLayout({
         className={`${outfit.variable} ${playfair.variable} antialiased font-sans bg-gray-50 text-gray-900`}
       >
         <PwaRegistry />
-        <main className="min-h-screen">
+        <div className="min-h-screen">
           {children}
-        </main>
+        </div>
         <AppFooter />
         <GlobalLockModal />
         <ScrollToTop />
