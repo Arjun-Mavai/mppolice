@@ -216,7 +216,7 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
                                     src={block.src} 
                                     alt={block.alt || "Blog image"} 
                                     fill 
-                                    className="object-cover"
+                                    className="object-contain"
                                     sizes="(max-width: 768px) 100vw, 800px"
                                 />
                              </div>
