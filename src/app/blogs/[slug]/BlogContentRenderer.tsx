@@ -1,4 +1,4 @@
-'use client';
+ 'use client';
 
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { Badge } from "@/components/ui/badge";
@@ -7,9 +7,10 @@ import Link from "next/link";
 import NextImage from "next/image";
 import { Button } from "@/components/ui/button";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { cn } from "@/lib/utils";
 
 // Format inline text: bold quoted text, bold **text**, handle Key: Value
-function formatText(text: string): React.ReactNode {
+function formatText(text: string, highlightClassName: string = "text-slate-900"): React.ReactNode {
     if (!text) return text;
 
     // Process markdown bold (**text**) into actual bold, then quoted text
@@ -19,7 +20,7 @@ function formatText(text: string): React.ReactNode {
         return boldParts.map((part, i) => {
             if (/^\*{2}[^*]+\*{2}$/.test(part)) {
                 const inner = part.replace(/\*{2}/g, '');
-                return <strong key={i} className="text-slate-900 font-semibold">{inner}</strong>;
+                return <strong key={i} className={cn(highlightClassName, "font-semibold")}>{inner}</strong>;
             }
             // Remove stray single stars
             const clean = part.replace(/\*([^*]+)\*/g, '$1');
@@ -28,7 +29,7 @@ function formatText(text: string): React.ReactNode {
             if (quoteParts.length > 1) {
                 return quoteParts.map((qp, j) => {
                     if (/^["'][^"']+["']$/.test(qp)) {
-                        return <strong key={`${i}-${j}`} className="text-slate-900 font-semibold">{qp}</strong>;
+                        return <strong key={`${i}-${j}`} className={cn(highlightClassName, "font-semibold")}>{qp}</strong>;
                     }
                     return <span key={`${i}-${j}`}>{qp}</span>;
                 });
@@ -45,7 +46,7 @@ function formatText(text: string): React.ReactNode {
     if (parts.length > 1) {
         return parts.map((part, i) => {
             if (/^["'][^"']+["']$/.test(part)) {
-                return <strong key={i} className="text-slate-900 font-semibold">{part}</strong>;
+                return <strong key={i} className={cn(highlightClassName, "font-semibold")}>{part}</strong>;
             }
             return <span key={i}>{part}</span>;
         });
@@ -55,7 +56,7 @@ function formatText(text: string): React.ReactNode {
 }
 
 // Render a single list item that may contain "Label: description" pattern
-function renderListItem(item: string, num: number | string, i: number): React.ReactNode {
+function renderListItem(item: string, num: number | string, i: number, highlightClassName: string = "text-slate-900"): React.ReactNode {
     const trimmed = item.trim();
     // Check for "**Label:** content" or "Label: content" pattern
     const boldLabelMatch = trimmed.match(/^\*{0,2}([^:*]{2,30})\*{0,2}:\s*(.+)/);
@@ -66,8 +67,8 @@ function renderListItem(item: string, num: number | string, i: number): React.Re
                     {num}
                 </span>
                 <span className="flex-1 text-base">
-                    <strong className="text-slate-900 font-semibold">{boldLabelMatch[1].replace(/\*/g, '')}:</strong>{' '}
-                    {formatText(boldLabelMatch[2])}
+                    <strong className={cn(highlightClassName, "font-semibold")}>{boldLabelMatch[1].replace(/\*/g, '')}:</strong>{' '}
+                    {formatText(boldLabelMatch[2], highlightClassName)}
                 </span>
             </li>
         );
@@ -77,13 +78,13 @@ function renderListItem(item: string, num: number | string, i: number): React.Re
             <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 text-slate-600 text-xs font-bold flex items-center justify-center mt-0.5">
                 {num}
             </span>
-            <span className="flex-1 text-base">{formatText(trimmed)}</span>
+            <span className="flex-1 text-base">{formatText(trimmed, highlightClassName)}</span>
         </li>
     );
 }
 
 // Detect numbered items, bullet dots, key:value, or plain paragraph
-function renderParagraphOrList(text: string, idx: number): React.ReactNode {
+function renderParagraphOrList(text: string, idx: number, highlightClassName: string = "text-slate-900"): React.ReactNode {
     if (!text) return null;
 
     // Remove stars for detection (but keep original for formatText)
@@ -98,7 +99,7 @@ function renderParagraphOrList(text: string, idx: number): React.ReactNode {
             return (
                 <div key={idx} className="my-4">
                     {beforeBullet && (
-                        <p className="text-slate-800 font-semibold text-base mb-2">{formatText(beforeBullet)}</p>
+                        <p className={cn(highlightClassName, "font-semibold text-base mb-2")}>{formatText(beforeBullet, highlightClassName)}</p>
                     )}
                     <ul className="space-y-1.5 ml-1">
                         {bulletItems.map((item, i) => {
@@ -109,8 +110,8 @@ function renderParagraphOrList(text: string, idx: number): React.ReactNode {
                                     <li key={i} className="flex items-start gap-2.5 text-slate-700 text-base leading-relaxed">
                                         <span className="text-emerald-500 mt-1 flex-shrink-0">•</span>
                                         <span>
-                                            <strong className="text-slate-900 font-semibold">{colonMatch[1]}:</strong>{' '}
-                                            {formatText(colonMatch[2])}
+                                            <strong className={cn(highlightClassName, "font-semibold")}>{colonMatch[1]}:</strong>{' '}
+                                            {formatText(colonMatch[2], highlightClassName)}
                                         </span>
                                     </li>
                                 );
@@ -118,7 +119,7 @@ function renderParagraphOrList(text: string, idx: number): React.ReactNode {
                             return (
                                 <li key={i} className="flex items-start gap-2.5 text-slate-700 text-base leading-relaxed">
                                     <span className="text-emerald-500 mt-1 flex-shrink-0">•</span>
-                                    <span>{formatText(item)}</span>
+                                    <span>{formatText(item, highlightClassName)}</span>
                                 </li>
                             );
                         })}
@@ -142,10 +143,10 @@ function renderParagraphOrList(text: string, idx: number): React.ReactNode {
             return (
                 <div key={idx} className="my-4">
                     {intro && (
-                        <p className="text-slate-800 font-semibold text-base mb-2">{formatText(intro)}</p>
+                        <p className={cn(highlightClassName, "font-semibold text-base mb-2")}>{formatText(intro, highlightClassName)}</p>
                     )}
                     <ol className="space-y-2">
-                        {items.map((item, i) => renderListItem(item, numbers[i] || i + 1, i))}
+                        {items.map((item, i) => renderListItem(item, numbers[i] || i + 1, i, highlightClassName))}
                     </ol>
                 </div>
             );
@@ -157,15 +158,15 @@ function renderParagraphOrList(text: string, idx: number): React.ReactNode {
     if (colonMatch && !cleaned.startsWith('http')) {
         return (
             <p key={idx} className="text-slate-700 leading-relaxed mb-4 text-base">
-                <strong className="text-slate-900 font-semibold">{colonMatch[1]}:</strong>{' '}
-                {formatText(colonMatch[2])}
+                <strong className={cn(highlightClassName, "font-semibold")}>{colonMatch[1]}:</strong>{' '}
+                {formatText(colonMatch[2], highlightClassName)}
             </p>
         );
     }
 
     return (
         <p key={idx} className="text-slate-700 leading-relaxed mb-5 text-base">
-            {formatText(cleaned)}
+            {formatText(cleaned, highlightClassName)}
         </p>
     );
 }
@@ -317,7 +318,7 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
                                     <p className="text-xs text-slate-400">{block.year}</p>
                                 </div>
                             </div>
-                            <p className="text-base font-medium mb-3 leading-relaxed">{formatText(block.question)}</p>
+                            <p className="text-base font-medium mb-3 leading-relaxed">{formatText(block.question, "text-emerald-400")}</p>
                             {block.options && (
                                 <div className="space-y-1.5 mb-3">
                                     {block.options.map((opt: string, i: number) => (
@@ -325,7 +326,7 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
                                             key={i} 
                                             className={`px-3 py-2 rounded-lg text-sm ${opt === block.correct ? 'bg-emerald-600/20 border border-emerald-500/50' : 'bg-slate-800/60'}`}
                                         >
-                                            <span className="font-mono text-xs mr-1.5">{String.fromCharCode(65 + i)}.</span>{opt}
+                                            <span className="font-mono text-xs mr-1.5">{String.fromCharCode(65 + i)}.</span>{formatText(opt, "text-emerald-400")}
                                             {opt === block.correct && <span className="ml-1.5 text-emerald-400 text-xs">✓</span>}
                                         </div>
                                     ))}
@@ -334,7 +335,7 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
                             {block.strategy && (
                                 <div className="mt-3 pt-3 border-t border-slate-700">
                                     <p className="text-[11px] text-slate-400 uppercase tracking-wider mb-1">Strategy</p>
-                                    <p className="text-sm text-slate-300">{block.strategy}</p>
+                                    <p className="text-sm text-slate-300">{formatText(block.strategy, "text-emerald-400")}</p>
                                 </div>
                             )}
                         </div>
@@ -419,13 +420,13 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
                                     <p className="text-base font-bold">{block.topic}</p>
                                 </div>
                             </div>
-                            <p className="text-sm text-indigo-200 mb-3">{block.analysis}</p>
+                            <p className="text-sm text-indigo-200 mb-3">{formatText(block.analysis, "text-indigo-300")}</p>
                             <div className="bg-white/10 rounded-lg p-3 mb-2">
                                 <ul className="space-y-1.5">
                                     {block.stats.map((stat: string, i: number) => (
                                         <li key={i} className="flex items-start gap-2 text-sm">
                                             <span className="text-indigo-300">▸</span>
-                                            <span>{stat}</span>
+                                            <span>{formatText(stat, "text-indigo-300")}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -433,7 +434,7 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
                             {block.trend && (
                                 <div className="pt-2 border-t border-white/20">
                                     <p className="text-[11px] text-indigo-300 uppercase tracking-wider mb-1">Trend</p>
-                                    <p className="text-sm">{block.trend}</p>
+                                    <p className="text-sm">{formatText(block.trend, "text-indigo-300")}</p>
                                 </div>
                             )}
                         </div>
@@ -471,7 +472,7 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/70 to-transparent" />
                 </div>
                 
-                <div className="relative z-10 w-full max-w-3xl mx-auto px-5 pb-8 pt-20 text-white">
+                <div className="relative z-10 w-full max-w-3xl lg:max-w-5xl mx-auto px-5 pb-8 pt-20 text-white">
                     <Badge className="bg-emerald-600/90 hover:bg-emerald-700 px-3 py-1 text-xs uppercase tracking-widest pointer-events-none mb-3">
                         {blog.category.replace(/_/g, ' ')}
                     </Badge>
@@ -492,7 +493,7 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
             </div>
 
             {/* Content Section */}
-            <article className="max-w-3xl mx-auto px-5 py-8 sm:py-12">
+            <article className="max-w-3xl lg:max-w-5xl mx-auto px-5 py-8 sm:py-12">
                  {/* Back Button & Language Toggle */}
                  <div className="mb-8 flex justify-between items-center">
                      <Button variant="ghost" size="sm" className="text-slate-500 hover:text-slate-900 -ml-3 text-sm" asChild>

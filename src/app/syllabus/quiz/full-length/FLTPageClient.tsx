@@ -1,31 +1,31 @@
 'use client';
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Lock, Play, ArrowLeft } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
+import { useSettingsStore } from '@/store/useSettingsStore';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { useRouter } from 'next/navigation';
+import { QuizListItem } from '@/components/QuizListItem';
+import { QuizSubNav } from '@/features/syllabus/components/QuizSubNav';
+import { QUIZ_CONSTANTS } from '@/config/quiz';
 
 export interface TestWithAccess {
     id: string;
     title: string;
+    titleEn?: string | null;
     description: string | null;
     durationMinutes: number;
     totalMarks: number;
     totalQuestions: number;
     maxRetries: number | null;
     
-    // Server-computed access control & state
     isLocked: boolean;
     isCompleted: boolean;
     attemptsCount: number;
-    attemptsLeft: number;
-    showFreeBadge: boolean;
+    attemptsLeft: number | null;
+    isFree: boolean;
 }
 
 interface FLTPageClientProps {
@@ -34,133 +34,95 @@ interface FLTPageClientProps {
 
 export default function FLTPageClient({ tests }: FLTPageClientProps) {
     const router = useRouter();
+    const { language, user } = useSettingsStore();
     const [paywallOpen, setPaywallOpen] = useState(false);
 
-    const handleTestClick = (testId: string, isLocked: boolean, attemptsLeft: number) => {
+    const handleTestClick = (testId: string, isLocked: boolean, attemptsLeft: number | null) => {
         if (isLocked) {
             setPaywallOpen(true);
             return;
         }
 
-        if (attemptsLeft > 0) {
+        if (attemptsLeft !== null && attemptsLeft > 0) {
             router.push(`/syllabus/quiz/play?mode=full&testId=${testId}`);
         }
     };
 
+    const hi = language === 'hi';
+
     return (
-        <div className="min-h-screen bg-slate-50 font-sans p-6 pb-20">
-             <div className="max-w-4xl mx-auto space-y-8">
-                 {/* Header */}
-                <div className="flex items-center gap-4">
-                    <Link href="/syllabus/quiz">
-                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100">
-                            <ArrowLeft className="w-6 h-6 text-slate-600" />
-                        </Button>
-                    </Link>
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900 font-display">
-                           Full Length Tests
-                        </h1>
-                        <p className="text-slate-500">Simulate the real exam environment.</p>
-                    </div>
+        <div className="min-h-screen bg-[#fafbfc] font-sans pb-20 relative overflow-hidden">
+            {/* 🎭 PREMIUM BACKGROUND BLURS */}
+            <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-slate-100/30 to-transparent pointer-events-none" />
+            <div className="absolute top-[-100px] right-[-100px] w-[500px] h-[500px] bg-indigo-50/40 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-[20%] left-[-150px] w-[400px] h-[400px] bg-emerald-50/30 rounded-full blur-[100px] pointer-events-none" />
+
+            <div className="max-w-5xl mx-auto px-6 relative z-10 pt-32">
+                
+                {/* Header Row */}
+                <div className="flex items-center justify-between mb-8">
+                     <Button 
+                        variant="ghost" 
+                        onClick={() => router.push('/syllabus/quiz')}
+                        className="group -ml-3 text-slate-500 hover:text-slate-900 hover:bg-transparent p-0"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:shadow-md transition-all mr-3">
+                            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                        </div>
+                        <span className="text-sm font-black uppercase tracking-widest">{hi ? 'क्विज़ हब' : 'Quiz Hub'}</span>
+                    </Button>
                 </div>
 
-                <div className="grid gap-4">
-                    {tests.length > 0 ? tests.map((test) => {
-                        const { 
-                            id, 
-                            title, 
-                            description, 
-                            isLocked, 
-                            isCompleted, 
-                            attemptsLeft, 
-                            maxRetries, 
-                            attemptsCount, 
-                            showFreeBadge 
-                        } = test;
+                {/* 🧭 CONSOLIDATED SUB-NAV */}
+                <QuizSubNav />
+                
+                <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-12 space-y-2 text-center"
+                >
+                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
+                        {hi ? 'फुल लेंथ टेस्ट' : 'Full Length Tests'}
+                    </h1>
+                    <p className="text-slate-500 font-medium max-w-xl mx-auto">
+                        {hi ? 'असली परीक्षा जैसा माहौल और पूरी तैयारी।' : 'Simulate the real exam environment with comprehensive mocks.'}
+                    </p>
+                </motion.div>
 
-                        // Default retries if null (though server should handle this, good fallback)
-                        const safeMaxRetries = maxRetries || 3;
-
-                        return (
-                            <Card 
-                                key={id}
-                                className={cn(
-                                    "transition-all hover:shadow-lg border-2 cursor-pointer",
-                                    isLocked ? "border-slate-200 bg-slate-50 opacity-90" : 
-                                    isCompleted ? "border-slate-200 bg-slate-50/20" :
-                                    "border-slate-200 bg-white hover:border-slate-400"
-                                )}
-                                onClick={() => handleTestClick(id, isLocked, attemptsLeft)}
-                            >
-                                <CardContent className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                    <div className="space-y-2 flex-1">
-                                        <div className="flex items-start justify-between md:justify-start gap-3">
-                                            <h3 className={cn("font-bold text-lg flex items-center gap-2", isLocked ? "text-slate-500" : "text-slate-900")}>
-                                                {title}
-                                            </h3>
-                                            {isLocked && <Lock className="w-4 h-4 text-slate-400 mt-1" />}
-                                            {showFreeBadge && <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">Free</Badge>}
-                                            {isCompleted && <Badge variant="secondary" className="bg-slate-100 text-slate-800">Completed</Badge>}
-                                        </div>
-                                        
-                                        <p className="text-sm text-slate-500 line-clamp-2">{description || "Comprehensive mock test covering all units."}</p>
-                                        
-                                        {!isLocked && (
-                                            <div className="flex items-center gap-4 text-xs font-medium text-slate-400 pt-1">
-                                                <span>{test.durationMinutes} Mins</span>
-                                                <span>•</span>
-                                                <span>{test.totalMarks} Marks</span>
-                                            </div>
-                                        )}
-
-                                        {!isLocked && (
-                                            <div className="max-w-[200px] space-y-1.5 pt-2">
-                                                <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-wider">
-                                                    <span className={attemptsLeft > 0 ? "text-slate-500" : "text-red-500"}>
-                                                        Attempts
-                                                    </span>
-                                                    <span className={cn(
-                                                        "bg-slate-100 px-1.5 py-0.5 rounded text-slate-600",
-                                                        attemptsLeft === 0 && "bg-red-100 text-red-600"
-                                                    )}>
-                                                        {attemptsLeft} / {safeMaxRetries}
-                                                    </span>
-                                                </div>
-                                                <Progress value={(attemptsCount / safeMaxRetries) * 100} className="h-1.5 bg-slate-100" 
-                                                    indicatorClassName={cn(attemptsLeft > 0 ? "bg-slate-700" : "bg-red-500")}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                    
-                                    <div className="flex md:flex-col gap-3 shrink-0">
-                                        {isLocked ? (
-                                            <Button className="w-full md:w-32 bg-slate-200 text-slate-400 hover:bg-slate-300 cursor-pointer">
-                                                <Lock className="w-4 h-4 mr-2" /> Locked
-                                            </Button>
-                                        ) : isCompleted ? (
-                                             <Button className="w-full md:w-32 bg-slate-100 text-slate-800 hover:bg-slate-200 font-bold shadow-none">
-                                                Review
-                                            </Button>
-                                        ) : (
-                                            <Button className="w-full md:w-32 bg-slate-800 hover:bg-slate-700 text-white font-bold shadow-lg shadow-slate-200">
-                                                <Play className="w-4 h-4 mr-2" /> Start Test
-                                            </Button>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        );
-                    }) : (
-                        <div className="text-center py-12 text-slate-400">
-                            No Full Length Tests available at the moment.
+                {/* 📝 LIST VIEW */}
+                <div className="space-y-4 pb-32 md:pb-20">
+                    <AnimatePresence mode="popLayout">
+                        {tests.map((test, idx) => (
+                            <QuizListItem
+                                key={test.id}
+                                index={idx}
+                                title={hi ? test.title : (test.titleEn || test.title)}
+                                questions={test.totalQuestions}
+                                marks={test.totalQuestions * QUIZ_CONSTANTS.MARKS_PER_QUESTION}
+                                duration={test.durationMinutes}
+                                isLocked={test.isLocked}
+                                isCompleted={test.isCompleted}
+                                attemptsLeft={test.attemptsLeft}
+                                maxAttempts={test.maxRetries}
+                                isFree={test.isFree}
+                                language={language}
+                                colorVariant={(['amber', 'emerald', 'pink', 'blue', 'indigo'] as const)[idx % 5]}
+                                onClick={() => handleTestClick(test.id, test.isLocked, test.attemptsLeft)}
+                            />
+                        ))}
+                    </AnimatePresence>
+                    
+                    {tests.length === 0 && (
+                        <div className="text-center py-20 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm border-dashed">
+                            <p className="text-slate-400 font-medium">
+                                {hi ? 'इस कैटेगरी में अभी कोई टेस्ट नहीं हैं।' : 'No tests available in this category yet.'}
+                            </p>
                         </div>
                     )}
                 </div>
-             </div>
-             
-             <SyllabusLockModal open={paywallOpen} onOpenChange={setPaywallOpen} />
+            </div>
+            
+            <SyllabusLockModal open={paywallOpen} onOpenChange={setPaywallOpen} />
         </div>
     );
 }

@@ -1,26 +1,27 @@
 "use client"
 
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import Link from 'next/link';
-import { Sparkles, ArrowLeft, BookOpen, Layers, Play, BrainCircuit, AlertCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { useRouter } from 'next/navigation';
+import { SyllabusTopicCard } from '@/components/SyllabusTopicCard';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 
 export default function QuizSelectionPage() {
   const router = useRouter();
   const { language, isSubscribed, user } = useSettingsStore();
+
+  // 🚀 REDIRECT TO NEW PRIMARY VIEW (PYQ)
+  useEffect(() => {
+    router.replace('/syllabus/quiz/pyq');
+  }, [router]);
+
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
 
@@ -72,231 +73,162 @@ export default function QuizSelectionPage() {
     setWelcomeMsg({
         title: `${greeting}, ${name}! ${isHindi ? '🙏' : '👋'}`,
         subtitle: isSubscribed 
-            ? (isHindi ? 'आपकी प्रीमियम मेंबरशिप सक्रिय है। अपनी तैयारी को अगले स्तर पर ले जाएं!' : 'Your Premium Membership is Active. Let\'s ace this exam!')
-            : (isHindi ? 'अपनी तैयारी को एक नई दिशा दें। अभी शुरू करें!' : 'Kickstart your preparation today!')
+            ? (isHindi ? 'आपकी प्रीमियम मेंबरशिप सक्रिय है।' : 'Your Premium Membership is Active.')
+            : (isHindi ? 'अपनी तैयारी को एक नई दिशा दें।' : 'Kickstart your preparation today!')
     });
   }, [language, isSubscribed, user]);
 
+  const hi = language === 'hi';
+
+  const categories = [
+    {
+        id: 'pyq',
+        title: hi ? 'विगत वर्षों के प्रश्न' : 'Previous Year Papers',
+        desc: hi ? 'पिछले पेपर्स का विश्लेषण' : 'Analysis of actual MPPSC papers',
+        emoji: '📜',
+        color: 'slate',
+        href: '/syllabus/quiz/pyq'
+    },
+    {
+        id: 'topic',
+        title: hi ? 'टॉपिक वाइज़' : 'Topic Quick Check',
+        desc: hi ? '10 प्रश्नों का क्विक टेस्ट' : 'Quick 10-question pulse check',
+        emoji: '✨',
+        color: 'indigo',
+        href: '/syllabus/quiz/topic'
+    },
+    {
+        id: 'units',
+        title: hi ? 'यूनिट वाइज़' : 'Unit Deep Dive',
+        desc: hi ? 'पूरी यूनिट का मास्टर टेस्ट' : 'Comprehensive practice on full units',
+        emoji: '🏷️',
+        color: 'emerald',
+        href: '/syllabus/quiz/units'
+    },
+    {
+        id: 'full-length',
+        title: hi ? 'फुल लेंथ मॉक' : 'Full Length Mock',
+        desc: hi ? '100+ प्रश्नों का असली अनुभव' : '100 questions simulation',
+        emoji: '🏆',
+        color: 'amber',
+        href: '/syllabus/quiz/full-length'
+    },
+    {
+        id: 'csat',
+        title: hi ? 'सीसैट (CSAT)' : 'CSAT Practice',
+        desc: hi ? 'रीज़निंग और एप्टीट्यूड' : 'Reasoning & Aptitude',
+        emoji: '🧠',
+        color: 'pink',
+        href: '/syllabus/quiz/csat'
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-50 font-sans p-6">
-       
-       <div className="max-w-6xl mx-auto space-y-8">
-           {/* Header with Personalization */}
-           <div className="flex flex-col gap-4">
-               <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => router.back()}>
-                        <ArrowLeft className="w-6 h-6 text-slate-600" />
-                    </Button>
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 font-display pt-40 mb-2" suppressHydrationWarning>
-                            {isMounted ? welcomeMsg.title : '\u00A0'}
+    <div className="min-h-screen bg-[#fafbfc] font-sans pb-20 relative overflow-hidden">
+        {/* 🎭 PREMIUM BACKGROUND BLURS */}
+        <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-slate-100/50 to-transparent pointer-events-none" />
+        <div className="absolute top-[-100px] right-[-100px] w-[500px] h-[500px] bg-indigo-50/50 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-[10%] left-[-100px] w-[400px] h-[400px] bg-emerald-50/30 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10 pt-32">
+            
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="space-y-4"
+                >
+                    <div className="flex items-center gap-4">
+                        <Button 
+                            variant="ghost" 
+                            onClick={() => router.push('/syllabus')}
+                            className="group -ml-3 text-slate-500 hover:text-slate-900 hover:bg-transparent p-0"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:shadow-md transition-all mr-3">
+                                <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                            </div>
+                            <span className="text-sm font-black uppercase tracking-widest">{hi ? 'पीछे' : 'Back'}</span>
+                        </Button>
+                    </div>
+
+                    <div className="space-y-2">
+                        <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-none" suppressHydrationWarning>
+                            {isMounted ? welcomeMsg.title : '...'}
                         </h1>
-                        <p className={`text-sm sm:text-base font-medium ${isSubscribed ? 'text-slate-700' : 'text-slate-500'}`} suppressHydrationWarning>
-                            {isMounted ? welcomeMsg.subtitle : '\u00A0'}
+                        <p className="text-lg md:text-xl text-slate-500 font-medium max-w-2xl" suppressHydrationWarning>
+                            {isMounted ? welcomeMsg.subtitle : '...'}
                         </p>
                     </div>
-               </div>
-               
-               {/* Marketing Nudge for Non-Subscribed */}
-               {/* {!isSubscribed && (
-                   <div className="bg-gradient-to-r from-slate-700 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden shadow-xl shadow-slate-200 ">
-                       <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                           <div>
-                               <h3 className="font-bold text-lg mb-1">
-                                   {language === 'hi' ? 'फुल एक्सेस अनलॉक करें' : 'Unlock Full Access'}
-                               </h3>
-                               <p className="text-slate-200 text-sm max-w-md">
-                                   {language === 'hi' 
-                                     ? 'सभी टेस्ट सीरीज़, विस्तृत विश्लेषण और अधिक के लिए प्रो बनें।' 
-                                     : 'Get unlimited access to all Test Series, Detailed Analysis and more.'}
-                               </p>
-                           </div>
-                           <Button asChild className="bg-white text-slate-700 hover:bg-slate-50 font-bold border-0 shadow-lg">
-                               <Link href="/upgrade">
-                                   {language === 'hi' ? 'अभी अपग्रेड करें' : 'Upgrade Now'}
-                               </Link>
-                           </Button>
-                       </div>
-                       
-                       
-                       <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-32" />
-                       <div className="absolute bottom-0 left-0 w-32 h-32 bg-slate-500/30 rounded-full blur-xl -ml-10 -mb-10" />
-                   </div>
-               )} */}
-           </div>
+                </motion.div>
+            </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                
-                {/* Option 1: Topic Wise */}
-                <div>
-                    <Card className="h-full border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-xl transition-all cursor-pointer group active:scale-[0.98]" onClick={() => router.push('/syllabus/quiz/topic')}>
-                        <CardContent className="p-8 space-y-6 flex flex-col h-full items-center text-center">
-                            <div className="w-20 h-20 rounded-2xl bg-slate-50 text-slate-900 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <Sparkles className="w-10 h-10" />
-                            </div>
-                            <div className="space-y-2">
-                                <h2 className="text-xl font-bold text-slate-900">
-                                    {language === 'hi' ? 'टॉपिक वार टेस्ट' : 'Topic Quick Check'} 
-                                </h2>
-                                <p className="text-slate-500 text-sm">
-                                    {language === 'hi' 
-                                      ? 'किसी विशिष्ट टॉपिक पर 10 प्रश्नों का क्विक टेस्ट दें।' 
-                                      : 'Quick 10-question check on specific syllabus topics.'}
-                                </p>
-                            </div>
-                            <Button className="w-full bg-slate-900 hover:bg-slate-800 text-white mt-auto rounded-xl h-12 font-bold shadow-lg shadow-slate-900/10 border border-slate-900">
-                                {language === 'hi' ? 'टॉपिक चुनें' : 'Select Topic'}
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Option 2: Unit Wise */}
-                <div>
-                    <Card className="h-full border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-xl transition-all cursor-pointer group active:scale-[0.98]">
-                        <CardContent className="p-8 space-y-6 flex flex-col h-full items-center text-center">
-                            <div className="w-20 h-20 rounded-2xl bg-slate-50 text-slate-900 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <BookOpen className="w-10 h-10" />
-                            </div>
-                            <div className="space-y-2">
-                                <h2 className="text-xl font-bold text-slate-900">
-                                    {language === 'hi' ? 'यूनिट वार टेस्ट' : 'Unit-wise Test'} 
-                                </h2>
-                                <p className="text-slate-500 text-sm">
-                                    {language === 'hi' 
-                                      ? 'विशिष्ट विषयों का अभ्यास करें और अपनी समझ को मजबूत करें।' 
-                                      : 'Deep dive into complete units with comprehensive tests.'}
-                                </p>
-                            </div>
-                            <div className="flex flex-col gap-3 justify-center mt-auto w-full">
-                              <Button asChild size="lg" className="h-12 w-full rounded-xl bg-slate-900 text-white hover:bg-slate-800 shadow-lg shadow-slate-900/10 font-bold transition-all border border-slate-900">
-                                  <Link href="/syllabus/quiz/units">
-                                     <Play className="w-4 h-4 mr-2 fill-white" /> {language === 'hi' ? 'यूनिट चुनें' : 'Start Unit Test'}
-                                  </Link>
-                              </Button>
-                              {/* <Button asChild variant="outline" size="lg" className="h-12 w-full rounded-xl border-2 border-slate-200 text-slate-700 hover:border-slate-900 hover:bg-white hover:text-slate-900 font-bold transition-all">
-                                  <Link href="/syllabus/quiz/topic">
-                                     {language === 'hi' ? 'टॉपिक वार' : 'Topic Wise'}
-                                  </Link>
-                              </Button> */}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Option 3: Full Length Mock */}
-                <div>
-                    <Card 
-                      className="h-full border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden active:scale-[0.98]" 
-                      onClick={() => router.push('/syllabus/quiz/full-length')}
-                    >
-                        <CardContent className="p-8 space-y-6 flex flex-col h-full items-center text-center relative z-0">
-                            <div className="w-20 h-20 rounded-2xl bg-slate-50 text-slate-900 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <Layers className="w-10 h-10" />
-                            </div>
-                            <div className="space-y-2">
-                                <h2 className="text-xl font-bold text-slate-900">
-                                    {language === 'hi' ? 'फुल लेंथ मॉक टेस्ट' : 'Full Length Mock'}
-                                </h2>
-                                <p className="text-slate-500 text-sm">
-                                    {language === 'hi' 
-                                      ? 'सभी 10 यूनिट्स को कवर करने वाला पूरा परीक्षा अनुभव।' 
-                                      : 'The complete exam experience covering all 10 units with timer.'}
-                                </p>
-                            </div>
-                            <Button 
-                              className="w-full bg-slate-900 hover:bg-slate-800 text-white mt-auto rounded-xl h-12 font-bold gap-2 shadow-lg shadow-slate-900/10 border border-slate-900"
-                            >
-                                {language === 'hi' ? 'टेस्ट देखें' : 'View Tests'}
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* CSAT Tests */}
-                <div>
-                    <Card 
-                      className="h-full border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden active:scale-[0.98]" 
-                      onClick={() => router.push('/syllabus/quiz/csat')}
-                    >
-                        <CardContent className="p-8 space-y-6 flex flex-col h-full items-center text-center relative z-0">
-                            <div className="w-20 h-20 rounded-2xl bg-slate-50 text-slate-900 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <BrainCircuit className="w-10 h-10" />
-                            </div>
-                            <div className="space-y-2">
-                                <h2 className="text-xl font-bold text-slate-900">
-                                    {language === 'hi' ? 'सीसैट (CSAT)' : 'CSAT Practice'}
-                                </h2>
-                                <p className="text-slate-500 text-sm">
-                                    {language === 'hi' 
-                                      ? 'सामान्य अभिरुचि परीक्षण और तार्किक क्षमता।' 
-                                      : 'Aptitude, logical reasoning and comprehension.'}
-                                </p>
-                            </div>
-                            <Button 
-                              className="w-full bg-slate-900 hover:bg-slate-800 text-white mt-auto rounded-xl h-12 font-bold gap-2 shadow-lg shadow-slate-900/10 border border-slate-900"
-                            >
-                                {language === 'hi' ? 'अभ्यास करें' : 'Practice Now'}
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Option 4: PYQs */}
-                <div>
-                    <Card 
-                      className="h-full border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden active:scale-[0.98]" 
-                      onClick={() => router.push('/syllabus/quiz/pyq')}
-                    >
-                         <CardContent className="p-8 space-y-6 flex flex-col h-full items-center text-center relative z-0">
-                            <div className="w-20 h-20 rounded-2xl bg-slate-50 text-slate-900 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <span className="text-xl font-black">PYQ</span>
-                            </div>
-                            <div className="space-y-2">
-                                <h2 className="text-xl font-bold text-slate-900">
-                                    {language === 'hi' ? 'विगत वर्षों के प्रश्न' : 'Previous Years Qs'}
-                                </h2>
-                                <p className="text-slate-500 text-sm">
-                                    {language === 'hi' 
-                                      ? 'पिछले वर्षों के पेपर्स के साथ वास्तविक परीक्षा का अभ्यास करें।' 
-                                      : 'Practice with actual questions from previous year papers.'}
-                                </p>
-                            </div>
-                            <Button 
-                              className="w-full bg-slate-900 hover:bg-slate-800 text-white mt-auto rounded-xl h-12 font-bold gap-2 shadow-lg shadow-slate-900/10 border border-slate-900"
-                            >
-                                {language === 'hi' ? 'अभ्यास करें' : 'Practice Now'}
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </div>
+            {/* MCQ SELECTION GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 pb-20">
+                <AnimatePresence mode="popLayout">
+                    {categories.map((item, index) => (
+                        <motion.div 
+                            key={item.id}
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 * index }}
+                        >
+                            <SyllabusTopicCard
+                                id={item.id}
+                                title={item.title}
+                                subtitle={item.desc}
+                                impactEmoji={item.emoji}
+                                colorVariant={(['blue', 'pink', 'emerald', 'amber'][index % 4] || 'blue') as any}
+                                hideBadge
+                                onClick={() => router.push(item.href)}
+                                labels={{
+                                    search: hi ? 'खोजें' : 'Search',
+                                    topic: hi ? 'टॉपिक' : 'Topic',
+                                    unit: hi ? 'यूनिट' : 'Unit'
+                                }}
+                            />
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
             </div>
        </div>
 
        <SyllabusLockModal open={unlockModalOpen} onOpenChange={setUnlockModalOpen} />
 
-       {/* Back button exit confirmation modal */}
        <Dialog open={showExitModal} onOpenChange={setShowExitModal}>
-         <DialogContent className="sm:max-w-md">
-           <DialogHeader>
-             <DialogTitle className="flex items-center gap-2 text-amber-600">
-               <AlertCircle className="w-5 h-5" />
-               {language === 'hi' ? 'क्विज़ सेक्शन छोड़ें?' : 'Leave Quiz Section?'}
-             </DialogTitle>
-             <DialogDescription className="text-slate-600 pt-2">
-               {language === 'hi'
-                 ? 'क्या आप वाकई क्विज़ सेक्शन से बाहर जाना चाहते हैं?'
-                 : 'Are you sure you want to leave the quiz section?'}
-             </DialogDescription>
-           </DialogHeader>
-           <DialogFooter className="flex gap-2 sm:justify-end mt-4">
-             <Button variant="outline" onClick={() => setShowExitModal(false)} className="flex-1 sm:flex-none">
-               {language === 'hi' ? 'रहने दो' : 'Stay Here'}
-             </Button>
-             <Button variant="destructive" onClick={handleConfirmExit} className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700">
-               {language === 'hi' ? 'हाँ, बाहर जाओ' : 'Yes, Leave'}
-             </Button>
-           </DialogFooter>
+         <DialogContent className="sm:max-w-md bg-white border-0 shadow-2xl rounded-[2.5rem] overflow-hidden p-0">
+           <div className="p-10 space-y-6">
+               <div className="w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600">
+                   <AlertCircle className="w-10 h-10" />
+               </div>
+               
+               <div className="space-y-2">
+                 <h2 className="text-3xl font-black text-slate-900">
+                    {hi ? 'क्विज़ छोड़ें?' : 'Leave Quiz?'}
+                 </h2>
+                 <p className="text-slate-500 font-medium leading-relaxed">
+                   {hi
+                     ? 'क्या आप वाकई क्विज़ सेक्शन से बाहर जाना चाहते हैं?'
+                     : 'Are you sure you want to leave? Practicing regularly is key.'}
+                 </p>
+               </div>
+               
+               <div className="flex flex-col gap-3">
+                 <Button 
+                   onClick={() => setShowExitModal(false)}
+                   className="h-16 font-black bg-slate-900 text-white hover:bg-slate-800 rounded-2xl shadow-xl shadow-slate-200"
+                 >
+                   {hi ? 'नहीं, यहीं रहें' : 'Stay & Practice'}
+                 </Button>
+                 <Button 
+                   variant="ghost" 
+                   onClick={handleConfirmExit}
+                   className="h-14 font-black text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-2xl"
+                 >
+                   {hi ? 'हाँ, बाहर जाओ' : 'Yes, Leave Section'}
+                 </Button>
+               </div>
+           </div>
          </DialogContent>
        </Dialog>
     </div>

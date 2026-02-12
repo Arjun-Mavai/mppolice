@@ -7,14 +7,15 @@ import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 
-async function getUser() {
-  const cookieStore = await cookies();
-  const userId = cookieStore.get('mppsc_token')?.value;
-  return userId;
+import { verifyAuth } from '@/lib/auth';
+
+async function getUserId() {
+  const user = await verifyAuth();
+  return user?.id;
 }
 
 export async function markTopicRevised(topicId: string, unitId: string) {
-  const userId = await getUser();
+  const userId = await getUserId();
   logger.info('markTopicRevised called:', { topicId, unitId, userId }); // Debug log
 
   if (!userId) {
@@ -68,7 +69,7 @@ export async function markTopicRevised(topicId: string, unitId: string) {
 }
 
 export async function getRevisionCount(topicId: string) {
-    const userId = await getUser();
+    const userId = await getUserId();
     if (!userId) return 0;
 
     try {
@@ -85,7 +86,7 @@ export async function getRevisionCount(topicId: string) {
 }
 
 export async function getUserSyllabusProgress() {
-    const userId = await getUser();
+    const userId = await getUserId();
     if (!userId) return null;
 
     try {

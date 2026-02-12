@@ -13,98 +13,10 @@ import {
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { SyllabusLockModal } from "@/features/syllabus/components/SyllabusLockModal";
+import { SyllabusTopicCard } from "@/components/SyllabusTopicCard";
 import { Button } from "@/components/ui/button";
 import { SyllabusData } from "@/types/syllabus";
 
-function UnitCard({ unit, unitKey, index, language, onClick, themeClass, iconColor, isLocked, onLockClick }: any) {
-    const title = language === 'en' && unit.title_en ? unit.title_en : (unit.unit_title || unit.title);
-    const topics = language === 'en' && unit.topics_en ? unit.topics_en : unit.topics;
-    
-    // Handle card click
-    const handleClick = (e: React.MouseEvent) => {
-        if (isLocked) {
-             e.preventDefault();
-             onLockClick();
-        } else {
-            onClick();
-        }
-    };
-
-    return (
-        <motion.div 
-            className="group relative h-[280px] w-full cursor-pointer select-none"
-            onClick={handleClick}
-            whileHover={{ y: -5 }}
-            transition={{ type: "spring", stiffness: 300 }}
-        >
-            <div className={cn(
-                "absolute inset-0 h-full w-full bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden transition-all duration-300 group-hover:shadow-xl group-hover:border-slate-300",
-                isLocked && "grayscale-[0.8] opacity-90"
-            )}>
-                 {/* Decorative background gradients */}
-                <div className={cn("absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br", themeClass)} />
-                
-                {isLocked && (
-                    <div className="absolute top-4 right-4 z-20">
-                         <div className="bg-gradient-to-r from-red-500 via-pink-500 to-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                             <Lock className="w-3 h-3" />
-                             PREMIUM
-                         </div>
-                    </div>
-                )}
-                
-                {/* Free Badge for Unit 1 */}
-                {!isLocked && unitKey === 'unit_1' && (
-                     <div className="absolute top-4 right-4 z-20 animate-pulse">
-                        <div className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
-                            NEW / FREE
-                        </div>
-                   </div>
-                )}
-
-                <div className="p-6 h-full flex flex-col relative z-10">
-                    {/* Unit Number - Darker & Visible */}
-                    <div className="flex justify-between items-start mb-6">
-                        <div className={cn(
-                            "w-12 h-12 rounded-2xl flex items-center justify-center font-display font-bold text-2xl shadow-sm border border-slate-100 transition-colors",
-                            isLocked ? "bg-slate-100 text-slate-400" : "bg-white text-slate-900 group-hover:bg-slate-900 group-hover:text-white"
-                        )}>
-                            {index + 1}
-                        </div>
-                        
-                        <div className={cn(
-                            "w-10 h-10 rounded-full flex items-center justify-center transition-all",
-                             isLocked ? "bg-slate-50 text-slate-300" : "bg-slate-100 text-slate-600 group-hover:bg-white group-hover:text-slate-900"
-                        )}>
-                            {isLocked ? <Lock size={16} /> : <ArrowRight size={18} className="-rotate-45 group-hover:rotate-0 transition-transform duration-300" />}
-                        </div>
-                    </div>
-
-                    <div className="space-y-4 mb-auto">
-                        <h3 className={cn(
-                            "font-bold text-xl leading-tight line-clamp-2 transition-colors",
-                            isLocked ? "text-slate-500" : "text-slate-900"
-                        )}>
-                            {title}
-                        </h3>
-                        
-                        <div className="flex items-center text-sm font-medium text-slate-500 mb-4">
-                            <BookOpen className="w-4 h-4 mr-2 opacity-70" />
-                            {topics.length} {language === 'hi' ? 'टॉपिक्स' : 'Topics'}
-                        </div>
-                    </div>
-                    
-                    {/* Visual Progress Bar (Fake for now, creates engagement) */}
-                    {!isLocked && (
-                        <div className="relative h-1.5 w-full bg-slate-100 rounded-full overflow-hidden mt-4">
-                            <div className="absolute top-0 left-0 h-full w-[0%] bg-emerald-500 group-hover:w-[15%] transition-all duration-1000 ease-out" />
-                        </div>
-                    )}
-                </div>
-            </div>
-        </motion.div>
-    );
-}
 
 interface SyllabusClientProps {
     syllabusData: SyllabusData;
@@ -143,87 +55,101 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
   if (!isMounted) return null; // Prevent hydration mismatch
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-20 selection:bg-slate-200 selection:text-slate-900">
-      
-      {/* --- Main Content --- */}
-      <div className="pt-32 px-4 md:px-8 max-w-7xl mx-auto space-y-12">
+    <div className="min-h-screen bg-[#fafbfc] font-sans pb-20 relative overflow-hidden selection:bg-slate-900 selection:text-white">
+       {/* 🎭 PREMIUM BACKGROUND BLURS */}
+       <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-slate-100/50 to-transparent pointer-events-none" />
+       <div className="absolute top-[-100px] right-[-100px] w-[600px] h-[600px] bg-indigo-50/40 rounded-full blur-[120px] pointer-events-none" />
+       <div className="absolute top-[20%] left-[-150px] w-[500px] h-[500px] bg-emerald-50/30 rounded-full blur-[100px] pointer-events-none" />
+
+       {/* --- Main Content --- */}
+       <div className="pt-32 md:pt-48 px-6 max-w-7xl mx-auto relative z-10 space-y-16">
           
-          {/* Header */}
+          {/* Header Section */}
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center space-y-4"
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="flex flex-col items-center text-center space-y-8"
           >
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 text-xs font-bold text-slate-700 shadow-sm mb-4">
+              <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white border border-slate-200 text-[10px] font-black tracking-widest text-slate-500 shadow-sm uppercase">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
                 {syllabusData.exam_name}
               </div>
+ 
+              <div className="space-y-4 max-w-4xl">
+                  <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-slate-900 leading-[0.95] md:leading-[0.9]">
+                    {language === 'hi' ? 'तैयारी का' : 'Master your'} <br className="hidden md:block" />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900">
+                        {language === 'hi' ? 'नया दौर।' : 'Syllabus.'}
+                    </span>
+                  </h1>
+                  <p className="max-w-xl mx-auto text-lg md:text-xl text-slate-500 font-medium leading-relaxed">
+                    {language === 'hi' 
+                        ? 'एमपीपीएससी प्रीलिम्स 2026 के लिए आधुनिक रणनीति। 1700+ टॉपिक्स, नेमोनिक्स और टेस्ट सीरीज।'
+                        : 'The most comprehensive roadmap for MPPSC 2026. 1700+ topics, smart mnemonics, and real-time assessments.'}
+                  </p>
+              </div>
 
-              <h1 className="text-4xl md:text-6xl font-extrabold font-display tracking-tight text-slate-900 leading-[1.1]">
-                {language === 'hi' ? 'आपका सिलेबस,' : 'Your Syllabus,'} <br className="hidden md:block" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900">
-                    {language === 'hi' ? 'स्मार्ट और सरल।' : 'Reimagined.'}
-                </span>
-              </h1>
-              <p className="max-w-2xl mx-auto text-lg text-slate-600">
-                 {syllabusData.subject}
-              </p>
-
-              <div className="pt-4 flex justify-center gap-6 items-center flex-col sm:flex-row">
+              {/* <div className="pt-4 flex flex-col sm:flex-row justify-center gap-4">
                   <Link href="/syllabus/quiz">
-                      <Button className="bg-slate-900 text-white hover:bg-slate-800 rounded-full px-8 py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all group">
-                         <Sparkles className="w-5 h-5 mr-2 text-yellow-400 group-hover:rotate-12 transition-transform" />
-                         {language === 'hi' ? 'टेस्ट सीरीज शुरू करें' : 'Start MPPSC Prelims Test'}
+                      <Button className="h-16 bg-slate-900 text-white hover:bg-slate-800 rounded-2xl px-10 text-lg font-black shadow-[0_20px_40px_rgba(0,0,0,0.1)] hover:shadow-[0_25px_50px_rgba(0,0,0,0.15)] transition-all group flex items-center gap-3">
+                         <Sparkles className="w-5 h-5 text-amber-400 fill-amber-400 group-hover:rotate-12 transition-transform" />
+                         {language === 'hi' ? 'टेस्ट सीरीज' : 'Practice Tests'}
                       </Button>
                   </Link>
-              </div>
+                  <Button 
+                    variant="ghost" 
+                    className="h-16 px-10 text-lg font-black text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-2xl transition-all"
+                    onClick={() => {
+                        const target = document.getElementById('units-grid');
+                        target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                  >
+                      {language === 'hi' ? 'यूनिट्स देखें' : 'View Units'}
+                  </Button>
+              </div> */}
           </motion.div>
 
 
           {/* Units Grid/List */}
-          {viewMode === 'grid' ? (
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
-                {Object.entries(syllabusData.units).map(([key, unit], index) => {
-                    // Gradients for cards (hover states mostly now)
-                    const gradients = [
-                      "from-slate-500/10 to-slate-400/10",
-                      "from-purple-500/10 to-pink-500/10",
-                      "from-emerald-500/10 to-teal-500/10",
-                      "from-amber-500/10 to-orange-500/10",
-                      "from-rose-500/10 to-red-500/10",
-                    ];
-                    const themeClass = gradients[index % gradients.length];
-                    const iconColor = ["text-slate-600", "text-purple-600", "text-emerald-600", "text-amber-600", "text-rose-600"][index % 5];
-                    
-                    // Logic: Unit 1 is always unlocked. Others depend on subscription.
-                    const isLocked = key !== "unit_1" && !isSubscribed;
+          <div id="units-grid" className="scroll-mt-32">
+              {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-32">
+                    {Object.entries(syllabusData.units).map(([key, unit], index) => {
+                        const title = language === 'en' && unit.title_en ? unit.title_en : (unit.unit_title || unit.title);
+                        const topics = language === 'en' && unit.topics_en ? unit.topics_en : unit.topics;
+                        const isLocked = key !== "unit_1" && !isSubscribed;
 
-                    return (
-                        <motion.div
-                            key={key}
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: index * 0.05 }}
-                        >
-                            <UnitCard 
-                                unit={unit} 
-                                unitKey={key} 
-                                index={index} 
-                                language={language} 
-                                themeClass={themeClass} 
-                                iconColor={iconColor}
-                                isLocked={isLocked}
-                                onLockClick={() => setUnlockModalOpen(true)}
-                                onClick={() => router.push(`/syllabus/${key}`)}
-                            />
-                        </motion.div>
-                    )
-                })}
-             </div>
-          ) : (
+                        return (
+                            <motion.div
+                                key={key}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.05 + 0.4 }}
+                            >
+                                <SyllabusTopicCard
+                                    id={key}
+                                    title={title ?? ''}
+                                    subtitle={`${topics?.length || 0} ${language === 'hi' ? 'टॉपिक्स' : 'Topics'}`}
+                                    impactEmoji="📚"
+                                    colorVariant={(['blue', 'pink', 'emerald', 'amber'] as const)[index % 4]}
+                                    variant="unit"
+                                    isLocked={isLocked}
+                                    onClick={() => isLocked ? setUnlockModalOpen(true) : router.push(`/syllabus/${key}`)}
+                                    labels={{
+                                        search: language === 'hi' ? 'सर्च' : 'Search',
+                                        topic: language === 'hi' ? 'विषय' : 'Topic',
+                                        unit: language === 'hi' ? 'यूनिट' : 'Unit'
+                                    }}
+                                />
+                            </motion.div>
+                        )
+                    })}
+                </div>
+              ) : (
              <div className="max-w-4xl mx-auto space-y-4 pb-20">
                 {Object.entries(syllabusData.units).map(([key, unit], index) => {
                     const title = language === 'en' && unit.title_en ? unit.title_en : (unit.unit_title || unit.title);
@@ -291,6 +217,7 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                 })}
               </div>
           )}
+          </div>
 
           <SyllabusLockModal open={unlockModalOpen} onOpenChange={setUnlockModalOpen} />
       </div>

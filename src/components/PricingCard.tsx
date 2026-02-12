@@ -1,0 +1,186 @@
+"use client";
+
+import React from 'react';
+import { CheckCircle2, Zap, Crown, Clock, Star, BadgeCheck, LucideIcon, Sparkles, Target, BookOpen, BarChart3, FileText, History } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { type PricingData, calcDiscount, calcMonthly, PlanFeatureWithIcon } from '@/config/pricing';
+
+const ICON_MAP: Record<string, LucideIcon> = { 
+    Target, BookOpen, Sparkles, FileText, Clock, Zap, BarChart3, History, CheckCircle2, Star, BadgeCheck 
+};
+
+interface PricingCardProps {
+    planType: 'lite' | 'pro' | 'upgrade';
+    pricing: PricingData;
+    features: PlanFeatureWithIcon[];
+    language: 'en' | 'hi';
+    onBuy: () => void;
+    isPopular?: boolean;
+}
+
+export function PricingCard({ planType, pricing, features, language, onBuy, isPopular }: PricingCardProps) {
+    const hi = language === 'hi';
+    const p = pricing;
+
+    // Calculate dynamic values
+    const isLite = planType === 'lite';
+    const isPro = planType === 'pro';
+    const isUpgrade = planType === 'upgrade';
+
+    const price = isLite ? p.litePrice : isPro ? p.proPrice : p.upgradePrice;
+    const originalPrice = isLite ? p.liteOriginalPrice : isPro ? p.proOriginalPrice : p.upgradeOriginalPrice;
+    const discount = calcDiscount(price, originalPrice);
+    const months = isLite ? p.liteMonths : isPro ? p.proMonths : 1; // months only relevant for full plans
+    const monthly = calcMonthly(price, months);
+    const validityText = isLite ? p.liteValidityText : p.proValidityText;
+
+    // Card Specific Styling
+    const cardClasses = cn(
+        "relative flex flex-col h-full transition-all duration-300",
+        isPro || isUpgrade ? "border-2 border-slate-800 shadow-xl overflow-hidden" : "border border-slate-200 shadow-sm hover:shadow-md"
+    );
+
+    const titleIcon = isLite ? <Zap className="w-5 h-5 text-blue-600" /> : isPro ? <Crown className="w-5 h-5 text-amber-600" /> : <Star className="w-5 h-5 text-amber-500 fill-amber-500" />;
+    const title = isLite ? 'Lite' : isPro ? 'Pro' : (hi ? 'प्रो में अपग्रेड' : 'Upgrade to Pro');
+    const subtitle = isLite 
+        ? (hi ? 'स्मार्ट शुरुआत — प्रीलिम्स तक' : 'Smart start — till Prelims')
+        : isPro 
+        ? (hi ? 'पूरी ताकत — मेन्स तक' : 'Full power — till Mains')
+        : (hi ? 'लाइट से प्रो — सिर्फ़ अंतर भरें' : 'Lite → Pro — Just pay the difference');
+
+    return (
+        <div className="relative h-full group">
+            {/* Pro/Upgrade Glow Effect */}
+            {(isPro || isUpgrade) && (
+                <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-r from-slate-700 to-slate-900 opacity-15 blur-sm animate-pulse" />
+            )}
+
+            <Card className={cn(cardClasses, "bg-white")}>
+                {/* Most Popular Badge */}
+                {isPopular && isPro && (
+                    <div className="absolute top-0 right-0 bg-slate-800 text-white text-[10px] font-bold px-4 py-1.5 rounded-bl-lg uppercase tracking-widest z-20">
+                        {hi ? 'सबसे लोकप्रिय' : 'MOST POPULAR'}
+                    </div>
+                )}
+                {isUpgrade && (
+                    <div className="absolute top-0 right-0 bg-slate-800 text-white text-[10px] font-bold px-4 py-1.5 rounded-bl-lg uppercase tracking-widest z-20">
+                        {hi ? 'खास ऑफर' : 'SPECIAL OFFER'}
+                    </div>
+                )}
+
+                <CardContent className="p-6 md:p-8 flex flex-col h-full relative z-10">
+                    {/* Header Block */}
+                    <div className="mb-5">
+                        <div className="flex items-center gap-2 mb-1">
+                            {titleIcon}
+                            <h3 className={cn("text-xl font-bold", (isPro || isUpgrade) ? "text-slate-800" : "text-slate-900")}>
+                                {title}
+                            </h3>
+                            {isLite && (
+                                <Badge className="bg-orange-100 text-orange-700 border-orange-200 text-[10px] font-black px-2 py-0.5">
+                                    LIMITED
+                                </Badge>
+                            )}
+                        </div>
+                        <p className={cn("text-sm font-medium", (isPro || isUpgrade) ? "text-slate-600" : "text-slate-500")}>
+                            {subtitle}
+                        </p>
+                    </div>
+
+                    {/* Price Block */}
+                    <div className="mb-5">
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-sm text-slate-400 line-through">₹{originalPrice}</span>
+                            <span className="text-4xl font-black text-slate-900 tracking-tighter">₹{price}</span>
+                            {isUpgrade && (
+                                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-bold ml-2">
+                                    {hi ? `बचत ₹${originalPrice - price}` : `SAVE ₹${originalPrice - price}`}
+                                </Badge>
+                            )}
+                        </div>
+                        
+                        {!isUpgrade && (
+                            <div className="flex items-center gap-3 mt-2">
+                                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-bold">
+                                    {discount}% OFF
+                                </Badge>
+                                <span className="relative inline-flex items-center">
+                                    <span className="absolute inset-[-2] rounded-full bg-gradient-to-r from-red-500 via-pink-500 to-green-500 p-[1.5px]" />
+                                    <span className="relative bg-white text-slate-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full">
+                                        ₹{monthly}/mo
+                                    </span>
+                                </span>
+                            </div>
+                        )}
+
+                        {(isPro || isUpgrade) && !isUpgrade && (
+                             <div className="mt-2">
+                                <span className="relative inline-flex items-center">
+                                    <span className="absolute inset-[-2] rounded-full bg-gradient-to-r from-red-500 via-pink-500 to-green-500 p-[1.5px]" />
+                                    <span className="relative bg-white text-slate-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full">
+                                        {hi ? `सिर्फ ₹${p.proPrice - p.litePrice} ज़्यादा` : `just ₹${p.proPrice - p.litePrice} more than Lite`}
+                                    </span>
+                                </span>
+                            </div>
+                        )}
+
+                        <p className="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {hi ? `एक बार भुगतान • ${validityText}` : `One-time payment • ${validityText}`}
+                        </p>
+                    </div>
+
+                    <div className="w-full h-px bg-slate-100 mb-5" />
+
+                    {/* Features List */}
+                    <ul className="space-y-3.5 mb-8 flex-1 text-left">
+                        {features.map((f, i) => {
+                            const IconComp = ICON_MAP[f.icon || ''] || CheckCircle2;
+                            return (
+                                <li key={f.en} className={cn(
+                                    "flex items-start gap-3 text-sm font-medium",
+                                    isPro || isUpgrade ? "text-slate-900" : "text-slate-700",
+                                    isPro && i === 0 && "font-bold"
+                                )}>
+                                    <IconComp className={cn(
+                                        "w-4.5 h-4.5 shrink-0 mt-0.5",
+                                        isLite ? "text-blue-500" : "text-amber-600"
+                                    )} />
+                                    <span>{hi ? f.hi : f.en}</span>
+                                </li>
+                            );
+                        })}
+                        {/* Validity Item if not in features already */}
+                        {!isUpgrade && (
+                            <li className={cn("flex items-start gap-3 text-sm font-medium", (isPro || isUpgrade) ? "text-slate-900" : "text-slate-700")}>
+                                <Clock className={cn("w-4.5 h-4.5 shrink-0 mt-0.5", isLite ? "text-blue-500" : "text-amber-600")} />
+                                <span>{hi ? (isLite ? 'MPPSC 2026 प्रीलिम्स तक वैध' : 'MPPSC 2026 मेन्स तक वैध') : validityText}</span>
+                            </li>
+                        )}
+                    </ul>
+
+                    {/* Action Button */}
+                    <Button 
+                        onClick={onBuy}
+                        variant={isLite ? "outline" : "default"}
+                        className={cn(
+                            "w-full h-12 rounded-xl font-bold transition-all",
+                            isLite && "border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-400",
+                            (isPro || isUpgrade) && "bg-slate-800 hover:bg-slate-700 text-white shadow-lg shadow-slate-300"
+                        )}
+                    >
+                        {isLite 
+                            ? (hi ? `₹${price} में लाइट लें` : `Get Lite — ₹${price}`)
+                            : isUpgrade
+                            ? (hi ? `₹${price} में प्रो लें` : `Upgrade to Pro — ₹${price}`)
+                            : (hi ? `₹${price} में प्रो लें` : `Get Pro — ₹${price}`)
+                        }
+                    </Button>
+                </CardContent>
+            </Card>
+        </div>
+    );
+}

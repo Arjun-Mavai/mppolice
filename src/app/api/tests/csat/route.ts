@@ -15,7 +15,7 @@ export async function GET() {
         // 1. Fetch CSAT Tests
         const csatTests = await db.select()
             .from(tests)
-            .where(eq(tests.type, 'CSAT'))
+            .where(and(eq(tests.type, 'CSAT'), eq(tests.isHidden, false)))
             .orderBy(asc(tests.displayOrder));
 
         let attemptsData: any[] = [];

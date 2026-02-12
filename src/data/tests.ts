@@ -10,7 +10,7 @@ export const getTests = async (filters: { unitId?: string; type?: 'FLT' | 'UNIT'
   return await unstable_cache(
     async () => {
       try {
-        const conditions = [];
+        const conditions = [eq(tests.isHidden, false)];
         if (filters.unitId) conditions.push(eq(tests.unitId, filters.unitId));
         if (filters.type) conditions.push(eq(tests.type, filters.type));
 

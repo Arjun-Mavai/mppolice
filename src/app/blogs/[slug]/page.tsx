@@ -41,9 +41,14 @@ export default async function BlogDetailPage({ params }: PageProps) {
     }
 
     // 🔒 ACCESS CONTROL Logic
-    // Server-side check to prevent leakage of premium content
-    const user = await verifyAuth();
-    const hasAccess = canAccessBlog(blog, user as any);
+    // If it's a FREE blog, we can skip auth check and keep ISR/SSG active!
+    // For premium blogs, we call verifyAuth which makes only those specific pages dynamic.
+    let hasAccess = blog.isFreeAccess === true;
+    
+    if (!hasAccess) {
+        const user = await verifyAuth();
+        hasAccess = canAccessBlog(blog, user as any);
+    }
 
     if (!hasAccess) {
         return <BlogAccessDenied />;

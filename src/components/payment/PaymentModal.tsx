@@ -204,7 +204,7 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
   const CurrentFactIcon = MPPSC_FACTS[factIndex].icon;
 
   return (
-    <Dialog open={open} onOpenChange={showLoading ? undefined : onOpenChange}>
+    <Dialog open={open} onOpenChange={showLoading ? undefined : onOpenChange} modal={false}>
       <DialogContent className="sm:max-w-[425px] bg-white text-black border-zinc-200">
         {showLoading ? (
           // ── Loading State: MPPSC facts while API calls process ──
@@ -245,7 +245,7 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
         ) : (
           // ── Form State ──
           <>
-            <DialogHeader>
+            <DialogHeader >
               <DialogTitle className="text-2xl font-bold">Upgrade to Premium</DialogTitle>
               <DialogDescription className="text-zinc-500">
                 Enter your details to proceed with the payment.

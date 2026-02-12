@@ -44,6 +44,15 @@ export const CACHE = {
             tags: ['tests-list'],
             revalidate: SHORT_CACHE // 1 hour for tests
         }
+    },
+    ATTEMPT_LIMITS: {
+        TAGS: {
+            ALL: 'attempt-limits',
+        },
+        GET_ALL: {
+            tags: ['attempt-limits'],
+            revalidate: REVALIDATE_TIME
+        }
     }
 };
 

@@ -17,9 +17,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, FileText, Zap, Search } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Loader2, FileText, Zap, Search, EyeOff, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
-import { toggleBlogAccess, bulkUpdateBlogAccess } from './actions';
+import { toggleBlogAccess, bulkUpdateBlogAccess, toggleBlogHidden } from './actions';
 
 interface BlogItem {
     id: string;
@@ -32,6 +33,7 @@ interface BlogItem {
     isLiteAccess: boolean | null;
     isProAccess: boolean | null;
     isPublished: boolean | null;
+    isHidden: boolean | null;
     createdAt: Date | null;
 }
 
@@ -80,6 +82,25 @@ export default function BlogAccessClient({ blogs: initialBlogs }: { blogs: BlogI
                 toast.error('Failed to update');
             } else {
                 toast.success(`Updated: ${field} → ${value ? 'ON' : 'OFF'}`);
+            }
+        });
+    };
+
+    // ── Hidden toggle handler ───────────────────────────────────
+    const handleToggleHidden = async (blogId: string, isHidden: boolean) => {
+        setBlogs(prev => prev.map(b =>
+            b.id === blogId ? { ...b, isHidden } : b
+        ));
+
+        startTransition(async () => {
+            const result = await toggleBlogHidden(blogId, isHidden);
+            if (!result.success) {
+                setBlogs(prev => prev.map(b =>
+                    b.id === blogId ? { ...b, isHidden: !isHidden } : b
+                ));
+                toast.error('Failed to update');
+            } else {
+                toast.success(isHidden ? 'Blog hidden!' : 'Blog visible!');
             }
         });
     };
@@ -238,7 +259,10 @@ export default function BlogAccessClient({ blogs: initialBlogs }: { blogs: BlogI
                                 <div className="p-8 text-center text-slate-400">No blogs found</div>
                             ) : (
                                 filteredBlogs.map((blog) => (
-                                    <div key={blog.id} className="p-3 md:p-4 hover:bg-slate-50/50 transition-colors">
+                                    <div key={blog.id} className={cn(
+                                        "p-3 md:p-4 hover:bg-slate-50/50 transition-colors",
+                                        blog.isHidden && "opacity-60 bg-red-50/30"
+                                    )}>
                                         {/* Blog Info */}
                                         <div className="flex items-start gap-2 mb-2">
                                             <Badge variant="outline" className="text-[10px] shrink-0 capitalize mt-0.5">
@@ -251,11 +275,35 @@ export default function BlogAccessClient({ blogs: initialBlogs }: { blogs: BlogI
                                                 <p className="text-[10px] md:text-xs text-slate-500 mt-0.5 font-mono truncate">
                                                     /{blog.slug}
                                                 </p>
+                                                {blog.createdAt && (
+                                                    <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
+                                                        <Calendar className="w-3 h-3" />
+                                                        {new Date(blog.createdAt).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}, {new Date(blog.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                                                    </p>
+                                                )}
                                             </div>
+                                            {blog.isHidden && (
+                                                <Badge variant="outline" className="text-[10px] text-red-600 border-red-200 bg-red-50 shrink-0">
+                                                    <EyeOff className="w-3 h-3 mr-1" /> Hidden
+                                                </Badge>
+                                            )}
                                         </div>
 
-                                        {/* Access Switches */}
+                                        {/* Access Switches + Hidden */}
                                         <div className="flex items-center gap-3 md:gap-5 mt-2 ml-0 md:ml-16">
+                                            <label className="flex items-center gap-1.5 cursor-pointer">
+                                                <Switch
+                                                    checked={!!blog.isHidden}
+                                                    onCheckedChange={(v) => handleToggleHidden(blog.id, v)}
+                                                    className="scale-90 md:scale-100 data-[state=checked]:bg-red-500"
+                                                />
+                                                <span className={`text-[10px] md:text-xs font-bold ${blog.isHidden ? 'text-red-600' : 'text-slate-400'}`}>
+                                                    Hide
+                                                </span>
+                                            </label>
+
+                                            <div className="w-px h-4 bg-slate-200" />
+
                                             <label className="flex items-center gap-1.5 cursor-pointer">
                                                 <Switch
                                                     checked={!!blog.isFreeAccess}

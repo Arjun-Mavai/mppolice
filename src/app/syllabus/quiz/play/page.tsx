@@ -6,6 +6,7 @@ import { PLAN_LIMITS } from '@/config/plans';
 import { Question } from '@/types/quiz';
 import { logger } from "@/lib/logger";
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
+import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 
 interface PageProps {
     searchParams: Promise<{
@@ -100,16 +101,20 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     }
     
     // 4. Content Logic (Attempts)
-    const attemptsMap = await getUserAttempts([testId]);
+    const [attemptsMap, attemptLimits] = await Promise.all([
+        getUserAttempts([testId]),
+        getCachedAttemptLimits()
+    ]);
     const userAttemptsCount = attemptsMap[testId] || 0;
+    const maxRetries = attemptLimits[testData.type] ?? null;
     
     return (
         <QuizPlayClient 
             questions={questions}
-            mode={(mode as 'topic' | 'full' | 'pyq') || 'topic'} // Default to topic if undefined
+            mode={(mode as 'topic' | 'full' | 'pyq') || 'topic'}
             testId={testId}
             userId={user?.id || null}
-            maxRetries={testData.maxRetries}
+            maxRetries={maxRetries}
             userAttempts={userAttemptsCount}
             isPro={isProUser}
             shouldShowPaywall={shouldShowPaywall}

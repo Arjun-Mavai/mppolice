@@ -56,6 +56,7 @@ export const tests = sqliteTable('tests', {
   isLiteAccess: integer('is_lite_access', { mode: 'boolean' }).default(false),
   isProAccess: integer('is_pro_access', { mode: 'boolean' }).default(true),
   displayOrder: integer('display_order').default(0),
+  isHidden: integer('is_hidden', { mode: 'boolean' }).default(false),
   maxRetries: integer('max_retries'), // null = unlimited. Standard: Unit=5, FLT=3
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
@@ -154,6 +155,13 @@ export const syllabusTopics = sqliteTable('syllabus_topics', {
     index('unit_order_idx').on(table.unitId, table.order),
 ]);
 
+// Test Attempt Limits — category wise max attempts (source of truth)
+// null maxAttempts = unlimited
+export const testAttemptLimits = sqliteTable('test_attempt_limits', {
+  testType: text('test_type', { enum: ['FLT', 'UNIT', 'CSAT', 'PYQ', 'TOPIC'] }).primaryKey(),
+  maxAttempts: integer('max_attempts'), // null = unlimited
+});
+
 // Blog/Vlog Content Table
 export const contentBlogs = sqliteTable('content_blogs', {
   id: text('id').primaryKey(),
@@ -174,6 +182,7 @@ export const contentBlogs = sqliteTable('content_blogs', {
   isLiteAccess: integer('is_lite_access', { mode: 'boolean' }).default(false),
   isProAccess: integer('is_pro_access', { mode: 'boolean' }).default(true),
   isPublished: integer('is_published', { mode: 'boolean' }).default(false),
+  isHidden: integer('is_hidden', { mode: 'boolean' }).default(false),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
 });

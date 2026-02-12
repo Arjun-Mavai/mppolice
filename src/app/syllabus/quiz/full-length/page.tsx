@@ -2,13 +2,15 @@ import { getCachedFLTTests, getUserAttempts } from '@/features/tests/actions/sub
 import FLTPageClient, { TestWithAccess } from './FLTPageClient';
 import { verifyAuth } from '@/lib/auth';
 import { getUserTier } from '@/lib/access-control';
+import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 
 // Server Component — FLT tests ko DB flags se access control karta hai
 export default async function FLTPage() {
-    // 1. Parallel fetch — test list + current user ek saath lao
-    const [tests, user] = await Promise.all([
+    // 1. Parallel fetch — test list + current user + attempt limits
+    const [tests, user, attemptLimits] = await Promise.all([
         getCachedFLTTests(),
-        verifyAuth()
+        verifyAuth(),
+        getCachedAttemptLimits()
     ]);
     
     // 2. User ke attempts fetch karo (kitni baar de chuka har test)
@@ -18,10 +20,11 @@ export default async function FLTPage() {
     // 3. User tier nikalo — DB flags is tier se match honge
     const tier = getUserTier(user);
 
+    // Max attempts from attempt_limits table (source of truth)
+    const maxRetries = attemptLimits['FLT'] ?? null;
+
     // 4. Har test ko access info ke saath enrich karo
-    // Ab index-based locking nahi — DB flags se decide hota hai!
     const enrichedTests: TestWithAccess[] = tests.map((test) => {
-        // DB flags se access check — admin panel se control hota hai
         const hasAccess = tier === 'pro' 
             ? (test.isProAccess ?? true)
             : tier === 'lite' 
@@ -30,19 +33,17 @@ export default async function FLTPage() {
 
         const isLocked = !hasAccess && user?.role !== 'admin';
         const attemptsCount = attempts[test.id] || 0;
-        const maxRetries = test.maxRetries || 3;
-        const attemptsLeft = Math.max(0, maxRetries - attemptsCount);
+        const attemptsLeft = maxRetries != null ? Math.max(0, maxRetries - attemptsCount) : null;
         
         return {
             ...test,
             totalQuestions: test.totalQuestions || 0,
-            isLocked,
+            isLocked: isLocked && !(test.isFreeAccess ?? false),
             isCompleted: attemptsLeft === 0,
             attemptsCount,
-            attemptsLeft,
-            maxRetries,
-            // "Free" badge tab dikhe jab test free hai aur user subscriber nahi
-            showFreeBadge: (test.isFreeAccess ?? false) && !user?.isSubscribed
+            attemptsLeft: user ? (attemptsLeft ?? 9999) : null,
+            maxRetries: user ? maxRetries : null,
+            isFree: (test.isFreeAccess ?? false) && !user
         };
     });
     

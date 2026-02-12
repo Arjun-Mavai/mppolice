@@ -3,11 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Lock, ArrowLeft, Crown } from "lucide-react";
 import Link from "next/link";
-import { useSettingsStore } from "@/store/useSettingsStore";
-
+import { useRouter } from "next/navigation";
+ 
 export function BlogAccessDenied() {
-    const { setLockModalOpen } = useSettingsStore();
-
+    const router = useRouter();
+ 
     return (
         <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 py-20 text-center animate-in fade-in zoom-in duration-500">
             <div className="relative mb-8">
@@ -24,14 +24,14 @@ export function BlogAccessDenied() {
                     Premium Content
                 </h1>
                 <p className="text-slate-600 leading-relaxed font-medium">
-                    Bhai, ye article sirf <span className="font-bold text-slate-900">Pro & Lite Members</span> ke liye hai. 
-                    Upgrade karke exclusive strategies aur notes unlock karein!
+                     This Article is for <span className="font-bold text-slate-900">Pro & Lite Members</span> only. 
+                    Upgrade to unlock exclusive strategies and notes!
                 </p>
 
                 <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Button 
                         size="lg" 
-                        onClick={() => setLockModalOpen(true)}
+                        onClick={() => router.push("/pricing")}
                         className="w-full sm:w-auto bg-slate-900 text-white hover:bg-slate-800 px-8 rounded-xl font-bold h-12 shadow-xl shadow-slate-200"
                     >
                         Learn More & Upgrade
@@ -53,7 +53,7 @@ export function BlogAccessDenied() {
                 <ul className="space-y-2">
                     {[
                         "Complete MPPSC Pre + Mains Strategies",
-                        "High-Yield Bilingual Revision Notes",
+                        "High-Yield Bilingual Test Series",
                         "Mnemonic-based learning for better recall"
                     ].map((item, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-slate-700 font-medium">

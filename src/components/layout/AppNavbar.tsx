@@ -183,7 +183,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, color: "text-slate-700" },
     { name: "Syllabus", href: "/syllabus", icon: BookOpen, color: "text-emerald-600" },
-    { name: "Test Series", href: "/syllabus/quiz", icon: GraduationCap, color: "text-amber-600" },
+    { name: "Test Series", href: "/syllabus/quiz/pyq", icon: GraduationCap, color: "text-amber-600" },
     { name: "Blogs", href: "/blogs", icon: BookOpen, color: "text-sky-600" },
     { name: "Test History", href: "/syllabus/test-history", icon: History, color: "text-violet-600" },
     { name: "About Us", href: "/", icon: Info, color: "text-slate-500" },
@@ -207,7 +207,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
           <div 
             onClick={() => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
-                router.push(user ? '/syllabus/quiz' : '/');
+                router.push(user ? '/syllabus/quiz/pyq' : '/');
             }}
             className="flex items-center gap-2 group cursor-pointer"
           >

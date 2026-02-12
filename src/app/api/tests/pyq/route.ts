@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { tests } from '@/db/schema';
-import { eq, asc, desc } from 'drizzle-orm';
+import { eq, asc, desc, and } from 'drizzle-orm';
 import { logger } from "@/lib/logger";
 
 export async function GET() {
@@ -15,7 +15,7 @@ export async function GET() {
             createdAt: tests.createdAt
         })
         .from(tests)
-        .where(eq(tests.type, 'PYQ'))
+        .where(and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false)))
         .orderBy(desc(tests.createdAt));
 
         // Extract year from title or createdAt
