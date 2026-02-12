@@ -4,11 +4,12 @@
 // revalidateTag se on-demand cache bust hota h, unstable_cache se data cache hota h
 import { db } from "@/db";
 import { contentBlogs, mppscUsers } from "@/db/schema";
-// import { eq, desc, and, like, count, sql } from "drizzle-orm"; -- Removing this as it's defined later or will be cleaned up
 import { verifyAuth } from "@/lib/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { logger } from "@/lib/logger";
-import { CACHE, cachedData } from "@/lib/cache";
+import { CACHE } from "@/lib/cache";
+import { eq } from "drizzle-orm";
+import * as blogService from "@/services/blog-service";
 
 /**
  * uploadBlog — Admin-only server action, blog DB me daalti h
@@ -123,8 +124,6 @@ export async function toggleBlogPremium(blogId: string, isPremium: boolean) {
  */
 export const getCachedBlogs = blogService.getCachedBlogs;
 
-import { eq, desc, and, like, count, sql } from "drizzle-orm";
-import * as blogService from "@/services/blog-service";
 
 /**
  * getBlogCounts — Fetch counts of blogs per unit with caching

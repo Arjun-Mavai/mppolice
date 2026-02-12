@@ -35,14 +35,21 @@ export const getBlogCounts = cachedData(
             const countsMap: Record<string, number> = {};
             let total = 0;
 
+            // Simple sum of all published and non-hidden blogs
+            const allResult = await db.select({ count: count() })
+                .from(contentBlogs)
+                .where(and(
+                    eq(contentBlogs.isPublished, true),
+                    eq(contentBlogs.isHidden, false)
+                ));
+
             counts.forEach(row => {
                 if (row.unitId) {
                     countsMap[row.unitId] = row.count;
-                    total += row.count;
                 }
             });
 
-            countsMap['All'] = total;
+            countsMap['All'] = allResult[0]?.count || 0;
             countsMap['Free'] = freeResult[0]?.count || 0;
 
             return countsMap;
@@ -64,7 +71,10 @@ export const getCachedBlogs = cachedData(
     async () => {
         try {
             return await db.select().from(contentBlogs)
-                .where(eq(contentBlogs.isHidden, false))
+                .where(and(
+                    eq(contentBlogs.isPublished, true),
+                    eq(contentBlogs.isHidden, false)
+                ))
                 .orderBy(desc(contentBlogs.createdAt));
         } catch (error) {
             logger.error("Get Blogs Error:", error);
@@ -171,7 +181,11 @@ export const getBlogBySlug = async (slug: string) => {
     return await cachedData(
         async () => {
             try {
-                return await db.select().from(contentBlogs).where(eq(contentBlogs.slug, slug)).get() ?? null;
+                return await db.select().from(contentBlogs).where(and(
+                    eq(contentBlogs.slug, slug),
+                    eq(contentBlogs.isPublished, true),
+                    eq(contentBlogs.isHidden, false)
+                )).get() ?? null;
             } catch (error) {
                 logger.error("Get Blog Error:", error);
                 return null;

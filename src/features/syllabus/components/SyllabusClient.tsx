@@ -83,7 +83,7 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                   <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-slate-900 leading-[0.95] md:leading-[0.9]">
                     {language === 'hi' ? 'तैयारी का ' : 'Master your'} <br className="hidden md:block" />
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900">
-                        {language === 'hi' ? ' नया  दौर ।' : 'Syllabus.'}
+                        {language === 'hi' ? 'नया दौर।' : 'Syllabus.'}
                     </span>
                   </h1>
                   <p className="max-w-xl mx-auto text-lg md:text-xl text-slate-500 font-medium leading-relaxed">

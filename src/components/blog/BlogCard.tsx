@@ -1,8 +1,7 @@
 "use client";
-
+import type React from "react";
 import Link from "next/link";
 import { useSettingsStore } from "@/store/useSettingsStore";
-import { Badge } from "@/components/ui/badge";
 import { Clock, Lock, ArrowRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -60,10 +59,10 @@ export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
     : blog.title;
 
   // Optional: Apply same split to description if it exists
-  const splitDesc = (blog.description || '').split('|');
-  const displayDesc = splitDesc.length > 1
-    ? (language === 'hi' ? splitDesc[1].trim() : splitDesc[0].trim())
-    : blog.description;
+  // const splitDesc = (blog.description || '').split('|');
+  // const displayDesc = splitDesc.length > 1
+  //   ? (language === 'hi' ? splitDesc[1].trim() : splitDesc[0].trim())
+  //   : blog.description;
 
   const displayReadTime = index % 2 === 0 ? 5 : 6;
 
