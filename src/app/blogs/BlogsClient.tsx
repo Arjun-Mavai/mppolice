@@ -16,9 +16,10 @@ interface BlogsClientProps {
         total: number;
         hasMore: boolean;
     };
+    initialCounts: Record<string, number>;
 }
 
-export default function BlogsClient({ initialBlogs, initialPagination }: BlogsClientProps) {
+export default function BlogsClient({ initialBlogs, initialPagination, initialCounts }: BlogsClientProps) {
     const { user: currentUser } = useSettingsStore();
     
     // State
@@ -114,24 +115,35 @@ export default function BlogsClient({ initialBlogs, initialPagination }: BlogsCl
 
                     {/* Unit Tabs (Scrollable) — clean slate style */}
                     <div className="flex overflow-x-auto pb-2 mt-4 -mx-4 px-4 md:mx-0 md:px-0 gap-2 no-scrollbar snap-x pt-2">
-                        {units.map((unit) => (
-                            <button 
-                                key={unit}
-                                onClick={() => handleUnitChange(unit)}
-                                className={`
-                                    px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap snap-start border transition-all
-                                    ${unit === 'Free' && activeUnit === 'Free'
-                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-100 scale-105'
-                                        : unit === 'Free' && activeUnit !== 'Free'
-                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                                        : activeUnit === unit 
-                                        ? 'bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-200 scale-105' 
-                                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'}
-                                `}
-                            >
-                                {unit === 'All' ? 'All Units' : unit === 'Free' ? '🎁 Free' : `Unit ${unit.split('_')[1]}`}
-                            </button>
-                        ))}
+                        {units.map((unit) => {
+                            const count = initialCounts[unit] || 0;
+                            return (
+                                <button 
+                                    key={unit}
+                                    onClick={() => handleUnitChange(unit)}
+                                    className={`
+                                        group flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap snap-start border transition-all
+                                        ${unit === 'Free' && activeUnit === 'Free'
+                                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-200 scale-105'
+                                            : unit === 'Free' && activeUnit !== 'Free'
+                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                            : activeUnit === unit 
+                                            ? 'bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-300 scale-105' 
+                                            : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'}
+                                    `}
+                                >
+                                    <span>{unit === 'All' ? 'All Units' : unit === 'Free' ? '🎁 Free' : `Unit ${unit.split('_')[1]}`}</span>
+                                    {count > 0 && (
+                                        <span className={`
+                                            flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full text-[10px] font-black transition-colors
+                                            ${activeUnit === unit ? 'bg-white text-slate-900' : 'bg-emerald-500 text-white group-hover:bg-emerald-600'}
+                                        `}>
+                                            {count}
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
                 
                     {/* Active Unit Breadcrumb */}

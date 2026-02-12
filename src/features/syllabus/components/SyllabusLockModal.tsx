@@ -14,10 +14,9 @@ export function SyllabusLockModal({ open, onOpenChange }: SyllabusLockModalProps
   // modal={false} prevents body scroll lock and scrollbar hiding
   return (
     <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
-      <DialogContent className="sm:max-w-4xl p-0 overflow-hidden border-0 shadow-2xl bg-white max-h-[90vh] overflow-y-auto">
-         <DialogTitle className="sr-only">Unlock Content</DialogTitle>
-         {/* We should ideally pass the current plan here to show relevant options */}
-         <PremiumMarketing onUnlock={(amount) => router.push(`/payment?amount=${amount}`)} />
+      <DialogContent className="sm:max-w-4xl p-0 overflow-hidden border-0 shadow-2xl bg-white max-h-[90vh] overflow-y-auto rounded-2xl">
+         <DialogTitle className="sr-only">MPPSC 2026 Test Series</DialogTitle>
+         <PremiumMarketing onUnlock={() => router.push('/pricing')} />
       </DialogContent>
     </Dialog>
   );

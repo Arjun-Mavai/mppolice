@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import NextImage from "next/image";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -46,10 +47,13 @@ export function BlogCard({ blog, featured, isLocked }: BlogCardProps) {
       )}>
         <div className={cn("aspect-[16/9] w-full relative overflow-hidden", !blog.imageUrl && "bg-slate-100")}>
           {blog.imageUrl ? (
-            <img 
+            <NextImage 
               src={blog.imageUrl} 
               alt={blog.title} 
-              className={cn("w-full h-full object-cover transition-transform duration-700", !isLocked && "group-hover:scale-110", isLocked && "blur-[2px] grayscale-[50%]")} 
+              fill
+              className={cn("object-cover transition-transform duration-700", !isLocked && "group-hover:scale-110", isLocked && "blur-[2px] grayscale-[50%]")} 
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              priority={featured}
             />
           ) : (
              /* Clean white/grey fallback — no colored gradient */

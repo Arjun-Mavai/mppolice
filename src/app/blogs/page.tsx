@@ -1,4 +1,4 @@
-import { getBlogs } from "@/actions/blog-actions";
+import { getBlogs, getBlogCounts } from "@/actions/blog-actions";
 import BlogsClient from "./BlogsClient";
 
 export const metadata = {
@@ -12,8 +12,15 @@ export const metadata = {
 export const dynamic = 'auto'; 
 
 export default async function BlogsPage() {
-    // Fetch initial data (Page 1) on server. Fast, SEO-friendly.
+    // Fetch initial data (Page 1) and counts on server. Fast, SEO-friendly.
+    const counts = await getBlogCounts();
     const { blogs, pagination } = await getBlogs({ page: 1, limit: 10, unitId: 'All' });
 
-    return <BlogsClient initialBlogs={blogs} initialPagination={pagination} />;
+    return (
+        <BlogsClient 
+            initialBlogs={blogs} 
+            initialPagination={pagination} 
+            initialCounts={counts} 
+        />
+    );
 }

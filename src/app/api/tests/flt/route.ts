@@ -10,7 +10,7 @@ export async function GET() {
         // 1. Fetch FLTs
         const fltTests = await db.select()
             .from(tests)
-            .where(eq(tests.type, 'FLT'))
+            .where(and(eq(tests.type, 'FLT'), eq(tests.isHidden, false)))
             .orderBy(asc(tests.displayOrder));
 
         // Get user attempts if logged in

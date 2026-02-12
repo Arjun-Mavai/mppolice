@@ -170,7 +170,7 @@ export default function LoginPage() {
 
              <div className="text-center pt-2 space-y-2">
                  <p className="text-xs text-slate-400">
-                     <Link href="/payment" className="hover:text-indigo-600 transition-colors font-semibold">Buy Premium Plan</Link>
+                     <Link href="/pricing" className="hover:text-indigo-600 transition-colors font-semibold">Buy Premium Plan</Link>
                  </p>
              </div>
          </motion.div>

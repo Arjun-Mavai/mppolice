@@ -15,7 +15,7 @@ export const getCachedPYQTests = unstable_cache(
     async () => {
         const pyqTests = await db.select()
             .from(tests)
-            .where(eq(tests.type, 'PYQ'))
+            .where(and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false)))
             .orderBy(asc(tests.displayOrder), desc(tests.createdAt));
         
         return pyqTests.map(test => ({
@@ -31,7 +31,7 @@ export const getCachedFLTTests = unstable_cache(
     async () => {
         return await db.select()
             .from(tests)
-            .where(eq(tests.type, 'FLT'))
+            .where(and(eq(tests.type, 'FLT'), eq(tests.isHidden, false)))
             .orderBy(asc(tests.displayOrder));
     },
     ['flt-tests-list'],
@@ -42,7 +42,7 @@ export const getCachedCSATTests = unstable_cache(
     async () => {
         return await db.select()
             .from(tests)
-            .where(eq(tests.type, 'CSAT'))
+            .where(and(eq(tests.type, 'CSAT'), eq(tests.isHidden, false)))
             .orderBy(asc(tests.displayOrder), desc(tests.createdAt));
     },
     ['csat-tests-list'],

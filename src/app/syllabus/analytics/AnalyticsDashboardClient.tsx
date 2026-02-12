@@ -18,20 +18,16 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
-// -- Apun ka analytics dashboard, bhai. Sab kuch yahan dikhta hai --
-
 interface AnalyticsDashboardClientProps {
   analytics: any;
 }
 
-// Accuracy ka color decide karta hai — green = mast, amber = theek, red = danger zone
 function accuracyStyle(accuracy: number) {
-  if (accuracy >= 80) return "bg-emerald-50 text-emerald-600 border-emerald-200";
-  if (accuracy >= 60) return "bg-amber-50 text-amber-600 border-amber-200";
-  return "bg-rose-50 text-rose-600 border-rose-200";
+  if (accuracy >= 80) return "bg-emerald-50 text-emerald-600 border-emerald-100";
+  if (accuracy >= 60) return "bg-amber-50 text-amber-600 border-amber-100";
+  return "bg-rose-50 text-rose-600 border-rose-100";
 }
 
-// Tab ka label friendly banata hai — "UNIT" bolega toh "Unit Wise" dikhayega
 function tabLabel(tab: string) {
   if (tab === 'ALL') return 'All Tests';
   if (tab === 'UNIT') return 'Unit Wise';
@@ -39,7 +35,6 @@ function tabLabel(tab: string) {
   return tab;
 }
 
-// Test type ka chhota label — "UNIT" → "Unit Test", "PYQ" → "PYQ"
 function typeLabel(type: string) {
   if (type === 'UNIT') return 'Unit Test';
   if (type === 'TOPIC') return 'Topic Test';
@@ -48,99 +43,93 @@ function typeLabel(type: string) {
   return 'Test';
 }
 
-// ========== Chhote reusable pieces — card ke andar jo cheezein repeat hoti hai ==========
-
-// Ek test row — history list mein har test ka ek line item
 function TestRow({ activity, onClick, showType }: { activity: any; onClick: () => void; showType?: boolean }) {
   const accuracy = Math.round((activity.score / (activity.totalMarks || 1)) * 100);
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
       onClick={onClick}
-      className="flex items-center justify-between px-4 py-4 sm:px-5 sm:py-5 hover:bg-slate-50 transition-colors cursor-pointer group"
+      className="flex items-center justify-between px-6 py-5 hover:bg-slate-50/80 transition-all cursor-pointer group border-b border-slate-50 last:border-0"
     >
-      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-        {/* Accuracy badge — rang se pata chalta hai kaisa gaya */}
+      <div className="flex items-center gap-4 min-w-0">
         <div className={cn(
-          "w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm border shrink-0",
+          "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm border shrink-0 transition-transform group-hover:scale-105 group-hover:rotate-3 shadow-sm",
           accuracyStyle(accuracy),
         )}>
           {accuracy}%
         </div>
 
         <div className="min-w-0 space-y-1">
-          {/* Type label + date — test ka type aur kab diya */}
           {showType && (
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200">
+              <span className="text-[10px] font-black uppercase tracking-widest bg-slate-900 text-white px-2 py-0.5 rounded-lg border border-slate-800 shadow-sm">
                 {typeLabel(activity.type)}
               </span>
-              <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                <Clock size={10} />
+              <span className="text-[11px] text-slate-400 font-bold flex items-center gap-1 uppercase tracking-tighter">
+                <Clock size={10} strokeWidth={3} />
                 {new Date(activity.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
               </span>
             </div>
           )}
 
           {!showType && (
-            <div className="text-[11px] text-slate-400 flex items-center gap-1">
-              <Clock size={10} />
+            <div className="text-[11px] text-slate-400 font-bold flex items-center gap-1 uppercase tracking-tighter">
+              <Clock size={10} strokeWidth={3} />
               {new Date(activity.createdAt).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
             </div>
           )}
 
-          <div className="font-semibold text-slate-900 text-sm sm:text-[15px] leading-snug group-hover:text-slate-700 transition-colors truncate pr-2">
+          <div className="font-black text-slate-900 text-sm sm:text-base leading-snug group-hover:text-slate-700 transition-colors truncate pr-2">
             {activity.testTitle || "Practice Test"}
           </div>
 
-          {/* Time liya kitna — agar data hai toh dikhao */}
           {activity.timeTaken && (
-            <div className="text-[11px] text-slate-500 flex items-center gap-1 font-medium">
-              <span className="bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1 border border-slate-200">
+            <div className="text-[10px] text-slate-500 flex items-center gap-1 font-black uppercase tracking-widest">
+              <span className="bg-white/80 border border-slate-100 px-2 py-0.5 rounded-lg shadow-sm">
                 ⏱️ {activity.timeTaken} / {activity.totalDuration}
               </span>
             </div>
           )}
         </div>
       </div>
-      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 group-hover:translate-x-1 transition-all shrink-0 ml-2" />
-    </div>
+      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 text-slate-300 group-hover:text-slate-900 group-hover:bg-white group-hover:shadow-md transition-all duration-300">
+          <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
+      </div>
+    </motion.div>
   );
 }
 
-// Jab koi test nahi milta — empty state ka placeholder
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-slate-400 space-y-3">
-      <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center">
-        <History className="w-6 h-6 text-slate-300" />
+    <div className="flex flex-col items-center justify-center py-20 text-slate-400 space-y-4">
+      <div className="w-16 h-16 bg-slate-50 rounded-[2rem] flex items-center justify-center border border-slate-100 shadow-sm">
+        <History className="w-7 h-7 text-slate-300" />
       </div>
-      <p className="font-medium text-sm">{message}</p>
+      <p className="font-black text-sm uppercase tracking-widest">{message}</p>
     </div>
   );
 }
-
-// ========== Main Dashboard Component — poora page yahan se render hota hai ==========
 
 export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboardClientProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = React.useState('ALL');
 
-  // Login nahi kiya toh seedha login page pe bhejo
   if (!analytics) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <h2 className="text-xl font-bold text-slate-900">Sign in to view analytics</h2>
-          <Button onClick={() => router.push('/login')}>Go to Login</Button>
+        <div className="text-center space-y-6">
+          <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Sign in to view analytics</h2>
+          <Button onClick={() => router.push('/login')} className="h-12 px-8 rounded-2xl bg-slate-900 text-white font-black hover:scale-105 transition-transform">
+            Go to Login
+          </Button>
         </div>
       </div>
     );
   }
 
   const { overallScore, totalTests, mastery, recentActivity, aiSuggestion } = analytics;
-
-  // Syllabus ka kitna cover hua — har test se 5% maan ke chalte hai, max 100
   const syllabusCoverage = Math.min(totalTests * 5, 100);
 
   const filteredHistory = recentActivity.filter((item: any) => {
@@ -148,266 +137,254 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
     return item.type === activeTab;
   });
 
-  // Kamzor subjects — 50% se neeche waale top 3
   const weakAreas = mastery.filter((m: any) => m.percentage < 50).slice(0, 3);
 
-  // Stat cards ka config — har card ko alag rang diya for visual hierarchy
   const overviewStats = [
     {
       label: "Avg. Score",
       value: `${overallScore}%`,
-      icon: <BarChart3 className="w-4 h-4 text-emerald-600" />,
+      icon: <BarChart3 className="w-5 h-5 text-emerald-600" />,
       trend: "Overall Performance",
-      accent: "bg-emerald-50 border-emerald-200 text-emerald-700",
-      iconBg: "bg-emerald-100",
-      trendStyle: "text-emerald-700 bg-emerald-100",
+      accent: "bg-emerald-50/50 border-emerald-100/50 text-emerald-700",
+      iconBg: "bg-emerald-100 shadow-sm shadow-emerald-100",
+      trendStyle: "text-emerald-700 bg-emerald-100/50 border border-emerald-200/50",
     },
     {
       label: "Completion",
       value: `${syllabusCoverage}%`,
-      icon: <Clock className="w-4 h-4 text-amber-600" />,
+      icon: <Clock className="w-5 h-5 text-amber-600" />,
       trend: "Syllabus Covered",
-      accent: "bg-amber-50 border-amber-200 text-amber-700",
-      iconBg: "bg-amber-100",
-      trendStyle: "text-amber-700 bg-amber-100",
+      accent: "bg-amber-50/50 border-amber-100/50 text-amber-700",
+      iconBg: "bg-amber-100 shadow-sm shadow-amber-100",
+      trendStyle: "text-amber-700 bg-amber-100/50 border border-amber-200/50",
     },
     {
       label: "Tests Taken",
       value: totalTests.toString(),
-      icon: <Target className="w-4 h-4 text-slate-600" />,
+      icon: <Target className="w-5 h-5 text-indigo-600" />,
       trend: "Total Attempts",
-      accent: "bg-slate-50 border-slate-200 text-slate-700",
-      iconBg: "bg-slate-100",
-      trendStyle: "text-slate-600 bg-slate-100",
+      accent: "bg-indigo-50/50 border-indigo-100/50 text-indigo-700",
+      iconBg: "bg-indigo-100 shadow-sm shadow-indigo-100",
+      trendStyle: "text-indigo-700 bg-indigo-100/50 border border-indigo-200/50",
     },
   ];
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-20">
-      <div className="pt-20 px-4 md:px-8 max-w-7xl mx-auto space-y-6">
-
-        {/* ===== Header — clean, compact, mobile-first ===== */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display leading-tight">Performance Analytics</h1>
-            <p className="text-slate-500 text-sm mt-0.5">Track your progress and identify areas for improvement.</p>
-          </div>
-          <Button
-            className="bg-slate-800 hover:bg-slate-700 text-white font-bold shadow-lg shadow-slate-200 w-full sm:w-auto"
-            onClick={() => router.push('/syllabus/quiz')}
-          >
-            <TrendingUp className="w-4 h-4 mr-2" /> Take New Test
-          </Button>
+    <div className="space-y-10">
+      {/* ===== Header Area ===== */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between"
+      >
+        <div>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-none mb-3">Performance Analytics</h2>
+          <p className="text-slate-500 text-lg font-medium">Detailed breakdown of your test history and subject mastery.</p>
         </div>
+        <Button
+          size="lg"
+          className="bg-slate-900 text-white px-8 py-7 rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl shadow-slate-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-3 border-4 border-white"
+          onClick={() => router.push('/syllabus/quiz')}
+        >
+          <TrendingUp className="w-5 h-5" /> Take New Test
+        </Button>
+      </motion.div>
 
-        {/* ===== Subject Mastery + Critical Focus — side by side at the top ===== */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-          {/* Subject Mastery — dark card, har subject ka progress bar with glow */}
-          <Card className="bg-slate-900 border-slate-800 shadow-xl overflow-hidden">
-            <CardHeader className="border-b border-slate-800 pb-4 pt-6 px-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-bold text-white">Subject Mastery</CardTitle>
-                  <p className="text-xs text-slate-400 mt-1">Overall Strength</p>
+      {/* ===== Stats Grid ===== */}
+      <motion.div 
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+      >
+        {overviewStats.map((stat, idx) => (
+          <motion.div key={idx} variants={item}>
+            <Card className={cn("border-0 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-all duration-500 rounded-[2.5rem] overflow-hidden bg-white group", stat.accent)}>
+              <CardContent className="p-8">
+                <div className="flex justify-between items-start mb-6">
+                  <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-3", stat.iconBg)}>
+                    {stat.icon}
+                  </div>
+                  <span className={cn("text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full backdrop-blur-md", stat.trendStyle)}>
+                    {stat.trend}
+                  </span>
                 </div>
-                <div className="text-2xl font-black text-white">{overallScore}%</div>
+                <div className="text-4xl font-black text-slate-900 mb-1">{stat.value}</div>
+                <div className="text-sm font-black text-slate-400 uppercase tracking-widest">{stat.label}</div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* ===== Main Content Split ===== */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* mastery Section */}
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="bg-slate-900 border-0 shadow-2xl rounded-[3rem] overflow-hidden flex flex-col h-full ring-1 ring-slate-800">
+            <CardHeader className="bg-slate-900/50 backdrop-blur-md border-b border-slate-800/50 p-10 pb-6">
+               <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-2xl font-black text-white uppercase tracking-tighter">Subject Mastery</CardTitle>
+                  <p className="text-sm text-slate-500 font-bold uppercase tracking-widest mt-1">Across all attempts</p>
+                </div>
+                <div className="text-4xl font-black text-white bg-indigo-500/10 px-6 py-3 rounded-3xl border border-indigo-500/20">{overallScore}%</div>
               </div>
             </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[300px]">
-                <div className="p-6 space-y-6">
+            <CardContent className="p-0 flex-1 overflow-hidden">
+              <ScrollArea className="h-[400px]">
+                <div className="p-10 space-y-10">
                   {mastery.map((m: any, i: number) => (
-                    <div key={i} className="space-y-2">
-                      <div className="flex justify-between text-sm font-medium">
-                        <span className="text-slate-300">{m.name}</span>
+                    <div key={i} className="space-y-4">
+                      <div className="flex justify-between items-end">
+                        <div className="space-y-1">
+                          <span className="text-slate-200 font-black text-lg leading-none">{m.name}</span>
+                          <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">Mastery Level</div>
+                        </div>
                         <span className={cn(
-                          "font-bold text-xs uppercase tracking-wider",
-                          m.percentage >= 80 ? "text-emerald-400" :
-                          m.percentage >= 60 ? "text-amber-400" : "text-rose-400"
+                          "font-black text-sm uppercase tracking-widest px-3 py-1 rounded-full border",
+                          m.percentage >= 80 ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" :
+                          m.percentage >= 60 ? "text-amber-400 bg-amber-500/10 border-amber-500/20" : "text-rose-400 bg-rose-500/10 border-rose-500/20"
                         )}>
-                          {m.percentage >= 80 ? 'Mastered' : m.percentage >= 60 ? 'Strong' : 'Needs Focus'} ({m.percentage}%)
+                          {m.percentage}%
                         </span>
                       </div>
-                      {/* Animated progress bar — glow effect with mastery level color */}
-                      <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden p-0.5">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${m.percentage}%` }}
-                          transition={{ duration: 1, delay: i * 0.1 }}
+                          transition={{ duration: 1.5, delay: 0.5 + (i * 0.1), ease: "easeOut" }}
                           className={cn(
-                            "h-full rounded-full",
-                            m.percentage >= 80 ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]" :
-                            m.percentage >= 60 ? "bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.3)]" :
-                            "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.3)]"
+                            "h-full rounded-full transition-all duration-1000",
+                            m.percentage >= 80 ? "bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.4)]" :
+                            m.percentage >= 60 ? "bg-gradient-to-r from-amber-600 to-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)]" :
+                            "bg-gradient-to-r from-rose-600 to-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.4)]"
                           )}
                         />
                       </div>
                     </div>
                   ))}
                   {mastery.length === 0 && (
-                    <div className="text-center py-10 text-slate-600 italic text-sm">
-                      Start taking tests to unlock mastery insights!
+                    <div className="text-center py-20 bg-slate-800/30 rounded-[2.5rem] border border-slate-800/50">
+                       <Lightbulb className="w-10 h-10 text-slate-600 mx-auto mb-4" />
+                       <p className="text-slate-400 font-black uppercase tracking-widest text-xs">Unlock Mastery Insights</p>
                     </div>
                   )}
                 </div>
               </ScrollArea>
             </CardContent>
           </Card>
+        </motion.div>
 
-          {/* Critical Focus — kamzor areas, red accents se urgent feel */}
-          {weakAreas.length > 0 ? (
-            <Card className="border-rose-200 shadow-sm bg-gradient-to-br from-rose-50/60 to-slate-50">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 text-rose-500" />
-                  Critical Focus
-                  <span className="text-[10px] font-black uppercase tracking-widest text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full ml-auto">
-                    {weakAreas.length} weak
-                  </span>
+        {/* History Section */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+          className="flex flex-col gap-8"
+        >
+          {/* Recent Activity Card */}
+          <Card className="border-0 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-[3rem] overflow-hidden flex flex-col flex-1 ring-1 ring-slate-100">
+             <CardHeader className="bg-white/50 backdrop-blur-md border-b border-slate-50 p-10 pb-6">
+                <CardTitle className="text-2xl font-black text-slate-900 flex items-center gap-4 uppercase tracking-tighter">
+                  <History className="w-7 h-7 text-indigo-500" /> Recent Test History
                 </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 pt-0">
-                {weakAreas.map((area: any, idx: number) => (
-                  <div key={idx} className="flex items-center justify-between text-sm bg-white p-3 rounded-lg border border-rose-100 shadow-sm">
-                    <span className="font-medium text-slate-700">{area.name}</span>
-                    {/* Plain span instead of Badge — Turbopack cache issue fix */}
-                    <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">
-                      {area.percentage}%
-                    </span>
-                  </div>
-                ))}
-                <Button
-                  variant="outline"
-                  className="w-full mt-1 bg-white hover:bg-rose-50 text-rose-700 border-rose-200 font-semibold"
-                  onClick={() => router.push('/syllabus/quiz/units')}
-                >
-                  Improve Weak Areas
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="border-emerald-200 shadow-sm bg-gradient-to-br from-emerald-50/60 to-slate-50 flex items-center justify-center">
-              <CardContent className="p-8 text-center space-y-3">
-                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
-                  <Target className="w-6 h-6 text-emerald-600" />
-                </div>
-                <h3 className="font-bold text-slate-900 text-lg">All Areas Strong!</h3>
-                <p className="text-sm text-slate-500">No weak subjects detected. Keep up the great work! 🎉</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* ===== Stats Grid — score, completion, tests taken — warm accent colors ===== */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {overviewStats.map((stat, idx) => (
-            <Card key={idx} className={cn("border shadow-sm hover:shadow-md transition-shadow", stat.accent)}>
-              <CardContent className="p-5">
-                <div className="flex justify-between items-start mb-3">
-                  <div className={cn("p-2 rounded-xl", stat.iconBg)}>{stat.icon}</div>
-                  <span className={cn("text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full", stat.trendStyle)}>
-                    {stat.trend}
-                  </span>
-                </div>
-                <div className="text-3xl font-bold mb-0.5">{stat.value}</div>
-                <div className="text-sm font-medium opacity-70">{stat.label}</div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* ===== Bottom section — Test History + AI Coach & Study Tip sidebar ===== */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-          {/* ===== Recent Test History — sab tests ka record, filter tabs ke saath ===== */}
-          <div className="lg:col-span-2">
-            <Card className="border-slate-200 shadow-sm overflow-hidden">
-              <CardHeader className="border-b border-slate-100 bg-slate-50/50 pb-4">
-                <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
-                  <Clock className="w-5 h-5 text-slate-600" /> Recent Test History
-                </CardTitle>
-
-                {/* Category tabs — filter karo test type se */}
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                <div className="flex gap-2 overflow-x-auto mt-6 pb-2 scrollbar-hide">
                   {['ALL', 'UNIT', 'TOPIC', 'CSAT', 'PYQ'].map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
                       className={cn(
-                        "px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap border",
+                        "px-6 py-2 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border shrink-0",
                         activeTab === tab
-                          ? "bg-slate-800 text-white border-slate-800 shadow-md shadow-slate-200"
-                          : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                          ? "bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-200"
+                          : "bg-white text-slate-500 border-slate-200 hover:border-slate-800 hover:text-slate-800 hover:bg-slate-50"
                       )}
                     >
                       {tabLabel(tab)}
                     </button>
                   ))}
                 </div>
-              </CardHeader>
-
-              <CardContent className="p-0">
-                <ScrollArea className="h-[360px] sm:h-[400px]">
+             </CardHeader>
+             <CardContent className="p-0">
+                <ScrollArea className="h-[430px]">
                   {activeTab === 'TOPIC' ? (
                     <TopicGroupedList history={filteredHistory} onNavigate={(id) => router.push(`/syllabus/analytics/history/${id}`)} />
                   ) : (
                     <FlatTestList history={filteredHistory} onNavigate={(id) => router.push(`/syllabus/analytics/history/${id}`)} />
                   )}
                 </ScrollArea>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* ===== Right Sidebar — AI Coach + Study Tip ===== */}
-          <div className="space-y-6">
-
-            {/* AI Coach — dark card, motivational gyaan */}
-            <Card className="bg-slate-950 text-white border-2 border-slate-800 shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-slate-500/10 rounded-full blur-3xl -mr-16 -mt-16" />
-              <CardContent className="p-8 text-center space-y-6 relative z-10">
-                <div className="w-16 h-16 bg-slate-800/20 rounded-2xl flex items-center justify-center mx-auto text-slate-400 border border-slate-500/20">
-                  <Target className="w-8 h-8" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-display font-black text-xl tracking-tight">AI Coach Says:</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed italic">&ldquo;{aiSuggestion}&rdquo;</p>
-                </div>
-                <Button
-                  className="w-full h-12 bg-slate-800 text-white hover:bg-slate-700 font-black uppercase tracking-widest text-[11px] rounded-xl shadow-lg shadow-slate-800/20"
-                  onClick={() => router.push('/syllabus/quiz')}
-                >
-                  START TEST SERIES
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Study Tip — quick contextual advice */}
-            <Card className="border-slate-200 bg-white shadow-sm">
-              <CardContent className="p-6 space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
-                    <Lightbulb className="w-4 h-4 text-amber-600" />
-                  </div>
-                  <h3 className="font-bold text-slate-900 text-sm">Quick Study Tip</h3>
-                </div>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  {totalTests < 5
-                    ? "Start with topic-wise tests to build fundamentals before attempting unit tests."
-                    : overallScore < 60
-                    ? "Focus on your weak subjects first. Revise concepts, then attempt more tests."
-                    : "Great progress! Try full-length mock tests to build exam stamina."}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+             </CardContent>
+          </Card>
+        </motion.div>
       </div>
+
+       {/* ===== AI Coach Section ===== */}
+       <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.6 }}
+       >
+          <Card className="bg-slate-950 text-white rounded-[3.5rem] p-10 md:p-16 border-[6px] border-white shadow-[0_40px_80px_rgba(0,0,0,0.1)] relative overflow-hidden ring-1 ring-slate-900">
+              <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_30%,rgba(99,102,241,0.1),transparent)] pointer-events-none" />
+              <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none" />
+              
+              <div className="flex flex-col md:flex-row items-center gap-12 relative z-10">
+                  <div className="w-24 h-24 bg-white/5 rounded-[2.5rem] flex items-center justify-center border border-white/10 shadow-inner group">
+                      <Target className="w-10 h-10 text-indigo-400 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div className="flex-1 space-y-6 text-center md:text-left">
+                      <div className="space-y-2">
+                        <span className="text-[11px] font-black uppercase tracking-[0.3em] text-indigo-400">Personalized Insights</span>
+                        <h3 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">AI Coach Recommendations</h3>
+                      </div>
+                      <p className="text-slate-400 text-lg md:text-xl font-medium leading-relaxed italic max-w-4xl">
+                        &quot;{aiSuggestion}&quot;
+                      </p>
+                      
+                      <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                        <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-2xl">
+                          <AlertCircle className="w-4 h-4 text-rose-500" />
+                          <span className="text-xs font-black uppercase tracking-widest text-white">{weakAreas.length} Weak Areas Identified</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-2xl">
+                          <History className="w-4 h-4 text-emerald-500" />
+                          <span className="text-xs font-black uppercase tracking-widest text-white">{totalTests} Tests Completed</span>
+                        </div>
+                      </div>
+                  </div>
+                  <Button
+                    size="lg"
+                    className="h-20 px-12 bg-white text-slate-950 hover:bg-slate-100 rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-xs shadow-white/10 shadow-2xl transition-all hover:scale-105 active:scale-95"
+                    onClick={() => router.push('/syllabus/quiz/units')}
+                  >
+                    Action Center
+                  </Button>
+              </div>
+          </Card>
+       </motion.div>
     </div>
   );
 }
-
-// ========== Topic tests grouped by unit — unit ke andar topics dikhata hai ==========
 
 function TopicGroupedList({ history, onNavigate }: { history: any[]; onNavigate: (id: string) => void }) {
   const grouped: Record<string, any[]> = {};
@@ -428,23 +405,20 @@ function TopicGroupedList({ history, onNavigate }: { history: any[]; onNavigate:
   }
 
   return (
-    <div className="divide-y divide-slate-100">
+    <div className="divide-y divide-slate-50">
       {sortedKeys.map((unitKey) => {
         const groupItems = grouped[unitKey];
         const unitName = groupItems[0]?.unitName || unitKey;
 
         return (
-          <div key={unitKey} className="border-b border-slate-100 last:border-0">
-            {/* Unit ka header — sticky rehta hai scroll pe */}
-            <div className="bg-slate-50/80 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-sm border-b border-slate-100">
-              <div className="w-2 h-2 rounded-full bg-slate-400" />
+          <div key={unitKey} className="group/unit">
+            <div className="bg-slate-50/80 px-10 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3 sticky top-0 z-10 backdrop-blur-md border-b border-slate-100">
+              <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
               {unitName}
             </div>
             <div className="divide-y divide-slate-50">
               {groupItems.map((activity: any, idx: number) => (
-                <div key={idx} className="pl-4">
-                  <TestRow activity={activity} onClick={() => onNavigate(activity.id)} />
-                </div>
+                <TestRow key={idx} activity={activity} onClick={() => onNavigate(activity.id)} />
               ))}
             </div>
           </div>
@@ -454,15 +428,13 @@ function TopicGroupedList({ history, onNavigate }: { history: any[]; onNavigate:
   );
 }
 
-// ========== Flat test list — simple list, no grouping, ALL/UNIT/CSAT/PYQ ke liye ==========
-
 function FlatTestList({ history, onNavigate }: { history: any[]; onNavigate: (id: string) => void }) {
   if (history.length === 0) {
     return <EmptyState message="No tests found in this category." />;
   }
 
   return (
-    <div className="divide-y divide-slate-100">
+    <div className="divide-y divide-slate-50">
       {history.map((activity: any, idx: number) => (
         <TestRow key={idx} activity={activity} onClick={() => onNavigate(activity.id)} showType />
       ))}

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, BookOpen, Sparkles, Brain, Lightbulb, Search, RotateCw, PlayCircle, Lock } from 'lucide-react';
 import FlipCard from '@/components/FlipCard';
+import { SyllabusTopicCard } from '@/components/SyllabusTopicCard';
 import { cn } from '@/lib/utils';
 import { SideDrawer } from '@/components/SideDrawer';
 import { SyllabusSearch } from '@/features/syllabus/components/SyllabusSearch';
@@ -182,52 +183,56 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 font-sans pb-24">
+    <div className="min-h-screen bg-slate-50/50 font-sans pb-24 ">
       {/* Sub-header: Unit title + Language toggle + Progress bar */}
-      <div className="sticky top-14 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
-        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
+      {/* 🧭 PREMIUM SUB-NAV: Unit Title + Progress */}
+      <div className="sticky top-[72px] md:top-[88px] z-30 bg-white/70 backdrop-blur-xl border-b border-slate-200/40 transition-all duration-300">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
+          <div className="flex items-center gap-4 min-w-0">
             <button 
               onClick={() => router.push('/syllabus')}
-              className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-all shrink-0"
+              className="group p-2 rounded-2xl bg-white border border-slate-200 text-slate-500 hover:text-slate-900 shadow-sm hover:shadow-md transition-all shrink-0"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             </button>
-            <h1 className="text-base sm:text-lg font-bold text-slate-900 truncate max-w-[200px] sm:max-w-xl">
-              {currentTitle}
-            </h1>
+            <div className="flex flex-col">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none mb-1">
+                    {language === 'hi' ? 'यूनिट' : 'Unit'} {unitId.replace('unit_', '')}
+                </span>
+                <h1 className="text-lg md:text-xl font-black text-slate-900 truncate max-w-[180px] sm:max-w-md leading-tight">
+                {currentTitle}
+                </h1>
+            </div>
           </div>
 
-          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/50">
-            <button
-              onClick={() => setLanguage('hi')}
-              className={cn(
-                "px-3 py-1 text-xs font-bold rounded-lg transition-all",
-                language === 'hi' 
-                  ? "bg-white text-slate-900 shadow-sm" 
-                  : "text-slate-500 hover:text-slate-800"
-              )}
-            >
-              हिन्दी
-            </button>
-            <button
-              onClick={() => setLanguage('en')}
-              className={cn(
-                "px-3 py-1 text-xs font-bold rounded-lg transition-all",
-                language === 'en' 
-                  ? "bg-white text-slate-900 shadow-sm" 
-                  : "text-slate-500 hover:text-slate-800"
-              )}
-            >
-              ENG
-            </button>
+          <div className="flex items-center gap-6">
+              {/* Desktop Progress Indicator */}
+              <div className="hidden md:flex items-center gap-3">
+                  <div className="text-right">
+                      <div className="text-sm font-black text-slate-900">{Math.round(progressPercent)}%</div>
+                      <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{language === 'hi' ? 'पूर्ण' : 'Complete'}</div>
+                  </div>
+                  <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progressPercent}%` }}
+                        className="h-full bg-emerald-500"
+                      />
+                  </div>
+              </div>
+
+              {/* Action: Search Shortcut (Visual Only) */}
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200/50 text-slate-400 text-[10px] font-bold">
+                  <Search className="w-3.5 h-3.5" />
+                  <span>CMD+K</span>
+              </div>
           </div>
         </div>
         
-        {/* Progress Bar */}
-        <div className="h-0.5 w-full bg-slate-100">
+        {/* Mobile Progress Bar (Slimmer) */}
+        <div className="h-[2px] w-full bg-slate-100 md:hidden">
           <motion.div 
-            className="h-full bg-emerald-500"
+            className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
             initial={{ width: 0 }}
             animate={{ width: `${progressPercent}%` }}
             transition={{ duration: 1.5, ease: "easeOut" }}
@@ -270,62 +275,34 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
           variants={container}
           initial="hidden"
           animate="show"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 mb-16"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mb-16"
         >
           {currentTopics.map((topic, idx) => {
             const locked = isTopicLocked(topic, idx);
-            // FREE badge: show for unlocked topics that are in the free tier,
-            // but ONLY for non-logged-in users (logged-in users don't need to see it)
-            const showFreeBadge = !locked && !isSubscribed && !user && topic.isFree;
+            const isFree = !locked && !isSubscribed && !user && topic.isFree;
             
+            // Rotate color variants
+            const variants: ('blue' | 'pink' | 'emerald' | 'amber')[] = ['blue', 'pink', 'emerald', 'amber'];
+            const colorVariant = variants[idx % variants.length];
+
             return (
-            <motion.div key={topic.id} variants={item} className="relative">
-              {showFreeBadge && (
-                <div className="absolute top-3 right-3 z-20">
-                  <span className="bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm">
-                    FREE
-                  </span>
-                </div>
-              )}
-              <FlipCard
-                id={topic.id}
-                className="h-[520px] w-full"
-                isLocked={isTopicLocked(topic, currentTopics.indexOf(topic))}
-                isFlipped={activeFlippedId === topic.id}
-                image={topic.image_url}
-                
-                // Content
-                title={topic.front}
-                subtitle={topic.id.toString().split('_').pop()?.replace('t', '') || topic.id.toString()}
-                impactEmoji={topic.impact_emoji}
-                
-                // Back Side
-                backMainContent={topic.back}
-                facts={topic.important_facts}
-                mnemonic={topic.mnemonic}
-                
-                // Logic
-                onPracticeTest={() => handleQuizClick('unit')}
-                onReadMore={() => {
-                    handleOpenDetails(topic, currentTopics.indexOf(topic));
-                }}
-                onFlip={(id) => {
-                   if (activeFlippedId === id) {
-                      setActiveFlippedId(null);
-                   } else {
-                      setActiveFlippedId(id);
-                   }
-                }}
-                
-                labels={{
-                    tapToFlip: language === 'hi' ? 'पलटने के लिए टैप करें' : 'Tap to Flip',
-                    topicAnalysis: language === 'hi' ? 'विषय विश्लेषण' : 'TOPIC ANALYSIS',
-                    mnemonicLabel: language === 'hi' ? 'स्मरण सूत्र' : 'MNEMONIC',
-                    practiceTest: language === 'hi' ? 'यूनिट टेस्ट दें' : 'Start Unit Test',
-                    closeAnalysis: language === 'hi' ? 'बंद करें' : 'Close Analysis'
-                }}
-              />
-            </motion.div>
+              <motion.div key={topic.id} variants={item}>
+                <SyllabusTopicCard
+                  id={topic.id}
+                  title={topic.front}
+                  impactEmoji={topic.impact_emoji}
+                  imageUrl={topic.image_url}
+                  colorVariant={colorVariant}
+                  isLocked={locked}
+                  isFree={isFree}
+                  onClick={() => handleOpenDetails(topic, idx)}
+                  labels={{
+                    search: language === 'hi' ? 'सर्च' : 'Search',
+                    topic: language === 'hi' ? 'विषय' : 'Topic',
+                    unit: language === 'hi' ? 'यूनिट' : 'Unit'
+                  }}
+                />
+              </motion.div>
             );
           })}
         </motion.div>

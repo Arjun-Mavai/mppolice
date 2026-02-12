@@ -123,7 +123,9 @@ export async function toggleBlogPremium(blogId: string, isPremium: boolean) {
 export const getCachedBlogs = cachedData(
     async () => {
         try {
-            return await db.select().from(contentBlogs).orderBy(desc(contentBlogs.createdAt));
+            return await db.select().from(contentBlogs)
+                .where(eq(contentBlogs.isHidden, false))
+                .orderBy(desc(contentBlogs.createdAt));
         } catch (error) {
             logger.error("Get Blogs Error:", error);
             return [];
@@ -140,6 +142,58 @@ import { eq, desc, and, like, count, sql } from "drizzle-orm";
  * getBlogs — Paginated, filtered blog fetcher
  * Replaces simple getCachedBlogs
  */
+/**
+ * getBlogCounts — Fetch counts of blogs per unit with caching
+ * Zero impact on performance due to server-side caching
+ */
+export const getBlogCounts = cachedData(
+    async () => {
+        try {
+            // Get counts grouped by unitId
+            const counts = await db.select({
+                unitId: contentBlogs.unitId,
+                count: count()
+            })
+            .from(contentBlogs)
+            .where(and(
+                eq(contentBlogs.isPublished, true), 
+                eq(contentBlogs.isHidden, false)
+            ))
+            .groupBy(contentBlogs.unitId);
+
+            // Get count for Free articles
+            const freeResult = await db.select({ count: count() })
+                .from(contentBlogs)
+                .where(and(
+                    eq(contentBlogs.isPublished, true),
+                    eq(contentBlogs.isHidden, false),
+                    eq(contentBlogs.isFreeAccess, true)
+                ));
+
+            const countsMap: Record<string, number> = {};
+            let total = 0;
+
+            counts.forEach(row => {
+                if (row.unitId) {
+                    countsMap[row.unitId] = row.count;
+                    total += row.count;
+                }
+            });
+
+            countsMap['All'] = total;
+            countsMap['Free'] = freeResult[0]?.count || 0;
+
+            return countsMap;
+        } catch (error) {
+            logger.error("Get Blog Counts Error:", error);
+            return { 'All': 0, 'Free': 0 };
+        }
+    },
+    ['blog-counts-meta'],
+    CACHE.BLOGS.GET_ALL.tags, // Busts when blogs change
+    CACHE.BLOGS.GET_ALL.revalidate
+);
+
 export async function getBlogs({
     page = 1,
     limit = 10,
@@ -161,6 +215,9 @@ export async function getBlogs({
         
         // Filter by Published (always)
         whereConditions.push(eq(contentBlogs.isPublished, true));
+
+        // Filter out hidden blogs
+        whereConditions.push(eq(contentBlogs.isHidden, false));
 
         // Filter by Unit
         if (unitId && unitId !== 'All') {

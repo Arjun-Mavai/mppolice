@@ -15,7 +15,7 @@ import { usePathname } from "next/navigation";
 import { 
     LayoutDashboard, Shield, BookOpen, FileText, Upload, 
     Brain, HelpCircle, Menu, X, ChevronLeft, UserPlus, KeyRound,
-    Users, IndianRupee, CreditCard
+    Users, IndianRupee, CreditCard, BarChart3
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 // ── Admin routes — sidebar me ye dikhenge ───────────────────
 const ADMIN_ROUTES = [
     { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, description: 'Overview & stats' },
+    { href: '/admin/user-dashboard', label: 'User Dashboard', icon: BarChart3, description: 'User activity & test history' },
     { href: '/admin/test-access', label: 'Test Access', icon: Shield, description: 'FLT/PYQ/CSAT access flags' },
     { href: '/admin/topic-access', label: 'Topic Access', icon: BookOpen, description: 'Syllabus topic access flags' },
     { href: '/admin/blog-access', label: 'Blog Access', icon: FileText, description: 'Blog tier access flags' },

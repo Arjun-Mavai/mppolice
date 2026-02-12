@@ -1,12 +1,15 @@
 import { requireAdmin } from '@/lib/auth-admin';
 import TestAccessClient from './TestAccessClient';
-import { getAllTestsForAdmin } from './actions';
+import { getAllTestsForAdmin, getAttemptLimits } from './actions';
 
 // Server Component — Admin only, no caching
 export const dynamic = 'force-dynamic';
 
 export default async function TestAccessPage() {
     await requireAdmin();
-    const tests = await getAllTestsForAdmin();
-    return <TestAccessClient initialTests={tests} />;
+    const [tests, attemptLimits] = await Promise.all([
+        getAllTestsForAdmin(),
+        getAttemptLimits()
+    ]);
+    return <TestAccessClient initialTests={tests} initialAttemptLimits={attemptLimits} />;
 }

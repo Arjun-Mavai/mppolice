@@ -3,34 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ChevronRight, Search, BookOpen, Layers, Lock } from 'lucide-react';
+import { ArrowLeft,     Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+  
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { toast } from "sonner"; 
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
-import { PLAN_LIMITS } from '@/config/plans';
-import { getSyllabusTopics } from '@/actions/getSyllabusTopics';
+ import { getSyllabusTopics } from '@/actions/getSyllabusTopics';
 import { getUserTier } from '@/lib/access-control';
-
-const UNIT_COLORS = [
-    'bg-rose-50 text-rose-600 border-rose-100 group-hover:bg-rose-600 group-hover:text-white',
-    // ... (rest of UNIT_COLORS is unchanged, just showing context for import)
-
-    'bg-rose-50 text-rose-600 border-rose-100 group-hover:bg-rose-600 group-hover:text-white',
-    'bg-orange-50 text-orange-600 border-orange-100 group-hover:bg-orange-600 group-hover:text-white',
-    'bg-amber-50 text-amber-600 border-amber-100 group-hover:bg-amber-600 group-hover:text-white',
-    'bg-yellow-50 text-yellow-600 border-yellow-100 group-hover:bg-yellow-600 group-hover:text-white',
-    'bg-lime-50 text-lime-600 border-lime-100 group-hover:bg-lime-600 group-hover:text-white',
-    'bg-green-50 text-green-600 border-green-100 group-hover:bg-green-600 group-hover:text-white',
-    'bg-emerald-50 text-emerald-600 border-emerald-100 group-hover:bg-emerald-600 group-hover:text-white',
-    'bg-teal-50 text-teal-600 border-teal-100 group-hover:bg-teal-600 group-hover:text-white',
-    'bg-cyan-50 text-cyan-600 border-cyan-100 group-hover:bg-cyan-600 group-hover:text-white',
-    'bg-sky-50 text-sky-600 border-sky-100 group-hover:bg-sky-600 group-hover:text-white',
-];
+ 
+import { QuizSubNav } from '@/features/syllabus/components/QuizSubNav';
+import { QuizListItem } from '@/components/QuizListItem';
 
 interface Topic {
     id: string; // UUID from DB
@@ -41,6 +25,10 @@ interface Topic {
     description: string | null; // Back text
     descriptionEn: string | null; 
     testId?: string;
+    isFree: boolean;
+    isFreeAccess: boolean;
+    attemptsLeft: number | null;
+    maxRetries: number | null;
 }
 
 interface Unit {
@@ -61,15 +49,20 @@ export default function TopicSelectionPage() {
     const [dbData, setDbData] = useState<Record<string, Topic[]> | null>(null);
     const [loading, setLoading] = useState(true);
 
+    const hi = language === 'hi';
+
     // Fetch DB Data on Mount
     useEffect(() => {
         getSyllabusTopics().then((res) => {
+            console.log("[TopicPage] API Response:", res);
             if (res.success && res.data) {
-                // Map the data to our interface if needed or use directly
-                // The action returns Record<string, typeof topics>
-                // We trust it matches our rough shape.
                 setDbData(res.data as any); 
+            } else {
+                toast.error("Failed to load topics");
             }
+            setLoading(false);
+        }).catch(err => {
+            console.error("[TopicPage] Fetch error:", err);
             setLoading(false);
         });
     }, []);
@@ -77,54 +70,61 @@ export default function TopicSelectionPage() {
     // Transform DB Data to UI Units
     const units: Unit[] = dbData ? Object.entries(dbData).map(([unitId, topicsData]) => {
         const unitIndex = parseInt(unitId.replace('unit_', '')) || 0;
-        // Simple titles based on index.
         return {
             id: unitId,
             index: unitIndex,
-            title: `Unit ${unitIndex}`, 
+            title: hi ? `यूनिट ${unitIndex}` : `Unit ${unitIndex}`, 
             topics: topicsData.sort((a: any, b: any) => a.order - b.order).map((t: any) => ({
                 id: t.id,
                 unitId: t.unitId,
                 order: t.order,
-                title: language === 'hi' ? t.title : (t.titleEn || t.title),
+                title: hi ? t.title : (t.titleEn || t.title),
                 titleEn: t.titleEn,
-                description: language === 'hi' ? t.description : (t.descriptionEn || t.description),
+                description: hi ? t.description : (t.descriptionEn || t.description),
                 descriptionEn: t.descriptionEn,
-                testId: t.testId
+                testId: t.testId,
+                isFree: t.isFree,
+                isFreeAccess: t.isFreeAccess,
+                attemptsLeft: t.attemptsLeft,
+                maxRetries: t.maxRetries
             }))
         };
     }).sort((a,b) => a.index - b.index) : [];
 
 
     const handleTopicClick = (unitId: string, topic: Topic) => {
-        const effectiveTier = getUserTier(user as any); // Cast only for compatibility with store types if needed, or fix store type import
-        const limit = PLAN_LIMITS[effectiveTier as keyof typeof PLAN_LIMITS]?.topic_tests_limit || 0;
-        
-        // Use order for locking logic (Top 5 free, etc)
-        // Special override: Unit 1, Topic 1 & 2 are free for everyone
-        // Admin gets everything unlocked
         const isAdmin = (user as any)?.role === 'admin';
-        const isFreeOverride = (unitId === 'unit_1' && topic.order <= 2) || isAdmin;
-        const isLocked = !isFreeOverride && topic.order > limit;
         
-        if (isLocked) {
-
+        // STRICT BACKEND ACCESS: 
+        // We no longer use "limit" or "order" to lock tests.
+        // If the backend says it's free (isFreeAccess), it's free.
+        // If it's not free, user must be Pro/Lite (handled by backend or future generic check).
+        // For now, if it is NOT free access and user is NOT admin/pro, it might be locked.
+        // But the user specifically asked to remove local logic. 
+        // so we rely on `topic.isFreeAccess` and maybe a simple check if they have subscription.
+        
+        // Actually, the previous logic was determining `isLocked` based on `order`.
+        // Now `isLocked` should ideally come from backend or be simple:
+        // Closed if: !isFreeAccess && !hasSubscription
+        
+        const effectiveTier = getUserTier(user as any);
+        // FIX: 'guest' is not 'free', so strict check for paid tiers needed.
+        const hasActivePlan = effectiveTier === 'lite' || effectiveTier === 'pro';
+        
+        const isUnlocked = topic.isFreeAccess || hasActivePlan || isAdmin;
+        
+        if (!isUnlocked) {
             setPaywallOpen(true);
             return;
         }
         
-        // Navigation: Pass specific testId if available
         if (topic.testId) {
              router.push(`/syllabus/quiz/play?unitId=${unitId}&testId=${topic.testId}`);
         } else {
-             // Fallback or Alert? 
-             // Ideally this shouldn't happen if topics are synced. 
-             // We can show a toast or just do nothing/log.
              toast.error("Test coming soon!");
         }
     };
 
-    // Filter topics if inside a unit
     const currentUnit = selectedUnitId ? units.find(u => u.id === selectedUnitId) : null;
     const filteredTopics = currentUnit ? currentUnit.topics.filter((t) => 
         t.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -137,188 +137,150 @@ export default function TopicSelectionPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans p-4 md:p-8 pt-32">
-            <div className="max-w-6xl mx-auto space-y-6">
-                
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => selectedUnitId ? setSelectedUnitId(null) : router.back()}
-                            className="rounded-full hover:bg-slate-200 gap-2 pl-2 pr-4"
-                        >
-                            <ArrowLeft className="w-6 h-6 text-slate-600" />
-                            {selectedUnitId && <span className="text-slate-600 font-bold">{language === 'hi' ? 'वापस जाएं' : 'Back'}</span>}
-                        </Button>
-                        <div>
-                            <h1 className="text-2xl font-bold text-slate-900 font-display">
-                                {selectedUnitId && currentUnit 
-                                    ? (language === 'hi' ? `यूनिट ${currentUnit.index}: विषय चुनें` : `Unit ${currentUnit.index}: Select Topic`)
-                                    : (language === 'hi' ? 'यूनिट चुनें' : 'Select Unit')
-                                }
-                            </h1>
-                            <p className="text-slate-500 text-sm">
-                                {selectedUnitId 
-                                    ? (language === 'hi' ? 'क्विक टेस्ट के लिए टॉपिक चुनें' : 'Choose a topic for quick check')
-                                    : (language === 'hi' ? 'शुरुआत करने के लिए एक यूनिट चुनें' : 'Select a unit to get started')
-                                }
-                            </p>
-                        </div>
-                    </div>
+        <div className="min-h-screen bg-[#fafbfc] font-sans pb-20 relative overflow-hidden">
+             {/* 🎭 PREMIUM BACKGROUND BLURS */}
+             <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-slate-100/30 to-transparent pointer-events-none" />
+             <div className="absolute top-[-100px] right-[-100px] w-[500px] h-[500px] bg-indigo-50/40 rounded-full blur-[100px] pointer-events-none" />
+             <div className="absolute bottom-[20%] left-[-150px] w-[400px] h-[400px] bg-emerald-50/30 rounded-full blur-[100px] pointer-events-none" />
 
-                    {/* Search only visible inside a unit */}
-                    {selectedUnitId && (
-                        <div className="relative w-full md:w-64">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                            <Input 
-                                placeholder={language === 'hi' ? 'टॉपिक खोजें...' : 'Search topics...'}
-                                className="pl-9 bg-white shadow-sm border-slate-200 focus:border-slate-500 rounded-xl"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
+            <div className="max-w-5xl mx-auto px-6 relative z-10 pt-32">
+                
+                {/* Header Row */}
+                <div className="flex items-center justify-between mb-8">
+                     <Button 
+                        key={selectedUnitId ? 'back-to-units' : 'back-to-hub'}
+                        variant="ghost" 
+                        onClick={() => selectedUnitId ? setSelectedUnitId(null) : router.push('/syllabus/quiz')}
+                        className="group -ml-3 text-slate-500 hover:text-slate-900 hover:bg-transparent p-0"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:shadow-md transition-all mr-3">
+                            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                         </div>
-                    )}
+                        <span className="text-sm font-black uppercase tracking-widest transition-colors">
+                            {selectedUnitId ? (hi ? 'यूनिट लिस्ट' : 'Back to Units') : (hi ? 'क्विज़ हब' : 'Quiz Hub')}
+                        </span>
+                    </Button>
                 </div>
 
-                {/* Content Area */}
-                <AnimatePresence mode="wait">
-                    {!selectedUnitId ? (
-                        /* VIEW 1: UNIT GRID */
-                        <motion.div 
-                            key="unit-grid"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                        >
-                            {units.map((unit, idx) => (
-                                <motion.div
-                                    key={unit.id}
-                                    whileHover={{ y: -5 }}
-                                    whileTap={{ scale: 0.98 }}
-                                >
-                                    <Card 
-                                        className="h-full cursor-pointer hover:shadow-xl transition-all border-l-4 group bg-white"
-                                        style={{ borderLeftColor: idx % 2 === 0 ? '#4f46e5' : '#db2777' }} 
-                                        onClick={() => setSelectedUnitId(unit.id)}
-                                    >
-                                        <CardContent className="p-6 space-y-4">
-                                            <div className="flex justify-between items-start">
-                                                <Badge variant="secondary" className="bg-slate-100 text-slate-600 font-bold px-3 py-1 text-xs">
-                                                    UNIT {unit.index}
-                                                </Badge>
-                                                <div className={`p-2 rounded-lg transition-colors ${UNIT_COLORS[idx % UNIT_COLORS.length]}`}>
-                                                    <Layers className="w-5 h-5" />
-                                                </div>
-                                            </div>
-                                            
-                                            <h3 className="text-lg font-bold text-slate-800 leading-snug line-clamp-2 min-h-[3rem]">
-                                                {unit.title}
-                                            </h3>
+                {/* 🧭 CONSOLIDATED SUB-NAV */}
+                <QuizSubNav />
 
-                                            <div className="pt-2 flex items-center text-xs text-slate-400 font-medium">
-                                                <BookOpen className="w-3 h-3 mr-1.5" />
-                                                {unit.topics.length} {language === 'hi' ? 'टॉपिक्स' : 'Topics'}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </motion.div>
-                            ))}
-                        </motion.div>
-                    ) : (
-                        /* VIEW 2: TOPIC LIST (SCROLL AREA) */
-                        <motion.div
-                            key="topic-list"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                        >
-                             <Card className="bg-white shadow-sm border-slate-200 overflow-hidden">
-                                <ScrollArea className="h-[calc(100vh-220px)]">
-                                    <div className="p-4 grid gap-3 md:grid-cols-2">
-                                        {filteredTopics.length > 0 ? (
-                                            filteredTopics.map((topic, index) => {
-                                                const effectiveTier = getUserTier(user as any);
-                                                const limit = PLAN_LIMITS[effectiveTier as keyof typeof PLAN_LIMITS]?.topic_tests_limit || 0;
-                                                
-                                                const isAdmin = (user as any)?.role === 'admin';
-                                                const isFreeOverride = (selectedUnitId === 'unit_1' && topic.order <= 2) || isAdmin;
-                                                const isLocked = !isFreeOverride && topic.order > limit;
-                                                
-                                                return (
-                                                <motion.div 
-                                                    key={topic.id}
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: index * 0.03 }}
-                                                    onClick={() => handleTopicClick(selectedUnitId, topic)}
-                                                    className={`
-                                                        flex items-center justify-between p-4 rounded-xl border transition-all group
-                                                        ${isLocked 
-                                                            ? 'border-slate-200 bg-slate-50/50 opacity-70 cursor-not-allowed' 
-                                                            : 'border-slate-100 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-100 cursor-pointer'
-                                                        }
-                                                    `}
-                                                >
-                                                    <div className="flex items-center gap-4">
-                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border font-bold text-sm shadow-sm transition-transform ${
-                                                            isLocked 
-                                                                ? 'bg-slate-100 text-slate-400 border-slate-200' 
-                                                                : 'bg-white text-slate-700 border-slate-50 group-hover:scale-110'
-                                                        }`}>
-                                                            {topic.order}
-                                                        </div>
-                                                        <div className="space-y-0.5 flex-1 select-none">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className={`font-semibold transition-colors line-clamp-2 leading-tight ${
-                                                                    isLocked 
-                                                                        ? 'text-slate-500' 
-                                                                        : 'text-slate-700 group-hover:text-slate-900'
-                                                                }`}>
-                                                                    {topic.title}
-                                                                </span>
-                                                                {isLocked && (
-                                                                    <Badge className="bg-slate-900 text-white text-[10px] px-2 py-0.5">
-                                                                        <Lock className="w-3 h-3 mr-1" />
-                                                                        Premium
-                                                                    </Badge>
-                                                                )}
-                                                            </div>
-                                                            {topic.description && (
-                                                                <p className={`text-xs line-clamp-1 ${
-                                                                    isLocked 
-                                                                        ? 'text-slate-400' 
-                                                                        : 'text-slate-400 group-hover:text-slate-400'
-                                                                }`}>
-                                                                    {topic.description}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <ChevronRight className={`w-5 h-5 transition-transform ${
-                                                        isLocked 
-                                                            ? 'text-slate-300' 
-                                                            : 'text-slate-300 group-hover:text-slate-400 group-hover:translate-x-1'
-                                                    }`} />
-                                                </motion.div>
-                                            )})
-                                        ) : (
-                                            <div className="col-span-2 text-center py-20">
-                                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
-                                                    <Search className="w-6 h-6 text-slate-400" />
-                                                </div>
-                                                <h3 className="text-slate-900 font-medium">No topics found</h3>
-                                                <p className="text-slate-500 text-sm">Try searching with a different keyword</p>
-                                            </div>
-                                        )}
+                <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-12 space-y-2 text-center"
+                >
+                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-none">
+                        {selectedUnitId && currentUnit 
+                            ? currentUnit.title
+                            : (hi ? 'टॉपिक टेस्ट' : 'Topic Tests')
+                        }
+                    </h1>
+                    <p className="text-slate-500 font-medium max-w-xl mx-auto">
+                        {selectedUnitId 
+                            ? (hi ? 'क्विक टेस्ट के लिए टॉपिक चुनें' : 'Select a topic for a quick 10-question check.')
+                            : (hi ? 'शुरुआत करने के लिए एक यूनिट चुनें' : 'Choose a unit to explore specific topics and tests.')
+                        }
+                    </p>
+                </motion.div>
+
+                {/* Search only visible inside a unit */}
+                {selectedUnitId && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="relative w-full max-w-md mx-auto mb-8"
+                    >
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Input 
+                            placeholder={hi ? 'टॉपिक खोजें...' : 'Search topics...'}
+                            className="h-12 pl-12 bg-white/70 backdrop-blur-md shadow-sm border-slate-200 focus:border-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </motion.div>
+                )}
+
+                {/* Content Area */}
+                <div className="space-y-4 pb-20">
+                    <AnimatePresence mode="wait">
+                        {!selectedUnitId ? (
+                            /* VIEW 1: UNIT LIST */
+                            <motion.div 
+                                key="unit-list"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="space-y-4"
+                            >
+                                {units.length > 0 ? (
+                                    units.map((unit, idx) => (
+                                        <QuizListItem
+                                            key={unit.id}
+                                            index={idx}
+                                            title={unit.title}
+                                            questions={unit.topics.length}
+                                            language={language}
+                                            colorVariant={(['amber', 'emerald', 'pink', 'blue', 'indigo'] as const)[idx % 5]}
+                                            onClick={() => setSelectedUnitId(unit.id)}
+                                        />
+                                    ))
+                                ) : (
+                                    <div className="text-center py-20 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm border-dashed">
+                                        <h3 className="text-lg font-black text-slate-900 mb-2">
+                                            {hi ? 'अापकी जानकारी उपलब्ध नहीं है' : 'No units available'}
+                                        </h3>
+                                        <p className="text-slate-500 text-sm">{hi ? 'कृपया बाद में प्रयास करें' : 'Please check back later.'}</p>
                                     </div>
-                                </ScrollArea>
-                            </Card>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                                )}
+                            </motion.div>
+                        ) : (
+                            /* VIEW 2: TOPIC LIST */
+                            <motion.div
+                                key="topic-list"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                className="space-y-4"
+                            >
+                                {filteredTopics.length > 0 ? (
+                                    filteredTopics.map((topic, index) => {
+                                        const isAdmin = (user as any)?.role === 'admin';
+                                        const effectiveTier = getUserTier(user as any);
+                                        // FIX: 'guest' is not 'free', so strict check for paid tiers needed.
+                                        const hasActivePlan = effectiveTier === 'lite' || effectiveTier === 'pro';
+                                        
+                                        // Lock if NOT free access AND NOT (active plan or admin)
+                                        // This ensures guests only see what is explicitly marked free.
+                                        const isLocked = !topic.isFreeAccess && !hasActivePlan && !isAdmin;
+                                        
+                                        return (
+                                            <QuizListItem
+                                                key={topic.id}
+                                                index={index}
+                                                title={topic.title}
+                                                questions={10} // Standard topic test
+                                                isLocked={isLocked}
+                                                isFree={topic.isFree}
+                                                attemptsLeft={topic.attemptsLeft}
+                                                maxAttempts={topic.maxRetries}
+                                                language={language}
+                                                colorVariant={(['amber', 'emerald', 'pink', 'blue', 'indigo'] as const)[index % 5]}
+                                                onClick={() => handleTopicClick(selectedUnitId, topic)}
+                                            />
+                                        );
+                                    })
+                                ) : (
+                                    <div className="text-center py-20 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm border-dashed">
+                                        <h3 className="text-lg font-black text-slate-900 mb-2">
+                                            {hi ? 'कोई टॉपिक नहीं मिला' : 'No topics found'}
+                                        </h3>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
             </div>
             
             <SyllabusLockModal open={paywallOpen} onOpenChange={setPaywallOpen} />

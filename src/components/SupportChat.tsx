@@ -106,11 +106,8 @@ export function SupportChat() {
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  if(user && pathname !== "/") return null;
-  // Hide on Quiz Play for focus
-  if (pathname === "/syllabus/quiz/play" ) return null;
-  // Hide on unit detail pages — sheet opens here, SupportChat z-index conflicts
-  if (pathname?.startsWith("/syllabus/unit_")) return null;
+  // Show ONLY on the Home page to reduce clutter, especially on mobile
+  if (pathname !== "/") return null;
 
   const handleWhatsApp = () => {
     const message = "Hi, I need help with the MPPSC App. My query is:";

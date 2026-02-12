@@ -71,7 +71,7 @@ export default function RootLayout({
     "@type": "WebSite",
     name: "Mindful MPPSC",
     url: baseUrl,
-    description: "The #1 App for MPPSC 2026 Preparation with Mnemonics, Bilingual Notes & Quizzes",
+    description: "The #1 App for MPPSC 2026 Preparation with Mnemonics, Bilingual Notes, Tests & Quizzes",
     potentialAction: {
       "@type": "SearchAction",
       target: `${baseUrl}/blogs?q={search_term_string}`,
@@ -104,7 +104,9 @@ export default function RootLayout({
         className={`${outfit.variable} ${playfair.variable} antialiased font-sans bg-gray-50 text-gray-900`}
       >
         <PwaRegistry />
-        {children}
+        <div className="min-h-screen">
+          {children}
+        </div>
         <AppFooter />
         <GlobalLockModal />
         <ScrollToTop />
@@ -119,9 +121,9 @@ export default function RootLayout({
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js').then(function(registration) {
-                    console.log('Bhai: ServiceWorker registration successful with scope: ', registration.scope);
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
                   }, function(err) {
-                    console.log('Bhai: ServiceWorker registration failed: ', err);
+                    console.log('ServiceWorker registration failed: ', err);
                   });
                 });
               }

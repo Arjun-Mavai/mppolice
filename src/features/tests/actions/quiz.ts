@@ -5,6 +5,7 @@ import { tests, userAttempts } from '@/db/schema';
 import { eq, and, sql, inArray } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
 import { cachedData, CACHE } from '@/lib/cache';
+import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 
 // Cache the unit tests query using our centralized policy (7 days)
 const getCachedUnitTests = cachedData(
@@ -14,8 +15,8 @@ const getCachedUnitTests = cachedData(
             unitId: tests.unitId,
             title: tests.title,
             titleEn: tests.titleEn,
-            maxRetries: tests.maxRetries,
-            totalQuestions: tests.totalQuestions
+            totalQuestions: tests.totalQuestions,
+            isFreeAccess: tests.isFreeAccess
         })
         .from(tests)
         .where(eq(tests.type, 'UNIT'));
@@ -25,16 +26,18 @@ const getCachedUnitTests = cachedData(
 );
 
 export async function getAvailableUnitTests() {
-    const user = await verifyAuth();
-    
-    // 1. Fetch all UNIT tests (Cached)
-    const allUnitTests = await getCachedUnitTests();
+    const [user, allUnitTests, attemptLimits] = await Promise.all([
+        verifyAuth(),
+        getCachedUnitTests(),
+        getCachedAttemptLimits()
+    ]);
 
     if (allUnitTests.length === 0) return [];
 
+    const maxRetries = attemptLimits['UNIT'] ?? null;
     let attemptsMap = new Map<string, number>();
 
-    // 2. If user exists, fetch their attempts
+    // If user exists, fetch their attempts
     if (user) {
         const testIds = allUnitTests.map(t => t.id);
         
@@ -42,7 +45,7 @@ export async function getAvailableUnitTests() {
             testId: userAttempts.testId,
             count: sql<number>`count(*)`
         })
-        .from(userAttempts) // Changed from userAttempts to userAttempts (already imported)
+        .from(userAttempts)
         .where(
             and(
                 eq(userAttempts.userId, user.id),
@@ -54,10 +57,22 @@ export async function getAvailableUnitTests() {
         attemptsMap = new Map(attempts.map(a => [a.testId, Number(a.count)]));
     }
 
-    // 3. Construct Result Array
-    return allUnitTests.map(test => ({
-        ...test,
-        attempts: attemptsMap.get(test.id) || 0,
-        maxRetries: test.maxRetries || 5 // Default to 5 if null
-    }));
+    return allUnitTests.map((test, idx) => {
+        const attemptsCount = attemptsMap.get(test.id) || 0;
+        const attemptsLeft = maxRetries != null ? Math.max(0, maxRetries - attemptsCount) : null;
+        
+        // Simple tier limit for units (lite/pro vs free)
+        const isPastLimit = idx >= (maxRetries || 999); // This is a bit arbitrary, let's use actual PLAN_LIMITS if possible
+        // Actually, for Unit tests, we use PLAN_LIMITS in the client. 
+        // Let's keep the client-side decision for "Locked due to tier" but allow isFreeAccess override from backend.
+        
+        return {
+            ...test,
+            attempts: attemptsCount,
+            attemptsLeft: user ? attemptsLeft : null,
+            maxRetries: maxRetries,
+            isFree: (test.isFreeAccess ?? false) && !user,
+            isFreeAccess: !!test.isFreeAccess
+        };
+    });
 }

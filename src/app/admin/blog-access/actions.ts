@@ -35,6 +35,7 @@ export async function getAllBlogsForAdmin() {
         isLiteAccess: contentBlogs.isLiteAccess,
         isProAccess: contentBlogs.isProAccess,
         isPublished: contentBlogs.isPublished,
+        isHidden: contentBlogs.isHidden,
         createdAt: contentBlogs.createdAt,
     })
     .from(contentBlogs)
@@ -122,5 +123,31 @@ export async function bulkUpdateBlogAccess(
 
     logger.info(`Bulk blog access: ${unitId || 'all'} → ${field}=${value}`);
 
+    return { success: true };
+}
+
+/**
+ * toggleBlogHidden — Blog ko hide/unhide karo
+ * Hidden blogs user ko nahi dikhenge
+ */
+export async function toggleBlogHidden(blogId: string, isHidden: boolean) {
+    await requireAdmin();
+
+    await db.update(contentBlogs)
+        .set({ isHidden, updatedAt: new Date() })
+        .where(eq(contentBlogs.id, blogId));
+
+    revalidateTag(CACHE.BLOGS.TAGS.ALL, { expire: 0 });
+    revalidatePath('/blogs');
+
+    const blog = await db.select({ slug: contentBlogs.slug })
+        .from(contentBlogs)
+        .where(eq(contentBlogs.id, blogId))
+        .get();
+    if (blog) {
+        revalidateTag(CACHE.BLOGS.TAGS.DETAIL(blog.slug), { expire: 0 });
+    }
+
+    logger.info(`Blog hidden toggled: ${blogId} → isHidden=${isHidden}`);
     return { success: true };
 }
