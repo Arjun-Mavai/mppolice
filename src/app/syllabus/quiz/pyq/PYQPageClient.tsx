@@ -30,7 +30,7 @@ interface PYQPageClientProps {
 
 export default function PYQPageClient({ initialTests }: PYQPageClientProps) {
     const router = useRouter();
-    const { language, user } = useSettingsStore();
+    const { language } = useSettingsStore();
     const [paywallOpen, setPaywallOpen] = useState(false);
 
     const hi = language === 'hi';

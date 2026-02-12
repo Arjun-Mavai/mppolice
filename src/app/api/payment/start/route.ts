@@ -54,8 +54,7 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { name, email, phone, source, planType } = startSchema.parse(body);
-    console.log("name email" , name , email , phone , source , planType)
-    const normalizedEmail = email.toLowerCase().trim();
+     const normalizedEmail = email.toLowerCase().trim();
 
     // ── PHASE 1: User Upsert (Lead Capture) ──
     const existingUser = await db.query.mppscUsers.findFirst({

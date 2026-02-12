@@ -3,20 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ChevronRight, Search, BookOpen, Layers, Lock } from 'lucide-react';
+import { ArrowLeft,     Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+  
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { toast } from "sonner"; 
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
-import { PLAN_LIMITS } from '@/config/plans';
-import { getSyllabusTopics } from '@/actions/getSyllabusTopics';
+ import { getSyllabusTopics } from '@/actions/getSyllabusTopics';
 import { getUserTier } from '@/lib/access-control';
-import { cn } from '@/lib/utils';
-
+ 
 import { QuizSubNav } from '@/features/syllabus/components/QuizSubNav';
 import { QuizListItem } from '@/components/QuizListItem';
 

@@ -4,7 +4,6 @@ import { db } from '@/db';
 import { topicRevisions, mppscUsers } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 
 import { verifyAuth } from '@/lib/auth';

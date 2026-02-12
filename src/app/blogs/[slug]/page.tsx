@@ -47,7 +47,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
     
     if (!hasAccess) {
         const user = await verifyAuth();
-        hasAccess = canAccessBlog(blog, user as any);
+        hasAccess = canAccessBlog(blog, user);
     }
 
     if (!hasAccess) {

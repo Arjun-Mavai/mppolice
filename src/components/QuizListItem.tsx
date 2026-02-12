@@ -108,13 +108,13 @@ export function QuizListItem({
                             </span>
                         )}
                         {/* 🔒 ATTEMPTS (Grey Text Only) */}
-                        {!isLocked && attemptsLeft !== undefined && attemptsLeft !== null && (
+                        {!isLocked && (attemptsLeft !== undefined || maxAttempts === null) && (
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                                {attemptsLeft === 9999 
+                                {maxAttempts === null || maxAttempts === undefined // Untracked or explicitly unlimited
                                     ? (hi ? 'असीमित प्रयास' : 'Unlimited') 
-                                    : (maxAttempts 
+                                    : (attemptsLeft !== null && attemptsLeft !== undefined
                                         ? (hi ? `${(maxAttempts - attemptsLeft)}/${maxAttempts} प्रयास` : `${(maxAttempts - attemptsLeft)}/${maxAttempts} Attempts`)
-                                        : (hi ? `${attemptsLeft} शेष प्रयास` : `${attemptsLeft} Left`)
+                                        : null
                                     )
                                 }
                             </span>
@@ -167,7 +167,7 @@ export function QuizListItem({
                             <Lock size={14} />
                         ) : (
                             <>
-                                <Play size={14} className={cn("transition-transform group-hover:scale-110", !isLocked && "fill-current")} />
+                                <Play size={14} className={cn("transition-transform group-hover:scale-110", "fill-current")} />
                                 <span className="hidden xs:inline">
                                     {isCompleted ? (hi ? 'फिर से' : 'Redo') : (hi ? 'शुरू' : 'Start')}
                                 </span>

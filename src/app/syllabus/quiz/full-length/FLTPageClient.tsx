@@ -34,7 +34,7 @@ interface FLTPageClientProps {
 
 export default function FLTPageClient({ tests }: FLTPageClientProps) {
     const router = useRouter();
-    const { language, user } = useSettingsStore();
+    const { language } = useSettingsStore();
     const [paywallOpen, setPaywallOpen] = useState(false);
 
     const handleTestClick = (testId: string, isLocked: boolean, attemptsLeft: number | null) => {
