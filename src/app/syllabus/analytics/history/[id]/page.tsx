@@ -17,7 +17,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { QuizResult } from "@/features/tests/components/QuizResult";
 import { cn } from '@/lib/utils';
-import { FormattedQuestionText } from '@/features/tests/utils/questionFormatter';
+import { FormattedQuestionText, RenderTableQuestion } from '@/features/tests/utils/questionFormatter';
  import { calculateScore } from '@/lib/quiz-scoring';
  import Loading from './loading';
 import { HistoryLeaderboard } from './HistoryLeaderboard';
@@ -184,12 +184,28 @@ async function AttemptContent({ attemptId }: { attemptId: string }) {
                                                     text={ans.questionText}
                                                     className="text-[15px] sm:text-base text-slate-900 font-medium leading-[1.7] tracking-[-0.01em]"
                                                 />
-                                                {ans.questionTextEn && (
-                                                    <FormattedQuestionText 
-                                                        text={ans.questionTextEn}
-                                                        className="text-[13px] sm:text-sm text-slate-500 leading-[1.7] mt-1.5"
-                                                    />
-                                                )}
+                                                 {ans.type === 'matching' && ans.matchPairs && (
+                                                     <RenderTableQuestion 
+                                                         matchPairs={ans.matchPairs}
+                                                         language="hi"
+                                                         className="mt-3 mb-2"
+                                                     />
+                                                 )}
+                                                 {ans.questionTextEn && (
+                                                     <>
+                                                        <FormattedQuestionText 
+                                                            text={ans.questionTextEn}
+                                                            className="text-[13px] sm:text-sm text-slate-500 leading-[1.7] mt-1.5"
+                                                        />
+                                                        {ans.type === 'matching' && ans.matchPairs && (
+                                                            <RenderTableQuestion 
+                                                                matchPairs={ans.matchPairs}
+                                                                language="en"
+                                                                className="mt-3 mb-2 border-slate-300"
+                                                            />
+                                                        )}
+                                                     </>
+                                                 )}
                                              </div>
                                          </div>
                                          {/* Status badges — compact inline row */}

@@ -39,7 +39,59 @@ export function FormattedQuestionText({ text, className }: FormattedQuestionText
 // SUB-RENDERERS
 // ---------------------------------------------------------------------------
 
-function RenderTableQuestion({ text, className }: FormattedQuestionTextProps) {
+export interface RenderTableQuestionProps {
+  text?: string;
+  className?: string;
+  matchPairs?: any[];
+  language?: string;
+}
+
+export function RenderTableQuestion({ text, className, matchPairs, language = 'hi' }: RenderTableQuestionProps) {
+  // If we have structured matchPairs, use them directly
+  if (matchPairs && Array.isArray(matchPairs) && matchPairs.length > 0) {
+    const isHindi = language === 'hi';
+    const h1 = isHindi ? 'सूची - I' : 'List - I';
+    const h2 = isHindi ? 'सूची - II' : 'List - II';
+    
+    return (
+      <div className={cn("border-2 border-slate-800 w-full text-sm sm:text-base overflow-hidden rounded-lg", className)}>
+        <div className="grid grid-cols-2 w-full border-b-2 border-slate-800 bg-slate-50">
+          <div className="px-2 sm:px-4 py-2.5 sm:py-3 font-bold text-slate-900 text-center border-r-2 border-slate-800 text-xs sm:text-sm">
+            {h1}
+          </div>
+          <div className="px-2 sm:px-4 py-2.5 sm:py-3 font-bold text-slate-900 text-center text-xs sm:text-sm">
+            {h2}
+          </div>
+        </div>
+        {matchPairs.map((pair, i) => (
+          <div key={i} className={cn(
+            "grid grid-cols-2 w-full bg-white",
+            i !== matchPairs.length - 1 && "border-b border-slate-800"
+          )}>
+            <div className="flex items-center border-r-2 border-slate-800">
+              <div className="px-2 sm:px-3 py-2 sm:py-3 text-slate-900 font-bold border-r border-slate-300 min-w-[2rem] sm:min-w-[3rem] text-center bg-slate-50 text-xs sm:text-sm">
+                {pair.id}
+              </div>
+              <div className="px-2 sm:px-3 py-2 sm:py-3 text-slate-900 flex-1 text-xs sm:text-sm">
+                {isHindi ? pair.label : (pair.labelEn || pair.label)}
+              </div>
+            </div>
+            <div className="flex items-center">
+              <div className="px-2 sm:px-3 py-2 sm:py-3 text-slate-900 font-bold border-r border-slate-300 min-w-[2rem] sm:min-w-[3rem] text-center bg-slate-50 text-xs sm:text-sm">
+                {pair.matchId}
+              </div>
+              <div className="px-2 sm:px-3 py-2 sm:py-3 text-slate-900 flex-1 text-xs sm:text-sm">
+                {isHindi ? pair.match : (pair.matchEn || pair.match)}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Fallback to text parsing if no matchPairs or text is provided
+  if (!text) return null;
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   
   const parseItem = (item: string) => {

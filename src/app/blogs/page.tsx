@@ -1,4 +1,4 @@
-import { getBlogs, getBlogCounts } from "@/actions/blog-actions";
+import { getBlogs, getBlogCounts } from "@/services/blog-service";
 import BlogsClient from "./BlogsClient";
 
 export const metadata = {

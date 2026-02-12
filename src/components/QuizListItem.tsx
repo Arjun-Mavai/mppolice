@@ -51,19 +51,22 @@ export function QuizListItem({
     };
 
     const style = styles[colorVariant];
+    const isExhausted = !isLocked && attemptsLeft === 0;
 
     return (
         <motion.div
             layout
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            whileHover={{ scale: 1.002 }}
+            whileHover={!isExhausted ? { scale: 1.002 } : {}}
             transition={{ duration: 0.2 }}
-            onClick={onClick}
+            onClick={isExhausted ? undefined : onClick}
             className={cn(
-                "group relative border rounded-[1.8rem] p-4 sm:p-5 transition-all cursor-pointer",
+                "group relative border rounded-[1.8rem] p-4 sm:p-5 transition-all",
+                isExhausted ? "cursor-not-allowed" : "cursor-pointer",
                 style,
-                isLocked && "grayscale-[0.4] opacity-80"
+                isLocked && "grayscale-[0.4] opacity-80",
+                isExhausted && "grayscale opacity-70 bg-slate-50 border-slate-200"
             )}
         >
             <div className="flex flex-row items-center gap-4 sm:gap-6">
@@ -71,22 +74,25 @@ export function QuizListItem({
                 {/* 🔢 Index / Status Indicator */}
                 <div className="relative flex-shrink-0">
                     <div className={cn(
-                        "w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex flex-col items-center justify-center font-black transition-transform group-hover:scale-105",
+                        "w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex flex-col items-center justify-center font-black transition-transform",
+                        !isExhausted && "group-hover:scale-105",
                         isLocked 
                             ? "bg-slate-100 text-slate-400" 
-                            : isCompleted 
-                                ? "bg-white text-emerald-600 border border-emerald-100 shadow-sm"
-                                : "bg-slate-900 text-white shadow-md shadow-slate-200"
+                            : isExhausted
+                                ? "bg-slate-200 text-slate-500"
+                                : isCompleted 
+                                    ? "bg-white text-emerald-600 border border-emerald-100 shadow-sm"
+                                    : "bg-slate-900 text-white shadow-md shadow-slate-200"
                     )}>
                         <span className="text-[9px] leading-tight uppercase tracking-widest opacity-60">
                             {hi ? 'टेस्ट' : 'Test'}
                         </span>
                         <span className="text-lg sm:text-xl leading-none">
-                            {isLocked ? <Lock size={18} /> : formattedNum}
+                            {isLocked ? <Lock size={18} /> : (isExhausted ? <Lock size={18} className="opacity-50" /> : formattedNum)}
                         </span>
                     </div>
 
-                    {isCompleted && !isLocked && (
+                    {isCompleted && !isLocked && !isExhausted && (
                          <div className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-emerald-100">
                             <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-white" />
                          </div>
@@ -98,7 +104,7 @@ export function QuizListItem({
                     <div className="flex items-center gap-2 mb-1">
                         <h3 className={cn(
                             "text-base sm:text-lg font-black tracking-tight transition-colors truncate",
-                            isLocked ? "text-slate-500" : "text-slate-900"
+                            (isLocked || isExhausted) ? "text-slate-500" : "text-slate-900"
                         )}>
                             {title}
                         </h3>
@@ -109,11 +115,17 @@ export function QuizListItem({
                         )}
                         {/* 🔒 ATTEMPTS (Grey Text Only) */}
                         {!isLocked && (attemptsLeft !== undefined || maxAttempts === null) && (
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                            <span className={cn(
+                                "text-[10px] font-bold uppercase tracking-tighter",
+                                isExhausted ? "text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded" : "text-slate-400"
+                            )}>
                                 {maxAttempts === null || maxAttempts === undefined // Untracked or explicitly unlimited
                                     ? (hi ? 'असीमित प्रयास' : 'Unlimited') 
                                     : (attemptsLeft !== null && attemptsLeft !== undefined
-                                        ? (hi ? `${(maxAttempts - attemptsLeft)}/${maxAttempts} प्रयास` : `${(maxAttempts - attemptsLeft)}/${maxAttempts} Attempts`)
+                                        ? (attemptsLeft === 0 
+                                            ? (hi ? 'कोई प्रयास शेष नहीं' : 'No Attempts Left')
+                                            : (hi ? `${(maxAttempts - attemptsLeft)}/${maxAttempts} प्रयास` : `${(maxAttempts - attemptsLeft)}/${maxAttempts} Attempts`)
+                                          )
                                         : null
                                     )
                                 }
@@ -133,7 +145,7 @@ export function QuizListItem({
                                 {marks} {hi ? 'अंक' : 'Marks'}
                             </span>
                         )}
-                        {attemptsLeft !== undefined && maxAttempts && (
+                        {attemptsLeft !== undefined && maxAttempts && !isExhausted && (
                             <span className={cn(
                                 "flex items-center gap-1",
                                 attemptsLeft === 0 ? "text-rose-500" : "text-emerald-600"
@@ -156,14 +168,19 @@ export function QuizListItem({
 
                     <Button 
                         size="sm"
+                        disabled={isExhausted}
                         className={cn(
-                            "h-10 px-4 rounded-xl font-black text-xs transition-all flex items-center gap-2 border-0 shadow-sm active:scale-95 flex-shrink-0",
+                            "h-10 px-4 rounded-xl font-black text-xs transition-all flex items-center gap-2 border-0 shadow-sm flex-shrink-0",
                             isLocked 
                                 ? "bg-slate-100 text-slate-400" 
-                                : "bg-white text-slate-900 border border-slate-200 hover:bg-slate-900 hover:text-white"
+                                : isExhausted
+                                    ? "bg-slate-100 text-slate-400 border border-slate-200"
+                                    : "bg-white text-slate-900 border border-slate-200 hover:bg-slate-900 hover:text-white active:scale-95"
                         )}
                     >
                         {isLocked ? (
+                            <Lock size={14} />
+                        ) : isExhausted ? (
                             <Lock size={14} />
                         ) : (
                             <>

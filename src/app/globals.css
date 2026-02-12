@@ -147,14 +147,15 @@ body {
   --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
-  --mp-cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='26' fill='none' viewBox='0 0 24 26'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M1.69 2.69a2.357 2.357 0 0 1 2.495-.54L21.47 8.632a2.357 2.357 0 0 1-.255 4.494l-7.271 1.818-1.818 7.27a2.357 2.357 0 0 1-4.494.256L1.15 5.185a2.357 2.357 0 0 1 .54-2.495Z' fill='%23fff'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M3.633 3.622A.786.786 0 0 0 2.62 4.633L9.103 21.92a.786.786 0 0 0 1.498-.086l2.047-8.185 8.185-2.046a.785.785 0 0 0 .086-1.498L3.633 3.622Z' fill='%23010101'/%3E%3C/svg%3E"), auto;
+  --mp-cursor-default:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='26' fill='none' viewBox='0 0 24 26'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M1.69 2.69a2.357 2.357 0 0 1 2.495-.54L21.47 8.632a2.357 2.357 0 0 1-.255 4.494l-7.271 1.818-1.818 7.27a2.357 2.357 0 0 1-4.494.256L1.15 5.185a2.357 2.357 0 0 1 .54-2.495Z' fill='%23fff'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M3.633 3.622A.786.786 0 0 0 2.62 4.633L9.103 21.92a.786.786 0 0 0 1.498-.086l2.047-8.185 8.185-2.046a.785.785 0 0 0 .086-1.498L3.633 3.622Z' fill='%23010101'/%3E%3C/svg%3E"),
+    auto;
 
   /* Electric Blue Theme - Primary Brand Color */
-  --electric-blue: #00F0FF;
-  --electric-blue-dark: #00D0E0;
-  --electric-blue-light: #33F3FF;
-  --electric-blue-pale: #E6FCFF;
-
+  --electric-blue: #00f0ff;
+  --electric-blue-dark: #00d0e0;
+  --electric-blue-light: #33f3ff;
+  --electric-blue-pale: #e6fcff;
 }
 
 @layer base {
@@ -208,20 +209,28 @@ body {
 }
 
 @media (hover: hover) and (pointer: fine) {
-    body {
-        cursor: var(--mp-cursor-default);
-    }
+  body {
+    cursor: var(--mp-cursor-default);
+  }
 }
 
 /* Navbar animations */
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 @keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .animate-shimmer {
@@ -232,8 +241,27 @@ body {
 .animate-spin-slow {
   animation: spin-slow 4s linear infinite;
 }
+@keyframes float {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
 /* Mobile-first: eliminate 300ms tap delay & double-tap zoom on interactive elements */
-button, a, [role="button"], .cursor-pointer {
+button,
+a,
+[role="button"],
+.cursor-pointer {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }

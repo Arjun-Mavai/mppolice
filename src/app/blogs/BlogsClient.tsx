@@ -45,7 +45,8 @@ export default function BlogsClient({ initialBlogs, initialPagination, initialCo
                 page: 1,
                 limit: 10,
                 unitId: activeUnit === 'Free' ? 'All' : activeUnit,
-                search: searchQuery
+                search: searchQuery,
+                isFreeAccess: activeUnit === 'Free' ? true : undefined
             });
             
             setBlogs(result.blogs);
@@ -63,7 +64,8 @@ export default function BlogsClient({ initialBlogs, initialPagination, initialCo
             page: nextPage,
             limit: 10,
             unitId: activeUnit === 'Free' ? 'All' : activeUnit,
-            search: searchQuery
+            search: searchQuery,
+            isFreeAccess: activeUnit === 'Free' ? true : undefined
         });
 
         setBlogs(prev => [...prev, ...result.blogs]);
@@ -204,9 +206,7 @@ export default function BlogsClient({ initialBlogs, initialPagination, initialCo
                          ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in">
                                 {(() => {
-                                    const displayBlogs = activeUnit === 'Free' 
-                                        ? blogs.filter(b => b.isFreeAccess === true)
-                                        : blogs;
+                                    const displayBlogs = blogs;
                                     
                                     if (displayBlogs.length === 0) return (
                                         <div className="col-span-2 py-20 text-center text-slate-400 flex flex-col items-center gap-4">
@@ -253,7 +253,7 @@ export default function BlogsClient({ initialBlogs, initialPagination, initialCo
                                             <BlogCard 
                                                 key={blog.id} 
                                                 blog={blog} 
-                                                featured={i === 0 && activeUnit === 'All' && !searchQuery} 
+                                                index={i}
                                                 isLocked={isLocked}
                                             />
                                         );

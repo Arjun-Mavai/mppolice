@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 // Format inline text: bold quoted text, bold **text**, handle Key: Value
 function formatText(text: string, highlightClassName: string = "text-slate-900"): React.ReactNode {
+    if (typeof text !== 'string') return String(text || '');
     if (!text) return text;
 
     // Process markdown bold (**text**) into actual bold, then quoted text
@@ -57,6 +58,7 @@ function formatText(text: string, highlightClassName: string = "text-slate-900")
 
 // Render a single list item that may contain "Label: description" pattern
 function renderListItem(item: string, num: number | string, i: number, highlightClassName: string = "text-slate-900"): React.ReactNode {
+    if (typeof item !== 'string') return <li key={i}>{String(item || '')}</li>;
     const trimmed = item.trim();
     // Check for "**Label:** content" or "Label: content" pattern
     const boldLabelMatch = trimmed.match(/^\*{0,2}([^:*]{2,30})\*{0,2}:\s*(.+)/);
@@ -85,7 +87,7 @@ function renderListItem(item: string, num: number | string, i: number, highlight
 
 // Detect numbered items, bullet dots, key:value, or plain paragraph
 function renderParagraphOrList(text: string, idx: number, highlightClassName: string = "text-slate-900"): React.ReactNode {
-    if (!text) return null;
+    if (typeof text !== 'string' || !text) return null;
 
     // Remove stars for detection (but keep original for formatText)
     const cleaned = text.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1');

@@ -1,4 +1,4 @@
-import { getBlogBySlug, getCachedBlogs } from "@/actions/blog-actions";
+import { getBlogBySlug, getCachedBlogs } from "@/services/blog-service";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import BlogContentRenderer from "./BlogContentRenderer";

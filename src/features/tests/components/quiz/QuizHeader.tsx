@@ -79,7 +79,7 @@ export function QuizHeader({
               "flex items-center gap-2 rounded-full px-3 py-1.5 border-2 transition-all cursor-pointer select-none",
               instantModeEnabled
                 ? "bg-amber-50 border-amber-400 shadow-sm shadow-amber-100"
-                : "bg-slate-50 border-slate-300 hover:bg-slate-100 hover:border-slate-400"
+                : "bg-amber-50 border-amber-400 hover:bg-slate-100 hover:border-slate-400"
             )}
             onClick={onInstantModeToggle}
             title="Toggle Instant Feedback"
