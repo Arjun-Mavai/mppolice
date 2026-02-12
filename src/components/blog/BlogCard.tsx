@@ -1,128 +1,178 @@
 "use client";
-
+import type React from "react";
 import Link from "next/link";
-import NextImage from "next/image";
 import { useSettingsStore } from "@/store/useSettingsStore";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Clock, BookOpen, ChevronRight, Lock } from "lucide-react";
+import { Clock, Lock, ArrowRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface BlogCardProps {
   blog: any;
-  featured?: boolean;
+  index?: number;
   isLocked?: boolean;
 }
 
-export function BlogCard({ blog, featured, isLocked }: BlogCardProps) {
-  // If locked, disable link or show lock modal on click?
-  // Ideally, clicking a locked item opens the paywall.
-  // For now, let's wrap in a div that handles click if locked, or Link if unlocked.
-  
-  const { setLockModalOpen } = useSettingsStore();
+const variants = {
+  blue: {
+    bg: 'bg-blue-50',
+    text: 'text-blue-600',
+    icon: 'text-blue-400',
+    border: 'border-blue-100',
+    shadow: 'shadow-blue-200/40'
+  },
+  pink: {
+    bg: 'bg-pink-50',
+    text: 'text-pink-600',
+    icon: 'text-pink-400',
+    border: 'border-pink-100',
+    shadow: 'shadow-pink-200/40'
+  },
+  emerald: {
+    bg: 'bg-emerald-50',
+    text: 'text-emerald-600',
+    icon: 'text-emerald-400',
+    border: 'border-emerald-100',
+    shadow: 'shadow-emerald-200/40'
+  },
+  amber: {
+    bg: 'bg-amber-50',
+    text: 'text-amber-600',
+    icon: 'text-amber-400',
+    border: 'border-amber-100',
+    shadow: 'shadow-amber-200/40'
+  }
+};
 
-  const Wrapper = ({ children }: { children: React.ReactNode }) => {
+const bgEmojis = ["📖", "📝", "💡", "🧠", "🎯", "📊", "⚖️", "📜", "🔍", "🎓"];
+
+export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
+  const { setLockModalOpen, language } = useSettingsStore();
+
+  const colorVariant = (['blue', 'pink', 'emerald', 'amber'] as const)[index % 4];
+  const style = variants[colorVariant];
+  const mainEmoji = bgEmojis[index % bgEmojis.length];
+
+  // Bilingual Title Splitting logic
+  const splitTitle = (blog.title || '').split('|');
+  const displayTitle = splitTitle.length > 1 
+    ? (language === 'hi' ? splitTitle[1].trim() : splitTitle[0].trim())
+    : blog.title;
+
+  // Optional: Apply same split to description if it exists
+  // const splitDesc = (blog.description || '').split('|');
+  // const displayDesc = splitDesc.length > 1
+  //   ? (language === 'hi' ? splitDesc[1].trim() : splitDesc[0].trim())
+  //   : blog.description;
+
+  const displayReadTime = index % 2 === 0 ? 5 : 6;
+
+  const handleClick = (e: React.MouseEvent) => {
     if (isLocked) {
-        return (
-            <div 
-                onClick={(e) => {
-                    e.preventDefault();
-                    setLockModalOpen(true);
-                }} 
-                className="group h-full block cursor-pointer"
-            >
-                {children}
-            </div>
-        );
+      e.preventDefault();
+      setLockModalOpen(true);
     }
-    return <Link href={`/blogs/${blog.slug}`} className="group h-full block">{children}</Link>;
   };
 
-  // Fallback — clean white placeholder when no image
-  return (
-    <Wrapper>
-      <Card className={cn(
-        "h-full border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white relative",
-        featured ? "border-slate-300 shadow-md" : ""
-      )}>
-        <div className={cn("aspect-[16/9] w-full relative overflow-hidden", !blog.imageUrl && "bg-slate-100")}>
-          {blog.imageUrl ? (
-            <NextImage 
-              src={blog.imageUrl} 
-              alt={blog.title} 
-              fill
-              className={cn("object-cover transition-transform duration-700", !isLocked && "group-hover:scale-110", isLocked && "blur-[2px] grayscale-[50%]")} 
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              priority={featured}
-            />
-          ) : (
-             /* Clean white/grey fallback — no colored gradient */
-            <div className="flex flex-col items-center justify-center h-full text-slate-500 p-6 text-center">
-              <BookOpen size={40} className="mb-2 opacity-60" />
-              <span className="font-bold text-base leading-tight line-clamp-2 text-slate-700">{blog.title}</span>
-            </div>
-          )}
-          
-          {isLocked && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px] z-10">
-                <div className="bg-slate-900/90 text-white px-3 py-1.5 rounded-full flex items-center gap-2 text-xs font-bold border border-slate-700 shadow-xl">
-                    <Lock className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                    <span>Premium</span>
-                </div>
-            </div>
-          )}
+  const CardContent = (
+    <motion.div
+      whileHover={{ y: -8, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className={cn(
+        "relative group cursor-pointer w-full h-[360px] rounded-[2.5rem] p-8 flex flex-col justify-between overflow-hidden border transition-all duration-500",
+        style.bg,
+        style.border,
+        "shadow-sm hover:shadow-2xl",
+        style.shadow,
+        isLocked && "grayscale-[0.4] opacity-90"
+      )}
+    >
+      {/* 🎭 PREMIUM EMOJI PATTERN BACKGROUND */}
+      <div className="absolute inset-0 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-500 pointer-events-none select-none overflow-hidden">
+        <div className="grid grid-cols-4 gap-12 rotate-12 scale-150">
+          {Array.from({ length: 16 }).map((_, i) => (
+            <div key={i} className="text-4xl">{bgEmojis[(i + index) % bgEmojis.length]}</div>
+          ))}
+        </div>
+      </div>
 
-          {/* Unit badge — always visible (z-20 so it appears above lock overlay) */}
-          <div className="absolute top-3 left-3 flex gap-2 z-20">
-              {blog.unitId && (
-                  <Badge className="bg-white/90 backdrop-blur-md text-slate-700 font-bold shadow-sm capitalize px-2 py-0.5 text-[10px] border border-white/50">
-                      Unit {blog.unitId.replace('unit_', '')}
-                  </Badge>
-              )}
-               {/* isFreeAccess = true → FREE badge dikhao (DB flag based) */}
-               {(blog.isFreeAccess === true) && (
-                  <Badge className="bg-emerald-500 text-white font-bold shadow-sm px-2 py-0.5 text-[10px]">
-                      FREE
-                  </Badge>
-               )}
-          </div>
-          
-          {/* Overlay gradient for text legibility if needed, or hover effect */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+      {/* Top Bar: Unit/Category + Lock Icon */}
+      <div className="flex items-center justify-between relative z-10">
+        <div className="flex items-center gap-2">
+          {blog.unitId && (
+            <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm border border-white flex items-center gap-2">
+              <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", 
+                colorVariant === 'emerald' ? 'bg-emerald-500' : 
+                colorVariant === 'blue' ? 'bg-blue-500' : 
+                colorVariant === 'pink' ? 'bg-pink-500' : 'bg-amber-500'
+              )} />
+              <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest">
+                Unit {blog.unitId.replace('unit_', '')}
+              </span>
+            </div>
+          )}
+          {blog.isFreeAccess && (
+            <div className="bg-emerald-500 text-white px-3 py-1.5 rounded-full shadow-sm text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-emerald-200">
+              <Sparkles className="w-3 h-3" />
+              Free
+            </div>
+          )}
         </div>
         
-        <CardContent className="p-5 md:p-6 space-y-4">
-          <div className="flex items-center gap-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-            <div className="flex items-center gap-1">
-               <Clock size={12} className="text-slate-500" />
-               <span>{blog.readingTime || 5} min</span>
-            </div>
-            <span>•</span>
-            <span>{blog.createdAt ? new Date(blog.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'New'}</span>
+        {isLocked && (
+          <div className="p-2.5 rounded-full bg-white/50 text-amber-600 border border-white/50">
+            <Lock className="w-4 h-4" />
           </div>
-          
-          <div className="space-y-2">
-            <h3 className={cn("font-bold text-slate-900 leading-tight transition-colors", featured ? "text-2xl" : "text-xl", !isLocked && "group-hover:text-slate-700")}>
-                {blog.title}
-            </h3>
-            <p className="text-slate-600 text-sm line-clamp-2 leading-relaxed">
-                {blog.description}
-            </p>
-          </div>
+        )}
+      </div>
 
-          {!isLocked && (
-            <div className="pt-2 flex items-center text-slate-800 font-bold text-sm opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-                Read Article <ChevronRight size={16} className="ml-1" />
+      {/* Middle Area: Big Featured Emoji */}
+      <div className="flex-1 flex items-center justify-center relative -mt-4">
+        <div className="relative w-32 h-32 flex items-center justify-center">
+          <div className={cn("absolute inset-0 rounded-full blur-3xl opacity-30", style.bg)} />
+          <div className="relative text-8xl drop-shadow-2xl transition-all duration-700 group-hover:scale-125 group-hover:rotate-12 animate-float">
+            {mainEmoji}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Content: Title & Meta */}
+      <div className="relative z-10 space-y-4">
+        <div className="space-y-2">
+          <h3 className="text-2xl font-black text-slate-900 leading-[1.1] tracking-tighter group-hover:text-slate-800 transition-colors line-clamp-3">
+            {displayTitle}
+          </h3>
+          <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-1">
+            <div className="flex items-center gap-1">
+              <Clock size={12} className={style.icon} />
+              <span>{displayReadTime} Min Read</span>
             </div>
-          )}
-          
-          {isLocked && (
-             <div className="pt-2 flex items-center text-slate-400 font-bold text-xs gap-1">
-                Unlock to read
-             </div>
-          )}
-        </CardContent>
-      </Card>
-    </Wrapper>
+            {isLocked ? (
+              <span className="text-amber-500">Premium Content</span>
+            ) : (
+              <div className="flex items-center gap-1 text-slate-900 group-hover:translate-x-1 transition-transform">
+                Read Now <ArrowRight size={10} className="ml-1" />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Glow */}
+      <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-white/30 rounded-full blur-3xl group-hover:bg-white/50 transition-colors duration-500" />
+    </motion.div>
+  );
+
+  if (isLocked) {
+    return (
+      <div onClick={handleClick} className="block group h-full">
+        {CardContent}
+      </div>
+    );
+  }
+
+  return (
+    <Link href={`/blogs/${blog.slug}`} className="block group h-full">
+      {CardContent}
+    </Link>
   );
 }

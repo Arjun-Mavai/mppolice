@@ -1,4 +1,4 @@
-import { getBlogs } from "@/actions/blog-actions";
+import { getBlogs } from "@/services/blog-service";
 import AdminBlogsClient from "./AdminBlogsClient";
 import { verifyAuth } from "@/lib/auth";
 import { redirect } from "next/navigation";

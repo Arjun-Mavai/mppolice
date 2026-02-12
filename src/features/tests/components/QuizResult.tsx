@@ -89,7 +89,13 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
              {/* Header for Result Page */}
              <div className="bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between sticky top-0 z-30 shadow-md">
                 <div className="flex items-center gap-3">
-                    <Button variant="ghost" size="icon" onClick={() => onExit?.()} className="text-slate-400 hover:text-white hover:bg-slate-800">
+                    <Button variant="ghost" size="icon" onClick={() => {
+                            if (onExit) {
+                                onExit();
+                            } else {
+                                router.push('/syllabus/quiz/pyq');
+                            }
+                        }} className="text-slate-400 hover:text-white hover:bg-slate-800">
                         <Home className="w-5 h-5" />
                     </Button>
                     <h1 className="text-lg font-bold text-white font-display truncate max-w-[200px] sm:max-w-md">

@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { type PricingData, LITE_FEATURES, PRO_FEATURES, PRICING_DEFAULTS } from '@/config/pricing';
 import { PricingCard } from '@/components/PricingCard';
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 interface PremiumMarketingProps {
     onUnlock: (amount: number) => void;
@@ -33,8 +34,8 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
     // Lite user ko Pro upgrade dikhao — dynamic price
     if (isLiteUser) {
         return (
-            <div className="p-6 md:p-8 bg-gradient-to-br from-slate-50 via-slate-100/50 to-slate-50 min-h-[500px] flex flex-col items-center text-center justify-center">
-                <Badge className="bg-amber-100 text-amber-700 px-3 py-1 mb-6 hover:bg-amber-200 transition-colors cursor-default border-amber-200">
+            <div className="p-4 md:p-8 bg-gradient-to-br from-slate-50 via-slate-100/50 to-slate-50 min-h-[500px] flex flex-col items-center text-center justify-center">
+                <Badge className="bg-amber-100 text-amber-700 px-3 py-1 mb-4 md:mb-6 hover:bg-amber-200 transition-colors cursor-default border-amber-200">
                     <Star className="w-3 h-3 mr-1 fill-current" />
                     {hi ? 'अपग्रेड उपलब्ध है' : 'UPGRADE AVAILABLE'}
                 </Badge>
@@ -66,13 +67,13 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
     }
 
     return (
-        <div className="p-6 md:p-10 bg-slate-50 flex flex-col items-center text-center">
+        <div className="px-4 py-8 md:p-10 bg-slate-50 flex flex-col items-center text-center">
             {/* Header */}
             {/* Header */}
-            <h2 className="text-3xl md:text-5xl font-black font-display text-slate-900 mb-3 tracking-tight leading-tight uppercase">
+            <h2 className="text-2xl md:text-5xl font-black font-display text-slate-900 mb-3 tracking-tighter leading-tight uppercase">
                 {hi ? 'अपना MPPSC सफलता प्लान चुनें' : 'Choose Your MPPSC Success Plan'}
             </h2>
-            <p className="text-base md:text-lg text-slate-500 font-medium max-w-lg mx-auto mb-6">
+            <p className="text-sm md:text-lg text-slate-500 font-medium max-w-lg mx-auto mb-6 px-4">
                  {hi ? '500+ छात्रों के साथ स्मार्ट तैयारी करें' : 'Join 500+ aspirants preparing smarter'}
             </p>
 
@@ -90,7 +91,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 w-full max-w-4xl mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 w-full max-w-4xl mx-auto px-0 md:px-4">
                 <PricingCard
                     planType="lite"
                     pricing={p}
@@ -112,6 +113,11 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
             <p className="text-xs text-slate-400 mt-8">
                 {hi ? 'सुरक्षित भुगतान • कोई ऑटो-रिन्यूअल नहीं • RazorPay से एक्टिवेट' : 'Secure Payment • No Auto-Renewal • Activate via RazorPay'}
             </p>
+
+            {/* Manual Dismiss */}
+            <DialogPrimitive.Close className=" md:hidden mt-6 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer pb-4">
+                {hi ? 'बंद करें' : 'Close'}
+            </DialogPrimitive.Close>
         </div>
     );
 }

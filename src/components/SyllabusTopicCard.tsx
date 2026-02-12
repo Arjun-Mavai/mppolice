@@ -26,22 +26,7 @@ interface SyllabusTopicCardProps {
     };
 }
 
-export const SyllabusTopicCard: React.FC<SyllabusTopicCardProps> = ({
-    id,
-    title,
-    subtitle,
-    impactEmoji,
-    imageUrl,
-    colorVariant,
-    variant = 'topic',
-    isLocked,
-    isFree,
-    hideBadge = false,
-    hidePlus = false,
-    onClick,
-    labels
-}) => {
-    const variants = {
+ export const variants = {
         blue: {
             bg: 'bg-blue-50',
             text: 'text-blue-600',
@@ -71,6 +56,23 @@ export const SyllabusTopicCard: React.FC<SyllabusTopicCardProps> = ({
             shadow: 'shadow-amber-200/40'
         }
     };
+
+export const SyllabusTopicCard: React.FC<SyllabusTopicCardProps> = ({
+    id,
+    title,
+    subtitle,
+    impactEmoji,
+    imageUrl,
+    colorVariant,
+    variant = 'topic',
+    isLocked,
+    isFree,
+    hideBadge = false,
+    hidePlus = false,
+    onClick,
+    labels
+}) => {
+   
 
     const style = variants[colorVariant];
 

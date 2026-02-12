@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,11 +30,11 @@ interface PYQPageClientProps {
 
 export default function PYQPageClient({ initialTests }: PYQPageClientProps) {
     const router = useRouter();
+    const pathname = usePathname();
     const { language } = useSettingsStore();
     const [paywallOpen, setPaywallOpen] = useState(false);
 
     const hi = language === 'hi';
-
     return (
         <div className="min-h-screen bg-[#fafbfc] font-sans pb-20 relative overflow-hidden">
              {/* 🎭 PREMIUM BACKGROUND BLURS */}
@@ -45,7 +45,7 @@ export default function PYQPageClient({ initialTests }: PYQPageClientProps) {
             <div className="max-w-5xl mx-auto px-6 relative z-10 pt-32">
                 
                 {/* Header Row */}
-                <div className="flex items-center justify-between mb-8">
+             { pathname === "/syllabus/quiz/pyq" && ( <div className="flex items-center justify-between mb-8">
                      <Button 
                         variant="ghost" 
                         onClick={() => router.push('/syllabus/quiz')}
@@ -56,7 +56,7 @@ export default function PYQPageClient({ initialTests }: PYQPageClientProps) {
                         </div>
                         <span className="text-sm font-black uppercase tracking-widest">{hi ? 'क्विज़ हब' : 'Quiz Hub'}</span>
                     </Button>
-                </div>
+                </div>)}
 
                 {/* 🧭 CONSOLIDATED SUB-NAV */}
                 <QuizSubNav />

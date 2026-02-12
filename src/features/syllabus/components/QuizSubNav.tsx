@@ -9,10 +9,11 @@ import { Album, BookOpen, Layers, Clock, BrainCircuit } from 'lucide-react';
 
 const NAV_ITEMS = [
     { id: 'pyq', label: { en: 'PYQ', hi: 'PYQ' }, icon: Clock, href: '/syllabus/quiz/pyq', color: 'bg-slate-900 border-slate-900', activeText: 'text-slate-900' },
-    { id: 'topic', label: { en: 'Topics', hi: 'टॉपिक' }, icon: Layers, href: '/syllabus/quiz/topic', color: 'bg-indigo-600 border-indigo-600', activeText: 'text-indigo-600' },
-    { id: 'units', label: { en: 'Units', hi: 'यूनिट' }, icon: BookOpen, href: '/syllabus/quiz/units', color: 'bg-emerald-500 border-emerald-500', activeText: 'text-emerald-600' },
     { id: 'full-length', label: { en: 'FLT', hi: 'FLT' }, icon: Album, href: '/syllabus/quiz/full-length', color: 'bg-amber-500 border-amber-500', activeText: 'text-amber-600' },
     { id: 'csat', label: { en: 'CSAT', hi: 'CSAT' }, icon: BrainCircuit, href: '/syllabus/quiz/csat', color: 'bg-pink-500 border-pink-500', activeText: 'text-pink-600' },
+    { id: 'topic', label: { en: 'Topics', hi: 'टॉपिक' }, icon: Layers, href: '/syllabus/quiz/topic', color: 'bg-indigo-600 border-indigo-600', activeText: 'text-indigo-600' },
+    { id: 'units', label: { en: 'Units', hi: 'यूनिट' }, icon: BookOpen, href: '/syllabus/quiz/units', color: 'bg-emerald-500 border-emerald-500', activeText: 'text-emerald-600' },
+    
 ];
 
 export function QuizSubNav() {

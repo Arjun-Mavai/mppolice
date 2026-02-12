@@ -116,7 +116,7 @@ export function PricingCard({ planType, pricing, features, language, onBuy, isPo
                             </div>
                         )}
 
-                        {(isPro || isUpgrade) && !isUpgrade && (
+                        {/* {(isPro || isUpgrade) && !isUpgrade && (
                              <div className="mt-2">
                                 <span className="relative inline-flex items-center">
                                     <span className="absolute inset-[-2] rounded-full bg-gradient-to-r from-red-500 via-pink-500 to-green-500 p-[1.5px]" />
@@ -125,7 +125,7 @@ export function PricingCard({ planType, pricing, features, language, onBuy, isPo
                                     </span>
                                 </span>
                             </div>
-                        )}
+                        )} */}
 
                         <p className="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
                             <Clock className="w-3 h-3" />

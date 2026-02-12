@@ -1,0 +1,198 @@
+import { db } from "@/db";
+import { contentBlogs } from "@/db/schema";
+import { eq, desc, and, count, sql } from "drizzle-orm";
+import { logger } from "@/lib/logger";
+import { CACHE, cachedData } from "@/lib/cache";
+
+/**
+ * getBlogCounts — Fetch counts of blogs per unit with caching
+ * Zero impact on performance due to server-side caching
+ */
+export const getBlogCounts = cachedData(
+    async () => {
+        try {
+            // Get counts grouped by unitId
+            const counts = await db.select({
+                unitId: contentBlogs.unitId,
+                count: count()
+            })
+            .from(contentBlogs)
+            .where(and(
+                eq(contentBlogs.isPublished, true), 
+                eq(contentBlogs.isHidden, false)
+            ))
+            .groupBy(contentBlogs.unitId);
+
+            // Get count for Free articles
+            const freeResult = await db.select({ count: count() })
+                .from(contentBlogs)
+                .where(and(
+                    eq(contentBlogs.isPublished, true),
+                    eq(contentBlogs.isHidden, false),
+                    eq(contentBlogs.isFreeAccess, true)
+                ));
+
+            const countsMap: Record<string, number> = {};
+            let total = 0;
+
+            // Simple sum of all published and non-hidden blogs
+            const allResult = await db.select({ count: count() })
+                .from(contentBlogs)
+                .where(and(
+                    eq(contentBlogs.isPublished, true),
+                    eq(contentBlogs.isHidden, false)
+                ));
+
+            counts.forEach(row => {
+                if (row.unitId) {
+                    countsMap[row.unitId] = row.count;
+                }
+            });
+
+            countsMap['All'] = allResult[0]?.count || 0;
+            countsMap['Free'] = freeResult[0]?.count || 0;
+
+            return countsMap;
+        } catch (error) {
+            logger.error("Get Blog Counts Error:", error);
+            return { 'All': 0, 'Free': 0 };
+        }
+    },
+    ['blog-counts-meta'],
+    CACHE.BLOGS.GET_ALL.tags, // Busts when blogs change
+    CACHE.BLOGS.GET_ALL.revalidate
+);
+
+/**
+ * getCachedBlogs — unstable_cache se wrapped, 1 hour cache
+ * Used for generateStaticParams to fetch ALL blogs
+ */
+export const getCachedBlogs = cachedData(
+    async () => {
+        try {
+            return await db.select().from(contentBlogs)
+                .where(and(
+                    eq(contentBlogs.isPublished, true),
+                    eq(contentBlogs.isHidden, false)
+                ))
+                .orderBy(desc(contentBlogs.createdAt));
+        } catch (error) {
+            logger.error("Get Blogs Error:", error);
+            return [];
+        }
+    },
+    ['blogs-list'],
+    CACHE.BLOGS.GET_ALL.tags,
+    CACHE.BLOGS.GET_ALL.revalidate
+);
+
+export async function getBlogs({
+    page = 1,
+    limit = 10,
+    search = '',
+    unitId = 'All',
+    isPremium = undefined, // undefined = all, true = premium, false = free
+    isFreeAccess = undefined
+}: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    unitId?: string;
+    isPremium?: boolean;
+    isFreeAccess?: boolean;
+} = {}) {
+    try {
+        const offset = (page - 1) * limit;
+        
+        // Build Where Clause
+        const whereConditions = [];
+        
+        // Filter by Published (always)
+        whereConditions.push(eq(contentBlogs.isPublished, true));
+
+        // Filter out hidden blogs
+        whereConditions.push(eq(contentBlogs.isHidden, false));
+
+        // Filter by Unit
+        if (unitId && unitId !== 'All') {
+            whereConditions.push(eq(contentBlogs.unitId, unitId));
+        }
+
+        // Filter by Search
+        if (search) {
+            whereConditions.push(
+                sql`(${contentBlogs.title} LIKE ${`%${search}%`} OR ${contentBlogs.description} LIKE ${`%${search}%`})`
+            );
+        }
+
+        // Filter by Premium Status (if specified)
+        if (isPremium !== undefined) {
+             whereConditions.push(eq(contentBlogs.isPremium, isPremium));
+        }
+
+        // Filter by Free Access (if specified)
+        if (isFreeAccess !== undefined) {
+            whereConditions.push(eq(contentBlogs.isFreeAccess, isFreeAccess));
+        }
+
+        const whereClause = and(...whereConditions);
+
+        // Fetch Data
+        const blogs = await db.select()
+            .from(contentBlogs)
+            .where(whereClause)
+            .orderBy(desc(contentBlogs.createdAt))
+            .limit(limit)
+            .offset(offset);
+
+        // Fetch Total Count (for pagination math)
+        const totalResult = await db.select({ count: count() })
+            .from(contentBlogs)
+            .where(whereClause);
+            
+        const total = totalResult[0]?.count || 0;
+        const hasMore = offset + blogs.length < total;
+
+        return {
+            blogs,
+            pagination: {
+                page,
+                limit,
+                total,
+                hasMore
+            }
+        };
+
+    } catch (error) {
+        logger.error("Get Blogs Error:", error);
+        return { 
+            blogs: [], 
+            pagination: { page: 1, limit: 10, total: 0, hasMore: false } 
+        };
+    }
+}
+
+/**
+ * getBlogBySlug — slug se specific blog fetch, 1 hour cached
+ * revalidateTag('blog-{slug}') se on-demand bust hoga
+ */
+export const getBlogBySlug = async (slug: string) => {
+    const { revalidate, tags } = CACHE.BLOGS.GET_BY_SLUG(slug);
+    return await cachedData(
+        async () => {
+            try {
+                return await db.select().from(contentBlogs).where(and(
+                    eq(contentBlogs.slug, slug),
+                    eq(contentBlogs.isPublished, true),
+                    eq(contentBlogs.isHidden, false)
+                )).get() ?? null;
+            } catch (error) {
+                logger.error("Get Blog Error:", error);
+                return null;
+            }
+        },
+        [`blog-${slug}`],
+        tags,
+        revalidate
+    )();
+};

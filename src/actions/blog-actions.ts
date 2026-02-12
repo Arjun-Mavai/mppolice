@@ -4,11 +4,12 @@
 // revalidateTag se on-demand cache bust hota h, unstable_cache se data cache hota h
 import { db } from "@/db";
 import { contentBlogs, mppscUsers } from "@/db/schema";
-// import { eq, desc, and, like, count, sql } from "drizzle-orm"; -- Removing this as it's defined later or will be cleaned up
 import { verifyAuth } from "@/lib/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { logger } from "@/lib/logger";
-import { CACHE, cachedData } from "@/lib/cache";
+import { CACHE } from "@/lib/cache";
+import { eq } from "drizzle-orm";
+import * as blogService from "@/services/blog-service";
 
 /**
  * uploadBlog — Admin-only server action, blog DB me daalti h
@@ -55,8 +56,8 @@ export async function uploadBlog(data: any) {
             contentType: metadata.type || 'blog',
             unitId: metadata.unit || null, 
             topicId: metadata.topic || null, // Store the topic string directly as provided
-            isPremium: true, // Legacy flag — backward compat
-            isFreeAccess: false, // Default: not free
+            isPremium: metadata.isPremium !== undefined ? metadata.isPremium : true, // Legacy flag
+            isFreeAccess: metadata.isPremium === false || metadata.isFreeAccess === true, // Free if not premium
             isLiteAccess: false, // Default: not for lite
             isProAccess: true,   // Default: pro users can access
             isPublished: true,
@@ -96,6 +97,7 @@ export async function toggleBlogPremium(blogId: string, isPremium: boolean) {
         await db.update(contentBlogs)
             .set({ 
                 isPremium, 
+                isFreeAccess: !isPremium, // Keep in sync
                 updatedAt: new Date() 
             })
             .where(eq(contentBlogs.id, blogId));
@@ -120,176 +122,24 @@ export async function toggleBlogPremium(blogId: string, isPremium: boolean) {
  * getCachedBlogs — unstable_cache se wrapped, 1 hour cache
  * Used for generateStaticParams to fetch ALL blogs
  */
-export const getCachedBlogs = cachedData(
-    async () => {
-        try {
-            return await db.select().from(contentBlogs)
-                .where(eq(contentBlogs.isHidden, false))
-                .orderBy(desc(contentBlogs.createdAt));
-        } catch (error) {
-            logger.error("Get Blogs Error:", error);
-            return [];
-        }
-    },
-    ['blogs-list'],
-    CACHE.BLOGS.GET_ALL.tags,
-    CACHE.BLOGS.GET_ALL.revalidate
-);
+export const getCachedBlogs = blogService.getCachedBlogs;
 
-import { eq, desc, and, like, count, sql } from "drizzle-orm";
 
-/**
- * getBlogs — Paginated, filtered blog fetcher
- * Replaces simple getCachedBlogs
- */
 /**
  * getBlogCounts — Fetch counts of blogs per unit with caching
  * Zero impact on performance due to server-side caching
  */
-export const getBlogCounts = cachedData(
-    async () => {
-        try {
-            // Get counts grouped by unitId
-            const counts = await db.select({
-                unitId: contentBlogs.unitId,
-                count: count()
-            })
-            .from(contentBlogs)
-            .where(and(
-                eq(contentBlogs.isPublished, true), 
-                eq(contentBlogs.isHidden, false)
-            ))
-            .groupBy(contentBlogs.unitId);
+export const getBlogCounts = blogService.getBlogCounts;
 
-            // Get count for Free articles
-            const freeResult = await db.select({ count: count() })
-                .from(contentBlogs)
-                .where(and(
-                    eq(contentBlogs.isPublished, true),
-                    eq(contentBlogs.isHidden, false),
-                    eq(contentBlogs.isFreeAccess, true)
-                ));
-
-            const countsMap: Record<string, number> = {};
-            let total = 0;
-
-            counts.forEach(row => {
-                if (row.unitId) {
-                    countsMap[row.unitId] = row.count;
-                    total += row.count;
-                }
-            });
-
-            countsMap['All'] = total;
-            countsMap['Free'] = freeResult[0]?.count || 0;
-
-            return countsMap;
-        } catch (error) {
-            logger.error("Get Blog Counts Error:", error);
-            return { 'All': 0, 'Free': 0 };
-        }
-    },
-    ['blog-counts-meta'],
-    CACHE.BLOGS.GET_ALL.tags, // Busts when blogs change
-    CACHE.BLOGS.GET_ALL.revalidate
-);
-
-export async function getBlogs({
-    page = 1,
-    limit = 10,
-    search = '',
-    unitId = 'All',
-    isPremium = undefined // undefined = all, true = premium, false = free
-}: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    unitId?: string;
-    isPremium?: boolean;
-} = {}) {
-    try {
-        const offset = (page - 1) * limit;
-        
-        // Build Where Clause
-        const whereConditions = [];
-        
-        // Filter by Published (always)
-        whereConditions.push(eq(contentBlogs.isPublished, true));
-
-        // Filter out hidden blogs
-        whereConditions.push(eq(contentBlogs.isHidden, false));
-
-        // Filter by Unit
-        if (unitId && unitId !== 'All') {
-            whereConditions.push(eq(contentBlogs.unitId, unitId));
-        }
-
-        // Filter by Search
-        if (search) {
-            whereConditions.push(
-                sql`(${contentBlogs.title} LIKE ${`%${search}%`} OR ${contentBlogs.description} LIKE ${`%${search}%`})`
-            );
-        }
-
-        // Filter by Premium Status (if specified)
-        if (isPremium !== undefined) {
-             whereConditions.push(eq(contentBlogs.isPremium, isPremium));
-        }
-
-        const whereClause = and(...whereConditions);
-
-        // Fetch Data
-        const blogs = await db.select()
-            .from(contentBlogs)
-            .where(whereClause)
-            .orderBy(desc(contentBlogs.createdAt))
-            .limit(limit)
-            .offset(offset);
-
-        // Fetch Total Count (for pagination math)
-        const totalResult = await db.select({ count: count() })
-            .from(contentBlogs)
-            .where(whereClause);
-            
-        const total = totalResult[0]?.count || 0;
-        const hasMore = offset + blogs.length < total;
-
-        return {
-            blogs,
-            pagination: {
-                page,
-                limit,
-                total,
-                hasMore
-            }
-        };
-
-    } catch (error) {
-        logger.error("Get Blogs Error:", error);
-        return { 
-            blogs: [], 
-            pagination: { page: 1, limit: 10, total: 0, hasMore: false } 
-        };
-    }
+/**
+ * getBlogs — Paginated, filtered blog fetcher
+ */
+export async function getBlogs(params: any = {}) {
+    return blogService.getBlogs(params);
 }
 
 /**
  * getBlogBySlug — slug se specific blog fetch, 1 hour cached
  * revalidateTag('blog-{slug}') se on-demand bust hoga
  */
-export const getBlogBySlug = async (slug: string) => {
-    const { revalidate, tags } = CACHE.BLOGS.GET_BY_SLUG(slug);
-    return await cachedData(
-        async () => {
-            try {
-                return await db.select().from(contentBlogs).where(eq(contentBlogs.slug, slug)).get() ?? null;
-            } catch (error) {
-                logger.error("Get Blog Error:", error);
-                return null;
-            }
-        },
-        [`blog-${slug}`],
-        tags,
-        revalidate
-    )();
-};
+export const getBlogBySlug = blogService.getBlogBySlug;
