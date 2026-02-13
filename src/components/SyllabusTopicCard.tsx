@@ -116,7 +116,13 @@ export const SyllabusTopicCard: React.FC<SyllabusTopicCardProps> = ({
                     
                     {imageUrl ? (
                         <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
-                            <NextImage src={imageUrl} alt={title} fill className="object-cover" />
+                            <NextImage 
+                                src={imageUrl} 
+                                alt={title} 
+                                fill 
+                                className="object-cover" 
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            />
                         </div>
                     ) : (
                         <div className="relative text-7xl drop-shadow-2xl transition-transform duration-500 group-hover:scale-125 group-hover:rotate-12 animate-float">

@@ -76,12 +76,20 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   // EFFECT 1: SCROLL LISTENER (The "Visuals")
   // ------------------------------------------------------------------
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 10);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
 
   // ------------------------------------------------------------------
   // EFFECT 1.5: CROSS-TAB LOGOUT SYNC
