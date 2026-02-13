@@ -3,7 +3,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Star, Quote, MapPin } from "lucide-react";
-import { motion } from "framer-motion";
+import Link from "next/link";
 import Image from "next/image";
 
 // Real Aspirant Data (Hinglish + MP Locations)
@@ -135,22 +135,12 @@ export function Testimonials() {
         <div className="absolute top-0 right-0 w-24 md:w-48 h-full z-20 bg-gradient-to-l from-slate-50 via-slate-50/80 to-transparent pointer-events-none" />
 
         {/* Marquee Track */}
-        <div className="flex select-none">
-            <motion.div 
-                className="flex items-stretch gap-6 pl-6"
-                animate={{
-                    x: ["0%", "-50%"]
-                }}
-                transition={{
-                    duration: 80, // Very slow smooth speed for readability
-                    ease: "linear",
-                    repeat: Infinity,
-                }}
-            >
+        <div className="flex select-none overflow-hidden group">
+            <div className="flex items-stretch gap-6 pl-6 animate-marquee min-w-full hover:[animation-play-state:paused]">
             {[...TESTIMONIALS, ...TESTIMONIALS].map((user, idx) => (
                 <div
                 key={`${user.name}-${idx}`}
-                className="w-[300px] md:w-[380px] shrink-0 p-6 md:p-8 rounded-3xl bg-white border border-slate-200/60 shadow-[0_2px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group h-full"
+                className="w-[300px] md:w-[380px] shrink-0 p-6 md:p-8 rounded-3xl bg-white border border-slate-200/60 shadow-[0_2px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-full"
                 >
                 <div>
                     <Quote className="w-8 h-8 text-indigo-100 mb-6 group-hover:text-indigo-200 transition-colors" />
@@ -180,7 +170,7 @@ export function Testimonials() {
                 </div>
                 </div>
             ))}
-            </motion.div>
+            </div>
         </div>
       </div>
     </section>
