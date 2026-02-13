@@ -1,9 +1,9 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, BookOpen, Sparkles, Brain, Lightbulb, Search, RotateCw, PlayCircle, Lock } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Search, PlayCircle, Lock } from 'lucide-react';
 import FlipCard from '@/components/FlipCard';
 import { SyllabusTopicCard } from '@/components/SyllabusTopicCard';
 import { cn } from '@/lib/utils';
@@ -61,6 +61,17 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
 
   // Revision Mode State
   const [revisionIndex, setRevisionIndex] = useState(0);
+
+  // Lazy Loading State
+  const [visibleCount, setVisibleCount] = useState(20);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Reset lazy load on search or view change
+  useEffect(() => {
+    setVisibleCount(20);
+  }, [searchTerm, viewMode, unitId]);
+
+
 
   // New Flip State: Only one card flipped at a time
   const [activeFlippedId, setActiveFlippedId] = useState<string | number | null>(null);
@@ -149,6 +160,27 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
     t.pro_tip?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (t.id.toString() === searchTerm)
   );
+
+  // Infinite Scroll Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+            setVisibleCount((prev) => Math.min(prev + 20, currentTopics.length));
+        }
+      },
+      { rootMargin: "200px" }
+    );
+
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) observer.unobserve(currentRef);
+    };
+  }, [currentTopics]);
 
   const handleOpenDetails = (topic: TopicData, index: number) => {
     if (isTopicLocked(topic, index)) {
@@ -277,7 +309,7 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
           animate="show"
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mb-16"
         >
-          {currentTopics.map((topic, idx) => {
+          {currentTopics.slice(0, visibleCount).map((topic, idx) => {
             const locked = isTopicLocked(topic, idx);
             const isFree = !locked && !isSubscribed && !user && topic.isFree;
             
@@ -305,10 +337,17 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
               </motion.div>
             );
           })}
+          
+          {/* Sentinel for Lazy Loading */}
+          {visibleCount < currentTopics.length && (
+             <div ref={loadMoreRef} className="col-span-full h-20 flex items-center justify-center">
+                <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+             </div>
+          )}
         </motion.div>
         ) : viewMode === 'list' ? (
              <div className="max-w-4xl mx-auto space-y-4 mb-12">
-                {currentTopics.map((topic, idx) => {
+                {currentTopics.slice(0, visibleCount).map((topic, idx) => {
                     const locked = isTopicLocked(topic, idx);
                     const showFreeBadge = !locked && !isSubscribed && !user && topic.isFree;
                     
@@ -353,6 +392,13 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
                     </motion.div>
                     );
                 })}
+
+                {/* Sentinel for Lazy Loading */}
+                {visibleCount < currentTopics.length && (
+                    <div ref={loadMoreRef} className="h-20 flex items-center justify-center">
+                        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+                    </div>
+                )}
             </div>
         ) : (
             /* REVISION MODE: Single Swipeable Card */
