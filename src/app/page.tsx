@@ -2,7 +2,9 @@
 // AppNavbar + UpgradePage + Testimonials = poora landing page
 import UpgradePage from "./upgrade/page";
 import { AppNavbar } from "@/components/layout/AppNavbar";
-import { Testimonials } from "@/components/home/Testimonials";
+import dynamic from "next/dynamic";
+
+const Testimonials = dynamic(() => import("@/components/home/Testimonials").then(m => m.Testimonials));
 
 
 export default function Home() {

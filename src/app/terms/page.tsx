@@ -114,7 +114,7 @@ export default function TermsOfServicePage() {
               <li>
                 We reserve the right to modify pricing with reasonable notice.
               </li>
-              <li>
+              {/* <li>
                 For refund queries, please reach out via our{" "}
                 <Link
                   href="/contact"
@@ -123,7 +123,7 @@ export default function TermsOfServicePage() {
                   Contact Page
                 </Link>
                 .
-              </li>
+              </li> */}
             </ul>
           </section>
 
