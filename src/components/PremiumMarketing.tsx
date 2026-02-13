@@ -74,7 +74,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                 {hi ? 'अपना MPPSC सफलता प्लान चुनें' : 'Choose Your MPPSC Success Plan'}
             </h2>
             <p className="text-sm md:text-lg text-slate-500 font-medium max-w-lg mx-auto mb-6 px-4">
-                 {hi ? '500+ छात्रों के साथ स्मार्ट तैयारी करें' : 'Join 500+ aspirants preparing smarter'}
+                 {hi ? 'छात्रों के साथ स्मार्ट तैयारी करें' : 'Join aspirants who are preparing smarter'}
             </p>
 
             {/* FOMO — first 100 students with joined count badge */}

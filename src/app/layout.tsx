@@ -53,12 +53,14 @@ export const metadata: Metadata = {
   },
 };
 
-import { SupportButton } from "@/components/SupportButton";
 import { AppFooter } from "@/components/layout/AppFooter";
 import { GlobalLockModal } from "@/components/GlobalLockModal";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { Toaster } from "@/components/ui/sonner";
-import { InstallPrompt } from "@/components/InstallPrompt";
+import dynamic from "next/dynamic";
+
+const InstallPrompt = dynamic(() => import("@/components/InstallPrompt").then(m => m.InstallPrompt));
+const SupportButton = dynamic(() => import("@/components/SupportButton").then(m => m.SupportButton));
 
 export default function RootLayout({
   children,

@@ -159,7 +159,7 @@ export default function PricingPage() {
           {hi ? 'अपना MPPSC सफलता प्लान चुनें' : 'Choose Your MPPSC Success Plan'}
         </h1>
         <p className="text-base md:text-lg text-slate-500 font-medium max-w-lg mx-auto mb-1">
-          {hi ? '500+ छात्रों के साथ स्मार्ट तैयारी करें' : 'Join 500+ aspirants preparing smarter'}
+          {hi ? 'छात्रों के साथ स्मार्ट तैयारी करें' : 'Join aspirants who are preparing smarter'}
         </p>
       </section>
 
@@ -223,7 +223,7 @@ export default function PricingPage() {
                 { icon: Target, label: hi ? '1000+ प्रश्न' : '1000+ Questions', sub: hi ? 'टॉपिक वाइज़' : 'Topic-wise' },
                 { icon: FileText, label: hi ? 'फुल मॉक टेस्ट' : 'Full Mock Tests', sub: hi ? '100 प्रश्न प्रत्येक' : '100Q each' },
                 { icon: BarChart3, label: hi ? 'स्मार्ट एनालिटिक्स' : 'Smart Analytics', sub: hi ? 'कमज़ोर टॉपिक पहचानो' : 'Find weak areas' },
-                { icon: Sparkles, label: hi ? 'AI एक्सप्लेनेशन' : 'AI Explanations', sub: hi ? 'हर प्रश्न का' : 'Every question' },
+                { icon: Sparkles, label: hi ? 'स्मार्ट एक्सप्लेनेशन' : 'Smart Explanations', sub: hi ? 'हर प्रश्न का' : 'Every question' },
               ].map(({ icon: Icon, label, sub }) => (
                 <div key={label} className="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
                   <Icon className="w-6 h-6 text-slate-700 mx-auto mb-2" />
