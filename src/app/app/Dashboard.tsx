@@ -39,7 +39,7 @@ export default function Dashboard({ initialCategories, initialQuotes }: Dashboar
   useEffect(() => {
       if (user) {
           // Check multiple flags for robustness (legacy is_pro, plan_tier, or is_subscribed)
-          const isProUser = user.is_pro || user.plan_tier === 'pro' || user.is_subscribed;
+          const isProUser = user.isPro || user.planTier === 'pro' || user.isSubscribed;
           
           // Only sync if the value actually changes to avoid unnecessary store updates
           // (Assuming syncProStatus handles this check internally, but good to be aware)

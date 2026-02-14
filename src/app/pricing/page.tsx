@@ -110,7 +110,7 @@ export default function PricingPage() {
   const { language, user } = useSettingsStore();
   const hi = language === 'hi';
   const router = useRouter();
-  const planTier = user?.plan_tier ?? 'free';
+  const planTier = user?.planTier ?? 'free';
   const isProUser = planTier === 'pro';
   const isLiteUser = planTier === 'lite';
   const isLoggedIn = !!user;

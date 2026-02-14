@@ -104,7 +104,7 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
       return isSyllabusTopicLocked(
           topic,
           originalIndex >= 0 ? originalIndex : _filteredIndex,
-          { isSubscribed: !!isSubscribed, plan_tier: user?.plan_tier },
+          { isSubscribed: !!isSubscribed, plan_tier: user?.planTier },
           unitId,
           rawTopics.length
       );
