@@ -1,7 +1,7 @@
 import { getCachedFLTTests, getUserAttempts } from '@/features/tests/actions/submission';
 import FLTPageClient, { TestWithAccess } from './FLTPageClient';
 import { verifyAuth } from '@/lib/auth';
-import { getUserTier } from '@/lib/access-control';
+import { getUserTier, hasAccessToContent } from '@/lib/access-control';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 
 // Server Component — FLT tests ko DB flags se access control karta hai
@@ -25,13 +25,11 @@ export default async function FLTPage() {
 
     // 4. Har test ko access info ke saath enrich karo
     const enrichedTests: TestWithAccess[] = tests.map((test) => {
-        const hasAccess = tier === 'pro' 
-            ? (test.isProAccess ?? true)
-            : tier === 'lite' 
-                ? ((test.isLiteAccess ?? false) || (test.isFreeAccess ?? false))
-                : (test.isFreeAccess ?? false);
-
-        const isLocked = !hasAccess && user?.role !== 'admin';
+        const hasAccess = user?.role === 'admin' || hasAccessToContent(
+            { isFreeAccess: test.isFreeAccess, isLiteAccess: test.isLiteAccess, isProAccess: test.isProAccess },
+            tier
+        );
+        const isLocked = !hasAccess;
         const attemptsCount = attempts[test.id] || 0;
         const attemptsLeft = maxRetries != null ? Math.max(0, maxRetries - attemptsCount) : null;
         

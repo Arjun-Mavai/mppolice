@@ -13,6 +13,9 @@ import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { getTestLeaderboard } from '@/actions/leaderboard-actions';
 import { revalidateAnalyticsAction } from '@/features/analytics/actions';
 import { LoadingQuotes } from '@/components/ui/LoadingQuotes';
+import { getRandomFeedback } from '../constants/feedback';
+import { useSettingsStore } from '@/store/useSettingsStore';
+import { FormattedQuestionText, RenderTableQuestion } from '@/features/tests/utils/questionFormatter';
 
 interface QuizResultProps {
     questions: Question[];
@@ -29,6 +32,7 @@ interface QuizResultProps {
 // Bhai, ye component ekdum jhakaas hai! Result dikhane ka zimma iska hai.
 export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExit, title, testId, userId }: QuizResultProps) {
     const router = useRouter();
+    const { language } = useSettingsStore();
 
     // Revalidate Analytics on Mount to ensure Dashboard is fresh
     // Bhai, data ekdum taaza hona mangta hai!
@@ -81,6 +85,9 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
     totalScore = parseFloat(totalScore.toFixed(2)); 
     
     const scorePercentage = maxMarks > 0 ? Math.round((totalScore / maxMarks) * 100) : 0;
+    
+    // Memoize feedback to prevent hydration mismatch or changes on re-renders
+    const feedbackMessage = React.useMemo(() => getRandomFeedback(scorePercentage, language), [scorePercentage, language]);
 
     const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
 
@@ -181,7 +188,7 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 text-left border border-white/20 relative z-10 shadow-2xl">
                              <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-white font-bold uppercase text-xs tracking-widest flex items-center gap-2">
-                                     <Sparkles className="w-4 h-4 text-yellow-400 fill-yellow-400" /> AI Performance Analysis
+                                     <Sparkles className="w-4 h-4 text-yellow-400 fill-yellow-400" /> Smart Performance Analysis
                                 </h3>
                                 <span className={cn(
                                     "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
@@ -218,9 +225,7 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                                 <div className="p-4 bg-slate-900/40 rounded-xl border border-white/5 shadow-inner">
                                     <p className="text-slate-200 text-sm leading-relaxed font-medium">
                                         <Quote className="w-4 h-4 text-slate-400 inline mr-2 -mt-1 transform rotate-180" />
-                                        {scorePercentage >= 80 ? "Outstanding command! You have mastered the core concepts. Challenge yourself with a Full Length Mock Test to test endurance." :
-                                         scorePercentage >= 60 ? "Solid effort. You have a good grasp, but missed some nuances. Review the explanations below, especially for dates and specific provisions." :
-                                         "Don't be discouraged. Focus on the core definitions and timelines. Read the detailed explanations for each question below and retake this quiz."}
+                                        {feedbackMessage}
                                     </p>
                                 </div>
                              </div>
@@ -346,10 +351,35 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                                          }
                                      </div>
                                      <div className="flex-1">
-                                         <h3 className="font-bold text-slate-900 text-sm md:text-base leading-snug">
+                                         <div className="font-bold text-slate-900 text-sm md:text-base leading-snug">
                                              <span className="text-slate-400 mr-2">Q{idx+1}.</span>
-                                             {q.question}
-                                         </h3>
+                                             <FormattedQuestionText text={q.question} className="inline" />
+                                             
+                                             {q.type === 'matching' && (
+                                                <RenderTableQuestion 
+                                                    text={q.question}
+                                                    matchPairs={q.matchPairs}
+                                                    language="hi"
+                                                    className="mt-2"
+                                                />
+                                             )}
+                                         </div>
+                                         
+                                         {/* English Question Text */}
+                                         {q.questionEn && (
+                                            <div className="mt-2 text-slate-500 text-sm">
+                                                <FormattedQuestionText text={q.questionEn} />
+                                                
+                                                {q.type === 'matching' && (
+                                                    <RenderTableQuestion 
+                                                        text={q.questionEn}
+                                                        matchPairs={q.matchPairs}
+                                                        language="en"
+                                                        className="mt-2 border-slate-300"
+                                                    />
+                                                )}
+                                            </div>
+                                         )}
                                      </div>
                                      <div className="text-slate-400">
                                          {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -364,6 +394,11 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                                     animate={{ height: "auto", opacity: 1 }}
                                     className="bg-slate-50/50 border-t border-slate-100 p-4 space-y-4"
                                 >
+                                    {q.type === 'matching' && (
+                                        <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                                            Select the correct code:
+                                        </div>
+                                    )}
                                     <div className="space-y-2">
                                         {q.options.map((opt, optIdx) => {
                                             const isSelected = userAnswer === optIdx;
@@ -390,6 +425,21 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                                         })}
                                     </div>
 
+                                    {/* Status Banner inside Expanded View */}
+                                    <div className={cn(
+                                        "p-3 rounded-lg flex items-center gap-2 text-sm font-bold",
+                                        isCorrect ? "bg-emerald-100 text-emerald-800" :
+                                        isSkipped ? "bg-slate-100 text-slate-600" : "bg-red-100 text-red-800"
+                                    )}>
+                                        {isCorrect ? <CheckCircle2 className="w-5 h-5" /> : 
+                                         isSkipped ? <AlertCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                                        
+                                        <span>
+                                            {isCorrect ? "You answered correctly!" : 
+                                             isSkipped ? "You skipped this question." : "You answered incorrectly."}
+                                        </span>
+                                    </div>
+
                                     {/* Explanation */}
                                     <div className="bg-white border border-slate-100 p-4 rounded-xl text-sm shadow-sm">
                                         <div className="font-bold text-slate-800 mb-2 flex items-center gap-1.5 uppercase tracking-wide text-xs">
@@ -408,20 +458,22 @@ export function QuizResult({ questions, answers, mode, timeTaken, onRetry, onExi
                 })}
 
                 <div className="flex gap-4 pt-8">
-                     <Button 
-                        onClick={() => {
-                            if (onExit) onExit();
-                            router.push('/syllabus/quiz'); // Force navigation to hub
-                        }}
-                        variant="outline" 
-                        className="flex-1 h-12 bg-white text-slate-900 border-slate-300 font-bold rounded-xl"
-                    >
-                        <Home className="w-4 h-4 mr-2" /> Back Home
-                     </Button>
+                     {mode === 'topic' && (
+                         <Button 
+                            onClick={() => {
+                                if (onExit) onExit();
+                                router.push('/syllabus/quiz'); // Force navigation to hub
+                            }}
+                            variant="outline" 
+                            className="flex-1 h-12 bg-white text-slate-900 border-slate-300 font-bold rounded-xl"
+                        >
+                            <Home className="w-4 h-4 mr-2" /> Back Home
+                         </Button>
+                     )}
                      <Button 
                         onClick={onRetry}
                         className="flex-1 h-12 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800"
-                    >
+                     >
                         <RefreshCw className="w-4 h-4 mr-2" /> Retry Quiz
                      </Button>
                 </div>

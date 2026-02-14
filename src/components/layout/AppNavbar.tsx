@@ -40,22 +40,28 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useSettingsStore } from "@/store/useSettingsStore";
+import { useSettingsStore, User as StoreUser } from "@/store/useSettingsStore";
 import { useEffect } from "react";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 import { usePwa } from "@/hooks/usePwa";
+import { useQuery } from '@tanstack/react-query';
 
-interface AppNavbarProps {
-  user: {
+interface PropUser {
     name?: string | null;
     email?: string | null;
     image?: string | null;
     role?: string;
     is_subscribed?: boolean;
     plan_tier?: 'free' | 'lite' | 'pro';
-  } | null;
 }
+
+interface AppNavbarProps {
+  user: PropUser | null;
+}
+
+// Helper type to handle both Store (camelCase) and API/Prop (snake_case) user shapes
+type UnifiedUser = StoreUser & PropUser;
 
 export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const pathname = usePathname();
@@ -69,8 +75,14 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
 
   
   // Create a merged user object (prop + global), favoring global if updated
-  // Actually, usually global store should be source of truth if we set it on mount in layout
-  const user = globalUser || initialUser;
+  const rawUser = (globalUser || initialUser) as UnifiedUser | null;
+
+  // Helper to normalize user object to store format (camelCase)
+  const user = rawUser ? {
+      ...rawUser,
+      isSubscribed: rawUser.isSubscribed ?? rawUser.is_subscribed,
+      planTier: rawUser.planTier ?? rawUser.plan_tier,
+  } : null;
 
   // ------------------------------------------------------------------
   // EFFECT 1: SCROLL LISTENER (The "Visuals")
@@ -111,43 +123,52 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   }, [setUser, setAuthCheckStatus]);
 
   // ------------------------------------------------------------------
-  // EFFECT 2: SESSION RESTORATION (The "Hydration")
+  // QUERY: SESSION RESTORATION (The "Hydration")
   // ------------------------------------------------------------------
-  // Why: When a user reloads the page, the client side `user` prop might be null initially.
-  // We need to fetch the session from the server to restore the specific user state.
-  // CRITICAL OPTIMIZATION: We check `authCheckStatus === 'idle'` to ensure this ONLY runs once per session load.
+  // Use React Query to fetch and cache user session
+  const { data: sessionData, isLoading: isSessionLoading } = useQuery({
+      queryKey: ['me'],
+      queryFn: async () => {
+          const res = await fetch('/api/auth/me');
+          if (!res.ok) throw new Error('Failed to fetch session');
+          const data = await res.json();
+          // Transform API response (snake_case) to Store format (camelCase)
+          if (data.user) {
+              return {
+                  user: {
+                      ...data.user,
+                      isSubscribed: data.user.is_subscribed,
+                      planTier: data.user.plan_tier,
+                  }
+              };
+          }
+          return data;
+      },
+      // Only fetch if we don't have a user yet
+      enabled: !initialUser && !globalUser,
+      staleTime: 10 * 60 * 1000, // 10 minutes cache
+      retry: false,
+  });
+
+  // Sync React Query result to Zustand Store
   useEffect(() => {
-    // Only fetch if:
-    // 1. No initial user passed from server component
-    // 2. Global store is empty
-    // 3. We haven't already checked (status is 'idle')
-    if (!initialUser && !globalUser && authCheckStatus === 'idle') {
-        setAuthCheckStatus('loading');
-        
-        fetch('/api/auth/me')
-            .then(res => res.json())
-            .then(data => {
-                if (data.user) {
-                    logger.info("Session restored successfully for:", data.user.email);
-                    setUser(data.user, true);
-                } else {
-                    // Important: Mark as checked even if no user found to prevent future loops
-                    logger.debug("No active session found during hydration.");
-                    setAuthCheckStatus('checked');
-                }
-            })
-            .catch(err => {
-                logger.error("Failed to restore session:", err);
-                setAuthCheckStatus('checked'); // Stop retrying on error
-                
-                // Notify user about authentication error
-                toast.error("Authentication Error", {
-                    description: "Unable to verify your session. Please try refreshing the page.",
-                    duration: 5000,
-                });
-            });
-    }
-  }, [initialUser, globalUser, setUser, authCheckStatus, setAuthCheckStatus]);
+      if (sessionData) {
+          if (sessionData.user) {
+              logger.info("Session restored successfully for:", sessionData.user.email);
+              setUser(sessionData.user, true);
+          } else {
+              logger.debug("No active session found during hydration.");
+              setAuthCheckStatus('checked');
+          }
+      } else if (!isSessionLoading && authCheckStatus === 'idle' && !initialUser && !globalUser) {
+          // Query finished but no data (error or empty)
+           setAuthCheckStatus('checked');
+      }
+      
+      if (isSessionLoading) {
+          setAuthCheckStatus('loading');
+      }
+  }, [sessionData, isSessionLoading, setUser, setAuthCheckStatus, authCheckStatus, initialUser, globalUser]);
 
   const handleLogout = async () => {
       try {
@@ -258,7 +279,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                 </Link>
               );
             })}
-                  {user && user.is_subscribed && (user as any)?.plan_tier === 'pro' ? (
+                  {user && user.isSubscribed && user.planTier === 'pro' ? (
                     /* Pro Badge — seamless golden-red-pink conic border, no gap */
                     <div className="relative p-[1.5px] rounded-full overflow-hidden">
                         <div className="absolute inset-0 bg-[conic-gradient(from_0deg,#fbbf24,#f59e0b,#ef4444,#ec4899,#f59e0b,#fbbf24,#d97706,#ef4444,#ec4899,#fbbf24)] animate-spin-slow" />
@@ -268,7 +289,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                             <span className="tracking-wide uppercase text-[10px] relative z-10 font-black">Pro</span>
                         </div>
                     </div>
-                  ) : user && user.is_subscribed && (user as any)?.plan_tier === 'lite' ? (
+                  ) : user && user.isSubscribed && user.planTier === 'lite' ? (
                     /* Lite Badge — tag style on desktop (no button), animated border */
                     <div className="relative p-[1.5px] rounded-full overflow-hidden">
                         <div className="absolute inset-0 bg-[conic-gradient(from_0deg,#ec4899,#ef4444,#f59e0b,#8b5cf6,#3b82f6,#ec4899,#ef4444,#f59e0b,#ec4899)] animate-spin-slow" />
@@ -327,7 +348,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full ring-2 ring-slate-100 hover:ring-slate-200 transition-all p-0 hidden md:flex">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={(user as any)?.image || ""} alt={user.name || "User"} />
+                      <AvatarImage src={user.image || ""} alt={user.name || "User"} />
                       <AvatarFallback className="bg-slate-50 text-slate-700 font-bold border border-slate-100">
                         {user.name?.charAt(0).toUpperCase() || "U"}
                       </AvatarFallback>
@@ -395,12 +416,12 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                                 <>
                                     <div className="relative">
                                         <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
-                                            <AvatarImage src={(user as any)?.image || ""} />
+                                            <AvatarImage src={user.image || ""} />
                                             <AvatarFallback className="bg-slate-900 text-white font-bold">
                                                 {user.name?.charAt(0).toUpperCase() || "U"}
                                             </AvatarFallback>
                                         </Avatar>
-                                        {(user as any)?.is_pro && (
+                                        {user.isPro && (
                                             <div className="absolute -bottom-1 -right-1 bg-amber-400 text-white p-0.5 rounded-full border-2 border-white" title="Premium">
                                                 <Sparkles size={10} className="fill-white" />
                                             </div>
@@ -409,7 +430,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                                     <div className="flex flex-col">
                                         <div className="flex items-center gap-2">
                                             <span className="font-bold text-sm text-slate-900 leading-none">{user.name}</span>
-                                            {(user as any)?.is_pro && (
+                                            {user.isPro && (
                                                 <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px] font-bold border border-amber-200 uppercase tracking-wider">
                                                     Pro
                                                 </span>
@@ -473,7 +494,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                         </SheetClose>
 
                         <div className="pt-3">
-                            {(user as any)?.is_subscribed && (user as any)?.plan_tier === 'pro' ? (
+                            {user?.isSubscribed && user.planTier === 'pro' ? (
                                 <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
                                     <div className="relative z-10 flex items-center gap-3">
                                          <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
@@ -485,7 +506,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                                          </div>
                                     </div>
                                 </div>
-                            ) : (user as any)?.is_subscribed && (user as any)?.plan_tier === 'lite' ? (
+                            ) : user?.isSubscribed && user.planTier === 'lite' ? (
                                 <>
                                     {/* Lite tag in mobile menu */}
                                     <div className="p-4 rounded-xl bg-slate-100 border border-slate-200">
@@ -496,9 +517,9 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                                             <div>
                                                 <h4 className="font-bold text-slate-900 text-sm">Lite Member</h4>
                                                 <p className="text-[10px] text-slate-500">Limited Access</p>
-                                            </div>
-                                        </div>
+                                         </div>
                                     </div>
+                                </div>
                                     {/* Animated Upgrade button — red/pink spinning border */}
                                     <SheetClose asChild>
                                         <Link href="/upgrade" className="mt-2 block">
@@ -537,7 +558,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                         </div>
 
                         {/* Admin Controls — single link to admin panel (sidebar handles rest) */}
-                        {(user as any)?.role === 'admin' && (
+                        {user?.role === 'admin' && (
                             <div className="pt-4 border-t border-slate-100 mt-4">
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-4">Admin</p>
                                 <div className="space-y-1">

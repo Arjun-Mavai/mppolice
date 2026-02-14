@@ -110,7 +110,7 @@ export function PricingCard({ planType, pricing, features, language, onBuy, isPo
                                 <span className="relative inline-flex items-center">
                                     <span className="absolute inset-[-2] rounded-full bg-gradient-to-r from-red-500 via-pink-500 to-green-500 p-[1.5px]" />
                                     <span className="relative bg-white text-slate-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full">
-                                        ₹{monthly}/mo
+                                        {hi ? `लगभग ₹${monthly}/mo` : `Effective ₹${monthly}/mo`}
                                     </span>
                                 </span>
                             </div>

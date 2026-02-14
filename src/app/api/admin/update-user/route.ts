@@ -112,9 +112,25 @@ export async function POST(request: Request) {
 
     await db.update(mppscUsers).set(updates).where(eq(mppscUsers.id, userId));
 
+    // ── Log Activity ──────────────────────────────────────────────
+    if (Object.keys(updates).length > 0) {
+      const { logUserActivity } = await import('@/app/actions/user-activity');
+      await logUserActivity({
+        userId: targetUser.id,
+        userEmail: targetUser.email,
+        userName: targetUser.name,
+        adminId: adminUser.id,
+        action: updates.planTier ? 'PLAN_CHANGE' : 'UPDATE',
+        details: {
+          changes: updates,
+          reason: 'Admin manual update',
+        }
+      });
+    }
+
     return NextResponse.json({
       success: true,
-      message: `Updated: ${changes.join(', ')} for ${targetUser.name || targetUser.email}`,
+      message: `Updated: ${changes.join(', ')}`,
     });
 
   } catch (error: any) {

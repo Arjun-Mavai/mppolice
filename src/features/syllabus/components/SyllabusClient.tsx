@@ -88,8 +88,8 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                   </h1>
                   <p className="max-w-xl mx-auto text-lg md:text-xl text-slate-500 font-medium leading-relaxed">
                     {language === 'hi' 
-                        ? 'एमपीपीएससी प्रीलिम्स 2026 के लिए आधुनिक रणनीति। 1700+ टॉपिक्स, नेमोनिक्स और टेस्ट सीरीज।'
-                        : 'The most comprehensive roadmap for MPPSC 2026. 1700+ topics, smart mnemonics, and real-time assessments.'}
+                        ? 'एमपीपीएससी प्रीलिम्स 2026 के लिए आधुनिक रणनीति। 100+ टॉपिक्स, नेमोनिक्स और टेस्ट सीरीज।'
+                        : 'The most comprehensive roadmap for MPPSC 2026. 100+ topics, smart mnemonics, and real-time assessments.'}
                   </p>
               </div>
 

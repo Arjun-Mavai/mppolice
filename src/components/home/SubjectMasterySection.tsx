@@ -29,8 +29,8 @@ export function SubjectMasterySection() {
                         </h2>
                         <p className="text-lg text-slate-600 leading-relaxed font-medium">
                             {language === 'hi'
-                                ? 'सिर्फ मेहनत नहीं, स्मार्ट स्टडी करें। हमारा AI हर विषय में आपकी परफॉरमेंस को ट्रैक करता है, ताकि आप अपनी कमजोरियों को ताकत बना सकें।'
-                                : "Don't just study hard, study smart. Our AI analyzes your performance in every subject to tell you exactly where to focus."}
+                                ? 'सिर्फ मेहनत नहीं, स्मार्ट स्टडी करें। हमारा Smart Coach हर विषय में आपकी परफॉरमेंस को ट्रैक करता है, ताकि आप अपनी कमजोरियों को ताकत बना सकें।'
+                                : "Don't just study hard, study smart. Our Smart Coach analyzes your performance in every subject to tell you exactly where to focus."}
                         </p>
                         <div className="flex gap-2 flex-wrap">
                             {['History (इतिहास)', 'Polity (राजव्यवस्था)', 'Geography (भूगोल)', 'Science (विज्ञान)'].map(tag => (
@@ -85,7 +85,7 @@ export function SubjectMasterySection() {
                                 <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex gap-4 items-start">
                                     <BrainCircuit className="w-6 h-6 text-purple-400 shrink-0" />
                                     <p className="text-sm text-slate-300 leading-relaxed">
-                                        <span className="text-purple-400 font-bold">AI Suggestion:</span> {language === 'hi' ? 'यूनिट 3 के  भूगोल' : 'Focus on Geography'} {language === 'hi' ? 'प्रश्नों पर ध्यान दें। "नदियां और पर्वत" में आपकी सटीकता औसत से कम है।' : 'questions. Your accuracy is below average in "Rivers & Mountains".'}
+                                        <span className="text-purple-400 font-bold">Smart Suggestion:</span> {language === 'hi' ? 'यूनिट 3 के  भूगोल' : 'Focus on Geography'} {language === 'hi' ? 'प्रश्नों पर ध्यान दें। "नदियां और पर्वत" में आपकी सटीकता औसत से कम है।' : 'questions. Your accuracy is below average in "Rivers & Mountains".'}
                                     </p>
                                 </div>
                             </Card>

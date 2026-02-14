@@ -6,7 +6,9 @@ import { ArrowLeft, Search, BookOpen, Loader2 } from "lucide-react";
 import { BlogCard } from "@/components/blog/BlogCard";
 import { SearchInput } from "@/components/blog/SearchInput";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { canAccessBlog } from "@/lib/access-control";
 import { getBlogs } from "@/actions/blog-actions";
+import { redirect } from "next/navigation";
 
 interface BlogsClientProps {
     initialBlogs: any[];
@@ -25,7 +27,7 @@ export default function BlogsClient({ initialBlogs, initialPagination, initialCo
     // State
     const [blogs, setBlogs] = useState<any[]>(initialBlogs);
     const [pagination, setPagination] = useState(initialPagination);
-    const [activeUnit, setActiveUnit] = useState<string>('All');
+    const [activeUnit, setActiveUnit] = useState<string>('Free');
     const [searchQuery, setSearchQuery] = useState('');
     
     const [isPending, startTransition] = useTransition();
@@ -33,9 +35,11 @@ export default function BlogsClient({ initialBlogs, initialPagination, initialCo
 
     const isGuest = !(currentUser as any)?.is_subscribed;
 
+   
+
     // Units: Free tab first for non-subscribed users
     const units = isGuest
-        ? ['All', 'Free', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)]
+        ? ['Free','All', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)]
         : ['All', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)];
 
     // Initial Fetch / Filter Change
@@ -171,7 +175,7 @@ export default function BlogsClient({ initialBlogs, initialPagination, initialCo
                                 <>
                                     <p className="text-slate-300 text-sm mb-4 relative z-10">Premium access active! Master your preparation with full mock tests.</p>
                                     <Button variant="secondary" className="w-full text-slate-900 font-bold hover:bg-white shadow-lg" asChild>
-                                        <Link href="/syllabus/quiz">Start Practicing</Link>
+                                        <Link href="/syllabus/quiz/pyq">Start Practicing</Link>
                                     </Button>
                                 </>
                             ) : (currentUser as any)?.plan_tier === 'lite' ? (
@@ -234,20 +238,11 @@ export default function BlogsClient({ initialBlogs, initialPagination, initialCo
                                     );
 
                                     return displayBlogs.map((blog, i) => {
-                                        const userTier = (currentUser as any)?.plan_tier || 'free';
-                                        const isUserSubscribed = (currentUser as any)?.is_subscribed;
-                                        const isAdmin = (currentUser as any)?.role === 'admin';
-                                        
-                                        let isLocked = true;
-                                        if (isAdmin) {
-                                            isLocked = false;
-                                        } else if (isUserSubscribed && userTier === 'pro') {
-                                            isLocked = blog.isProAccess === false;
-                                        } else if (isUserSubscribed && userTier === 'lite') {
-                                            isLocked = !(blog.isLiteAccess || blog.isFreeAccess);
-                                        } else {
-                                            isLocked = !blog.isFreeAccess;
-                                        }
+                                        const hasAccess = canAccessBlog(
+                                            { isFreeAccess: blog.isFreeAccess, isLiteAccess: blog.isLiteAccess, isProAccess: blog.isProAccess },
+                                            currentUser as Parameters<typeof canAccessBlog>[1]
+                                        );
+                                        const isLocked = !hasAccess;
 
                                         return (
                                             <BlogCard 

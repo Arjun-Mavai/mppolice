@@ -30,9 +30,9 @@ interface PYQPageClientProps {
 
 export default function PYQPageClient({ initialTests }: PYQPageClientProps) {
     const router = useRouter();
-    const pathname = usePathname();
-    const { language } = useSettingsStore();
+     const { language } = useSettingsStore();
     const [paywallOpen, setPaywallOpen] = useState(false);
+    const [loadingTestId, setLoadingTestId] = useState<string | null>(null);
 
     const hi = language === 'hi';
     return (
@@ -45,7 +45,7 @@ export default function PYQPageClient({ initialTests }: PYQPageClientProps) {
             <div className="max-w-5xl mx-auto px-6 relative z-10 pt-32">
                 
                 {/* Header Row */}
-             { pathname === "/syllabus/quiz/pyq" && ( <div className="flex items-center justify-between mb-8">
+             {/* { pathname.includes("topic") && ( <div className="flex items-center justify-between mb-8">
                      <Button 
                         variant="ghost" 
                         onClick={() => router.push('/syllabus/quiz')}
@@ -56,7 +56,7 @@ export default function PYQPageClient({ initialTests }: PYQPageClientProps) {
                         </div>
                         <span className="text-sm font-black uppercase tracking-widest">{hi ? 'क्विज़ हब' : 'Quiz Hub'}</span>
                     </Button>
-                </div>)}
+                </div>)} */}
 
                 {/* 🧭 CONSOLIDATED SUB-NAV */}
                 <QuizSubNav />
@@ -84,6 +84,7 @@ export default function PYQPageClient({ initialTests }: PYQPageClientProps) {
                                 title={hi ? test.title : (test.titleEn || test.title)}
                                 subtitle={`${test.year}`}
                                 questions={test.totalQuestions || undefined}
+                                itemLabel={hi ? 'प्रश्न' : 'Questions'}
                                 marks={(test.totalQuestions || 0) * QUIZ_CONSTANTS.MARKS_PER_QUESTION}
                                 duration={test.durationMinutes}
                                 isLocked={test.isLocked}
@@ -92,10 +93,12 @@ export default function PYQPageClient({ initialTests }: PYQPageClientProps) {
                                 maxAttempts={test.maxRetries}
                                 language={language}
                                 colorVariant={(['amber', 'emerald', 'pink', 'blue', 'indigo'] as const)[idx % 5]}
+                                isLoading={loadingTestId === test.id}
                                 onClick={() => {
                                     if (test.isLocked) {
                                         setPaywallOpen(true);
                                     } else {
+                                        setLoadingTestId(test.id);
                                         router.push(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`)
                                     }
                                 }}

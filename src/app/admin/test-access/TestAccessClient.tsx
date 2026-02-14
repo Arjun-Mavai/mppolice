@@ -75,6 +75,7 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
     const [isPending, startTransition] = useTransition();
     const [editingTitle, setEditingTitle] = useState<string | null>(null);
     const [editTitleValue, setEditTitleValue] = useState('');
+    const [editTitleEnValue, setEditTitleEnValue] = useState('');
     const [editingOrder, setEditingOrder] = useState<string | null>(null);
     const [editOrderValue, setEditOrderValue] = useState('');
     const [editingLimit, setEditingLimit] = useState<string | null>(null);
@@ -145,16 +146,21 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
         });
     };
 
-    // Save title
+    // Save title (Bilingual)
     const handleSaveTitle = (testId: string) => {
         if (!editTitleValue.trim()) return;
+        
         setTests(prev => prev.map(t => 
-            t.id === testId ? { ...t, title: editTitleValue.trim() } : t
+            t.id === testId ? { 
+                ...t, 
+                title: editTitleValue.trim(),
+                titleEn: editTitleEnValue.trim() || null 
+            } : t
         ));
         setEditingTitle(null);
         startTransition(async () => {
             try {
-                await updateTestTitle(testId, editTitleValue.trim());
+                await updateTestTitle(testId, editTitleValue.trim(), editTitleEnValue.trim() || null);
                 toast.success('Title updated!');
             } catch {
                 router.refresh();
@@ -467,37 +473,74 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
                                                     )}
                                                 </div>
                                                 
-                                                {/* Title — inline editable */}
+                                                {/* Title — inline editable (Bilingual) */}
                                                 {editingTitle === test.id ? (
-                                                    <div className="flex items-center gap-2 mt-1">
+                                                    <div className="flex flex-col gap-2 mt-1 w-full max-w-md">
                                                         <Input
                                                             value={editTitleValue}
                                                             onChange={(e) => setEditTitleValue(e.target.value)}
                                                             className="h-8 text-sm font-semibold"
+                                                            placeholder="Hindi Title"
                                                             autoFocus
                                                             onKeyDown={(e) => {
                                                                 if (e.key === 'Enter') handleSaveTitle(test.id);
                                                                 if (e.key === 'Escape') setEditingTitle(null);
                                                             }}
                                                         />
-                                                        <Button size="icon" variant="ghost" className="h-7 w-7 text-emerald-600" onClick={() => handleSaveTitle(test.id)}>
-                                                            <Check className="w-4 h-4" />
-                                                        </Button>
-                                                        <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400" onClick={() => setEditingTitle(null)}>
-                                                            <X className="w-4 h-4" />
-                                                        </Button>
+                                                        <Input
+                                                            value={editTitleEnValue}
+                                                            onChange={(e) => setEditTitleEnValue(e.target.value)}
+                                                            className="h-8 text-sm font-medium"
+                                                            placeholder="English Title"
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') handleSaveTitle(test.id);
+                                                                if (e.key === 'Escape') setEditingTitle(null);
+                                                            }}
+                                                        />
+                                                        <div className="flex gap-2">
+                                                            <Button size="sm" variant="default" className="h-7 px-3 bg-emerald-600 hover:bg-emerald-700" onClick={() => handleSaveTitle(test.id)}>
+                                                                <Check className="w-3 h-3 mr-1" /> Save
+                                                            </Button>
+                                                            <Button size="sm" variant="ghost" className="h-7 px-3 text-slate-500" onClick={() => setEditingTitle(null)}>
+                                                                <X className="w-3 h-3 mr-1" /> Cancel
+                                                            </Button>
+                                                        </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="flex items-center gap-2 group">
-                                                        <h3 className="font-semibold text-slate-900 truncate">
-                                                            {test.type === 'TOPIC' && test.topicName ? test.topicName : test.title}
-                                                        </h3>
-                                                        <button
-                                                            onClick={() => { setEditingTitle(test.id); setEditTitleValue(test.title); }}
-                                                            className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-slate-700"
-                                                        >
-                                                            <Pencil className="w-3.5 h-3.5" />
-                                                        </button>
+                                                    <div className="group">
+                                                        <div className="flex items-start gap-2">
+                                                            <div>
+                                                                <h3 className="font-semibold text-slate-900 leading-snug">
+                                                                    {test.title}
+                                                                </h3>
+                                                                {test.titleEn && (
+                                                                    <p className="text-sm text-slate-500 font-medium">
+                                                                        {test.titleEn}
+                                                                    </p>
+                                                                )}
+                                                                
+                                                                {/* Show Linked Topic Name for Context (if available) */}
+                                                                {test.type === 'TOPIC' && test.topicName && (
+                                                                    <div className="flex items-center gap-1.5 mt-1">
+                                                                        <Badge variant="outline" className="text-[10px] font-normal text-slate-400 border-slate-200 px-1.5 py-0 h-5">
+                                                                            Linked: {test.topicName}
+                                                                        </Badge>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            <button
+                                                                onClick={() => { 
+                                                                    setEditingTitle(test.id); 
+                                                                    setEditTitleValue(test.title); 
+                                                                    setEditTitleEnValue(test.titleEn || ''); 
+                                                                }}
+                                                                className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-blue-600 p-1"
+                                                                title="Rename Test"
+                                                            >
+                                                                <Pencil className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 )}
 

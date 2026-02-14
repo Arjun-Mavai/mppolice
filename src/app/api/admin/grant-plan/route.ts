@@ -90,6 +90,22 @@ export async function POST(request: Request) {
         }),
       }).where(eq(mppscUsers.id, existing.id));
 
+      // ── Log Activity ──────────────────────────────────────────────
+      const { logUserActivity } = await import('@/app/actions/user-activity');
+      await logUserActivity({
+        userId: existing.id,
+        userEmail: existing.email,
+        userName: name,
+        adminId: adminUser.id,
+        action: 'GRANT',
+        details: {
+          plan: planTier,
+          months,
+          reason: grantMeta.grantReason,
+          isUpgrade: true
+        }
+      });
+
       return NextResponse.json({
         success: true,
         message: `${name} upgraded to ${planTier} (${months} months) — existing user updated`,
@@ -114,6 +130,22 @@ export async function POST(request: Request) {
       role: 'guest',
       accessExpiresAt,
       metadata: JSON.stringify(grantMeta),
+    });
+
+    // ── Log Activity ──────────────────────────────────────────────
+    const { logUserActivity } = await import('@/app/actions/user-activity');
+    await logUserActivity({
+      userId,
+      userEmail: normalizedEmail,
+      userName: name,
+      adminId: adminUser.id,
+      action: 'GRANT',
+      details: {
+        plan: planTier,
+        months,
+        reason: grantMeta.grantReason,
+        isNewUser: true
+      }
     });
 
     return NextResponse.json({

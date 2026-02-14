@@ -104,3 +104,63 @@ export async function GET() {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+// ── DELETE User ──────────────────────────────────────────────
+export async function DELETE(req: Request) {
+  try {
+    const { userId } = await req.json();
+
+    // ── Admin Auth ──────────────────────────────────────────────
+    const cookieStore = await cookies();
+    const token = cookieStore.get('mppsc_token')?.value;
+
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { verifyToken } = await import('@/lib/jwt');
+    const decoded: any = verifyToken(token);
+
+    if (!decoded?.userId) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+
+    const adminUser = await db.query.mppscUsers.findFirst({
+      where: (users, { eq }) => eq(users.id, decoded.userId)
+    });
+
+    if (!adminUser || adminUser.role !== 'admin') {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+
+    if (!userId) return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+
+    // 1. Get user details for logging before delete
+    const targetUser = await db.query.mppscUsers.findFirst({
+      where: (u, { eq }) => eq(u.id, userId)
+    });
+
+    if (!targetUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+    // 2. Log access delete activity
+    const { logUserActivity } = await import('@/app/actions/user-activity');
+    await logUserActivity({
+      userId: targetUser.id,
+      userEmail: targetUser.email,
+      userName: targetUser.name,
+      adminId: adminUser.id,
+      action: 'DELETE',
+      details: {
+        reason: 'Admin deleted user',
+        previousPlan: targetUser.planTier,
+        joinedAt: targetUser.createdAt,
+      }
+    });
+
+    // 3. Delete user (Cascades attempts/revisions, Set Null payments)
+    await db.delete(mppscUsers).where(sql`id = ${userId}`);
+
+    return NextResponse.json({ message: 'User deleted safely' });
+
+  } catch (error: any) {
+    logger.error("Delete user error:", error);
+    return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
+  }
+}
+

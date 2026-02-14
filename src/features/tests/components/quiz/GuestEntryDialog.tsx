@@ -22,6 +22,7 @@ interface GuestEntryDialogProps {
   onEmailChange: (value: string) => void;
   onMobileChange: (value: string) => void;
   onSubmit: () => void;
+  onExit: () => void;
 }
 
 export function GuestEntryDialog({
@@ -34,14 +35,22 @@ export function GuestEntryDialog({
   onEmailChange,
   onMobileChange,
   onSubmit,
+  onExit,
 }: GuestEntryDialogProps) {
   return (
     <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
-        <DialogHeader>
+      <DialogContent showCloseButton={false} className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+        <DialogHeader className="relative">
           <DialogTitle className="text-2xl font-bold text-slate-900 text-center">
             Welcome to MPPSC 2026! 🚀
           </DialogTitle>
+          <button 
+            onClick={onExit}
+            className="absolute -top-2 -right-2 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            <span className="sr-only">Close</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
           <DialogDescription className="text-slate-600 text-center pt-2">
             We value your time and just need your name to get started!
             <br />

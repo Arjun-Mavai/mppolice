@@ -24,7 +24,7 @@ export async function GET() {
         "Allow: /",
         "Allow: /syllabus/",
         "Allow: /blogs/",
-        "Allow: /syllabus/quiz/",
+        "Allow: /syllabus/quiz/pyq",
         "Allow: /tests/",
         "Disallow: /api/",
         "Disallow: /admin/",

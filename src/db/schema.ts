@@ -92,8 +92,8 @@ export const questions = sqliteTable('questions', {
 // User Attempts Table
 export const userAttempts = sqliteTable('user_attempts', {
   id: text('id').primaryKey(),
-  userId: text('user_id').references(() => mppscUsers.id).notNull(), // Linked to users table
-  testId: text('test_id').references(() => tests.id).notNull(),
+  userId: text('user_id').references(() => mppscUsers.id, { onDelete: 'cascade' }).notNull(), // Linked to users table
+  testId: text('test_id').references(() => tests.id, { onDelete: 'cascade' }).notNull(),
   startTime: integer('start_time', { mode: 'timestamp' }).notNull(),
   endTime: integer('end_time', { mode: 'timestamp' }),
   score: real('score'),
@@ -249,7 +249,7 @@ export const paymentExitReasons = sqliteTable('payment_exit_reasons', {
 // Topic Revisions Table (User Progress)
 export const topicRevisions = sqliteTable('topic_revisions', {
     id: text('id').primaryKey(),
-    userId: text('user_id').references(() => mppscUsers.id).notNull(),
+    userId: text('user_id').references(() => mppscUsers.id, { onDelete: 'cascade' }).notNull(),
     topicId: text('topic_id').notNull(), // Matching syllabusData IDs
     unitId: text('unit_id').notNull(),
     revisionCount: integer('revision_count').default(0),
@@ -307,10 +307,26 @@ export const guests = sqliteTable('guests', {
     index('idx_guests_mobile').on(table.mobile),
 ]);
 
+// User Activity Logs (Audit Trail)
+export const mppscUserActivities = sqliteTable('mppsc_user_activities', {
+    id: text('id').primaryKey(),
+    userId: text('user_id'), // Kept even if user is deleted (for history)
+    userEmail: text('user_email').notNull(),
+    userName: text('user_name'),
+    adminId: text('admin_id'), // Who performed the action
+    action: text('action', { enum: ['PLAN_CHANGE', 'DELETE', 'GRANT', 'UPDATE', 'LOGIN'] }).notNull(),
+    details: text('details', { mode: 'json' }), // Store old/new values
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+}, (table) => [
+    index('idx_activities_user_id').on(table.userId),
+    index('idx_activities_action').on(table.action),
+    index('idx_activities_created_at').on(table.createdAt),
+]);
+
 // Payments Table
 export const payments = sqliteTable('payments', {
     id: text('id').primaryKey(),
-    userId: text('user_id').references(() => mppscUsers.id).notNull(),
+    userId: text('user_id').references(() => mppscUsers.id, { onDelete: 'set null' }), // Set null on user delete
     orderId: text('order_id').notNull(),
     paymentId: text('payment_id').unique(),
     signature: text('signature'),

@@ -10,6 +10,7 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ExitSurveyModal } from "./ExitSurveyModal"
+import { contactEmail } from "@/app/contact/page"
 
 function PaymentContent() {
   const router = useRouter()
@@ -76,7 +77,7 @@ function PaymentContent() {
       router.back(); 
   };
 
-  const paymentEmail = "mppscsyllabus@gmail.com"
+  const paymentEmail = contactEmail
   const paymentSubject = `Payment Confirmation - ${planName}`
   const paymentBody = `Dear Team,
 

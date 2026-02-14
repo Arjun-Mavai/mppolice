@@ -147,29 +147,38 @@ export async function toggleTestHidden(testId: string, isHidden: boolean) {
         .set({ isHidden })
         .where(eq(tests.id, testId));
 
-    revalidateTag('tests', { expire: 0 });
-    revalidateTag('tests-list', { expire: 0 });
+
+
+        // yaha tests ka cache burst ho raha h 
+
+    revalidateTag('tests', { expire: 0 }); // ✅ 'tests' — FLT/PYQ/CSAT use karte h
+    revalidateTag('tests-list', { expire: 0 }); // ✅ 'tests-list' — getCachedFLTTests use karta h
+    revalidateTag('syllabus-topics', { expire: 0 }); // 🔥 FIX: TOPIC tests use this tag!
 
     logger.info(`Test hidden toggled: ${testId} → isHidden=${isHidden}`);
     return { success: true };
 }
 
 /**
- * updateTestTitle — Test ka title change karo
+ * updateTestTitle — Test ka title change karo (Bilingual)
  */
-export async function updateTestTitle(testId: string, title: string) {
+export async function updateTestTitle(testId: string, title: string, titleEn: string | null) {
     await requireAdmin();
 
-    if (!title.trim()) return { success: false, error: 'Title cannot be empty' };
+    if (!title.trim()) return { success: false, error: 'Hindi Title cannot be empty' };
 
     await db.update(tests)
-        .set({ title: title.trim(), updatedAt: new Date() })
+        .set({ 
+            title: title.trim(), 
+            titleEn: titleEn ? titleEn.trim() : null,
+            updatedAt: new Date() 
+        })
         .where(eq(tests.id, testId));
 
     revalidateTag('tests', { expire: 0 });
     revalidateTag('tests-list', { expire: 0 });
 
-    logger.info(`Test title updated: ${testId} → "${title}"`);
+    logger.info(`Test title updated: ${testId} → "${title}" / "${titleEn}"`);
     return { success: true };
 }
 

@@ -2,27 +2,21 @@
 
 import { db } from '@/db';
 import { tests, userAttempts } from '@/db/schema';
-import { eq, and, sql, inArray } from 'drizzle-orm';
+import { eq, and, sql, inArray, asc } from 'drizzle-orm';
+import { unstable_cache } from 'next/cache';
 import { verifyAuth } from '@/lib/auth';
-import { cachedData, CACHE } from '@/lib/cache';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 
-// Cache the unit tests query using our centralized policy (7 days)
-const getCachedUnitTests = cachedData(
+// Same pattern as getCachedFLTTests — 60s revalidate, tag 'tests'
+const getCachedUnitTests = unstable_cache(
     async () => {
-        return await db.select({
-            id: tests.id,
-            unitId: tests.unitId,
-            title: tests.title,
-            titleEn: tests.titleEn,
-            totalQuestions: tests.totalQuestions,
-            isFreeAccess: tests.isFreeAccess
-        })
-        .from(tests)
-        .where(eq(tests.type, 'UNIT'));
+        return await db.select()
+            .from(tests)
+            .where(and(eq(tests.type, 'UNIT'), eq(tests.isHidden, false)))
+            .orderBy(asc(tests.displayOrder));
     },
     ['unit-tests-list'],
-    [CACHE.TESTS.TAGS.ALL]
+    { revalidate: 60, tags: ['tests'] }
 );
 
 export async function getAvailableUnitTests() {
@@ -57,14 +51,9 @@ export async function getAvailableUnitTests() {
         attemptsMap = new Map(attempts.map(a => [a.testId, Number(a.count)]));
     }
 
-    return allUnitTests.map((test, idx) => {
+    return allUnitTests.map((test) => {
         const attemptsCount = attemptsMap.get(test.id) || 0;
         const attemptsLeft = maxRetries != null ? Math.max(0, maxRetries - attemptsCount) : null;
-        
-        // Simple tier limit for units (lite/pro vs free)
-        const isPastLimit = idx >= (maxRetries || 999); // This is a bit arbitrary, let's use actual PLAN_LIMITS if possible
-        // Actually, for Unit tests, we use PLAN_LIMITS in the client. 
-        // Let's keep the client-side decision for "Locked due to tier" but allow isFreeAccess override from backend.
         
         return {
             ...test,
@@ -72,7 +61,9 @@ export async function getAvailableUnitTests() {
             attemptsLeft: user ? attemptsLeft : null,
             maxRetries: maxRetries,
             isFree: (test.isFreeAccess ?? false) && !user,
-            isFreeAccess: !!test.isFreeAccess
+            isFreeAccess: !!test.isFreeAccess,
+            isLiteAccess: !!test.isLiteAccess,
+            isProAccess: test.isProAccess !== false,
         };
     });
 }

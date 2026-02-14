@@ -217,7 +217,7 @@ export default function FeedbackPage() {
 
                         <div className="space-y-1.5">
                             <Label htmlFor="email">Email (Optional)</Label>
-                            <Input id="email" type="email" placeholder="mppscsyllabus@gmail.com" {...register("email")} />
+                            <Input id="email" type="email" placeholder="mppsc@zenscroll.app" {...register("email")} />
                         </div>
                     </div>
 

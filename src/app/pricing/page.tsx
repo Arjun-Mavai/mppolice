@@ -26,6 +26,7 @@ import { PaymentModal } from '@/components/payment/PaymentModal';
 import { PricingCard } from '@/components/PricingCard';
 
 import { AppNavbar } from '@/components/layout/AppNavbar';
+import { ExitSurveyModal } from "@/components/ExitSurveyModal";
 
 // ── FAQ data — bilingual ────────────────────────────────────
 const faqData = [
@@ -100,6 +101,12 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
 // ... (existing imports)
 
 export default function PricingPage() {
+    const [p, setP] = useState<PricingData>(PRICING_DEFAULTS);
+// Payment Modal State
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState({ planType: 'pro' as 'lite' | 'pro' | 'upgrade', name: '' });
+  // ── Exit Survey Logic ─────────────────────────────────────
+  const [showExitSurvey, setShowExitSurvey] = useState(false);
   const { language, user } = useSettingsStore();
   const hi = language === 'hi';
   const router = useRouter();
@@ -108,24 +115,21 @@ export default function PricingPage() {
   const isLiteUser = planTier === 'lite';
   const isLoggedIn = !!user;
 
-  // Logged-in users ko pricing nahi dikhana — redirect to quiz
+  // Pro users ko pricing page bilkul na dikhao — redirect to quiz
   useEffect(() => {
-    if (isLoggedIn && !isLiteUser) {
-      router.replace('/syllabus/quiz');
+    if (isProUser) {
+      router.replace('/syllabus/quiz/pyq');
     }
-  }, [isLoggedIn, isLiteUser, router]);
+  }, [isProUser, router]);
 
   // ── Fetch dynamic pricing from API ────────────────────────
-  const [p, setP] = useState<PricingData>(PRICING_DEFAULTS);
   useEffect(() => {
     fetch(API.PRICING).then(r => r.json()).then(d => {
       if (d.pricing) setP(d.pricing);
     }).catch(() => {/* defaults stay */});
   }, []);
 
-  // Payment Modal State
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState({ planType: 'pro' as 'lite' | 'pro' | 'upgrade', name: '' });
+  
 
   const handleBuy = (plan: 'lite' | 'pro' | 'upgrade') => {
     if (plan === 'lite') {
@@ -143,6 +147,36 @@ export default function PricingPage() {
   const proDiscount = calcDiscount(p.proPrice, p.proOriginalPrice);
   const liteMonthly = calcMonthly(p.litePrice, p.liteMonths);
   const proMonthly = calcMonthly(p.proPrice, p.proMonths);
+
+  
+  // Intercept back button
+  useEffect(() => {
+    // Only intercept if user is NOT a pro member already
+    if (isProUser) return;
+
+    // Check if survey already completed
+    const surveyDone = localStorage.getItem('payment_exit_survey_completed');
+    if (surveyDone) return;
+
+    // Push state to intercept
+    window.history.pushState({ pricingActive: true }, '');
+
+    const handlePopState = () => {
+        setShowExitSurvey(true);
+        // Don't push state again immediately, let them go back if they confirm in modal
+        // But for now, we want to show modal FIRST.
+        // If they close modal without submitting, we let them go? 
+        // The modal logic handles "Let them go anyway".
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isProUser]);
+
+  const handleConfirmExit = () => {
+    setShowExitSurvey(false);
+    router.back(); // Actually go back now
+  };
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-slate-100 selection:text-slate-900">
@@ -181,7 +215,7 @@ export default function PricingPage() {
       )}
 
       {/* ── Free users — both plans ──────────────────────── */}
-      {!isProUser && (
+      {!isProUser && !isLiteUser && (
         <section className="px-4 pb-16">
 
           {/* Urgency banner — FOMO with dynamic student count */}
@@ -223,7 +257,7 @@ export default function PricingPage() {
                 { icon: Target, label: hi ? '1000+ प्रश्न' : '1000+ Questions', sub: hi ? 'टॉपिक वाइज़' : 'Topic-wise' },
                 { icon: FileText, label: hi ? 'फुल मॉक टेस्ट' : 'Full Mock Tests', sub: hi ? '100 प्रश्न प्रत्येक' : '100Q each' },
                 { icon: BarChart3, label: hi ? 'स्मार्ट एनालिटिक्स' : 'Smart Analytics', sub: hi ? 'कमज़ोर टॉपिक पहचानो' : 'Find weak areas' },
-                { icon: Sparkles, label: hi ? 'स्मार्ट एक्सप्लेनेशन' : 'Smart Explanations', sub: hi ? 'हर प्रश्न का' : 'Every question' },
+                { icon: History, label: hi ? '5+ साल के PYQ' : '5+ Years PYQs', sub: hi ? 'विस्तृत उत्तर सहित' : 'With Explanations' },
               ].map(({ icon: Icon, label, sub }) => (
                 <div key={label} className="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
                   <Icon className="w-6 h-6 text-slate-700 mx-auto mb-2" />
@@ -310,6 +344,12 @@ export default function PricingPage() {
         onOpenChange={setShowPaymentModal}
         planType={selectedPlan.planType}
         planName={selectedPlan.name}
+      />
+      
+      <ExitSurveyModal 
+        open={showExitSurvey}
+        onOpenChange={setShowExitSurvey}
+        onConfirmExit={handleConfirmExit}
       />
     </div>
   );

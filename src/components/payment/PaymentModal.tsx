@@ -50,13 +50,17 @@ const MPPSC_FACTS = [
  * 3. **Engaging Loading State**: User bore na ho isliye MPPSC ke amazing facts rotate hote h
  *    jab tak payment verify ho raha h.
  */
+import { useSettingsStore } from '@/store/useSettingsStore';
+
 export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 'Pro Plan' }: PaymentModalProps) {
+  const { user, setUser } = useSettingsStore();
   const [isLoading, setIsLoading] = useState(false);
   
   // Bhai, ye phases users ko batate h ki abhi background me kya chal raha h.
   // Transparancy = Trust. 🤝
   const [loadingPhase, setLoadingPhase] = useState<'registering' | 'razorpay-open' | 'verifying' | null>(null);
   const [factIndex, setFactIndex] = useState(0);
+  const [emailCheckInProgress, setEmailCheckInProgress] = useState(false);
   const router = useRouter();
 
   // 💡 LEARNING MOMENT:
@@ -68,8 +72,60 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: '', email: '', phone: '', source: '' },
+    defaultValues: { 
+        name: user?.name || '', 
+        email: user?.email || '', 
+        phone: (user as any)?.phone || '', 
+        source: '' 
+    },
   });
+
+  // Update form if user loads late
+  useEffect(() => {
+    if (user) {
+        form.setValue('name', user.name || '');
+        form.setValue('email', user.email || '');
+        if ((user as any).phone) form.setValue('phone', (user as any).phone);
+    }
+  }, [user, form]);
+
+  // Check if email already has a plan (for inline validation when user enters details)
+  const checkEmailHasPlan = useCallback(async (emailVal: string) => {
+    const normalized = (emailVal || '').toLowerCase().trim();
+    if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) return false;
+    const isSameUser = !!user && (user.email?.toLowerCase().trim() === normalized);
+    if (isSameUser) return false;
+    try {
+      const res = await fetch('/api/auth/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalized }),
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      const tier = (data.planTier ?? '').toLowerCase();
+      return !!(data.exists && (tier === 'lite' || tier === 'pro' || data.isSubscribed === true));
+    } catch {
+      return false;
+    }
+  }, [user]);
+
+  const onEmailBlur = useCallback(async () => {
+    const emailVal = form.getValues('email');
+    const normalized = (emailVal || '').toLowerCase().trim();
+    if (!normalized || !!user?.email) return;
+    setEmailCheckInProgress(true);
+    const hasPlan = await checkEmailHasPlan(emailVal);
+    setEmailCheckInProgress(false);
+    if (hasPlan) {
+      form.setError('email', {
+        type: 'manual',
+        message: 'This email is already registered with a plan. Please log in to access your account.',
+      });
+    } else {
+      form.clearErrors('email');
+    }
+  }, [form, user, checkEmailHasPlan]);
 
   // ⚡ Performance Tip: Razorpay SDK ko dynamically load karte h taaki initial page load slow na ho.
   useEffect(() => {
@@ -92,11 +148,11 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
 
   const getLoadingMessage = useCallback(() => {
     switch (loadingPhase) {
-      case 'registering': return 'Preparing your payment...';
+      case 'registering': return user ? 'Setting up payment...' : 'Creating your account...';
       case 'verifying': return 'Verifying your payment...';
       default: return 'Processing...';
     }
-  }, [loadingPhase]);
+  }, [loadingPhase, user]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -104,14 +160,50 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
       setLoadingPhase('registering');
       formValuesRef.current = values;
 
+      // Block if this email already has lite/pro (without same-user login) — validation at submit time
+      const emailToCheck = (values.email || '').toLowerCase().trim();
+      const isLoggedInWithSameEmail = !!user && (user.email?.toLowerCase().trim() === emailToCheck);
+      if (!isLoggedInWithSameEmail && emailToCheck) {
+        const checkRes = await fetch('/api/auth/check-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailToCheck }),
+        });
+        if (checkRes.ok) {
+          const data = await checkRes.json();
+          const tier = (data.planTier ?? '').toLowerCase();
+          const hasPaidPlan =
+            data.exists &&
+            (tier === 'lite' || tier === 'pro' || data.isSubscribed === true);
+          if (hasPaidPlan) {
+            form.setError('email', {
+              type: 'manual',
+              message: 'This email is already registered with a plan. Please log in to access your account.',
+            });
+            toast.error('This email is already registered with a plan. Please log in to access your account.');
+            setIsLoading(false);
+            setLoadingPhase(null);
+            return;
+          }
+        }
+        form.clearErrors('email');
+      }
+
       // 🚀 COMBINED API CALL: Register + Create Order in ONE request
-      // Pehle 2 calls thi (register-init → create-order) = 2 Network Tab entries + 500ms
-      // Ab 1 call h (/api/payment/start) = 1 entry + ~350ms (30% faster!)
       const startRes = await fetch('/api/payment/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...values, planType }),
       });
+
+      // Server-side block: existing lite/pro must be same logged-in user — never open Razorpay for 403
+      if (startRes.status === 403) {
+        const errData = await startRes.json().catch(() => ({}));
+        toast.error(errData.error || 'This email is already registered with a plan. Please log in.');
+        setIsLoading(false);
+        setLoadingPhase(null);
+        return;
+      }
       if (!startRes.ok) {
         const error = await startRes.json();
         throw new Error(error.error || 'Failed to start payment');
@@ -148,7 +240,11 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
             onOpenChange(true);
 
             // Verify Payment — Frontend se mat maano, Server par signature verify karo.
-            const verifyRes = await fetch('/api/payment/verify', {
+            // 🔄 ROUTING UPDATE: User requested separate endpoint for upgrades.
+            const isUpgrade = planType === 'upgrade';
+            const verifyUrl = isUpgrade ? '/api/payment/verify-upgrade' : '/api/payment/verify';
+
+            const verifyRes = await fetch(verifyUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -161,13 +257,30 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
             if (!verifyRes.ok) throw new Error('Payment verification failed');
 
             const verifyData = await verifyRes.json();
-            toast.success('Payment successful! 🎉');
             
+            // 🔥 CACHE INVALIDATION MAGIC: Update local store immediately
+            // This ensures user sees "Pro" badge everywhere instantly without reload
+            if (user) {
+                // If we have previous user object, update it
+                const updatedPlan = verifyData.planTier || 'pro'; // fallback to pro if verification sends nothing
+                setUser({ ...user, planTier: updatedPlan, isSubscribed: true }, true);
+            }
+            // Trigger a background re-fetch so plan_tier is fresh everywhere (no caching)
+            const meRes = await fetch('/api/auth/me');
+            const meData = await meRes.json();
+            if (meData?.user) setUser(meData.user, true);
+            router.refresh();
+
+            toast.success('Payment successful! 🎉');
+
             // Sab clean up karke Thank You page par bhejo
             onOpenChange(false);
             setIsLoading(false);
             setLoadingPhase(null);
-            router.push(`/thank-you?plan=${verifyData.planTier || planType}&email=${encodeURIComponent(values.email)}&name=${encodeURIComponent(values.name)}`);
+
+            const displayPlan = planType === 'upgrade' ? 'pro' : (verifyData.planTier || planType);
+            const upgradeParam = planType === 'upgrade' ? '&type=upgrade' : '';
+            router.push(`/thank-you?plan=${displayPlan}&email=${encodeURIComponent(values.email)}&name=${encodeURIComponent(values.name)}${upgradeParam}`);
           } catch (error) {
             console.error(error);
             toast.error('Payment verification failed. Please contact support.');
@@ -202,6 +315,10 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
 
   const showLoading = isLoading && loadingPhase !== 'razorpay-open';
   const CurrentFactIcon = MPPSC_FACTS[factIndex].icon;
+
+  // Determine if we should show the "Simplified" view for logged in users (Lite upgrade / renew)
+  // Session se data lete h — form nahi; direct paywall. Phone required by Razorpay; if missing we show form for phone only.
+  const isUserReady = !!user && !!(user.phone ?? (user as any).phone);
 
   return (
     <Dialog open={open} onOpenChange={showLoading ? undefined : onOpenChange} modal={false}>
@@ -248,72 +365,108 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
             <DialogHeader >
               <DialogTitle className="text-2xl font-bold">Upgrade to Premium</DialogTitle>
               <DialogDescription className="text-zinc-500">
-                Enter your details to proceed with the payment.
+                {isUserReady ? 'Confirm your details to proceed.' : 'Enter your details to proceed with the payment.'}
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input 
-                  id="name" 
-                  placeholder="John Doe" 
-                  {...form.register('name')} 
-                  className="bg-white border-zinc-300 focus:ring-black"
-                />
-                {form.formState.errors.name && (
-                  <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
+
+            {isUserReady ? (
+                 // SIMPLIFIED VIEW FOR LOGGED IN USERS
+                 <div className="py-4 space-y-4">
+                     <div className="bg-zinc-50 p-4 rounded-lg border border-zinc-100 flex items-center gap-4">
+                         <div className="h-10 w-10 rounded-full bg-black text-white flex items-center justify-center font-bold text-lg">
+                             {user?.name?.charAt(0).toUpperCase()}
+                         </div>
+                         <div>
+                             <p className="font-semibold text-sm text-zinc-900">{user?.name}</p>
+                             <p className="text-xs text-zinc-500">{user?.email}</p>
+                             <p className="text-xs text-zinc-500">{user?.phone ?? (user as any)?.phone}</p>
+                         </div>
+                     </div>
+                     <Button 
+                        onClick={() => onSubmit(form.getValues())}
+                        className="w-full bg-black hover:bg-zinc-800 text-white font-bold py-2 mt-4"
+                        disabled={isLoading}
+                    >
+                        {`Pay — ${planName}`}
+                    </Button>
+                 </div>
+            ) : (
+                // FULL FORM FOR GUESTS Or USERS WITHOUT PHONE
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+                <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input 
+                    id="name" 
+                    placeholder="John Doe" 
+                    {...form.register('name')} 
+                    // Disable if logged in
+                    disabled={!!user?.name}
+                    className="bg-white border-zinc-300 focus:ring-black disabled:bg-zinc-100 disabled:text-zinc-500"
+                    />
+                    {form.formState.errors.name && (
+                    <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
+                    )}
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="john@example.com" 
+                    {...form.register('email')}
+                    onBlur={() => void onEmailBlur()}
+                    disabled={!!user?.email}
+                    className="bg-white border-zinc-300 focus:ring-black disabled:bg-zinc-100 disabled:text-zinc-500"
+                    />
+                    {(form.formState.errors.email || emailCheckInProgress) && (
+                    <p className="text-sm text-red-500">
+                      {emailCheckInProgress ? 'Checking...' : form.formState.errors.email?.message}
+                    </p>
+                    )}
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input 
+                    id="phone" 
+                    type="tel" 
+                    placeholder="9876543210" 
+                    {...form.register('phone')} 
+                    className="bg-white border-zinc-300 focus:ring-black"
+                    />
+                    {form.formState.errors.phone && (
+                    <p className="text-sm text-red-500">{form.formState.errors.phone.message}</p>
+                    )}
+                </div>
+                
+                {/* Source dropdown not needed for upgrade/logged-in users usually, but keeping it optional */}
+                {!user && (
+                    <div className="space-y-2">
+                        <Label htmlFor="source">How did you hear about us? (Optional)</Label>
+                        <Select onValueChange={(val) => form.setValue('source', val)}>
+                        <SelectTrigger className="bg-white border-zinc-300 focus:ring-black">
+                            <SelectValue placeholder="Select an option" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="telegram">Telegram</SelectItem>
+                            <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                            <SelectItem value="google">Google</SelectItem>
+                            <SelectItem value="friends">Friends/Family</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                        </Select>
+                    </div>
                 )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="john@example.com" 
-                  {...form.register('email')}
-                  className="bg-white border-zinc-300 focus:ring-black"
-                />
-                {form.formState.errors.email && (
-                  <p className="text-sm text-red-500">{form.formState.errors.email.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input 
-                  id="phone" 
-                  type="tel" 
-                  placeholder="9876543210" 
-                  {...form.register('phone')} 
-                  className="bg-white border-zinc-300 focus:ring-black"
-                />
-                {form.formState.errors.phone && (
-                  <p className="text-sm text-red-500">{form.formState.errors.phone.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="source">How did you hear about us? (Optional)</Label>
-                <Select onValueChange={(val) => form.setValue('source', val)}>
-                  <SelectTrigger className="bg-white border-zinc-300 focus:ring-black">
-                    <SelectValue placeholder="Select an option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="telegram">Telegram</SelectItem>
-                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                    <SelectItem value="google">Google</SelectItem>
-                    <SelectItem value="friends">Friends/Family</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full bg-black hover:bg-zinc-800 text-white font-bold py-2 mt-4"
-                disabled={isLoading}
-              >
-                {`Pay — ${planName}`}
-              </Button>
-            </form>
+                
+                <Button 
+                    type="submit" 
+                    className="w-full bg-black hover:bg-zinc-800 text-white font-bold py-2 mt-4"
+                    disabled={isLoading}
+                >
+                    {`Pay — ${planName}`}
+                </Button>
+                </form>
+            )}
+            
           </>
         )}
       </DialogContent>

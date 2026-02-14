@@ -129,7 +129,7 @@ async function fetchAnalyticsInternal(userId: string) {
                     color: percentage >= 80 ? 'emerald' : percentage >= 60 ? 'amber' : 'red'
                 };
             })
-            .sort((a, b) => b.percentage - a.percentage);
+            .sort((a, b) => a.percentage - b.percentage); // Sort ASCENDING: Weak areas (0%) at top, Strong (100%) at bottom
 
         // 5. Generate AI Suggestion
         const sortedMastery = [...mastery].sort((a, b) => a.percentage - b.percentage);

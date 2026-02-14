@@ -57,7 +57,7 @@ export default function CSATPageClient({ initialTests }: CSATPageClientProps) {
             <div className="max-w-5xl mx-auto px-6 relative z-10 pt-32">
                 
                 {/* Header Row */}
-                <div className="flex items-center justify-between mb-8">
+                {/* <div className="flex items-center justify-between mb-8">
                      <Button 
                         variant="ghost" 
                         onClick={() => router.push('/syllabus/quiz')}
@@ -68,7 +68,7 @@ export default function CSATPageClient({ initialTests }: CSATPageClientProps) {
                         </div>
                         <span className="text-sm font-black uppercase tracking-widest">{hi ? 'क्विज़ हब' : 'Quiz Hub'}</span>
                     </Button>
-                </div>
+                </div> */}
 
                 {/* 🧭 CONSOLIDATED SUB-NAV */}
                 <QuizSubNav />
@@ -95,7 +95,8 @@ export default function CSATPageClient({ initialTests }: CSATPageClientProps) {
                                 index={idx}
                                 title={hi ? test.title : (test.titleEn || test.title)}
                                 questions={test.totalQuestions || undefined}
-                                marks={(test.totalQuestions || 0) * QUIZ_CONSTANTS.MARKS_PER_QUESTION}
+                                itemLabel={hi ? 'प्रश्न' : 'Questions'}
+                                marks={(test.totalQuestions || 0) * 2} // CSAT usually 2 marks/question
                                 duration={test.durationMinutes}
                                 isLocked={test.isLocked}
                                 isFree={test.isFree}

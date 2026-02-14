@@ -10,6 +10,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { QuizListItem } from '@/components/QuizListItem';
 import { QuizSubNav } from '@/features/syllabus/components/QuizSubNav';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
+import { QUIZ_CONSTANTS } from '@/config/quiz';
 
 interface QuizUnitSelectionClientProps {
     availableTests: {
@@ -32,8 +33,8 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
 
   const isAdmin = (user as any)?.role === 'admin';
-  const isSubscribed = user?.is_subscribed || false;
-  const userTier = user?.plan_tier || 'free';
+  const isSubscribed = user?.isSubscribed || false;
+  const userTier = user?.planTier || 'free';
   const effectiveTier = !user ? 'guest' : (isSubscribed ? (userTier === 'free' ? 'lite' : userTier) : 'free');
   const hasActivePlan = effectiveTier === 'lite' || effectiveTier === 'pro';
 
@@ -58,16 +59,7 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
             
             {/* Header */}
             <div className="mb-8">
-                 <Button 
-                    variant="ghost" 
-                    onClick={() => router.push('/syllabus/quiz')}
-                    className="group -ml-3 text-slate-500 hover:text-slate-900 hover:bg-transparent p-0"
-                >
-                    <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:shadow-md transition-all mr-3">
-                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                    </div>
-                    <span className="text-sm font-black uppercase tracking-widest">{hi ? 'क्विज़ हब' : 'Quiz Hub'}</span>
-                </Button>
+                 {/* Back button removed as requested */}
             </div>
 
             {/* 🧭 CONSOLIDATED SUB-NAV */}
@@ -99,13 +91,17 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
                         // Backend-only: lock if NOT free access AND no active plan AND not admin
                         const isLocked = !test.isFreeAccess && !hasActivePlan && !isAdmin;
 
+                        const totalQuestions = test.totalQuestions || unitData?.topics?.length || 0;
+                        const totalMarks = totalQuestions * QUIZ_CONSTANTS.MARKS_PER_QUESTION;
+
                         return (
                             <QuizListItem
                                 key={test.id}
                                 index={idx}
                                 title={title}
-                                questions={test.totalQuestions || unitData?.topics?.length || undefined}
-                                marks={100}
+                                questions={totalQuestions}
+                                itemLabel={hi ? 'प्रश्न' : 'Questions'}
+                                marks={totalMarks} // Dynamic Marks
                                 isLocked={isLocked}
                                 isFree={test.isFree}
                                 attemptsLeft={test.attemptsLeft}

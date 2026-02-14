@@ -28,6 +28,7 @@ export async function GET() {
         id: user.id,
         name: user.name,
         email: user.email,
+        phone: user.phone ?? undefined,
         role: user.role,
         is_subscribed: user.isSubscribed,
         plan_tier: user.planTier,

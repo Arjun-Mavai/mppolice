@@ -2,11 +2,11 @@ import { redirect } from 'next/navigation';
 import { getTestWithQuestions, getUserAttempts } from '@/features/tests/actions/submission';
 import { QuizPlayClient } from './QuizPlayClient';
 import { verifyAuth } from '@/lib/auth';
-import { PLAN_LIMITS } from '@/config/plans';
 import { Question } from '@/types/quiz';
 import { logger } from "@/lib/logger";
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
+import { canAccessTest, getUserTier } from '@/lib/access-control';
 
 interface PageProps {
     searchParams: Promise<{
@@ -20,9 +20,10 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     const params = await searchParams;
     logger.debug("params", params);
     const { testId, mode } = params;
+    
 
     if (!testId) {
-        redirect('/syllabus/quiz');
+        redirect('/syllabus/quiz/pyq');
     }
 
     // 1. Fetch Test and User Data in Parallel
@@ -31,6 +32,12 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
         verifyAuth()
     ]);
 
+    // Access: Guest → only isFreeAccess; Logged-in → canAccessTest (tier + flags)
+    const guestDenied = !user && !testData?.isFreeAccess;
+    const loggedInDenied = user && testData && !canAccessTest(testData, user);
+    if (guestDenied || loggedInDenied) {
+        redirect('/pricing');
+    }
     if (!testData) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 pt-[80px]">
@@ -65,41 +72,10 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
         };
     });
 
-    // 3. Determine Access / Paywall Logic
-    const userTier = user?.planTier || 'free';
-    const effectiveTier = !user ? 'guest' : (user.isSubscribed ? (userTier === 'free' ? 'lite' : userTier) : 'free');
-    
-    // Limits
-    // Note: This page is for PLAYING. The limit check usually happens on the listing page (FLTPage).
-    // However, for direct link access, we should re-verify or rely on "Access Denied" if locked.
-    // Current requirement: "FLT page client hydration issue... sab kuch server se karo".
-    // For this specific 'Play' page, we might want to ensure they CAN play.
-    
-    // Logic from FLT Page:
-    // limit = PLAN_LIMITS[effectiveTier].flt_limit
-    // isOpen = index < limit.
-    // But here we rely on testId. We don't know the index easily without fetching ALL tests.
-    // Optimization: If it's an FLT, maybe we should just check subscription for now, 
-    // OR we trust the "Locked" UI on the previous page prevented entry.
-    // BUT direct navigation is possible.
-    
-    // Simplification for 'Principal Engineer' robustness:
-    // If it's an FLT and user is NOT Pro/Lite (depending on specific logic), maybe show paywall.
-    // But `displayOrder` is key.
-    // Let's assume for now valid entry if they got here, BUT check `isPro` for the test itself.
-    
-    const isProUser = user?.isSubscribed || false;
-    
-    // If test is marked isPro and user is not subscribed -> Paywall
-    // OR if test is FLT and user is Free -> Paywall (typically FLT are premium except demo)
-    
-    let shouldShowPaywall = false;
-    
-    // Very basic check: If test.isPro && !isProUser
-    if (testData.isPro && !isProUser) {
-        shouldShowPaywall = true;
-    }
-    
+    const tier = getUserTier(user);
+    const hasPaidPlan = tier === 'pro' || tier === 'lite';
+    const shouldShowPaywall = false;
+
     // 4. Content Logic (Attempts)
     const [attemptsMap, attemptLimits] = await Promise.all([
         getUserAttempts([testId]),
@@ -116,7 +92,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
             userId={user?.id || null}
             maxRetries={maxRetries}
             userAttempts={userAttemptsCount}
-            isPro={isProUser}
+            isPro={hasPaidPlan}
             shouldShowPaywall={shouldShowPaywall}
         />
     );

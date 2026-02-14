@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { contactEmail } from "../contact/page";
 
 export const metadata: Metadata = {
   title: "Terms of Service | Mindful MPPSC",
@@ -177,10 +178,10 @@ export default function TermsOfServicePage() {
               </Link>{" "}
               or email{" "}
               <a
-                href="mailto:mppscsyllabus@gmail.com"
+                href={`mailto:${contactEmail}`}
                 className="underline text-slate-900 hover:text-slate-600"
               >
-                mppscsyllabus@gmail.com
+                {contactEmail}
               </a>
               .
             </p>

@@ -56,7 +56,8 @@ export function ContentSuiteSection() {
                                 <div className="text-sm font-bold text-slate-500 uppercase tracking-wide">Units Covered</div>
                             </div>
                             <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100 text-[10px] sm:text-xs">
-                                {language === 'hi' ? '5 प्रयास / टेस्ट' : '5 Attempts / Test'}
+                                {/* {language === 'hi' ? '5 प्रयास / टेस्ट' : '5 Attempts / Test'} */}
+                                {language === 'hi' ? 'यूनिट वाइज' : 'Unit Wise'}
                             </Badge>
                         </CardContent>
                     </Card>
@@ -86,11 +87,11 @@ export function ContentSuiteSection() {
                                 <Trophy size={24} />
                             </div>
                             <div>
-                                <div className="text-3xl font-extrabold text-slate-900">5</div>
+                                <div className="text-3xl font-extrabold text-slate-900">10</div>
                                 <div className="text-sm font-bold text-slate-500 uppercase tracking-wide">Full Length Tests</div>
                             </div>
                             <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-[10px] sm:text-xs">
-                                {language === 'hi' ? '3 प्रयास / टेस्ट' : '3 Attempts / Test'}
+                                {language === 'hi' ? '5 प्रयास / टेस्ट' : '5 Attempts / Test'}
                             </Badge>
                         </CardContent>
                     </Card>

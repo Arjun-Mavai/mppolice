@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -8,11 +7,12 @@ export interface User {
   id?: string;
   name?: string | null;
   email?: string | null;
+  phone?: string | null;
   image?: string | null;
   role?: string; // 'admin' | 'user'
-  is_subscribed?: boolean;
-  is_pro?: boolean; // Legacy flag support
-  plan_tier?: 'free' | 'lite' | 'pro';
+  isSubscribed?: boolean; // Fixed: camelCase to match DB
+  isPro?: boolean; // Legacy flag support
+  planTier?: 'free' | 'lite' | 'pro'; // Fixed: camelCase to match DB
 }
 
 interface SettingsState {

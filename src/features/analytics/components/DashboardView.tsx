@@ -199,7 +199,7 @@ export function DashboardView({ data, userName }: DashboardViewProps) {
                      <div className="space-y-6">
                          <div className="flex items-center justify-between">
                              <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                                 <BrainCircuit className="w-5 h-5 text-purple-600" /> AI Coach
+                                 <BrainCircuit className="w-5 h-5 text-purple-600" /> Smart Coach
                              </h3>
                              <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100">Beta</Badge>
                          </div>
@@ -213,7 +213,7 @@ export function DashboardView({ data, userName }: DashboardViewProps) {
                                     <h3 className="font-display font-black text-lg tracking-tight">Coach Says:</h3>
                                     <p className="text-slate-400 text-sm leading-relaxed italic">"{aiSuggestion}"</p>
                                 </div>
-                                <Button className="w-full h-10 bg-indigo-600 text-white hover:bg-indigo-500 font-bold uppercase tracking-widest text-[10px] rounded-xl shadow-lg shadow-indigo-600/20" onClick={() => router.push('/syllabus/quiz')}>
+                                <Button className="w-full h-10 bg-indigo-600 text-white hover:bg-indigo-500 font-bold uppercase tracking-widest text-[10px] rounded-xl shadow-lg shadow-indigo-600/20" onClick={() => router.push('/syllabus/quiz/pyq')}>
                                         START TEST SERIES
                                 </Button>
                             </CardContent>

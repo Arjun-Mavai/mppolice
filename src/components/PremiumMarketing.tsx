@@ -6,13 +6,14 @@
 // Admin changes prices in dashboard → reflects here instantly.
 // All ₹ amounts are dynamic — no hardcoded prices.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-import { useState, useEffect } from 'react';
-import { Star, Users, Flame } from 'lucide-react';
+import { Star, Users, Flame, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { type PricingData, LITE_FEATURES, PRO_FEATURES, PRICING_DEFAULTS } from '@/config/pricing';
 import { PricingCard } from '@/components/PricingCard';
 import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { useQuery } from '@tanstack/react-query';
 
 interface PremiumMarketingProps {
     onUnlock: (amount: number) => void;
@@ -21,20 +22,61 @@ interface PremiumMarketingProps {
 export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
     const { language, user } = useSettingsStore();
     const hi = language === 'hi';
-    const isLiteUser = user?.plan_tier === 'lite';
+    const isLiteUser = user?.planTier === 'lite';
 
     // Dynamic pricing — fetch from backend, fallback to defaults
-    const [p, setP] = useState<PricingData>(PRICING_DEFAULTS);
-    useEffect(() => {
-        fetch('/api/pricing').then(r => r.json()).then(d => {
-            if (d.pricing) setP(d.pricing);
-        }).catch(() => {/* defaults stay */});
-    }, []);
+    const { data: p = PRICING_DEFAULTS, isLoading } = useQuery({
+        queryKey: ['pricing'],
+        queryFn: async () => {
+            const res = await fetch('/api/pricing');
+            if (!res.ok) throw new Error('Failed to fetch pricing');
+            const data = await res.json();
+            return data.pricing || PRICING_DEFAULTS;
+        },
+        staleTime: 5 * 60 * 1000, // 5 minutes cache
+    });
+
+    // Loading Skeleton State
+    if (isLoading) {
+        if (isLiteUser) {
+            return (
+                <div className="relative p-4 md:p-8 bg-slate-50 min-h-[500px] flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-300">
+                    <Skeleton className="h-6 w-32 mb-6 rounded-full" />
+                    <Skeleton className="h-10 w-3/4 max-w-sm mb-4" />
+                    <Skeleton className="h-4 w-full max-w-md mb-8" />
+                    <Skeleton className="h-[200px] w-full max-w-md rounded-xl" />
+                    <DialogPrimitive.Close className="absolute top-2 right-2 p-2">
+                        <X className="w-6 h-6 text-slate-300" />
+                    </DialogPrimitive.Close>
+                </div>
+            );
+        }
+
+        return (
+            <div className="relative px-4 py-6 md:p-8 bg-slate-50 flex flex-col items-center animate-in fade-in zoom-in-95 duration-300">
+                <Skeleton className="h-10 w-3/4 max-w-lg mb-4" />
+                <Skeleton className="h-4 w-1/2 max-w-md mb-8" />
+                
+                <div className="flex justify-center mb-8">
+                     <Skeleton className="h-8 w-48 rounded-full" />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 w-full max-w-4xl mx-auto">
+                    <Skeleton className="h-[450px] w-full rounded-2xl" />
+                    <Skeleton className="h-[450px] w-full rounded-2xl" />
+                </div>
+                
+                 <DialogPrimitive.Close className="absolute top-0 right-0 p-2">
+                    <X className="w-6 h-6 text-slate-300" />
+                </DialogPrimitive.Close>
+            </div>
+        );
+    }
 
     // Lite user ko Pro upgrade dikhao — dynamic price
     if (isLiteUser) {
         return (
-            <div className="p-4 md:p-8 bg-gradient-to-br from-slate-50 via-slate-100/50 to-slate-50 min-h-[500px] flex flex-col items-center text-center justify-center">
+            <div className="relative p-4 md:p-8 bg-gradient-to-br from-slate-50 via-slate-100/50 to-slate-50 min-h-[500px] flex flex-col items-center text-center justify-center">
                 <Badge className="bg-amber-100 text-amber-700 px-3 py-1 mb-4 md:mb-6 hover:bg-amber-200 transition-colors cursor-default border-amber-200">
                     <Star className="w-3 h-3 mr-1 fill-current" />
                     {hi ? 'अपग्रेड उपलब्ध है' : 'UPGRADE AVAILABLE'}
@@ -62,12 +104,17 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                         onBuy={() => onUnlock(p.upgradePrice)}
                     />
                 </div>
+
+                {/* Manual Dismiss - Top Right Icon */}
+                <DialogPrimitive.Close className="absolute top-2 right-2 p-2 text-slate-900 border border-black bg-white/80 backdrop-blur-sm hover:bg-white shadow-sm rounded-full transition-all hover:scale-110 z-50">
+                    <X className="w-6 h-6" />
+                </DialogPrimitive.Close>
             </div>
         );
     }
 
     return (
-        <div className="px-4 py-8 md:p-10 bg-slate-50 flex flex-col items-center text-center">
+        <div className="relative px-4 py-6 md:p-8 bg-slate-50 flex flex-col items-center text-center">
             {/* Header */}
             {/* Header */}
             <h2 className="text-2xl md:text-5xl font-black font-display text-slate-900 mb-3 tracking-tighter leading-tight uppercase">
@@ -114,9 +161,9 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
                 {hi ? 'सुरक्षित भुगतान • कोई ऑटो-रिन्यूअल नहीं • RazorPay से एक्टिवेट' : 'Secure Payment • No Auto-Renewal • Activate via RazorPay'}
             </p>
 
-            {/* Manual Dismiss */}
-            <DialogPrimitive.Close className=" md:hidden mt-6 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer pb-4">
-                {hi ? 'बंद करें' : 'Close'}
+            {/* Manual Dismiss - Top Right Icon */}
+            <DialogPrimitive.Close className="absolute top-0 right-0 p-2 text-slate-900 border border-black bg-white/80 backdrop-blur-sm hover:bg-white shadow-sm rounded-full transition-all hover:scale-110 z-50">
+                <X className="w-6 h-6"  />
             </DialogPrimitive.Close>
         </div>
     );

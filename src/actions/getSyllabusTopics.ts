@@ -4,33 +4,38 @@ import { db } from "@/db";
 import { syllabusTopics, tests, userAttempts as userAttemptsTable } from "@/db/schema";
 import { asc, eq, inArray, and, sql } from "drizzle-orm";
 import { logger } from "@/lib/logger";
-import { CACHE, cachedData } from "@/lib/cache";
+import { unstable_cache } from 'next/cache';
 import { getCachedAttemptLimits } from "@/app/admin/test-access/actions";
 import { verifyAuth } from "@/lib/auth";
 
 /**
- * [STATIC CACHE] Fetches and groups topics by unit.
- * This does NOT include any user-specific data (attempts, access).
+ * Same pattern as getCachedFLTTests — 60s revalidate, tag 'tests'
+ * Admin toggle → revalidateTag('tests') → busts this cache instantly
  */
-const getCachedBaseSyllabusData = cachedData(
+const getCachedBaseSyllabusData = unstable_cache(
   async () => {
     try {
-      // 1. Fetch all topics
       const topics = await db.query.syllabusTopics.findMany({
         orderBy: [asc(syllabusTopics.order)],
       });
 
       if (topics.length === 0) return { topics: [], relatedTests: [] };
 
-      // 2. Fetch all related tests for THESE topics
       const topicIds = topics.map(t => t.id);
       const relatedTests = await db.select({
         id: tests.id,
         topicId: tests.topicId,
-        isFreeAccess: tests.isFreeAccess
+        isFreeAccess: tests.isFreeAccess,
+        isLiteAccess: tests.isLiteAccess,
+        isProAccess: tests.isProAccess
       })
       .from(tests)
-      .where(inArray(tests.topicId, topicIds));
+      .where(
+        and(
+          inArray(tests.topicId, topicIds),
+          eq(tests.isHidden, false)
+        )
+      );
 
       return { topics, relatedTests };
     } catch (error) {
@@ -38,9 +43,8 @@ const getCachedBaseSyllabusData = cachedData(
       throw error;
     }
   },
-  ["syllabus-base-data-v1"], // New key to force fresh start
-  CACHE.SYLLABUS.GET_ALL.tags,
-  CACHE.SYLLABUS.GET_ALL.revalidate
+  ["syllabus-base-data-v3"],
+  { revalidate: 60, tags: ['tests'] }
 );
 
 /**
@@ -59,18 +63,20 @@ export async function getSyllabusTopics() {
       return { success: true, data: {} };
     }
 
-    const maxRetries = attemptLimits['TOPIC'] ?? null;
+     const maxRetries = attemptLimits['TOPIC'] ?? null;
 
     // 1. Create a map of topicId -> test info
     const topicTestMap = relatedTests.reduce((acc, curr) => {
       if (curr.topicId) {
         acc[curr.topicId] = {
           testId: curr.id,
-          isFreeAccess: !!curr.isFreeAccess
+          isFreeAccess: !!curr.isFreeAccess,
+          isLiteAccess: !!curr.isLiteAccess,
+          isProAccess: curr.isProAccess ?? true // Default true for pro
         };
       }
       return acc;
-    }, {} as Record<string, { testId: string, isFreeAccess: boolean }>);
+    }, {} as Record<string, { testId: string, isFreeAccess: boolean, isLiteAccess: boolean, isProAccess: boolean }>);
 
     // 2. Fetch attempts ONLY if user exists
     let userAttemptsMap: Record<string, number> = {};
@@ -107,17 +113,19 @@ export async function getSyllabusTopics() {
       const attemptsDone = testData ? (userAttemptsMap[testData.testId] || 0) : 0;
       const attemptsLeft = maxRetries != null ? Math.max(0, maxRetries - attemptsDone) : null;
       
-      // LOGIC FIX: If a test exists, use *only* the test's access flag.
-      // If no test exists, use topic.isFree (legacy).
-      // This prevents topic.isFree=true from overriding test.isFreeAccess=false.
-      const isFreeAccess = testData 
-        ? testData.isFreeAccess 
-        : topic.isFree;
+      // LOGIC FIX: Strict Visibility
+      // If a topic has NO test (or test is hidden), do not include it.
+      // This mimics FLT behavior: Only show what is playable.
+      if (!testData) return;
+
+      const isFreeAccess = testData.isFreeAccess;
 
       grouped[topic.unitId].push({
         ...topic,
-        testId: testData?.testId,
+        testId: testData.testId,
         isFreeAccess: isFreeAccess,
+        isLiteAccess: testData.isLiteAccess,
+        isProAccess: testData.isProAccess,
         isFree: isFreeAccess && !user,
         attemptsLeft: user ? attemptsLeft : null,
         attemptsDone: user ? attemptsDone : 0,

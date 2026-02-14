@@ -321,6 +321,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
                 onEmailChange={setGuestEmail}
                 onMobileChange={setGuestMobile}
                 onSubmit={handleGuestEntrySubmit}
+                onExit={showExitModal}
             />
         </div>
     );

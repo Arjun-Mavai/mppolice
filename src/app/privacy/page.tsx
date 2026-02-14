@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { contactEmail } from "../contact/page";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Mindful MPPSC",
@@ -143,10 +144,10 @@ export default function PrivacyPolicyPage() {
               </Link>{" "}
               or email us at{" "}
               <a
-                href="mailto:mppscsyllabus@gmail.com"
+                href="mailto:mppsc@zenscroll.app"
                 className="underline text-slate-900 hover:text-slate-600"
               >
-                mppscsyllabus@gmail.com
+              { contactEmail}
               </a>
               .
             </p>

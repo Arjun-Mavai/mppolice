@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft,     Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,6 +41,7 @@ interface Unit {
 export default function TopicSelectionPage() {
     const router = useRouter();
     const { language, user } = useSettingsStore();
+    const pathname = usePathname();
 
     const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -146,20 +147,19 @@ export default function TopicSelectionPage() {
             <div className="max-w-5xl mx-auto px-6 relative z-10 pt-32">
                 
                 {/* Header Row */}
-                <div className="flex items-center justify-between mb-8">
-                     <Button 
-                        key={selectedUnitId ? 'back-to-units' : 'back-to-hub'}
-                        variant="ghost" 
-                        onClick={() => selectedUnitId ? setSelectedUnitId(null) : router.push('/syllabus/quiz')}
-                        className="group -ml-3 text-slate-500 hover:text-slate-900 hover:bg-transparent p-0"
-                    >
-                        <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:shadow-md transition-all mr-3">
-                            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                        </div>
-                        <span className="text-sm font-black uppercase tracking-widest transition-colors">
-                            {selectedUnitId ? (hi ? 'यूनिट लिस्ट' : 'Back to Units') : (hi ? 'क्विज़ हब' : 'Quiz Hub')}
-                        </span>
-                    </Button>
+               <div className="flex items-center justify-between mb-8">
+                     {selectedUnitId && (
+                         <Button 
+                            key="back-to-units"
+                            variant="ghost" 
+                            onClick={() => setSelectedUnitId(null)}
+                            className="group -ml-3 text-slate-500 hover:text-slate-900 hover:bg-transparent p-0"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:shadow-md transition-all mr-3">
+                                <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                            </div>
+                         </Button>
+                     )}
                 </div>
 
                 {/* 🧭 CONSOLIDATED SUB-NAV */}
@@ -260,6 +260,7 @@ export default function TopicSelectionPage() {
                                                 index={index}
                                                 title={topic.title}
                                                 questions={10} // Standard topic test
+                                                itemLabel={hi ? 'प्रश्न' : 'Questions'}
                                                 isLocked={isLocked}
                                                 isFree={topic.isFree}
                                                 attemptsLeft={topic.attemptsLeft}

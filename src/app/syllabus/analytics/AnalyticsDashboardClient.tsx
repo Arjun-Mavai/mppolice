@@ -115,6 +115,7 @@ function EmptyState({ message }: { message: string }) {
 export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboardClientProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = React.useState('ALL');
+  const [masteryTab, setMasteryTab] = React.useState<'strong' | 'weak'>('strong');
 
   if (!analytics) {
     return (
@@ -137,7 +138,9 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
     return item.type === activeTab;
   });
 
-  const weakAreas = mastery.filter((m: any) => m.percentage < 50).slice(0, 3);
+  const weakAreas = mastery.filter((m: any) => m.percentage < 50);
+  const strongAreas = mastery.filter((m: any) => m.percentage >= 50);
+  const displayedMastery = masteryTab === 'weak' ? weakAreas : strongAreas;
 
   const overviewStats = [
     {
@@ -249,11 +252,36 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
                 </div>
                 <div className="text-4xl font-black text-white bg-indigo-500/10 px-6 py-3 rounded-3xl border border-indigo-500/20">{overallScore}%</div>
               </div>
+              {/* Strong / Weak Tabs */}
+              <div className="flex gap-2 mt-5">
+                <button
+                  onClick={() => setMasteryTab('strong')}
+                  className={cn(
+                    "px-5 py-2 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border",
+                    masteryTab === 'strong'
+                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                      : "bg-slate-800/50 text-slate-500 border-slate-700/50 hover:text-slate-300"
+                  )}
+                >
+                  💪 Strong ({strongAreas.length})
+                </button>
+                <button
+                  onClick={() => setMasteryTab('weak')}
+                  className={cn(
+                    "px-5 py-2 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border",
+                    masteryTab === 'weak'
+                      ? "bg-rose-500/15 text-rose-400 border-rose-500/30 shadow-[0_0_15px_rgba(244,63,94,0.15)]"
+                      : "bg-slate-800/50 text-slate-500 border-slate-700/50 hover:text-slate-300"
+                  )}
+                >
+                  🔥 Weak ({weakAreas.length})
+                </button>
+              </div>
             </CardHeader>
             <CardContent className="p-0 flex-1 overflow-hidden">
               <ScrollArea className="h-[400px]">
                 <div className="p-10 space-y-10">
-                  {mastery.map((m: any, i: number) => (
+                  {displayedMastery.map((m: any, i: number) => (
                     <div key={i} className="space-y-4">
                       <div className="flex justify-between items-end">
                         <div className="space-y-1">
@@ -283,6 +311,14 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
                       </div>
                     </div>
                   ))}
+                  {displayedMastery.length === 0 && mastery.length > 0 && (
+                    <div className="text-center py-16 bg-slate-800/30 rounded-[2.5rem] border border-slate-800/50">
+                       <p className="text-2xl mb-3">{masteryTab === 'strong' ? '🎯' : '🎉'}</p>
+                       <p className="text-slate-400 font-black uppercase tracking-widest text-xs">
+                         {masteryTab === 'strong' ? 'Keep practicing to build strong areas!' : 'No weak areas — great job!'}
+                       </p>
+                    </div>
+                  )}
                   {mastery.length === 0 && (
                     <div className="text-center py-20 bg-slate-800/30 rounded-[2.5rem] border border-slate-800/50">
                        <Lightbulb className="w-10 h-10 text-slate-600 mx-auto mb-4" />
@@ -355,7 +391,7 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
                   <div className="flex-1 space-y-6 text-center md:text-left">
                       <div className="space-y-2">
                         <span className="text-[11px] font-black uppercase tracking-[0.3em] text-indigo-400">Personalized Insights</span>
-                        <h3 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">AI Coach Recommendations</h3>
+                        <h3 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">Smart Coach Recommendations</h3>
                       </div>
                       <p className="text-slate-400 text-lg md:text-xl font-medium leading-relaxed italic max-w-4xl">
                         &quot;{aiSuggestion}&quot;

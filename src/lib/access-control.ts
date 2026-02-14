@@ -98,6 +98,13 @@ export interface AccessResult {
  *   // Show everything
  * }
  */
+/** Client API returns plan_tier (snake_case); server DB has planTier (camelCase). Support both. */
+function getPlanTierFromUser(user: User): PlanTier | null {
+    if (!user) return null;
+    const u = user as { planTier?: PlanTier; plan_tier?: PlanTier };
+    return (u.planTier ?? u.plan_tier ?? null) as PlanTier | null;
+}
+
 export function getUserTier(user: User): PlanTier | 'guest' {
     // ───────────────────────────────────────────────────────────────
     // CASE 1: No user (Guest)
@@ -107,25 +114,53 @@ export function getUserTier(user: User): PlanTier | 'guest' {
     // ───────────────────────────────────────────────────────────────
     // CASE 2: Admin (Boss Mode!)
     // ───────────────────────────────────────────────────────────────
-    // Admin ko seedha pro maan lo, sab open hai unke liye
-    if (user.role === 'admin') return 'pro';
+    if ((user as any).role === 'admin') return 'pro';
 
     // ───────────────────────────────────────────────────────────────
-    // CASE 3: Subscribed User
+    // CASE 3: Subscribed User (isSubscribed / is_subscribed)
     // ───────────────────────────────────────────────────────────────
-    if (user.isSubscribed) {
-        // Legacy bug fix: Agar plan 'free' hai par subscribed hai
-        // (DB inconsistency), to 'lite' maan lo
-        if (user.planTier === 'free') return 'lite';
-        
-        // Normal case: Jo plan DB me hai wahi return karo
-        return (user.planTier as PlanTier) || 'lite';
+    const isSubscribed = !!((user as any).isSubscribed ?? (user as any).is_subscribed);
+    if (isSubscribed) {
+        const plan = getPlanTierFromUser(user);
+        if (plan === 'free') return 'lite'; // legacy: subscribed but plan free
+        return plan || 'lite';
     }
 
     // ───────────────────────────────────────────────────────────────
     // CASE 4: Non-Subscribed User (Free Plan)
     // ───────────────────────────────────────────────────────────────
     return 'free';
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🎯 CENTRAL: CONTENT ACCESS (Tests, Topics, Blogs — same rule)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/**
+ * Content access flags — Tests, SyllabusTopics, ContentBlogs sab same pattern use karte hain.
+ */
+export interface ContentAccessFlags {
+    isFreeAccess?: boolean | null;
+    isLiteAccess?: boolean | null;
+    isProAccess?: boolean | null;
+}
+
+/**
+ * hasAccessToContent — Single source of truth for "can this user access this item?"
+ *
+ * Use for: tests, syllabus topics (test flags), blogs.
+ * - Free/Guest: sirf isFreeAccess === true
+ * - Lite: isFreeAccess OR isLiteAccess
+ * - Pro: isFreeAccess OR isLiteAccess OR isProAccess (Pro gets sab jo kisi bhi tier ke liye open hai)
+ * - Admin: always true (caller should pass user; we don't have user here — so use canAccessTest/canAccessBlog etc for admin)
+ */
+export function hasAccessToContent(flags: ContentAccessFlags, tier: PlanTier | 'guest'): boolean {
+    const free = !!flags.isFreeAccess;
+    const lite = !!flags.isLiteAccess;
+    const pro = flags.isProAccess !== false; // default true
+    if (tier === 'pro') return pro || lite || free; // Pro gets everything that's open to any tier
+    if (tier === 'lite') return lite || free;
+    return free; // guest / free
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -151,27 +186,13 @@ export function getUserTier(user: User): PlanTier | 'guest' {
  * 6. Default → LOCKED 🔒
  */
 export function canAccessTopic(topic: Topic, user: User): boolean {
-    // ── Admin → bypass sab ──────────────────────────────────────
-    if (user?.role === 'admin') return true;
-    
-    // ── Free topic → sabke liye open ────────────────────────────
+    if ((user as any)?.role === 'admin') return true;
     if (topic.isFree) return true;
-    
-    // ── User ka tier nikalo ─────────────────────────────────────
     const tier = getUserTier(user);
-    
-    // ── Pro user — isProAccess check (default true if null) ─────
-    if (tier === 'pro') {
-        return topic.isProAccess !== false;
-    }
-    
-    // ── Lite user — isLiteAccess check ──────────────────────────
-    if (tier === 'lite') {
-        return topic.isLiteAccess === true;
-    }
-    
-    // ── Free/Guest — sirf isFree wale (already checked above) ───
-    return false;
+    return hasAccessToContent(
+        { isFreeAccess: topic.isFree, isLiteAccess: topic.isLiteAccess, isProAccess: topic.isProAccess },
+        tier
+    );
 }
 
 /**
@@ -185,25 +206,13 @@ export function canAccessTopic(topic: Topic, user: User): boolean {
  * - isProAccess = true → PRO user padh sakta (default true)
  * - isPremium = legacy flag (backward compat — NOT used in logic anymore)
  */
-export function canAccessBlog(blog: { isFreeAccess: boolean | null; isLiteAccess: boolean | null; isProAccess: boolean | null; isPremium: boolean | null }, user: User): boolean {
-    // ── Admin → sab khula ───────────────────────────────────────
-    if (user?.role === 'admin') return true;
-    
-    // ── User ka tier nikalo ─────────────────────────────────────
+export function canAccessBlog(blog: { isFreeAccess: boolean | null; isLiteAccess: boolean | null; isProAccess: boolean | null; isPremium?: boolean | null }, user: User): boolean {
+    if ((user as any)?.role === 'admin') return true;
     const tier = getUserTier(user);
-    
-    // ── Pro user — isProAccess check ────────────────────────────
-    if (tier === 'pro') {
-        return blog.isProAccess !== false;
-    }
-    
-    // ── Lite user — isLiteAccess OR isFreeAccess ────────────────
-    if (tier === 'lite') {
-        return blog.isLiteAccess === true || blog.isFreeAccess === true;
-    }
-    
-    // ── Free/Guest — sirf isFreeAccess wale ─────────────────────
-    return blog.isFreeAccess === true;
+    return hasAccessToContent(
+        { isFreeAccess: blog.isFreeAccess, isLiteAccess: blog.isLiteAccess, isProAccess: blog.isProAccess },
+        tier
+    );
 }
 
 
@@ -251,21 +260,12 @@ export function canAccessTest(test: Test, user: User): boolean {
     const tier = getUserTier(user);
 
     // ───────────────────────────────────────────────────────────────
-    // CHECK 3: DB flags se access decide karo
-    // Pro → isProAccess check (almost always true)
-    // Lite → isLiteAccess OR isFreeAccess (koi bhi true ho to OK)
-    // Free/Guest → sirf isFreeAccess (agar admin ne free mark kiya)
+    // CHECK 3: Central rule — Pro gets everything open to any tier
     // ───────────────────────────────────────────────────────────────
-    switch (tier) {
-        case 'pro':
-            return test.isProAccess ?? true;
-        case 'lite':
-            return (test.isLiteAccess ?? false) || (test.isFreeAccess ?? false);
-        case 'free':
-        case 'guest':
-        default:
-            return test.isFreeAccess ?? false;
-    }
+    return hasAccessToContent(
+        { isFreeAccess: test.isFreeAccess, isLiteAccess: test.isLiteAccess, isProAccess: test.isProAccess },
+        tier
+    );
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

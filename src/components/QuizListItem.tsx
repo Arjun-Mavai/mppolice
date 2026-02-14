@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from 'framer-motion';
-import { Play, Lock, CheckCircle2, Clock, Info, Sparkles } from 'lucide-react';
+import { Play, Lock, CheckCircle2, Clock, Info, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -20,6 +20,8 @@ interface QuizListItemProps {
     onClick: () => void;
     language?: 'en' | 'hi';
     colorVariant?: 'blue' | 'pink' | 'emerald' | 'amber' | 'slate' | 'indigo';
+    isLoading?: boolean;
+    itemLabel?: string; // New: Custom label for "Questions" vs "Topics"
 }
 
 export function QuizListItem({
@@ -35,7 +37,9 @@ export function QuizListItem({
     isFree,
     onClick,
     language = 'en',
-    colorVariant = 'slate'
+    colorVariant = 'slate',
+    isLoading = false,
+    itemLabel
 }: QuizListItemProps) {
     const hi = language === 'hi';
     const num = index + 1;
@@ -58,12 +62,12 @@ export function QuizListItem({
             layout
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            whileHover={!isExhausted ? { scale: 1.002 } : {}}
+            whileHover={!isExhausted && !isLoading ? { scale: 1.002 } : {}}
             transition={{ duration: 0.2 }}
-            onClick={isExhausted ? undefined : onClick}
+            onClick={isExhausted || isLoading ? undefined : onClick}
             className={cn(
                 "group relative border rounded-[1.8rem] p-4 sm:p-5 transition-all",
-                isExhausted ? "cursor-not-allowed" : "cursor-pointer",
+                (isExhausted || isLoading) ? "cursor-not-allowed" : "cursor-pointer",
                 style,
                 isLocked && "grayscale-[0.4] opacity-80",
                 isExhausted && "grayscale opacity-70 bg-slate-50 border-slate-200"
@@ -75,7 +79,7 @@ export function QuizListItem({
                 <div className="relative flex-shrink-0">
                     <div className={cn(
                         "w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex flex-col items-center justify-center font-black transition-transform",
-                        !isExhausted && "group-hover:scale-105",
+                        !isExhausted && !isLoading && "group-hover:scale-105",
                         isLocked 
                             ? "bg-slate-100 text-slate-400" 
                             : isExhausted
@@ -134,9 +138,9 @@ export function QuizListItem({
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-slate-500">
-                        {questions !== undefined && (
+                        {(questions !== undefined || itemLabel) && (
                             <span className="flex items-center gap-1">
-                                {questions} {hi ? 'प्रश्न' : 'Que'}
+                                {questions || 0} {itemLabel || (hi ? 'टॉपिक्स' : 'Topics')}
                             </span>
                         )}
                         {marks !== undefined && (
@@ -168,7 +172,7 @@ export function QuizListItem({
 
                     <Button 
                         size="sm"
-                        disabled={isExhausted}
+                        disabled={isExhausted || isLoading}
                         className={cn(
                             "h-10 px-4 rounded-xl font-black text-xs transition-all flex items-center gap-2 border-0 shadow-sm flex-shrink-0",
                             isLocked 
@@ -178,7 +182,14 @@ export function QuizListItem({
                                     : "bg-white text-slate-900 border border-slate-200 hover:bg-slate-900 hover:text-white active:scale-95"
                         )}
                     >
-                        {isLocked ? (
+                        {isLoading ? (
+                            <>
+                                <Loader2 size={14} className="animate-spin" />
+                                <span className="hidden xs:inline">
+                                    {hi ? 'खुल रहा है...' : 'Opening...'}
+                                </span>
+                            </>
+                        ) : isLocked ? (
                             <Lock size={14} />
                         ) : isExhausted ? (
                             <Lock size={14} />

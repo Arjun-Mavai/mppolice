@@ -60,7 +60,7 @@ export default function FLTPageClient({ tests }: FLTPageClientProps) {
             <div className="max-w-5xl mx-auto px-6 relative z-10 pt-32">
                 
                 {/* Header Row */}
-                <div className="flex items-center justify-between mb-8">
+                {/* <div className="flex items-center justify-between mb-8">
                      <Button 
                         variant="ghost" 
                         onClick={() => router.push('/syllabus/quiz')}
@@ -71,7 +71,7 @@ export default function FLTPageClient({ tests }: FLTPageClientProps) {
                         </div>
                         <span className="text-sm font-black uppercase tracking-widest">{hi ? 'क्विज़ हब' : 'Quiz Hub'}</span>
                     </Button>
-                </div>
+                </div> */}
 
                 {/* 🧭 CONSOLIDATED SUB-NAV */}
                 <QuizSubNav />
@@ -98,6 +98,7 @@ export default function FLTPageClient({ tests }: FLTPageClientProps) {
                                 index={idx}
                                 title={hi ? test.title : (test.titleEn || test.title)}
                                 questions={test.totalQuestions}
+                                itemLabel={hi ? 'प्रश्न' : 'Questions'}
                                 marks={test.totalQuestions * QUIZ_CONSTANTS.MARKS_PER_QUESTION}
                                 duration={test.durationMinutes}
                                 isLocked={test.isLocked}

@@ -1,5 +1,4 @@
 
-import * as React from 'react';
 
 interface EmailTemplateProps {
   name: string;
@@ -13,7 +12,7 @@ export default function EmailTemplate({ name, actionUrl, planName = 'Premium' }:
       {/* Header with brand gradient */}
       <div style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)', padding: '32px 24px', textAlign: 'center', borderRadius: '12px 12px 0 0' }}>
         <h1 style={{ color: '#ffffff', fontSize: '22px', fontWeight: '700', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>
-          MPPSC Syllabus
+          MPPSC Prelims - 2026
         </h1>
         <p style={{ color: '#00F0FF', fontSize: '12px', fontWeight: '600', margin: '0', letterSpacing: '2px', textTransform: 'uppercase' }}>
           Smart Test Series
@@ -100,7 +99,7 @@ export default function EmailTemplate({ name, actionUrl, planName = 'Premium' }:
       {/* Footer */}
       <div style={{ background: '#f9fafb', padding: '20px 24px', textAlign: 'center', borderRadius: '0 0 12px 12px', border: '1px solid #e5e7eb', borderTop: 'none' }}>
         <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 4px 0', fontWeight: '600' }}>
-          MPPSC Syllabus — Smart Test Series
+          Mindful MPPSC — Smart Test Series
         </p>
         <p style={{ fontSize: '11px', color: '#9ca3af', margin: '0' }}>
           Secure • Trusted • Built for MPPSC Aspirants

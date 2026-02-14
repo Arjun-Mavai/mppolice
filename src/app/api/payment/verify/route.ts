@@ -10,6 +10,7 @@ import EmailTemplate from '@/components/email-template';
 import { v4 as uuidv4 } from 'uuid';
 import { addHours } from 'date-fns';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { appPath } from '@/lib/app-url';
 import { PRICING_DEFAULTS } from '@/config/pricing';
 
 /**
@@ -88,8 +89,8 @@ export async function POST(req: Request) {
     const proAmountPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
     const planTier = paidAmount >= proAmountPaise ? 'pro' : 'lite';
 
-    // 💾 Step 6: Persist Payment in DB
-    // Transaction log maintain karna zaroori h for audits & analytics.
+    // 💾 Step 6: Persist Payment in DB + Update User Plan
+    // Transaction log + user plan update so DB is consistent even before set-password.
     await db.insert(payments).values({
       id: `pay_${uuidv4()}`,
       userId,
@@ -101,6 +102,10 @@ export async function POST(req: Request) {
       status: 'captured',
       currency: 'INR',
     });
+
+    await db.update(mppscUsers)
+      .set({ planTier: planTier as 'lite' | 'pro', isSubscribed: true })
+      .where(eq(mppscUsers.id, userId));
 
     // 🎫 Step 7: Generate 'Magic Link' Token
     // User ko ab password set karna h. Hum ek secure, temporary token banate h.
@@ -116,17 +121,43 @@ export async function POST(req: Request) {
     // 📧 Step 8: Send Welcome Email (The "Wow" Moment)
     // Resend API se beautiful email bhejo jisme Magic Link ho.
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'MPPSC Syllabus <onboarding@resend.dev>';
-    const actionUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/set-password?token=${token}`;
+    
+    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
+    const fromAddress = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
+    const fromEmail = `${fromName} <${fromAddress}>`;
+    
+    const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
 
     const planLabel = planTier === 'pro' ? 'Pro Plan' : 'Lite Plan';
 
     await resend.emails.send({
       from: fromEmail,
       to: [user.email],
-      subject: '🎉 Welcome to MPPSC Syllabus — Set Your Password',
+      subject: '🎉 Welcome to MPPSC ZEN — Set Your Password',
       react: EmailTemplate({ name: user.name || 'Student', actionUrl, planName: planLabel }),
     });
+
+    // ── Log Activity ──────────────────────────────────────────────
+    try {
+      const { logUserActivity } = await import('@/app/actions/user-activity');
+      await logUserActivity({
+        userId,
+        userEmail: user.email,
+        userName: user.name,
+        adminId: 'system', // System triggered
+        action: 'PLAN_CHANGE',
+        details: {
+          plan: planTier,
+          amount: paidAmount / 100,
+          orderId: razorpay_order_id,
+          paymentId: razorpay_payment_id,
+          reason: 'Initial Payment',
+          isNew: true
+        }
+      });
+    } catch (err) {
+      console.error('Failed to log activity:', err);
+    }
 
     return NextResponse.json({ success: true, planTier });
 
