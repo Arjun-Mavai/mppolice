@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { verifyToken } = await import('@/lib/jwt');
-    
+
     interface SessionPayload {
       userId: string;
       iat?: number;
@@ -23,20 +23,20 @@ export async function POST(request: Request) {
     }
 
     const decoded = verifyToken(token) as SessionPayload | null;
-    
+
     if (!decoded?.userId) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId) // Type safe now
+      where: (users, { eq }) => eq(users.id, decoded.userId), // Type safe now
     });
     if (!adminUser || adminUser.role !== 'admin') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const body = await request.json().catch(() => ({})) as { to?: string };
+    const body = (await request.json().catch(() => ({}))) as { to?: string };
     const to = body.to || adminUser.email;
-    
+
     const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
     const fromAddress = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
@@ -45,7 +45,13 @@ export async function POST(request: Request) {
       from: fromEmail,
       to: [to],
       subject: 'Test Email — MPPSC ZEN',
-      react: <EmailTemplate name={adminUser.name || 'Admin'} actionUrl={appPath('/')} planName="Admin Test" />,
+      react: (
+        <EmailTemplate
+          name={adminUser.name || 'Admin'}
+          actionUrl={appPath('/')}
+          planName="Admin Test"
+        />
+      ),
     });
 
     if (error) {

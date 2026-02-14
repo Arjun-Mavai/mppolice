@@ -35,7 +35,7 @@ export async function GET() {
     }
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId)
+      where: (users, { eq }) => eq(users.id, decoded.userId),
     });
 
     if (!adminUser || adminUser.role !== 'admin') {
@@ -43,21 +43,24 @@ export async function GET() {
     }
 
     // ── Fetch All Users (password excluded for security) ────────
-    const allUsers = await db.select({
-      id: mppscUsers.id,
-      name: mppscUsers.name,
-      email: mppscUsers.email,
-      role: mppscUsers.role,
-      planTier: mppscUsers.planTier,
-      isSubscribed: mppscUsers.isSubscribed,
-      isActive: mppscUsers.isActive,
-      createdAt: mppscUsers.createdAt,
-      deletedAt: mppscUsers.deletedAt,
-      accessExpiresAt: mppscUsers.accessExpiresAt,
-      phone: mppscUsers.phone,
-      metadata: mppscUsers.metadata,
-      previousUserId: mppscUsers.previousUserId,
-    }).from(mppscUsers).orderBy(sql`created_at DESC`);
+    const allUsers = await db
+      .select({
+        id: mppscUsers.id,
+        name: mppscUsers.name,
+        email: mppscUsers.email,
+        role: mppscUsers.role,
+        planTier: mppscUsers.planTier,
+        isSubscribed: mppscUsers.isSubscribed,
+        isActive: mppscUsers.isActive,
+        createdAt: mppscUsers.createdAt,
+        deletedAt: mppscUsers.deletedAt,
+        accessExpiresAt: mppscUsers.accessExpiresAt,
+        phone: mppscUsers.phone,
+        metadata: mppscUsers.metadata,
+        previousUserId: mppscUsers.previousUserId,
+      })
+      .from(mppscUsers)
+      .orderBy(sql`created_at DESC`);
 
     // ── Calculate Stats ─────────────────────────────────────────
     const now = new Date();
@@ -95,12 +98,14 @@ export async function GET() {
       if (user.previousUserId) stats.migrations++;
     }
 
-    return NextResponse.json({ users: allUsers, stats }, {
-      headers: { 'Cache-Control': 'no-store' }
-    });
-
+    return NextResponse.json(
+      { users: allUsers, stats },
+      {
+        headers: { 'Cache-Control': 'no-store' },
+      }
+    );
   } catch (error: any) {
-    logger.error("Admin users list error:", error);
+    logger.error('Admin users list error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -122,7 +127,7 @@ export async function DELETE(req: Request) {
     if (!decoded?.userId) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId)
+      where: (users, { eq }) => eq(users.id, decoded.userId),
     });
 
     if (!adminUser || adminUser.role !== 'admin') {
@@ -133,7 +138,7 @@ export async function DELETE(req: Request) {
 
     // 1. Get user details for logging before delete
     const targetUser = await db.query.mppscUsers.findFirst({
-      where: (u, { eq }) => eq(u.id, userId)
+      where: (u, { eq }) => eq(u.id, userId),
     });
 
     if (!targetUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -150,17 +155,15 @@ export async function DELETE(req: Request) {
         reason: 'Admin deleted user',
         previousPlan: targetUser.planTier,
         joinedAt: targetUser.createdAt,
-      }
+      },
     });
 
     // 3. Delete user (Cascades attempts/revisions, Set Null payments)
     await db.delete(mppscUsers).where(sql`id = ${userId}`);
 
     return NextResponse.json({ message: 'User deleted safely' });
-
   } catch (error: any) {
-    logger.error("Delete user error:", error);
+    logger.error('Delete user error:', error);
     return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
   }
 }
-

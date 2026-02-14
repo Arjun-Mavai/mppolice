@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -28,36 +28,36 @@ export function QuizNavigation({
   const isLast = currentIndex === totalQuestions - 1;
 
   return (
-    <div className="flex-shrink-0 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 px-3 sm:px-6 py-3 sm:py-4 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-      <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
+    <div className="flex-shrink-0 border-t border-slate-200/80 bg-white/95 px-3 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] backdrop-blur-lg sm:px-6 sm:py-4">
+      <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
         <Button
           variant="outline"
           onClick={onPrev}
           disabled={currentIndex === 0}
-          className="h-11 sm:h-12 px-5 sm:px-6 rounded-xl font-semibold disabled:opacity-50 text-sm sm:text-base transition-all active:scale-95"
+          className="h-11 rounded-xl px-5 text-sm font-semibold transition-all active:scale-95 disabled:opacity-50 sm:h-12 sm:px-6 sm:text-base"
         >
-          <ChevronLeft className="w-4 h-4 mr-1" />
+          <ChevronLeft className="mr-1 h-4 w-4" />
           {t.prev}
         </Button>
 
-        <div className="text-sm sm:text-base font-bold text-slate-900 bg-slate-100 px-4 py-2 rounded-full">
+        <div className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-900 sm:text-base">
           {currentIndex + 1} / {totalQuestions}
         </div>
 
         {isLast ? (
           <Button
             onClick={onSubmit}
-            className="h-11 sm:h-12 px-5 sm:px-6 rounded-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg shadow-emerald-200/50 text-sm sm:text-base transition-all active:scale-95"
+            className="h-11 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-5 text-sm font-bold text-white shadow-lg shadow-emerald-200/50 transition-all hover:from-emerald-700 hover:to-teal-700 active:scale-95 sm:h-12 sm:px-6 sm:text-base"
           >
             {t.submit}
           </Button>
         ) : (
           <Button
             onClick={onNext}
-            className="h-11 sm:h-12 px-5 sm:px-6 rounded-xl font-semibold bg-slate-800 hover:bg-slate-700 text-white shadow-md text-sm sm:text-base transition-all active:scale-95"
+            className="h-11 rounded-xl bg-slate-800 px-5 text-sm font-semibold text-white shadow-md transition-all hover:bg-slate-700 active:scale-95 sm:h-12 sm:px-6 sm:text-base"
           >
             {t.next}
-            <ChevronRight className="w-4 h-4 ml-1" />
+            <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         )}
       </div>

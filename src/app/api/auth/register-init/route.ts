@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
@@ -17,15 +16,15 @@ const registerSchema = z.object({
 
 /**
  * Register Init API - The Lead Magnet 🧲
- * 
+ *
  * Bhai, ye payment flow ka 'EntryPoint' h.
  * Hum user se payment lene se PEHLE uska account create karte h.
- * 
+ *
  * 🤔 Why?
  * 1. Data Capture: Agar user payment page par drop ho gaya, tab bhi humare paas uska
  *    name/email h. Hum use follow-up kar sakte h ("Hey, you forgot to unlock Pro!").
  * 2. Identity: Payment gateway ko pre-fill karne ke liye user data chahiye.
- * 
+ *
  * State:
  * User 'Guest' role aur 'isActive: false' ke saath banega.
  * Sirf Payment success hone par hi 'isActive: true' hoga.
@@ -59,17 +58,18 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
-      
+
       // Update existing inactive user (re-attempting payment)
       // Purane lead ko refresh kar rahe h latest details ke saath.
-      await db.update(mppscUsers)
+      await db
+        .update(mppscUsers)
         .set({
           name,
           phone,
           metadata: JSON.stringify({ source }),
         })
         .where(eq(mppscUsers.id, existingUser.id));
-        
+
       return NextResponse.json({ userId: existingUser.id, isNew: false });
     }
 
@@ -87,7 +87,7 @@ export async function POST(req: Request) {
       isActive: false, // 👈 Key: Inactive until paid
       role: 'guest',
       metadata: JSON.stringify({ source }),
-      planTier: 'free', 
+      planTier: 'free',
     });
 
     return NextResponse.json({ userId, isNew: true });

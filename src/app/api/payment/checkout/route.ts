@@ -4,10 +4,7 @@ export async function GET(request: Request) {
   const paymentLink = process.env.DODO_PAYMENT_LINK;
 
   if (!paymentLink) {
-    return NextResponse.json(
-      { error: 'Payment link not configured' }, 
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Payment link not configured' }, { status: 500 });
   }
 
   // Determine the base URL (ngrok or production)

@@ -73,7 +73,10 @@ export async function POST(req: Request) {
       if (hasPaidPlan) {
         if (!currentSession || currentSession.id !== existingUser.id) {
           return NextResponse.json(
-            { error: 'This email is already registered with a plan. Please log in to access your account or upgrade.' },
+            {
+              error:
+                'This email is already registered with a plan. Please log in to access your account or upgrade.',
+            },
             { status: 403 }
           );
         }
@@ -83,11 +86,15 @@ export async function POST(req: Request) {
     let userId: string;
     if (existingUser) {
       // Existing user allowed: only update name/phone/metadata — NEVER touch planTier, isSubscribed, role
-      await db.update(mppscUsers)
+      await db
+        .update(mppscUsers)
         .set({
           name: name.trim(),
           phone: phone.trim(),
-          metadata: JSON.stringify({ ...JSON.parse((existingUser.metadata as string) || '{}'), source }),
+          metadata: JSON.stringify({
+            ...JSON.parse((existingUser.metadata as string) || '{}'),
+            source,
+          }),
         })
         .where(eq(mppscUsers.id, existingUser.id));
       userId = existingUser.id;
@@ -112,7 +119,11 @@ export async function POST(req: Request) {
       throw new Error('Razorpay keys not configured');
     }
 
-    const rows = await db.select().from(pricingConfig).where(eq(pricingConfig.id, 'default')).limit(1);
+    const rows = await db
+      .select()
+      .from(pricingConfig)
+      .where(eq(pricingConfig.id, 'default'))
+      .limit(1);
     const p = rows[0] || PRICING_DEFAULTS;
 
     const PLAN_AMOUNTS: Record<string, number> = {
@@ -142,9 +153,6 @@ export async function POST(req: Request) {
   } catch (error: unknown) {
     console.error('Payment start error:', error);
     const message = error instanceof Error ? error.message : 'Failed to start payment';
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { SupportChat } from "./SupportChat";
+import { SupportChat } from './SupportChat';
 
 export function SupportButton() {
   return <SupportChat />;

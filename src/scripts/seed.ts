@@ -17,8 +17,8 @@ if (!supabaseUrl || !supabaseServiceKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
-    persistSession: false
-  }
+    persistSession: false,
+  },
 });
 
 async function seed() {
@@ -26,11 +26,11 @@ async function seed() {
 
   // Transform quotes to match DB schema (if needed)
   // Our DB schema: text, author, category, verified (optional)
-  const quotesToInsert = QUOTES.map(q => ({
+  const quotesToInsert = QUOTES.map((q) => ({
     text: q.text,
     author: q.author,
     category: q.category,
-    verified: q.category === 'Scientific Proven' || q.category === 'Ted Wisdom' // Simple logic for verify
+    verified: q.category === 'Scientific Proven' || q.category === 'Ted Wisdom', // Simple logic for verify
   }));
 
   const { error } = await supabase.from('quotes').insert(quotesToInsert);

@@ -21,7 +21,8 @@ const grantSchema = z.object({
   name: z.string().min(2).max(100),
   phone: z.string().min(10).max(15).optional(),
   planTier: z.enum(['lite', 'pro']),
-  password: z.string()
+  password: z
+    .string()
     .min(8, 'Min 8 characters')
     .regex(/[a-z]/, 'Need lowercase')
     .regex(/[A-Z]/, 'Need uppercase')
@@ -46,14 +47,15 @@ export async function POST(request: Request) {
     }
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId)
+      where: (users, { eq }) => eq(users.id, decoded.userId),
     });
     if (!adminUser || adminUser.role !== 'admin') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
     const body = await request.json();
-    const { email, name, phone, planTier, password, accessMonths, reason } = grantSchema.parse(body);
+    const { email, name, phone, planTier, password, accessMonths, reason } =
+      grantSchema.parse(body);
 
     const normalizedEmail = email.toLowerCase().trim();
     const months = accessMonths || PLAN_MONTHS[planTier] || 7;
@@ -75,20 +77,25 @@ export async function POST(request: Request) {
 
     if (existing) {
       // Upgrade existing user
-      await db.update(mppscUsers).set({
-        name: name.trim(),
-        phone: phone?.trim(),
-        password: hashedPassword,
-        planTier,
-        isSubscribed: true,
-        isActive: true,
-        accessExpiresAt,
-        deletedAt: null,
-        metadata: JSON.stringify({
-          ...(typeof existing.metadata === 'string' ? JSON.parse(existing.metadata || '{}') : (existing.metadata || {})),
-          ...grantMeta,
-        }),
-      }).where(eq(mppscUsers.id, existing.id));
+      await db
+        .update(mppscUsers)
+        .set({
+          name: name.trim(),
+          phone: phone?.trim(),
+          password: hashedPassword,
+          planTier,
+          isSubscribed: true,
+          isActive: true,
+          accessExpiresAt,
+          deletedAt: null,
+          metadata: JSON.stringify({
+            ...(typeof existing.metadata === 'string'
+              ? JSON.parse(existing.metadata || '{}')
+              : existing.metadata || {}),
+            ...grantMeta,
+          }),
+        })
+        .where(eq(mppscUsers.id, existing.id));
 
       // ── Log Activity ──────────────────────────────────────────────
       const { logUserActivity } = await import('@/app/actions/user-activity');
@@ -102,8 +109,8 @@ export async function POST(request: Request) {
           plan: planTier,
           months,
           reason: grantMeta.grantReason,
-          isUpgrade: true
-        }
+          isUpgrade: true,
+        },
       });
 
       return NextResponse.json({
@@ -144,8 +151,8 @@ export async function POST(request: Request) {
         plan: planTier,
         months,
         reason: grantMeta.grantReason,
-        isNewUser: true
-      }
+        isNewUser: true,
+      },
     });
 
     return NextResponse.json({
@@ -154,10 +161,12 @@ export async function POST(request: Request) {
       userId,
       isNew: true,
     });
-
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0]?.message || 'Invalid input' }, { status: 400 });
+      return NextResponse.json(
+        { error: error.issues[0]?.message || 'Invalid input' },
+        { status: 400 }
+      );
     }
     console.error('Grant plan error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

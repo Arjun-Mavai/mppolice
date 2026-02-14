@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React from 'react';
 import { AlertCircle } from 'lucide-react';
@@ -37,24 +37,18 @@ export function QuizExitDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-amber-600">
-            <AlertCircle className="w-5 h-5" /> {t.quitConfirm}
+            <AlertCircle className="h-5 w-5" /> {t.quitConfirm}
           </DialogTitle>
-          <DialogDescription className="text-slate-600 pt-2">
-            {t.quitDesc}
-          </DialogDescription>
+          <DialogDescription className="pt-2 text-slate-600">{t.quitDesc}</DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex gap-2 sm:justify-end mt-4">
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            className="flex-1 sm:flex-none"
-          >
+        <DialogFooter className="mt-4 flex gap-2 sm:justify-end">
+          <Button variant="outline" onClick={onCancel} className="flex-1 sm:flex-none">
             {t.cancel}
           </Button>
           <Button
             variant="destructive"
             onClick={onConfirmExit}
-            className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700"
+            className="flex-1 bg-red-600 hover:bg-red-700 sm:flex-none"
           >
             {t.yesExit}
           </Button>

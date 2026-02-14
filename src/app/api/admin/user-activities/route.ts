@@ -19,22 +19,22 @@ export async function GET() {
     if (!decoded?.userId) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId)
+      where: (users, { eq }) => eq(users.id, decoded.userId),
     });
 
     if (!adminUser || adminUser.role !== 'admin') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const logs = await db.select()
+    const logs = await db
+      .select()
       .from(mppscUserActivities)
       .orderBy(desc(mppscUserActivities.createdAt))
       .limit(100);
 
     return NextResponse.json({ logs });
-
   } catch (error) {
-    console.error("Fetch activities error:", error);
+    console.error('Fetch activities error:', error);
     return NextResponse.json({ error: 'Failed to fetch logs' }, { status: 500 });
   }
 }

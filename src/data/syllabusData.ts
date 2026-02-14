@@ -13,20 +13,20 @@ import { unit_10 } from './units/unit_10';
 export * from '@/types/syllabus';
 
 export const syllabusData: SyllabusData = {
-  exam_name: "राज्य सेवा (प्रारंभिक) परीक्षा",
-  subject: "सामान्य अध्ययन - प्रथम प्रश्न पत्र",
+  exam_name: 'राज्य सेवा (प्रारंभिक) परीक्षा',
+  subject: 'सामान्य अध्ययन - प्रथम प्रश्न पत्र',
   units: {
-    "unit_1": unit_1,
-    "unit_2": unit_2,
-    "unit_3": unit_3,
-    "unit_4": unit_4,
-    "unit_5": unit_5,
-    "unit_6": unit_6,
-    "unit_7": unit_7,
-    "unit_8": unit_8,
-    "unit_9": unit_9,
-    "unit_10": unit_10,
-  }
+    unit_1: unit_1,
+    unit_2: unit_2,
+    unit_3: unit_3,
+    unit_4: unit_4,
+    unit_5: unit_5,
+    unit_6: unit_6,
+    unit_7: unit_7,
+    unit_8: unit_8,
+    unit_9: unit_9,
+    unit_10: unit_10,
+  },
 };
 
 // Lightweight metadata for menus/lists without loading heavy topics
@@ -39,6 +39,6 @@ export const syllabusMetadata = {
     id: key,
     title: unit.title,
     title_en: unit.title_en,
-    unit_title: unit.unit_title
-  }))
+    unit_title: unit.unit_title,
+  })),
 };

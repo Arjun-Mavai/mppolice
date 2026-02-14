@@ -24,16 +24,16 @@ export interface PricingData {
 export const PRICING_DEFAULTS: PricingData = {
   litePrice: 99,
   liteOriginalPrice: 299,
-  liteValidityText: "Valid till MPPSC 2026 Prelims",
+  liteValidityText: 'Valid till MPPSC 2026 Prelims',
   liteMonths: 8,
   proPrice: 299,
   proOriginalPrice: 999,
-  proValidityText: "Valid till MPPSC 2026 Mains",
+  proValidityText: 'Valid till MPPSC 2026 Mains',
   proMonths: 12,
   upgradePrice: 199,
   upgradeOriginalPrice: 299,
-  urgencyText: "Special pricing for first 100 students",
-  urgencyTextHi: "पहले 100 छात्रों के लिए विशेष मूल्य",
+  urgencyText: 'Special pricing for first 100 students',
+  urgencyTextHi: 'पहले 100 छात्रों के लिए विशेष मूल्य',
   studentsBought: 23,
 };
 
@@ -54,7 +54,11 @@ export const LITE_FEATURES: PlanFeatureWithIcon[] = [
   { en: 'Full Length Tests ×2', hi: 'फुल लेंथ टेस्ट ×2', icon: 'FileText' },
   // { en: '2 Topic Tests per Unit', hi: '2 टॉपिक टेस्ट प्रति यूनिट', icon: 'Target' },
   { en: 'Limited Tests in Topic-wise', hi: 'टॉपिक वाइज़ में सीमित टेस्ट', icon: 'Target' },
-  { en: 'Limited Syllabus Topics Analysis', hi: 'सीमित सिलेबस टॉपिक्स एनालिसिस', icon: 'BarChart3' },
+  {
+    en: 'Limited Syllabus Topics Analysis',
+    hi: 'सीमित सिलेबस टॉपिक्स एनालिसिस',
+    icon: 'BarChart3',
+  },
   { en: 'Premium Study Blogs (Limited)', hi: 'प्रीमियम स्टडी ब्लॉग्स (सीमित)', icon: 'FileText' },
   // { en: '5+ Years PYQs (With Explanations)', hi: '5+ साल के PYQ (उत्तर सहित)', icon: 'History' },
 ];

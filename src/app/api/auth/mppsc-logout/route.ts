@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST() {
   const cookieStore = await cookies();
-  
+
   // Clear the JWT auth cookie
   cookieStore.delete('mppsc_token');
 

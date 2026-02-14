@@ -6,9 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
-  Loader2, IndianRupee, TrendingUp, Users, Search,
-  ArrowUpRight, ArrowDownRight, Calendar, BarChart3,
-  Crown, Zap,
+  Loader2,
+  IndianRupee,
+  TrendingUp,
+  Users,
+  Search,
+  ArrowUpRight,
+  ArrowDownRight,
+  Calendar,
+  BarChart3,
+  Crown,
+  Zap,
 } from 'lucide-react';
 
 interface PaymentRecord {
@@ -56,7 +64,11 @@ function formatRupees(paise: number) {
 }
 
 export default function PaymentsPage() {
-  const [data, setData] = useState<{ stats: Stats; dailyChart: DailyData[]; payments: PaymentRecord[] } | null>(null);
+  const [data, setData] = useState<{
+    stats: Stats;
+    dailyChart: DailyData[];
+    payments: PaymentRecord[];
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>('all');
   const [search, setSearch] = useState('');
@@ -76,7 +88,9 @@ export default function PaymentsPage() {
     }
   };
 
-  useEffect(() => { fetchData(); }, [filter]);
+  useEffect(() => {
+    fetchData();
+  }, [filter]);
 
   // Debounced search
   useEffect(() => {
@@ -86,8 +100,8 @@ export default function PaymentsPage() {
 
   if (loading && !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
       </div>
     );
   }
@@ -95,48 +109,47 @@ export default function PaymentsPage() {
   if (!data) return <div className="p-6 text-red-500">Failed to load payment data.</div>;
 
   const { stats, dailyChart, payments } = data;
-  const maxChartVal = Math.max(...dailyChart.map(d => d.count), 1);
+  const maxChartVal = Math.max(...dailyChart.map((d) => d.count), 1);
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-4 md:p-8 font-sans">
-      <div className="max-w-7xl mx-auto space-y-6">
-
+    <div className="min-h-screen bg-slate-50/50 p-4 font-sans md:p-8">
+      <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-black tracking-tight text-slate-900 md:text-3xl">
             Payment Analytics
           </h1>
           <p className="text-sm text-slate-500">Real-time revenue & order tracking</p>
         </div>
 
         {/* ── Stats Grid ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <MetricCard
             label="Total Revenue"
             value={formatRupees(stats.totalRevenue)}
             sub={`${stats.total} orders`}
-            icon={<IndianRupee className="w-4 h-4" />}
+            icon={<IndianRupee className="h-4 w-4" />}
             color="emerald"
           />
           <MetricCard
             label="Today"
             value={formatRupees(stats.todayRevenue)}
             sub={`${stats.today} orders`}
-            icon={<TrendingUp className="w-4 h-4" />}
+            icon={<TrendingUp className="h-4 w-4" />}
             color="blue"
           />
           <MetricCard
             label="This Week"
             value={formatRupees(stats.weekRevenue)}
             sub={`${stats.week} orders`}
-            icon={<Calendar className="w-4 h-4" />}
+            icon={<Calendar className="h-4 w-4" />}
             color="violet"
           />
           <MetricCard
             label="This Month"
             value={formatRupees(stats.monthRevenue)}
             sub={`${stats.month} orders`}
-            icon={<BarChart3 className="w-4 h-4" />}
+            icon={<BarChart3 className="h-4 w-4" />}
             color="amber"
           />
         </div>
@@ -144,9 +157,9 @@ export default function PaymentsPage() {
         {/* ── Plan Breakdown ── */}
         <div className="grid grid-cols-2 gap-3">
           <Card className="border-blue-100 bg-blue-50/30">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                <Zap className="w-5 h-5 text-blue-600" />
+            <CardContent className="flex items-center gap-3 p-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
+                <Zap className="h-5 w-5 text-blue-600" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-bold text-blue-500 uppercase">Lite Plan</p>
@@ -163,9 +176,9 @@ export default function PaymentsPage() {
             </CardContent>
           </Card>
           <Card className="border-amber-100 bg-amber-50/30">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-                <Crown className="w-5 h-5 text-amber-600" />
+            <CardContent className="flex items-center gap-3 p-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+                <Crown className="h-5 w-5 text-amber-600" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-bold text-amber-500 uppercase">Pro Plan</p>
@@ -186,40 +199,55 @@ export default function PaymentsPage() {
         {/* ── Daily Chart (last 30 days) ── */}
         <Card className="border-slate-200">
           <CardContent className="p-4 md:p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-slate-900 text-sm">Daily Orders</h3>
+                <h3 className="text-sm font-bold text-slate-900">Daily Orders</h3>
                 <p className="text-[11px] text-slate-400">Last 30 days</p>
               </div>
               <div className="flex gap-3 text-[10px]">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /> Lite</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> Pro</span>
+                <span className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-blue-500" /> Lite
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-amber-500" /> Pro
+                </span>
               </div>
             </div>
             {/* Bar chart */}
-            <div className="flex items-end gap-[3px] h-32 md:h-40 overflow-x-auto pb-1">
+            <div className="flex h-32 items-end gap-[3px] overflow-x-auto pb-1 md:h-40">
               {dailyChart.map((d) => {
                 const totalH = (d.count / maxChartVal) * 100;
                 const liteH = d.count > 0 ? (d.lite / d.count) * totalH : 0;
                 const proH = totalH - liteH;
                 return (
-                  <div key={d.date} className="flex-1 min-w-[8px] flex flex-col items-center gap-0.5 group relative">
+                  <div
+                    key={d.date}
+                    className="group relative flex min-w-[8px] flex-1 flex-col items-center gap-0.5"
+                  >
                     {/* Tooltip */}
-                    <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-lg">
+                    <div className="pointer-events-none absolute -top-16 left-1/2 z-10 -translate-x-1/2 rounded-lg bg-slate-900 px-2 py-1.5 text-[10px] whitespace-nowrap text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
                       <p className="font-bold">{d.label}</p>
-                      <p>{d.count} orders • ₹{(d.revenue / 100).toLocaleString('en-IN')}</p>
+                      <p>
+                        {d.count} orders • ₹{(d.revenue / 100).toLocaleString('en-IN')}
+                      </p>
                       {d.lite > 0 && <p className="text-blue-300">Lite: {d.lite}</p>}
                       {d.pro > 0 && <p className="text-amber-300">Pro: {d.pro}</p>}
                     </div>
                     {/* Bar */}
-                    <div className="w-full flex flex-col justify-end" style={{ height: '100%' }}>
+                    <div className="flex w-full flex-col justify-end" style={{ height: '100%' }}>
                       {d.count > 0 ? (
                         <>
-                          <div className="w-full bg-amber-400 rounded-t-sm transition-all" style={{ height: `${proH}%`, minHeight: proH > 0 ? 2 : 0 }} />
-                          <div className="w-full bg-blue-400 rounded-b-sm transition-all" style={{ height: `${liteH}%`, minHeight: liteH > 0 ? 2 : 0 }} />
+                          <div
+                            className="w-full rounded-t-sm bg-amber-400 transition-all"
+                            style={{ height: `${proH}%`, minHeight: proH > 0 ? 2 : 0 }}
+                          />
+                          <div
+                            className="w-full rounded-b-sm bg-blue-400 transition-all"
+                            style={{ height: `${liteH}%`, minHeight: liteH > 0 ? 2 : 0 }}
+                          />
                         </>
                       ) : (
-                        <div className="w-full bg-slate-100 rounded-sm" style={{ height: '4px' }} />
+                        <div className="w-full rounded-sm bg-slate-100" style={{ height: '4px' }} />
                       )}
                     </div>
                   </div>
@@ -227,9 +255,9 @@ export default function PaymentsPage() {
               })}
             </div>
             {/* X-axis labels (show every 5th) */}
-            <div className="flex gap-[3px] mt-1">
+            <div className="mt-1 flex gap-[3px]">
               {dailyChart.map((d, i) => (
-                <div key={d.date} className="flex-1 min-w-[8px] text-center">
+                <div key={d.date} className="min-w-[8px] flex-1 text-center">
                   {i % 5 === 0 && (
                     <span className="text-[8px] text-slate-400">{d.label.split(' ')[0]}</span>
                   )}
@@ -240,77 +268,98 @@ export default function PaymentsPage() {
         </Card>
 
         {/* ── Filters + Search ── */}
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-          <div className="flex gap-1.5 bg-white border rounded-lg p-1">
+        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+          <div className="flex gap-1.5 rounded-lg border bg-white p-1">
             {(['all', 'today', 'week', 'month'] as FilterType[]).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
                   filter === f
                     ? 'bg-slate-900 text-white shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                 }`}
               >
-                {f === 'all' ? 'All' : f === 'today' ? 'Today' : f === 'week' ? '7 Days' : '30 Days'}
+                {f === 'all'
+                  ? 'All'
+                  : f === 'today'
+                    ? 'Today'
+                    : f === 'week'
+                      ? '7 Days'
+                      : '30 Days'}
               </button>
             ))}
           </div>
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <div className="relative max-w-sm flex-1">
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search name, email, phone, payment ID..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-9 text-sm bg-white"
+              className="h-9 bg-white pl-9 text-sm"
             />
           </div>
-          <span className="text-xs text-slate-400 self-center">
+          <span className="self-center text-xs text-slate-400">
             {payments.length} result{payments.length !== 1 ? 's' : ''}
           </span>
         </div>
 
         {/* ── Payments Table ── */}
-        <Card className="border-slate-200 overflow-hidden">
+        <Card className="overflow-hidden border-slate-200">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="text-left px-4 py-3 font-bold text-slate-600 text-xs uppercase tracking-wider">User</th>
-                  <th className="text-left px-4 py-3 font-bold text-slate-600 text-xs uppercase tracking-wider hidden sm:table-cell">Plan</th>
-                  <th className="text-right px-4 py-3 font-bold text-slate-600 text-xs uppercase tracking-wider">Amount</th>
-                  <th className="text-left px-4 py-3 font-bold text-slate-600 text-xs uppercase tracking-wider hidden md:table-cell">Payment ID</th>
-                  <th className="text-right px-4 py-3 font-bold text-slate-600 text-xs uppercase tracking-wider">Date</th>
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <th className="px-4 py-3 text-left text-xs font-bold tracking-wider text-slate-600 uppercase">
+                    User
+                  </th>
+                  <th className="hidden px-4 py-3 text-left text-xs font-bold tracking-wider text-slate-600 uppercase sm:table-cell">
+                    Plan
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-bold tracking-wider text-slate-600 uppercase">
+                    Amount
+                  </th>
+                  <th className="hidden px-4 py-3 text-left text-xs font-bold tracking-wider text-slate-600 uppercase md:table-cell">
+                    Payment ID
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-bold tracking-wider text-slate-600 uppercase">
+                    Date
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {payments.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="text-center py-12 text-slate-400">
+                    <td colSpan={5} className="py-12 text-center text-slate-400">
                       {search ? 'No payments match your search' : 'No payments yet'}
                     </td>
                   </tr>
                 ) : (
                   payments.map((p) => (
-                    <tr key={p.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                    <tr
+                      key={p.id}
+                      className="border-b border-slate-50 transition-colors hover:bg-slate-50/50"
+                    >
                       {/* User */}
                       <td className="px-4 py-3">
                         <div className="min-w-0">
-                          <p className="font-semibold text-slate-900 text-sm truncate max-w-[180px]">
+                          <p className="max-w-[180px] truncate text-sm font-semibold text-slate-900">
                             {p.userName || 'Unknown'}
                           </p>
-                          <p className="text-[11px] text-slate-400 truncate max-w-[180px]">{p.userEmail}</p>
+                          <p className="max-w-[180px] truncate text-[11px] text-slate-400">
+                            {p.userEmail}
+                          </p>
                           {p.userPhone && (
                             <p className="text-[10px] text-slate-300 sm:hidden">{p.userPhone}</p>
                           )}
                           {/* Mobile-only plan badge */}
-                          <div className="sm:hidden mt-1">
+                          <div className="mt-1 sm:hidden">
                             <PlanBadge plan={p.planTier} />
                           </div>
                         </div>
                       </td>
                       {/* Plan */}
-                      <td className="px-4 py-3 hidden sm:table-cell">
+                      <td className="hidden px-4 py-3 sm:table-cell">
                         <PlanBadge plan={p.planTier} />
                       </td>
                       {/* Amount */}
@@ -318,18 +367,24 @@ export default function PaymentsPage() {
                         <span className="font-bold text-slate-900">₹{p.amount}</span>
                       </td>
                       {/* Payment ID */}
-                      <td className="px-4 py-3 hidden md:table-cell">
-                        <span className="text-[11px] text-slate-400 font-mono">
+                      <td className="hidden px-4 py-3 md:table-cell">
+                        <span className="font-mono text-[11px] text-slate-400">
                           {p.paymentId ? `${p.paymentId.slice(0, 16)}...` : '—'}
                         </span>
                       </td>
                       {/* Date */}
                       <td className="px-4 py-3 text-right">
-                        <div className="text-xs text-slate-500 whitespace-nowrap">
-                          {new Date(p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                        <div className="text-xs whitespace-nowrap text-slate-500">
+                          {new Date(p.createdAt).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                          })}
                         </div>
                         <div className="text-[10px] text-slate-300">
-                          {new Date(p.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(p.createdAt).toLocaleTimeString('en-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                         </div>
                       </td>
                     </tr>
@@ -339,7 +394,6 @@ export default function PaymentsPage() {
             </table>
           </div>
         </Card>
-
       </div>
     </div>
   );
@@ -347,8 +401,18 @@ export default function PaymentsPage() {
 
 // ── Sub-components ──
 
-function MetricCard({ label, value, sub, icon, color }: {
-  label: string; value: string; sub: string; icon: React.ReactNode; color: string;
+function MetricCard({
+  label,
+  value,
+  sub,
+  icon,
+  color,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  icon: React.ReactNode;
+  color: string;
 }) {
   const colors: Record<string, string> = {
     emerald: 'bg-emerald-50 text-emerald-600',
@@ -359,12 +423,14 @@ function MetricCard({ label, value, sub, icon, color }: {
   return (
     <Card className="border-slate-100 shadow-sm">
       <CardContent className="p-3 md:p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <div className={`p-1.5 rounded-lg ${colors[color] || colors.blue}`}>{icon}</div>
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{label}</span>
+        <div className="mb-2 flex items-center gap-2">
+          <div className={`rounded-lg p-1.5 ${colors[color] || colors.blue}`}>{icon}</div>
+          <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+            {label}
+          </span>
         </div>
-        <p className="text-xl md:text-2xl font-black text-slate-900 leading-none">{value}</p>
-        <p className="text-[11px] text-slate-400 mt-1">{sub}</p>
+        <p className="text-xl leading-none font-black text-slate-900 md:text-2xl">{value}</p>
+        <p className="mt-1 text-[11px] text-slate-400">{sub}</p>
       </CardContent>
     </Card>
   );
@@ -373,14 +439,14 @@ function MetricCard({ label, value, sub, icon, color }: {
 function PlanBadge({ plan }: { plan: string | null }) {
   if (plan === 'pro') {
     return (
-      <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-amber-200 text-[10px] font-bold px-1.5 py-0">
-        <Crown className="w-2.5 h-2.5 mr-0.5" /> PRO
+      <Badge className="border-amber-200 bg-amber-100 px-1.5 py-0 text-[10px] font-bold text-amber-700 hover:bg-amber-100">
+        <Crown className="mr-0.5 h-2.5 w-2.5" /> PRO
       </Badge>
     );
   }
   return (
-    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200 text-[10px] font-bold px-1.5 py-0">
-      <Zap className="w-2.5 h-2.5 mr-0.5" /> LITE
+    <Badge className="border-blue-200 bg-blue-100 px-1.5 py-0 text-[10px] font-bold text-blue-700 hover:bg-blue-100">
+      <Zap className="mr-0.5 h-2.5 w-2.5" /> LITE
     </Badge>
   );
 }

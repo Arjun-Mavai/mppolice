@@ -5,18 +5,18 @@ import { eq } from 'drizzle-orm';
 
 /**
  * 🗺️ SITEMAP - Search engines ko batao ki kya crawl karna h
- * 
+ *
  * Bhai sitemap me sirf WAHI pages daalo jo:
  * 1. Public h (login ke bina accessible)
  * 2. SEO value h (Google se traffic la sake)
  * 3. Unique content h (duplicate/user-specific nahi)
- * 
+ *
  * MPPSC keywords se related pages jyada priority do
  * jis se "MPPSC preparation", "MPPSC syllabus" etc search kare to mile
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppsc.zenscroll.app';
-  
+
   // Static pages jo hamesha rahenge - ye h tumhara SEO ka backbone
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -68,7 +68,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.4,
     },
   ];
-  
+
   try {
     // Syllabus unit pages - "MPPSC unit 1/2/3..." search ke liye
     // Ye public pages h - koi bhi dekh sakta h (login ke bina bhi)
@@ -78,16 +78,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly' as const,
       priority: 0.85,
     }));
-    
+
     // Blog pages - ye h tumhara organic traffic ka engine
     // "MPPSC preparation tips", "MPPSC 2026 strategy" etc search me aayega
-    const allBlogs = await db.select({
-      slug: contentBlogs.slug,
-      updatedAt: contentBlogs.updatedAt,
-    })
-    .from(contentBlogs)
-    .where(eq(contentBlogs.isPublished, true));
-    
+    const allBlogs = await db
+      .select({
+        slug: contentBlogs.slug,
+        updatedAt: contentBlogs.updatedAt,
+      })
+      .from(contentBlogs)
+      .where(eq(contentBlogs.isPublished, true));
+
     const blogPages: MetadataRoute.Sitemap = allBlogs.map((blog) => ({
       url: `${baseUrl}/blogs/${blog.slug}`,
       lastModified: blog.updatedAt || new Date(),
@@ -122,16 +123,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.75,
       },
     ];
-    
-    const allPages = [
-      ...staticPages,
-      ...syllabusPages,
-      ...blogPages,
-      ...quizPages,
-    ];
-    
+
+    const allPages = [...staticPages, ...syllabusPages, ...blogPages, ...quizPages];
+
     return allPages;
-    
   } catch (error) {
     console.error('❌ Sitemap generation failed:', error);
     return staticPages;

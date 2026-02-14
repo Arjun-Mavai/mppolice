@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { mppscUsers, verificationTokens, payments } from '@/db/schema';
@@ -11,7 +10,8 @@ const PLAN_ACCESS_MONTHS: Record<string, number> = { lite: 4, pro: 7 };
 
 const passwordSchema = z.object({
   token: z.string().min(1),
-  password: z.string()
+  password: z
+    .string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/[a-z]/, 'Need at least one lowercase letter')
     .regex(/[A-Z]/, 'Need at least one uppercase letter')
@@ -43,13 +43,17 @@ export async function POST(req: Request) {
     if (new Date() > storedToken.expires) {
       // Clean up expired token
       await db.delete(verificationTokens).where(eq(verificationTokens.token, token));
-      return NextResponse.json({ error: 'Token expired. Please contact support.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Token expired. Please contact support.' },
+        { status: 400 }
+      );
     }
 
     const userId = storedToken.identifier;
 
     // Look up plan from most recent payment
-    const userPayments = await db.select({ planTier: payments.planTier })
+    const userPayments = await db
+      .select({ planTier: payments.planTier })
       .from(payments)
       .where(eq(payments.userId, userId))
       .orderBy(desc(payments.createdAt))
@@ -66,7 +70,8 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Update user — activate with correct plan and expiry
-    await db.update(mppscUsers)
+    await db
+      .update(mppscUsers)
       .set({
         password: hashedPassword,
         isActive: true,
@@ -80,19 +85,19 @@ export async function POST(req: Request) {
     await db.delete(verificationTokens).where(eq(verificationTokens.token, token));
 
     // Cleanup: delete all expired tokens (housekeeping)
-    await db.delete(verificationTokens)
+    await db
+      .delete(verificationTokens)
       .where(sql`${verificationTokens.expires} < strftime('%s', 'now')`);
 
     return NextResponse.json({ success: true, planTier });
-
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0]?.message || 'Invalid input' }, { status: 400 });
+      return NextResponse.json(
+        { error: error.issues[0]?.message || 'Invalid input' },
+        { status: 400 }
+      );
     }
     console.error('Set password error:', error);
-    return NextResponse.json(
-      { error: 'Failed to set password' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to set password' }, { status: 500 });
   }
 }

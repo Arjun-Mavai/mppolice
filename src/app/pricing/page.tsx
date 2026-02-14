@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 💰 PRICING PAGE — Dynamic prices from backend, marketing-optimized
@@ -15,18 +15,42 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Star, ChevronDown, Shield, Zap, Crown, ArrowLeft, Clock, Users, Sparkles, Target, BookOpen, BarChart3, FileText, Flame, History } from 'lucide-react';
+import {
+  CheckCircle2,
+  Star,
+  ChevronDown,
+  Shield,
+  Zap,
+  Crown,
+  ArrowLeft,
+  Clock,
+  Users,
+  Sparkles,
+  Target,
+  BookOpen,
+  BarChart3,
+  FileText,
+  Flame,
+  History,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { type PricingData, PRICING_DEFAULTS, LITE_FEATURES, PRO_FEATURES, calcDiscount, calcMonthly } from '@/config/pricing';
+import {
+  type PricingData,
+  PRICING_DEFAULTS,
+  LITE_FEATURES,
+  PRO_FEATURES,
+  calcDiscount,
+  calcMonthly,
+} from '@/config/pricing';
 import { API } from '@/config/endpoints';
 import { PaymentModal } from '@/components/payment/PaymentModal';
 import { PricingCard } from '@/components/PricingCard';
 
 import { AppNavbar } from '@/components/layout/AppNavbar';
-import { ExitSurveyModal } from "@/components/ExitSurveyModal";
+import { ExitSurveyModal } from '@/components/ExitSurveyModal';
 
 // ── FAQ data — bilingual ────────────────────────────────────
 const faqData = [
@@ -69,10 +93,19 @@ const faqData = [
 
 // ── Feature lists from centralized config ───────────────
 // Icon mapping for pricing page
-const ICON_MAP: Record<string, any> = { Target, BookOpen, Sparkles, FileText, Clock, Zap, BarChart3, History };
+const ICON_MAP: Record<string, any> = {
+  Target,
+  BookOpen,
+  Sparkles,
+  FileText,
+  Clock,
+  Zap,
+  BarChart3,
+  History,
+};
 
-const liteFeatures = LITE_FEATURES.map(f => ({ ...f, icon: ICON_MAP[f.icon || ''] || Target }));
-const proFeatures = PRO_FEATURES.map(f => ({ ...f, icon: ICON_MAP[f.icon || ''] || Target }));
+const liteFeatures = LITE_FEATURES.map((f) => ({ ...f, icon: ICON_MAP[f.icon || ''] || Target }));
+const proFeatures = PRO_FEATURES.map((f) => ({ ...f, icon: ICON_MAP[f.icon || ''] || Target }));
 
 // ── Pricing data from centralized config ────────────────
 
@@ -83,28 +116,34 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
     <div className="border-b border-slate-200 last:border-b-0">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between py-5 text-left group cursor-pointer"
+        className="group flex w-full cursor-pointer items-center justify-between py-5 text-left"
       >
-        <span className="text-sm md:text-base font-semibold text-slate-800 pr-4">{question}</span>
-        <ChevronDown className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        <span className="pr-4 text-sm font-semibold text-slate-800 md:text-base">{question}</span>
+        <ChevronDown
+          className={`h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+        />
       </button>
-      <div className={`grid transition-all duration-200 ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+      <div
+        className={`grid transition-all duration-200 ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+      >
         <div className="overflow-hidden">
-          <p className="text-sm text-slate-600 pb-5 leading-relaxed">{answer}</p>
+          <p className="pb-5 text-sm leading-relaxed text-slate-600">{answer}</p>
         </div>
       </div>
     </div>
   );
 }
 
-
 // ... (existing imports)
 
 export default function PricingPage() {
-    const [p, setP] = useState<PricingData>(PRICING_DEFAULTS);
-// Payment Modal State
+  const [p, setP] = useState<PricingData>(PRICING_DEFAULTS);
+  // Payment Modal State
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState({ planType: 'pro' as 'lite' | 'pro' | 'upgrade', name: '' });
+  const [selectedPlan, setSelectedPlan] = useState({
+    planType: 'pro' as 'lite' | 'pro' | 'upgrade',
+    name: '',
+  });
   // ── Exit Survey Logic ─────────────────────────────────────
   const [showExitSurvey, setShowExitSurvey] = useState(false);
   const { language, user } = useSettingsStore();
@@ -124,12 +163,15 @@ export default function PricingPage() {
 
   // ── Fetch dynamic pricing from API ────────────────────────
   useEffect(() => {
-    fetch(API.PRICING).then(r => r.json()).then(d => {
-      if (d.pricing) setP(d.pricing);
-    }).catch(() => {/* defaults stay */});
+    fetch(API.PRICING)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.pricing) setP(d.pricing);
+      })
+      .catch(() => {
+        /* defaults stay */
+      });
   }, []);
-
-  
 
   const handleBuy = (plan: 'lite' | 'pro' | 'upgrade') => {
     if (plan === 'lite') {
@@ -148,7 +190,6 @@ export default function PricingPage() {
   const liteMonthly = calcMonthly(p.litePrice, p.liteMonths);
   const proMonthly = calcMonthly(p.proPrice, p.proMonths);
 
-  
   // Intercept back button
   useEffect(() => {
     // Only intercept if user is NOT a pro member already
@@ -162,11 +203,11 @@ export default function PricingPage() {
     window.history.pushState({ pricingActive: true }, '');
 
     const handlePopState = () => {
-        setShowExitSurvey(true);
-        // Don't push state again immediately, let them go back if they confirm in modal
-        // But for now, we want to show modal FIRST.
-        // If they close modal without submitting, we let them go? 
-        // The modal logic handles "Let them go anyway".
+      setShowExitSurvey(true);
+      // Don't push state again immediately, let them go back if they confirm in modal
+      // But for now, we want to show modal FIRST.
+      // If they close modal without submitting, we let them go?
+      // The modal logic handles "Let them go anyway".
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -180,19 +221,18 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-slate-100 selection:text-slate-900">
-
       {/* Common header — same navbar as rest of the app */}
       <AppNavbar user={null} />
 
       {/* ── Hero Header ──────────────────────────────────── */}
-      <section className="pt-24 pb-4 md:pt-28 md:pb-6 text-center px-4">
-        <Badge className="bg-slate-100 text-slate-700 border-slate-200 px-4 py-1.5 mb-5 hover:bg-slate-200 transition-colors cursor-default text-xs font-semibold tracking-wide">
+      <section className="px-4 pt-24 pb-4 text-center md:pt-28 md:pb-6">
+        <Badge className="mb-5 cursor-default border-slate-200 bg-slate-100 px-4 py-1.5 text-xs font-semibold tracking-wide text-slate-700 transition-colors hover:bg-slate-200">
           MPPSC 2026
         </Badge>
-        <h1 className="text-3xl md:text-5xl font-black font-display text-slate-900 tracking-tight mb-3 leading-tight">
+        <h1 className="font-display mb-3 text-3xl leading-tight font-black tracking-tight text-slate-900 md:text-5xl">
           {hi ? 'अपना MPPSC सफलता प्लान चुनें' : 'Choose Your MPPSC Success Plan'}
         </h1>
-        <p className="text-base md:text-lg text-slate-500 font-medium max-w-lg mx-auto mb-1">
+        <p className="mx-auto mb-1 max-w-lg text-base font-medium text-slate-500 md:text-lg">
           {hi ? 'छात्रों के साथ स्मार्ट तैयारी करें' : 'Join aspirants who are preparing smarter'}
         </p>
       </section>
@@ -202,14 +242,14 @@ export default function PricingPage() {
       {/* ── Lite user — upgrade to Pro card ──────────────── */}
       {isLiteUser && (
         <section className="px-4 pb-8">
-          <div className="max-w-lg mx-auto">
-             <PricingCard
-                planType="upgrade"
-                pricing={p}
-                features={proFeatures.slice(1)}
-                language={language}
-                onBuy={() => handleBuy('upgrade')}
-             />
+          <div className="mx-auto max-w-lg">
+            <PricingCard
+              planType="upgrade"
+              pricing={p}
+              features={proFeatures.slice(1)}
+              language={language}
+              onBuy={() => handleBuy('upgrade')}
+            />
           </div>
         </section>
       )}
@@ -217,7 +257,6 @@ export default function PricingPage() {
       {/* ── Free users — both plans ──────────────────────── */}
       {!isProUser && !isLiteUser && (
         <section className="px-4 pb-16">
-
           {/* Urgency banner — FOMO with dynamic student count */}
           {/* <div className="flex justify-center mb-8">
             <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-4 py-2 md:px-5 md:py-2.5 animate-pulse">
@@ -232,35 +271,54 @@ export default function PricingPage() {
             
           </div> */}
 
-
-             {/* FOMO badge - "first 100 students" with joined count */}
-                          <div className="flex justify-center mb-8">
-                              <div className="relative inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-4 py-2">
-                                  <Flame className="w-3.5 h-3.5 text-red-500" />
-                                  <span className="text-xs font-semibold text-amber-800">
-                                      {hi ? p.urgencyTextHi : p.urgencyText}
-                                  </span>
-                                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] font-bold px-1.5 py-0 h-5 hover:bg-emerald-100">
-                                      <Users className="w-2.5 h-2.5 mr-0.5" />
-                                      {p.studentsBought || PRICING_DEFAULTS.studentsBought} joined
-                                  </Badge>.   
-                              </div>
-                          </div>
+          {/* FOMO badge - "first 100 students" with joined count */}
+          <div className="mb-8 flex justify-center">
+            <div className="relative inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2">
+              <Flame className="h-3.5 w-3.5 text-red-500" />
+              <span className="text-xs font-semibold text-amber-800">
+                {hi ? p.urgencyTextHi : p.urgencyText}
+              </span>
+              <Badge className="h-5 border-emerald-200 bg-emerald-100 px-1.5 py-0 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100">
+                <Users className="mr-0.5 h-2.5 w-2.5" />
+                {p.studentsBought || PRICING_DEFAULTS.studentsBought} joined
+              </Badge>
+              .
+            </div>
+          </div>
 
           {/* ── What You Get Section ─────────────────────── */}
-          <div className="max-w-4xl mx-auto mb-10">
-            <h2 className="text-center text-lg md:text-xl font-bold text-slate-800 mb-6">
+          <div className="mx-auto mb-10 max-w-4xl">
+            <h2 className="mb-6 text-center text-lg font-bold text-slate-800 md:text-xl">
               {hi ? 'आपको क्या मिलता है?' : 'What do you get?'}
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
               {[
-                { icon: Target, label: hi ? '1000+ प्रश्न' : '1000+ Questions', sub: hi ? 'टॉपिक वाइज़' : 'Topic-wise' },
-                { icon: FileText, label: hi ? 'फुल मॉक टेस्ट' : 'Full Mock Tests', sub: hi ? '100 प्रश्न प्रत्येक' : '100Q each' },
-                { icon: BarChart3, label: hi ? 'स्मार्ट एनालिटिक्स' : 'Smart Analytics', sub: hi ? 'कमज़ोर टॉपिक पहचानो' : 'Find weak areas' },
-                { icon: History, label: hi ? '5+ साल के PYQ' : '5+ Years PYQs', sub: hi ? 'विस्तृत उत्तर सहित' : 'With Explanations' },
+                {
+                  icon: Target,
+                  label: hi ? '1000+ प्रश्न' : '1000+ Questions',
+                  sub: hi ? 'टॉपिक वाइज़' : 'Topic-wise',
+                },
+                {
+                  icon: FileText,
+                  label: hi ? 'फुल मॉक टेस्ट' : 'Full Mock Tests',
+                  sub: hi ? '100 प्रश्न प्रत्येक' : '100Q each',
+                },
+                {
+                  icon: BarChart3,
+                  label: hi ? 'स्मार्ट एनालिटिक्स' : 'Smart Analytics',
+                  sub: hi ? 'कमज़ोर टॉपिक पहचानो' : 'Find weak areas',
+                },
+                {
+                  icon: History,
+                  label: hi ? '5+ साल के PYQ' : '5+ Years PYQs',
+                  sub: hi ? 'विस्तृत उत्तर सहित' : 'With Explanations',
+                },
               ].map(({ icon: Icon, label, sub }) => (
-                <div key={label} className="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
-                  <Icon className="w-6 h-6 text-slate-700 mx-auto mb-2" />
+                <div
+                  key={label}
+                  className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-center"
+                >
+                  <Icon className="mx-auto mb-2 h-6 w-6 text-slate-700" />
                   <p className="text-sm font-bold text-slate-800">{label}</p>
                   <p className="text-[11px] text-slate-500">{sub}</p>
                 </div>
@@ -269,30 +327,30 @@ export default function PricingPage() {
           </div>
 
           {/* ── Pricing Cards ────────────────────────────── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 w-full max-w-4xl mx-auto">
+          <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-5 md:grid-cols-2 md:gap-8">
             <PricingCard
-                planType="lite"
-                pricing={p}
-                features={LITE_FEATURES}
-                language={language}
-                onBuy={() => handleBuy('lite')}
+              planType="lite"
+              pricing={p}
+              features={LITE_FEATURES}
+              language={language}
+              onBuy={() => handleBuy('lite')}
             />
             <PricingCard
-                planType="pro"
-                pricing={p}
-                features={PRO_FEATURES}
-                language={language}
-                onBuy={() => handleBuy('pro')}
-                isPopular
+              planType="pro"
+              pricing={p}
+              features={PRO_FEATURES}
+              language={language}
+              onBuy={() => handleBuy('pro')}
+              isPopular
             />
           </div>
 
           {/* ── Comparison note ───────────────────────────── */}
-          <div className="max-w-4xl mx-auto mt-6">
-            <div className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-4 md:p-6 border border-slate-200">
-              <div className="flex flex-col md:flex-row items-center gap-3 md:gap-6 text-center md:text-left">
+          <div className="mx-auto mt-6 max-w-4xl">
+            <div className="rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 p-4 md:p-6">
+              <div className="flex flex-col items-center gap-3 text-center md:flex-row md:gap-6 md:text-left">
                 <div className="flex-1">
-                  <p className="text-sm font-bold text-slate-800 mb-1">
+                  <p className="mb-1 text-sm font-bold text-slate-800">
                     {hi ? '💡 Pro में क्या extra मिलता है?' : '💡 What extra do you get in Pro?'}
                   </p>
                   <p className="text-xs text-slate-500">
@@ -301,17 +359,19 @@ export default function PricingPage() {
                       : 'Unlimited tests, FLTs, CSAT, PYQ papers + validity till Mains. Best value for serious aspirants.'}
                   </p>
                 </div>
-                <div className="text-sm font-bold text-slate-600 whitespace-nowrap">
-                  {hi ? `सिर्फ ₹${p.proPrice - p.litePrice} ज़्यादा` : `Just ₹${p.proPrice - p.litePrice} more`}
+                <div className="text-sm font-bold whitespace-nowrap text-slate-600">
+                  {hi
+                    ? `सिर्फ ₹${p.proPrice - p.litePrice} ज़्यादा`
+                    : `Just ₹${p.proPrice - p.litePrice} more`}
                 </div>
               </div>
             </div>
           </div>
 
           {/* Trust signals */}
-          <div className="flex items-center justify-center gap-2 mt-8">
-            <Shield className="w-4 h-4 text-slate-400" />
-            <p className="text-xs text-slate-400 font-medium">
+          <div className="mt-8 flex items-center justify-center gap-2">
+            <Shield className="h-4 w-4 text-slate-400" />
+            <p className="text-xs font-medium text-slate-400">
               {hi
                 ? 'सुरक्षित भुगतान • कोई ऑटो-रिन्यूअल नहीं • RazorPay से एक्टिवेट'
                 : 'Secure Payment • No Auto-Renewal • Activate via RazorPay'}
@@ -321,9 +381,9 @@ export default function PricingPage() {
       )}
 
       {/* ── FAQ Section ──────────────────────────────────── */}
-      <section className="px-4 pb-20 pt-4">
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold font-display text-slate-900 text-center mb-12">
+      <section className="px-4 pt-4 pb-20">
+        <div className="mx-auto max-w-2xl">
+          <h2 className="font-display mb-12 text-center text-2xl font-bold text-slate-900 md:text-3xl">
             {hi ? 'अक्सर पूछे जाने वाले सवाल' : 'Frequently Asked Questions'}
           </h2>
           <div className="space-y-4">
@@ -339,18 +399,18 @@ export default function PricingPage() {
       </section>
 
       {/* Payment Modal Integration */}
-      <PaymentModal 
-        open={showPaymentModal} 
+      <PaymentModal
+        open={showPaymentModal}
         onOpenChange={setShowPaymentModal}
         planType={selectedPlan.planType}
         planName={selectedPlan.name}
       />
-      
-      <ExitSurveyModal 
+
+      <ExitSurveyModal
         open={showExitSurvey}
         onOpenChange={setShowExitSurvey}
         onConfirmExit={handleConfirmExit}
       />
     </div>
   );
-} 
+}

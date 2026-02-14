@@ -12,11 +12,16 @@ export async function GET(req: Request) {
     const token = cookieStore.get('mppsc_token')?.value;
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const payload = await verifyToken(token) as any;
+    const payload = (await verifyToken(token)) as any;
     if (!payload?.userId) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
 
-    const [admin] = await db.select({ role: mppscUsers.role }).from(mppscUsers).where(eq(mppscUsers.id, payload.userId as string)).limit(1);
-    if (!admin || admin.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const [admin] = await db
+      .select({ role: mppscUsers.role })
+      .from(mppscUsers)
+      .where(eq(mppscUsers.id, payload.userId as string))
+      .limit(1);
+    if (!admin || admin.role !== 'admin')
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     // Parse query params
     const { searchParams } = new URL(req.url);
@@ -53,17 +58,24 @@ export async function GET(req: Request) {
 
     // ── Stats ──
     const totalRevenue = allPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-    const liteCount = allPayments.filter(p => p.planTier === 'lite').length;
-    const proCount = allPayments.filter(p => p.planTier === 'pro').length;
-    const liteRevenue = allPayments.filter(p => p.planTier === 'lite').reduce((s, p) => s + (p.amount || 0), 0);
-    const proRevenue = allPayments.filter(p => p.planTier === 'pro').reduce((s, p) => s + (p.amount || 0), 0);
+    const liteCount = allPayments.filter((p) => p.planTier === 'lite').length;
+    const proCount = allPayments.filter((p) => p.planTier === 'pro').length;
+    const liteRevenue = allPayments
+      .filter((p) => p.planTier === 'lite')
+      .reduce((s, p) => s + (p.amount || 0), 0);
+    const proRevenue = allPayments
+      .filter((p) => p.planTier === 'pro')
+      .reduce((s, p) => s + (p.amount || 0), 0);
 
-    const todayPayments = allPayments.filter(p => p.createdAt && p.createdAt >= todayStart);
-    const weekPayments = allPayments.filter(p => p.createdAt && p.createdAt >= weekStart);
-    const monthPayments = allPayments.filter(p => p.createdAt && p.createdAt >= monthStart);
+    const todayPayments = allPayments.filter((p) => p.createdAt && p.createdAt >= todayStart);
+    const weekPayments = allPayments.filter((p) => p.createdAt && p.createdAt >= weekStart);
+    const monthPayments = allPayments.filter((p) => p.createdAt && p.createdAt >= monthStart);
 
     // ── Daily chart data (last 30 days) ──
-    const dailyMap = new Map<string, { count: number; revenue: number; lite: number; pro: number }>();
+    const dailyMap = new Map<
+      string,
+      { count: number; revenue: number; lite: number; pro: number }
+    >();
     for (let i = 29; i >= 0; i--) {
       const d = new Date(todayStart);
       d.setDate(d.getDate() - i);
@@ -95,12 +107,13 @@ export async function GET(req: Request) {
 
     if (search) {
       const q = search.toLowerCase();
-      filtered = filtered.filter(p =>
-        (p.userName || '').toLowerCase().includes(q) ||
-        (p.userEmail || '').toLowerCase().includes(q) ||
-        (p.userPhone || '').includes(q) ||
-        (p.paymentId || '').toLowerCase().includes(q) ||
-        (p.orderId || '').toLowerCase().includes(q)
+      filtered = filtered.filter(
+        (p) =>
+          (p.userName || '').toLowerCase().includes(q) ||
+          (p.userEmail || '').toLowerCase().includes(q) ||
+          (p.userPhone || '').includes(q) ||
+          (p.paymentId || '').toLowerCase().includes(q) ||
+          (p.orderId || '').toLowerCase().includes(q)
       );
     }
 
@@ -120,7 +133,7 @@ export async function GET(req: Request) {
         monthRevenue: monthPayments.reduce((s, p) => s + (p.amount || 0), 0),
       },
       dailyChart,
-      payments: filtered.map(p => ({
+      payments: filtered.map((p) => ({
         ...p,
         amount: p.amount / 100, // paise → rupees for display
         createdAt: p.createdAt?.toISOString(),

@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
@@ -15,10 +14,10 @@ import { PRICING_DEFAULTS } from '@/config/pricing';
 
 /**
  * Payment Verification API - The Trust Center 🏦
- * 
+ *
  * Bhai, ye route sabse heavy lifting karta h. Jab user pay karke wapas aata h,
  * humein verify karna padta h ki sach me pay kiya ya bas fake request bhej di.
- * 
+ *
  * Key Pillars of Trust:
  * 1. **HMAC Signature Check**: Cryptographic proof ki data Razorpay se hi aaya h.
  * 2. **Razorpay Server Cross-Check**: Hum Razorpay se order fetch karke amount re-verify karte h.
@@ -49,7 +48,7 @@ export async function POST(req: Request) {
     // Formula: HMAC_SHA256(order_id + "|" + payment_id, secret)
     // Agar ye match nahi hua, to pakka koi fraud karne ki koshish kar raha h.
     const hmac = crypto.createHmac('sha256', secret);
-    hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+    hmac.update(razorpay_order_id + '|' + razorpay_payment_id);
     const generated_signature = hmac.digest('hex');
 
     if (generated_signature !== razorpay_signature) {
@@ -58,8 +57,11 @@ export async function POST(req: Request) {
 
     // 🔄 Step 2: Idempotency Check (Double-Spending Prevention)
     // Check karo ki ye payment ID pehle se DB me to nahi h?
-    const existingPayment = await db.select({ id: payments.id }).from(payments)
-      .where(eq(payments.paymentId, razorpay_payment_id)).limit(1);
+    const existingPayment = await db
+      .select({ id: payments.id })
+      .from(payments)
+      .where(eq(payments.paymentId, razorpay_payment_id))
+      .limit(1);
     if (existingPayment.length > 0) {
       return NextResponse.json({ success: true, message: 'Payment already verified' });
     }
@@ -84,7 +86,11 @@ export async function POST(req: Request) {
 
     // 🏷️ Step 5: Logic to assign Plan based on Amount
     // 99900 paise = 999 Rs = Pro Plan
-    const pricingRows = await db.select().from(pricingConfig).where(eq(pricingConfig.id, 'default')).limit(1);
+    const pricingRows = await db
+      .select()
+      .from(pricingConfig)
+      .where(eq(pricingConfig.id, 'default'))
+      .limit(1);
     const p = pricingRows[0] || PRICING_DEFAULTS;
     const proAmountPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
     const planTier = paidAmount >= proAmountPaise ? 'pro' : 'lite';
@@ -103,7 +109,8 @@ export async function POST(req: Request) {
       currency: 'INR',
     });
 
-    await db.update(mppscUsers)
+    await db
+      .update(mppscUsers)
       .set({ planTier: planTier as 'lite' | 'pro', isSubscribed: true })
       .where(eq(mppscUsers.id, userId));
 
@@ -121,11 +128,11 @@ export async function POST(req: Request) {
     // 📧 Step 8: Send Welcome Email (The "Wow" Moment)
     // Resend API se beautiful email bhejo jisme Magic Link ho.
     const resend = new Resend(process.env.RESEND_API_KEY);
-    
+
     const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
     const fromAddress = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
-    
+
     const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
 
     const planLabel = planTier === 'pro' ? 'Pro Plan' : 'Lite Plan';
@@ -152,20 +159,16 @@ export async function POST(req: Request) {
           orderId: razorpay_order_id,
           paymentId: razorpay_payment_id,
           reason: 'Initial Payment',
-          isNew: true
-        }
+          isNew: true,
+        },
       });
     } catch (err) {
       console.error('Failed to log activity:', err);
     }
 
     return NextResponse.json({ success: true, planTier });
-
   } catch (error) {
     console.error('Payment verification error:', error);
-    return NextResponse.json(
-      { error: 'Payment verification failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Payment verification failed' }, { status: 500 });
   }
 }

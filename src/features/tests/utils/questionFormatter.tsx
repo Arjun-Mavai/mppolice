@@ -10,27 +10,26 @@ export function FormattedQuestionText({ text, className }: FormattedQuestionText
   if (!text) return null;
 
   // 1. Check for "Match Column" / "List-I & List-II" pattern (English + Hindi)
-  const hasListPattern = (
-    (text.includes("List-I") && text.includes("List-II")) ||
-    (text.includes("सूची-I") && text.includes("सूची-II")) ||
-    (text.includes("सूची-1") && text.includes("सूची-2")) ||
-    (text.includes("सूची- I") && text.includes("सूची- II"))
-  );
+  const hasListPattern =
+    (text.includes('List-I') && text.includes('List-II')) ||
+    (text.includes('सूची-I') && text.includes('सूची-II')) ||
+    (text.includes('सूची-1') && text.includes('सूची-2')) ||
+    (text.includes('सूची- I') && text.includes('सूची- II'));
   if (hasListPattern) {
     return <RenderTableQuestion text={text} className={className} />;
   }
 
   // 2. Check for "Assertion (A)" and "Reason (R)" or "Statement I" & "Statement II"
   if (
-    (text.includes("Assertion (A)") && text.includes("Reason (R)")) || 
-    (text.includes("Statement I:") && text.includes("Statement II:"))
+    (text.includes('Assertion (A)') && text.includes('Reason (R)')) ||
+    (text.includes('Statement I:') && text.includes('Statement II:'))
   ) {
     return <RenderAssertionReason text={text} className={className} />;
   }
 
   // 3. Check for Numbered Lists (1. ... 2. ... 3. ...)
   // We use a heuristic: if distinct "1. ", "2. " patterns exist in the text closer to the end or middle
-  // This is tricky because the main question might be numbered. 
+  // This is tricky because the main question might be numbered.
   // We'll rely on newline splits mostly.
   return <RenderStandardText text={text} className={className} />;
 }
@@ -46,42 +45,55 @@ export interface RenderTableQuestionProps {
   language?: string;
 }
 
-export function RenderTableQuestion({ text, className, matchPairs, language = 'hi' }: RenderTableQuestionProps) {
+export function RenderTableQuestion({
+  text,
+  className,
+  matchPairs,
+  language = 'hi',
+}: RenderTableQuestionProps) {
   // If we have structured matchPairs, use them directly
   if (matchPairs && Array.isArray(matchPairs) && matchPairs.length > 0) {
     const isHindi = language === 'hi';
     const h1 = isHindi ? 'सूची - I' : 'List - I';
     const h2 = isHindi ? 'सूची - II' : 'List - II';
-    
+
     return (
-      <div className={cn("border-2 border-slate-800 w-full text-sm sm:text-base overflow-hidden rounded-lg", className)}>
-        <div className="grid grid-cols-2 w-full border-b-2 border-slate-800 bg-slate-50">
-          <div className="px-2 sm:px-4 py-2.5 sm:py-3 font-bold text-slate-900 text-center border-r-2 border-slate-800 text-xs sm:text-sm">
+      <div
+        className={cn(
+          'w-full overflow-hidden rounded-lg border-2 border-slate-800 text-sm sm:text-base',
+          className
+        )}
+      >
+        <div className="grid w-full grid-cols-2 border-b-2 border-slate-800 bg-slate-50">
+          <div className="border-r-2 border-slate-800 px-2 py-2.5 text-center text-xs font-bold text-slate-900 sm:px-4 sm:py-3 sm:text-sm">
             {h1}
           </div>
-          <div className="px-2 sm:px-4 py-2.5 sm:py-3 font-bold text-slate-900 text-center text-xs sm:text-sm">
+          <div className="px-2 py-2.5 text-center text-xs font-bold text-slate-900 sm:px-4 sm:py-3 sm:text-sm">
             {h2}
           </div>
         </div>
         {matchPairs.map((pair, i) => (
-          <div key={i} className={cn(
-            "grid grid-cols-2 w-full bg-white",
-            i !== matchPairs.length - 1 && "border-b border-slate-800"
-          )}>
+          <div
+            key={i}
+            className={cn(
+              'grid w-full grid-cols-2 bg-white',
+              i !== matchPairs.length - 1 && 'border-b border-slate-800'
+            )}
+          >
             <div className="flex items-center border-r-2 border-slate-800">
-              <div className="px-2 sm:px-3 py-2 sm:py-3 text-slate-900 font-bold border-r border-slate-300 min-w-[2rem] sm:min-w-[3rem] text-center bg-slate-50 text-xs sm:text-sm">
+              <div className="min-w-[2rem] border-r border-slate-300 bg-slate-50 px-2 py-2 text-center text-xs font-bold text-slate-900 sm:min-w-[3rem] sm:px-3 sm:py-3 sm:text-sm">
                 {pair.id}
               </div>
-              <div className="px-2 sm:px-3 py-2 sm:py-3 text-slate-900 flex-1 text-xs sm:text-sm">
-                {isHindi ? pair.label : (pair.labelEn || pair.label)}
+              <div className="flex-1 px-2 py-2 text-xs text-slate-900 sm:px-3 sm:py-3 sm:text-sm">
+                {isHindi ? pair.label : pair.labelEn || pair.label}
               </div>
             </div>
             <div className="flex items-center">
-              <div className="px-2 sm:px-3 py-2 sm:py-3 text-slate-900 font-bold border-r border-slate-300 min-w-[2rem] sm:min-w-[3rem] text-center bg-slate-50 text-xs sm:text-sm">
+              <div className="min-w-[2rem] border-r border-slate-300 bg-slate-50 px-2 py-2 text-center text-xs font-bold text-slate-900 sm:min-w-[3rem] sm:px-3 sm:py-3 sm:text-sm">
                 {pair.matchId}
               </div>
-              <div className="px-2 sm:px-3 py-2 sm:py-3 text-slate-900 flex-1 text-xs sm:text-sm">
-                {isHindi ? pair.match : (pair.matchEn || pair.match)}
+              <div className="flex-1 px-2 py-2 text-xs text-slate-900 sm:px-3 sm:py-3 sm:text-sm">
+                {isHindi ? pair.match : pair.matchEn || pair.match}
               </div>
             </div>
           </div>
@@ -92,8 +104,11 @@ export function RenderTableQuestion({ text, className, matchPairs, language = 'h
 
   // Fallback to text parsing if no matchPairs or text is provided
   if (!text) return null;
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  
+  const lines = text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+
   const parseItem = (item: string) => {
     const match = item.match(/^([A-Za-z0-9]+\.?\)?\s*)/);
     if (match) {
@@ -127,17 +142,13 @@ export function RenderTableQuestion({ text, className, matchPairs, language = 'h
 
       // Separate header lines
       const singleMatch1 = line.match(
-        isHindi
-          ? /^(सूची-?\s*(?:I|1))\s*(\([^)]*\))?\s*$/i
-          : /^(List-?\s*I)\s*(\([^)]*\))?\s*$/i
+        isHindi ? /^(सूची-?\s*(?:I|1))\s*(\([^)]*\))?\s*$/i : /^(List-?\s*I)\s*(\([^)]*\))?\s*$/i
       );
       if (singleMatch1) {
         h1 = singleMatch1[1] + (singleMatch1[2] ? ' ' + singleMatch1[2] : '');
       }
       const singleMatch2 = line.match(
-        isHindi
-          ? /^(सूची-?\s*(?:II|2))\s*(\([^)]*\))?\s*$/i
-          : /^(List-?\s*II)\s*(\([^)]*\))?\s*$/i
+        isHindi ? /^(सूची-?\s*(?:II|2))\s*(\([^)]*\))?\s*$/i : /^(List-?\s*II)\s*(\([^)]*\))?\s*$/i
       );
       if (singleMatch2) {
         h2 = singleMatch2[1] + (singleMatch2[2] ? ' ' + singleMatch2[2] : '');
@@ -157,8 +168,16 @@ export function RenderTableQuestion({ text, className, matchPairs, language = 'h
   let headerIndex = -1;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].toLowerCase();
-    const hasL1 = line.includes("list-i") || line.includes("सूची-i") || line.includes("सूची-1") || line.includes("सूची- i");
-    const hasL2 = line.includes("list-ii") || line.includes("सूची-ii") || line.includes("सूची-2") || line.includes("सूची- ii");
+    const hasL1 =
+      line.includes('list-i') ||
+      line.includes('सूची-i') ||
+      line.includes('सूची-1') ||
+      line.includes('सूची- i');
+    const hasL2 =
+      line.includes('list-ii') ||
+      line.includes('सूची-ii') ||
+      line.includes('सूची-2') ||
+      line.includes('सूची- ii');
     if (hasL1 && hasL2) {
       headerIndex = i;
       break;
@@ -168,42 +187,47 @@ export function RenderTableQuestion({ text, className, matchPairs, language = 'h
   const renderTable = (intro: string[], list1Items: string[], list2Items: string[]) => {
     const maxLength = Math.max(list1Items.length, list2Items.length);
     return (
-      <div className={cn("space-y-3", className)}>
+      <div className={cn('space-y-3', className)}>
         {intro.length > 0 && (
-          <div className="text-base sm:text-lg text-slate-900 font-medium leading-relaxed">
-            {intro.map((l, i) => <div key={i}>{l}</div>)}
+          <div className="text-base leading-relaxed font-medium text-slate-900 sm:text-lg">
+            {intro.map((l, i) => (
+              <div key={i}>{l}</div>
+            ))}
           </div>
         )}
-        <div className="border-2 border-slate-800 w-full text-sm sm:text-base overflow-hidden rounded-lg">
-          <div className="grid grid-cols-2 w-full border-b-2 border-slate-800 bg-slate-50">
-            <div className="px-2 sm:px-4 py-2.5 sm:py-3 font-bold text-slate-900 text-center border-r-2 border-slate-800 text-xs sm:text-sm">
+        <div className="w-full overflow-hidden rounded-lg border-2 border-slate-800 text-sm sm:text-base">
+          <div className="grid w-full grid-cols-2 border-b-2 border-slate-800 bg-slate-50">
+            <div className="border-r-2 border-slate-800 px-2 py-2.5 text-center text-xs font-bold text-slate-900 sm:px-4 sm:py-3 sm:text-sm">
               {h1}
             </div>
-            <div className="px-2 sm:px-4 py-2.5 sm:py-3 font-bold text-slate-900 text-center text-xs sm:text-sm">
+            <div className="px-2 py-2.5 text-center text-xs font-bold text-slate-900 sm:px-4 sm:py-3 sm:text-sm">
               {h2}
             </div>
           </div>
           {Array.from({ length: maxLength }).map((_, i) => {
-            const list1 = parseItem(list1Items[i] || "");
-            const list2 = parseItem(list2Items[i] || "");
+            const list1 = parseItem(list1Items[i] || '');
+            const list2 = parseItem(list2Items[i] || '');
             return (
-              <div key={i} className={cn(
-                "grid grid-cols-2 w-full bg-white",
-                i !== maxLength - 1 && "border-b border-slate-800"
-              )}>
+              <div
+                key={i}
+                className={cn(
+                  'grid w-full grid-cols-2 bg-white',
+                  i !== maxLength - 1 && 'border-b border-slate-800'
+                )}
+              >
                 <div className="flex items-center border-r-2 border-slate-800">
-                  <div className="px-2 sm:px-3 py-2 sm:py-3 text-slate-900 font-bold border-r border-slate-300 min-w-[2rem] sm:min-w-[3rem] text-center bg-slate-50 text-xs sm:text-sm">
+                  <div className="min-w-[2rem] border-r border-slate-300 bg-slate-50 px-2 py-2 text-center text-xs font-bold text-slate-900 sm:min-w-[3rem] sm:px-3 sm:py-3 sm:text-sm">
                     {list1.identifier}
                   </div>
-                  <div className="px-2 sm:px-3 py-2 sm:py-3 text-slate-900 flex-1 text-xs sm:text-sm">
+                  <div className="flex-1 px-2 py-2 text-xs text-slate-900 sm:px-3 sm:py-3 sm:text-sm">
                     {list1.content}
                   </div>
                 </div>
                 <div className="flex items-center">
-                  <div className="px-2 sm:px-3 py-2 sm:py-3 text-slate-900 font-bold border-r border-slate-300 min-w-[2rem] sm:min-w-[3rem] text-center bg-slate-50 text-xs sm:text-sm">
+                  <div className="min-w-[2rem] border-r border-slate-300 bg-slate-50 px-2 py-2 text-center text-xs font-bold text-slate-900 sm:min-w-[3rem] sm:px-3 sm:py-3 sm:text-sm">
                     {list2.identifier}
                   </div>
-                  <div className="px-2 sm:px-3 py-2 sm:py-3 text-slate-900 flex-1 text-xs sm:text-sm">
+                  <div className="flex-1 px-2 py-2 text-xs text-slate-900 sm:px-3 sm:py-3 sm:text-sm">
                     {list2.content}
                   </div>
                 </div>
@@ -248,18 +272,35 @@ export function RenderTableQuestion({ text, className, matchPairs, language = 'h
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].toLowerCase();
-    const isL1 = (line.includes("list-i") || line.includes("सूची-i") || line.includes("सूची-1") || line.includes("सूची- i")) && 
-                 !line.includes("list-ii") && !line.includes("सूची-ii") && !line.includes("सूची-2") && !line.includes("सूची- ii") && 
-                 line.length < 80;
-    const isL2 = (line.includes("list-ii") || line.includes("सूची-ii") || line.includes("सूची-2") || line.includes("सूची- ii")) && 
-                 line.length < 80;
+    const isL1 =
+      (line.includes('list-i') ||
+        line.includes('सूची-i') ||
+        line.includes('सूची-1') ||
+        line.includes('सूची- i')) &&
+      !line.includes('list-ii') &&
+      !line.includes('सूची-ii') &&
+      !line.includes('सूची-2') &&
+      !line.includes('सूची- ii') &&
+      line.length < 80;
+    const isL2 =
+      (line.includes('list-ii') ||
+        line.includes('सूची-ii') ||
+        line.includes('सूची-2') ||
+        line.includes('सूची- ii')) &&
+      line.length < 80;
     if (isL1) list1Index = i;
     else if (isL2) list2Index = i;
   }
 
   // Fallback: first occurrence
-  if (list1Index === -1) list1Index = lines.findIndex(l => l.includes("List-I") || l.includes("सूची-I") || l.includes("सूची-1"));
-  if (list2Index === -1) list2Index = lines.findIndex(l => l.includes("List-II") || l.includes("सूची-II") || l.includes("सूची-2"));
+  if (list1Index === -1)
+    list1Index = lines.findIndex(
+      (l) => l.includes('List-I') || l.includes('सूची-I') || l.includes('सूची-1')
+    );
+  if (list2Index === -1)
+    list2Index = lines.findIndex(
+      (l) => l.includes('List-II') || l.includes('सूची-II') || l.includes('सूची-2')
+    );
 
   if (list1Index !== -1 && list2Index !== -1 && list1Index < list2Index) {
     const intro = lines.slice(0, list1Index);
@@ -274,76 +315,87 @@ export function RenderTableQuestion({ text, className, matchPairs, language = 'h
 
 function RenderAssertionReason({ text, className }: FormattedQuestionTextProps) {
   // Split into Intro, Statement 1, Statement 2
-  const isAssertion = text.includes("Assertion (A)");
-  
-  const marker1 = isAssertion ? "Assertion (A)" : "Statement I";
-  const marker2 = isAssertion ? "Reason (R)" : "Statement II";
-  
+  const isAssertion = text.includes('Assertion (A)');
+
+  const marker1 = isAssertion ? 'Assertion (A)' : 'Statement I';
+  const marker2 = isAssertion ? 'Reason (R)' : 'Statement II';
+
   // Regex to split
   // careful with special regex chars in markers
-  const parts = text.split(isAssertion ? /(Assertion \(A\)|Reason \(R\))/ : /(Statement I:|Statement II:)/);
-  
+  const parts = text.split(
+    isAssertion ? /(Assertion \(A\)|Reason \(R\))/ : /(Statement I:|Statement II:)/
+  );
+
   // parts[0] = intro (e.g. "Read the following...")
   // parts[1] = Marker 1
   // parts[2] = Content 1
   // parts[3] = Marker 2
   // parts[4] = Content 2
-  
+
   // Simple check if split worked
   if (parts.length < 5) return <RenderStandardText text={text} className={className} />;
 
   return (
-      <div className={cn("space-y-4", className)}>
-          {/* Intro */}
-          {parts[0].trim() && (
-             <div className="text-lg text-slate-900 font-medium leading-relaxed mb-4">
-               {parts[0].trim()}
-             </div>
-          )}
-          
-          <div className="space-y-3">
-              <div className="bg-amber-50/50 border border-amber-100 p-4 rounded-xl">
-                  <span className="font-bold text-amber-800 block mb-1">{isAssertion ? "Assertion (A)" : "Statement I"}</span>
-                  <div className="text-slate-800 leading-relaxed font-medium">
-                      {parts[2]?.replace(/^:/, '').trim()}
-                  </div>
-              </div>
-              
-              <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-xl">
-                  <span className="font-bold text-blue-800 block mb-1">{isAssertion ? "Reason (R)" : "Statement II"}</span>
-                  <div className="text-slate-800 leading-relaxed font-medium">
-                      {parts[4]?.replace(/^:/, '').trim()}
-                  </div>
-              </div>
+    <div className={cn('space-y-4', className)}>
+      {/* Intro */}
+      {parts[0].trim() && (
+        <div className="mb-4 text-lg leading-relaxed font-medium text-slate-900">
+          {parts[0].trim()}
+        </div>
+      )}
+
+      <div className="space-y-3">
+        <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4">
+          <span className="mb-1 block font-bold text-amber-800">
+            {isAssertion ? 'Assertion (A)' : 'Statement I'}
+          </span>
+          <div className="leading-relaxed font-medium text-slate-800">
+            {parts[2]?.replace(/^:/, '').trim()}
           </div>
+        </div>
+
+        <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+          <span className="mb-1 block font-bold text-blue-800">
+            {isAssertion ? 'Reason (R)' : 'Statement II'}
+          </span>
+          <div className="leading-relaxed font-medium text-slate-800">
+            {parts[4]?.replace(/^:/, '').trim()}
+          </div>
+        </div>
       </div>
-  )
+    </div>
+  );
 }
 
 function RenderStandardText({ text, className }: FormattedQuestionTextProps) {
   // Check for embedded numbered list "1. 2. 3. 4." in the text
   // Many questions have "1. xxx 2. xxx" or newlines.
-  
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  
+
+  const lines = text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+
   // formatting logic:
   // If line starts with "1.", "2." etc, allow indented rendering
-  
+
   return (
-    <div className={cn("text-lg text-slate-900 font-medium leading-relaxed space-y-1", className)}>
-       {lines.map((line, i) => {
-           // Check if numbered list item
-           const isListItem = line.match(/^\d+\./);
-           if (isListItem) {
-               return (
-                   <div key={i} className="pl-4 py-1 flex items-start gap-2">
-                       <span className="font-bold text-slate-500 bg-slate-100 px-1.5 rounded text-sm mt-1">{line.split('.')[0]}</span>
-                       <span>{line.substring(line.indexOf('.') + 1).trim()}</span>
-                   </div>
-               )
-           }
-           return <div key={i}>{line}</div>
-       })}
+    <div className={cn('space-y-1 text-lg leading-relaxed font-medium text-slate-900', className)}>
+      {lines.map((line, i) => {
+        // Check if numbered list item
+        const isListItem = line.match(/^\d+\./);
+        if (isListItem) {
+          return (
+            <div key={i} className="flex items-start gap-2 py-1 pl-4">
+              <span className="mt-1 rounded bg-slate-100 px-1.5 text-sm font-bold text-slate-500">
+                {line.split('.')[0]}
+              </span>
+              <span>{line.substring(line.indexOf('.') + 1).trim()}</span>
+            </div>
+          );
+        }
+        return <div key={i}>{line}</div>;
+      })}
     </div>
   );
 }

@@ -25,26 +25,26 @@ export async function POST(request: Request) {
 
     // Verify password match
     const isMatch = await bcrypt.compare(password, user.password);
-    
+
     if (!isMatch) {
-        return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
     // create cookie logic is async in Next.js 15+ (App Router)
     // cookies() is an async function in newer Next versions, let's wait for it
     const cookieStore = await cookies();
-    
+
     // Set a simple session cookie
     cookieStore.set('auth_token', user.id, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7, // 1 week
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7, // 1 week
     });
 
     return NextResponse.json({ success: true, user });
   } catch (error) {
-    logger.error("Login error:", error);
+    logger.error('Login error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

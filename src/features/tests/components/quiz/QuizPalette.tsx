@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React, { useState } from 'react';
 import { Menu, Flag } from 'lucide-react';
@@ -39,14 +39,14 @@ function PaletteGrid({
 }: QuizPaletteProps & { onClose?: () => void }) {
   return (
     <>
-      <div className="flex justify-between items-center mb-4">
-        <span className="font-bold text-slate-900 text-base">{t.questionPalette}</span>
-        <span className="text-xs font-bold text-slate-700 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+      <div className="mb-4 flex items-center justify-between">
+        <span className="text-base font-bold text-slate-900">{t.questionPalette}</span>
+        <span className="rounded-full border border-slate-100 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-700">
           {Object.keys(answers).length}/{totalQuestions} {t.attempted}
         </span>
       </div>
 
-      <div className="grid grid-cols-5 gap-2.5 mb-6">
+      <div className="mb-6 grid grid-cols-5 gap-2.5">
         {questions.map((q, idx) => {
           const isAns = answers[q.id] !== undefined;
           const isMarked = markedForReview.includes(q.id);
@@ -57,20 +57,20 @@ function PaletteGrid({
               key={q.id}
               onClick={() => onJump(idx)}
               className={cn(
-                "aspect-square rounded-xl font-bold text-sm flex items-center justify-center transition-all border-2 relative select-none",
+                'relative flex aspect-square items-center justify-center rounded-xl border-2 text-sm font-bold transition-all select-none',
                 isCurrent
-                  ? "border-slate-800 bg-slate-800 text-white shadow-md scale-105 z-10"
+                  ? 'z-10 scale-105 border-slate-800 bg-slate-800 text-white shadow-md'
                   : isAns
-                    ? "bg-emerald-50 border-emerald-500 text-emerald-700"
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                     : isMarked
-                      ? "bg-amber-50 border-amber-300 text-amber-700"
-                      : "bg-white border-slate-100 text-slate-400 hover:border-slate-200 hover:bg-slate-50"
+                      ? 'border-amber-300 bg-amber-50 text-amber-700'
+                      : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200 hover:bg-slate-50'
               )}
             >
               {idx + 1}
               {isMarked && !isCurrent && (
-                <div className="absolute -top-1.5 -right-1.5 bg-amber-100 rounded-full p-0.5 border border-amber-200">
-                  <Flag className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                <div className="absolute -top-1.5 -right-1.5 rounded-full border border-amber-200 bg-amber-100 p-0.5">
+                  <Flag className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
                 </div>
               )}
             </button>
@@ -79,23 +79,24 @@ function PaletteGrid({
       </div>
 
       {/* Legend */}
-      <div className="grid grid-cols-2 gap-3 text-xs text-slate-500 font-medium mb-4">
+      <div className="mb-4 grid grid-cols-2 gap-3 text-xs font-medium text-slate-500">
         <span className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-emerald-50 border border-emerald-500" /> {t.answered}
+          <div className="h-3 w-3 rounded-full border border-emerald-500 bg-emerald-50" />{' '}
+          {t.answered}
         </span>
         <span className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full border border-slate-300 bg-white" /> {t.notAnswered}
+          <div className="h-3 w-3 rounded-full border border-slate-300 bg-white" /> {t.notAnswered}
         </span>
         <span className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-amber-50 border border-amber-300" /> {t.review}
+          <div className="h-3 w-3 rounded-full border border-amber-300 bg-amber-50" /> {t.review}
         </span>
         <span className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-slate-800" /> {t.current}
+          <div className="h-3 w-3 rounded-full bg-slate-800" /> {t.current}
         </span>
       </div>
 
       <Button
-        className="w-full h-12 text-lg font-bold bg-slate-900 hover:bg-slate-800 shadow-lg shadow-slate-900/10"
+        className="h-12 w-full bg-slate-900 text-lg font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-800"
         onClick={onSubmit}
       >
         {t.submitTest}
@@ -107,9 +108,9 @@ function PaletteGrid({
 // Mobile drawer trigger button
 export function PaletteDrawerButton() {
   return (
-    <Button variant="ghost" size="icon" className="hover:bg-slate-100 relative text-slate-700">
-      <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
-      <span className="absolute top-1.5 right-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-pink-400 border-2 border-white rounded-full animate-[pulse_3s_ease-in-out_infinite] opacity-70 shadow-sm" />
+    <Button variant="ghost" size="icon" className="relative text-slate-700 hover:bg-slate-100">
+      <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
+      <span className="absolute top-1.5 right-1.5 h-2 w-2 animate-[pulse_3s_ease-in-out_infinite] rounded-full border-2 border-white bg-pink-400 opacity-70 shadow-sm sm:h-2.5 sm:w-2.5" />
     </Button>
   );
 }
@@ -128,18 +129,18 @@ export function QuizPaletteMobile(props: QuizPaletteProps) {
       <SheetTrigger asChild>
         <button
           type="button"
-          className="hover:bg-slate-100 relative text-slate-700 inline-flex items-center justify-center rounded-md h-10 w-10"
+          className="relative inline-flex h-10 w-10 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100"
         >
-          <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-pink-400 border-2 border-white rounded-full animate-[pulse_3s_ease-in-out_infinite] opacity-70 shadow-sm" />
+          <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
+          <span className="absolute top-1.5 right-1.5 h-2 w-2 animate-[pulse_3s_ease-in-out_infinite] rounded-full border-2 border-white bg-pink-400 opacity-70 shadow-sm sm:h-2.5 sm:w-2.5" />
         </button>
       </SheetTrigger>
       <SheetContent
         side="right"
-        className="w-[85vw] sm:w-[400px] flex flex-col p-0 !z-[9999]"
+        className="!z-[9999] flex w-[85vw] flex-col p-0 sm:w-[400px]"
         overlayClassName="!z-[9998]"
       >
-        <SheetHeader className="p-6 border-b border-slate-100 bg-slate-50/50">
+        <SheetHeader className="border-b border-slate-100 bg-slate-50/50 p-6">
           <SheetTitle className="sr-only">{props.translations.questionPalette}</SheetTitle>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto p-6">
@@ -153,7 +154,7 @@ export function QuizPaletteMobile(props: QuizPaletteProps) {
 // Desktop: Always-visible sidebar palette
 export function QuizPaletteDesktop(props: QuizPaletteProps) {
   return (
-    <aside className="hidden lg:flex flex-col w-[280px] xl:w-[320px] shrink-0 border-l border-slate-200/80 bg-white/80 backdrop-blur-sm overflow-y-auto p-5">
+    <aside className="hidden w-[280px] shrink-0 flex-col overflow-y-auto border-l border-slate-200/80 bg-white/80 p-5 backdrop-blur-sm lg:flex xl:w-[320px]">
       <PaletteGrid {...props} />
     </aside>
   );

@@ -1,4 +1,3 @@
-
 import { db } from '@/db';
 import { tests, questions, userAttempts, attemptAnswers } from '@/db/schema';
 import { eq, desc, and } from 'drizzle-orm';
@@ -6,7 +5,9 @@ import { unstable_cache } from 'next/cache';
 import { CACHE } from '@/lib/cache';
 import { logger } from '@/lib/logger';
 
-export const getTests = async (filters: { unitId?: string; type?: 'FLT' | 'UNIT' | 'CSAT' } = {}) => {
+export const getTests = async (
+  filters: { unitId?: string; type?: 'FLT' | 'UNIT' | 'CSAT' } = {}
+) => {
   return await unstable_cache(
     async () => {
       try {
@@ -14,19 +15,20 @@ export const getTests = async (filters: { unitId?: string; type?: 'FLT' | 'UNIT'
         if (filters.unitId) conditions.push(eq(tests.unitId, filters.unitId));
         if (filters.type) conditions.push(eq(tests.type, filters.type));
 
-        return await db.select()
+        return await db
+          .select()
           .from(tests)
           .where(and(...conditions))
           .orderBy(desc(tests.createdAt));
       } catch (error) {
-        logger.error("Failed to fetch tests:", error);
+        logger.error('Failed to fetch tests:', error);
         return [];
       }
     },
     [`tests-${filters.unitId || 'all'}-${filters.type || 'all'}`],
     {
       revalidate: CACHE.TESTS.GET_ALL.revalidate,
-      tags: CACHE.TESTS.GET_ALL.tags
+      tags: CACHE.TESTS.GET_ALL.tags,
     }
   )();
 };
@@ -45,7 +47,7 @@ export const getTestBySlug = async (slug: string) => {
     [`test-${slug}`],
     {
       revalidate: CACHE.TESTS.GET_ALL.revalidate,
-      tags: [CACHE.TESTS.TAGS.DETAIL(slug)]
+      tags: [CACHE.TESTS.TAGS.DETAIL(slug)],
     }
   )();
 };
@@ -54,7 +56,11 @@ export const getTestQuestions = async (testId: string) => {
   return await unstable_cache(
     async () => {
       try {
-        return await db.select().from(questions).where(eq(questions.testId, testId)).orderBy(questions.order);
+        return await db
+          .select()
+          .from(questions)
+          .where(eq(questions.testId, testId))
+          .orderBy(questions.order);
       } catch (error) {
         logger.error(`Failed to fetch questions for ${testId}:`, error);
         return [];
@@ -63,7 +69,7 @@ export const getTestQuestions = async (testId: string) => {
     [`test-questions-${testId}`],
     {
       revalidate: CACHE.TESTS.GET_ALL.revalidate,
-      tags: [CACHE.TESTS.TAGS.DETAIL(testId)]
+      tags: [CACHE.TESTS.TAGS.DETAIL(testId)],
     }
   )();
 };
@@ -72,13 +78,18 @@ export const getAttemptResult = async (attemptId: string) => {
   return await unstable_cache(
     async () => {
       try {
-        const attemptResult = await db.select().from(userAttempts).where(eq(userAttempts.id, attemptId)).limit(1);
+        const attemptResult = await db
+          .select()
+          .from(userAttempts)
+          .where(eq(userAttempts.id, attemptId))
+          .limit(1);
         const attempt = attemptResult[0];
-        
+
         if (!attempt) return null;
 
         // Fetch granular answers with question details using join
-        const answers = await db.select({
+        const answers = await db
+          .select({
             userAnswer: attemptAnswers.userAnswer,
             isCorrect: attemptAnswers.isCorrect,
             timeTaken: attemptAnswers.timeTakenSeconds,
@@ -92,12 +103,12 @@ export const getAttemptResult = async (attemptId: string) => {
             marks: questions.marks,
             negativeMarks: questions.negativeMarks,
             idealTime: questions.idealTime,
-            order: questions.order
-        })
-        .from(attemptAnswers)
-        .leftJoin(questions, eq(attemptAnswers.questionId, questions.id))
-        .where(eq(attemptAnswers.attemptId, attemptId))
-        .orderBy(questions.order);
+            order: questions.order,
+          })
+          .from(attemptAnswers)
+          .leftJoin(questions, eq(attemptAnswers.questionId, questions.id))
+          .where(eq(attemptAnswers.attemptId, attemptId))
+          .orderBy(questions.order);
 
         return { ...attempt, details: answers };
       } catch (error) {
@@ -108,7 +119,7 @@ export const getAttemptResult = async (attemptId: string) => {
     [`attempt-${attemptId}`],
     {
       revalidate: 0, // User-specific data, no caching
-      tags: [`attempt-${attemptId}`]
+      tags: [`attempt-${attemptId}`],
     }
   )();
 };

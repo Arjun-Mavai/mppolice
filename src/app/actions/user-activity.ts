@@ -1,6 +1,6 @@
-import { db } from "@/db";
-import { mppscUserActivities } from "@/db/schema";
-import { nanoid } from "nanoid";
+import { db } from '@/db';
+import { mppscUserActivities } from '@/db/schema';
+import { nanoid } from 'nanoid';
 
 export type ActivityAction = 'PLAN_CHANGE' | 'DELETE' | 'GRANT' | 'UPDATE' | 'LOGIN';
 
@@ -23,7 +23,7 @@ export async function logUserActivity({
   userName,
   adminId,
   action,
-  details
+  details,
 }: LogActivityParams) {
   try {
     await db.insert(mppscUserActivities).values({
@@ -36,7 +36,7 @@ export async function logUserActivity({
       details: details ? JSON.stringify(details) : null,
     });
   } catch (error) {
-    console.error("Failed to log user activity:", error);
+    console.error('Failed to log user activity:', error);
     // Don't throw, logging failure shouldn't block the main action
   }
 }

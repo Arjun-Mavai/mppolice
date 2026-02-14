@@ -1,4 +1,3 @@
-
 import dotenv from 'dotenv';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
@@ -19,12 +18,9 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function verify() {
   console.log('--- Verification Start ---');
-  
+
   // 1. Get a user (assuming one exists)
-  const { data: users, error: userError } = await supabase
-    .from('card_users')
-    .select('*')
-    .limit(1);
+  const { data: users, error: userError } = await supabase.from('card_users').select('*').limit(1);
 
   if (userError || !users?.length) {
     console.error('No users found to verify against.');
@@ -48,9 +44,9 @@ async function verify() {
   } else {
     console.log('API Simulation Result:', apiSim);
     if (apiSim.is_pro === user.is_pro) {
-        console.log('SUCCESS: API query fetches is_pro correctly.');
+      console.log('SUCCESS: API query fetches is_pro correctly.');
     } else {
-        console.error('FAILURE: API query mismatch.');
+      console.error('FAILURE: API query mismatch.');
     }
   }
 

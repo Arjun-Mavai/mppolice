@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import { z } from 'zod';
@@ -14,14 +13,14 @@ const createOrderSchema = z.object({
 
 /**
  * Razorpay Order Creation API - The Security Gate 🛡️
- * 
+ *
  * Bhai, ye route sabse critical h. Yaha hum 'Order' create karte h.
- * 
+ *
  * 🔥 Why Server-Side?
  * Agar hum frontend se amount bhejte, to koi bhi right-click karke inspect element se
  * amount ko 999 se 1 kar sakta tha! 😱
  * Isliye hum sirf 'planType' lete h aur amount DB/Config se uthate h.
- * 
+ *
  * Best Practices:
  * 1. Zod Validation: Incoming data ko sanitize karo.
  * 2. Rate Limiting: Spam bots ko roko.
@@ -47,7 +46,11 @@ export async function POST(req: Request) {
 
     // 💰 Amount Calculation: The Single Source of Truth
     // DB se price fetch karo. Agar DB down h, to default constant use karo (Fallback Strategy).
-    const rows = await db.select().from(pricingConfig).where(eq(pricingConfig.id, 'default')).limit(1);
+    const rows = await db
+      .select()
+      .from(pricingConfig)
+      .where(eq(pricingConfig.id, 'default'))
+      .limit(1);
     const p = rows[0] || PRICING_DEFAULTS;
 
     const PLAN_AMOUNTS: Record<string, number> = {
@@ -57,7 +60,8 @@ export async function POST(req: Request) {
     };
 
     const amount = PLAN_AMOUNTS[planType];
-    if (!amount || amount < 100) { // Min 1 Rupee (100 paise)
+    if (!amount || amount < 100) {
+      // Min 1 Rupee (100 paise)
       return NextResponse.json({ error: 'Invalid plan configuration' }, { status: 500 });
     }
 

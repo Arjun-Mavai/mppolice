@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const hostnames = [
   'riversinsight.com',
@@ -17,17 +17,17 @@ const hostnames = [
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
-      ...hostnames.map(hostname => ({
+      ...hostnames.map((hostname) => ({
         protocol: 'https' as const,
         hostname,
       })),
       {
         protocol: 'https' as const,
         hostname: '**', // Allow all HTTPS images (Optional)
-      }
+      },
     ],
   },
-   
+
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
@@ -38,50 +38,50 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'X-DNS-Prefetch-Control',
-            value: 'on'
+            value: 'on',
           },
           {
             key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload'
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
           {
             key: 'X-XSS-Protection',
-            value: '1; mode=block'
+            value: '1; mode=block',
           },
           {
             key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
+            value: 'SAMEORIGIN',
           },
           {
             key: 'X-Content-Type-Options',
-            value: 'nosniff'
+            value: 'nosniff',
           },
           {
             key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin'
+            value: 'origin-when-cross-origin',
           },
-           {
+          {
             key: 'Cache-Control',
             value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
-          }
-        ]
+          },
+        ],
       },
       // Auth-related pages must never be browser-cached
       {
         source: '/login',
-        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }]
+        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }],
       },
       {
         source: '/signup',
-        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }]
+        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }],
       },
       {
         source: '/dashboard',
-        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }]
+        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }],
       },
       {
         source: '/api/auth/:path*',
-        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }]
+        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }],
       },
     ];
   },

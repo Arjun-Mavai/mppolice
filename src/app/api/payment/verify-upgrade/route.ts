@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
@@ -12,7 +11,7 @@ import { PRICING_DEFAULTS } from '@/config/pricing';
 
 /**
  * Payment Verification API FOR UPGRADES 🚀
- * 
+ *
  * Specialized route for existing users upgrading to Pro.
  * - Verifies payment
  * - Updates plan to Pro
@@ -40,7 +39,7 @@ export async function POST(req: Request) {
 
     // 🔒 Signature Verification
     const hmac = crypto.createHmac('sha256', secret);
-    hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+    hmac.update(razorpay_order_id + '|' + razorpay_payment_id);
     const generated_signature = hmac.digest('hex');
 
     if (generated_signature !== razorpay_signature) {
@@ -48,8 +47,11 @@ export async function POST(req: Request) {
     }
 
     // 🔄 Idempotency Check
-    const existingPayment = await db.select({ id: payments.id }).from(payments)
-      .where(eq(payments.paymentId, razorpay_payment_id)).limit(1);
+    const existingPayment = await db
+      .select({ id: payments.id })
+      .from(payments)
+      .where(eq(payments.paymentId, razorpay_payment_id))
+      .limit(1);
     if (existingPayment.length > 0) {
       return NextResponse.json({ success: true, message: 'Payment already verified' });
     }
@@ -68,21 +70,25 @@ export async function POST(req: Request) {
       key_secret: secret,
     });
     const order = await instance.orders.fetch(razorpay_order_id);
-    const paidAmount = order.amount as number; 
+    const paidAmount = order.amount as number;
 
     // 🏷️ Plan Verification (Allows Upgrade Price OR Full Pro Price)
-    const pricingRows = await db.select().from(pricingConfig).where(eq(pricingConfig.id, 'default')).limit(1);
+    const pricingRows = await db
+      .select()
+      .from(pricingConfig)
+      .where(eq(pricingConfig.id, 'default'))
+      .limit(1);
     const p = pricingRows[0] || PRICING_DEFAULTS;
-    
+
     // We expect user to pay at least upgrade price
     const upgradeAmountPaise = (p.upgradePrice ?? PRICING_DEFAULTS.upgradePrice) * 100;
     const proAmountPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
 
     const isValidAmount = paidAmount >= upgradeAmountPaise || paidAmount >= proAmountPaise;
-    
+
     // If they paid standard Lite price (unlikely in this route, but safety check), don't upgrade to Pro
     const liteAmountPaise = (p.litePrice ?? PRICING_DEFAULTS.litePrice) * 100;
-    
+
     let planTier = user.planTier || 'lite';
     if (isValidAmount && paidAmount > liteAmountPaise) {
       planTier = 'pro';
@@ -102,23 +108,24 @@ export async function POST(req: Request) {
         currency: 'INR',
       });
 
-      await tx.update(mppscUsers)
+      await tx
+        .update(mppscUsers)
         .set({ planTier: planTier as 'lite' | 'pro' })
         .where(eq(mppscUsers.id, userId));
     });
 
     // 📧 Send Receipt Email
     const resend = new Resend(process.env.RESEND_API_KEY);
-    
+
     const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
     const fromAddress = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
-    
+
     await resend.emails.send({
-        from: fromEmail,
-        to: [user.email],
-        subject: '🚀 Upgrade Successful — MPPSC ZEN',
-        html: `
+      from: fromEmail,
+      to: [user.email],
+      subject: '🚀 Upgrade Successful — MPPSC ZEN',
+      html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
                 <h1 style="color: #111;">Upgrade Successful!</h1>
                 <p>Hi ${user.name},</p>
@@ -150,20 +157,16 @@ export async function POST(req: Request) {
           orderId: razorpay_order_id,
           paymentId: razorpay_payment_id,
           reason: 'Upgrade Payment',
-          isUpgrade: true
-        }
+          isUpgrade: true,
+        },
       });
     } catch (err) {
       console.error('Failed to log upgrade activity:', err);
     }
 
     return NextResponse.json({ success: true, planTier });
-
   } catch (error) {
     console.error('Upgrade verification error:', error);
-    return NextResponse.json(
-      { error: 'Payment verification failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Payment verification failed' }, { status: 500 });
   }
 }

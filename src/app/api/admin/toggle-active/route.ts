@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     }
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId)
+      where: (users, { eq }) => eq(users.id, decoded.userId),
     });
 
     if (!adminUser || adminUser.role !== 'admin') {
@@ -41,7 +41,10 @@ export async function POST(request: Request) {
     const { userId, isActive } = await request.json();
 
     if (!userId || typeof isActive !== 'boolean') {
-      return NextResponse.json({ error: 'userId and isActive (boolean) required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'userId and isActive (boolean) required' },
+        { status: 400 }
+      );
     }
 
     // Can't deactivate yourself
@@ -50,19 +53,18 @@ export async function POST(request: Request) {
     }
 
     // ── Update isActive ─────────────────────────────────────────
-    await db.update(mppscUsers)
-      .set({ isActive })
-      .where(eq(mppscUsers.id, userId));
+    await db.update(mppscUsers).set({ isActive }).where(eq(mppscUsers.id, userId));
 
-    logger.info(`User ${userId} ${isActive ? 'activated' : 'deactivated'} by admin ${decoded.userId}`);
+    logger.info(
+      `User ${userId} ${isActive ? 'activated' : 'deactivated'} by admin ${decoded.userId}`
+    );
 
     return NextResponse.json({
       success: true,
       message: `User ${isActive ? 'activated' : 'deactivated'} successfully`,
     });
-
   } catch (error: any) {
-    logger.error("Toggle active error:", error);
+    logger.error('Toggle active error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

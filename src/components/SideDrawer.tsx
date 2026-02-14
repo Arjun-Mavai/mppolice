@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
-import { useEffect } from "react";
-import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from 'framer-motion';
+import { X } from 'lucide-react';
+import { useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 interface SideDrawerProps {
   isOpen: boolean;
@@ -17,12 +17,12 @@ export const SideDrawer = ({ isOpen, onClose, title, children, className }: Side
   // Prevent body scroll when open
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = "hidden";
+      document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = 'unset';
     }
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
 
@@ -36,37 +36,35 @@ export const SideDrawer = ({ isOpen, onClose, title, children, className }: Side
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100]" // High z-index
+            className="fixed inset-0 z-[100] bg-black/20 backdrop-blur-sm" // High z-index
           />
 
           {/* Drawer */}
           <motion.div
-            initial={{ x: "100%" }}
+            initial={{ x: '100%' }}
             animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className={cn(
-              "fixed top-0 right-0 h-full w-[90%] max-w-md bg-white shadow-2xl z-[101] flex flex-col border-l  ",
+              'fixed top-0 right-0 z-[101] flex h-full w-[90%] max-w-md flex-col border-l bg-white shadow-2xl',
               className
             )}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
-              <h2 className="text-xl font-display font-bold text-slate-900 dark:text-white">
-                {title || "Details"}
+            <div className="flex items-center justify-between border-b border-slate-100 p-6 dark:border-slate-800">
+              <h2 className="font-display text-xl font-bold text-slate-900 dark:text-white">
+                {title || 'Details'}
               </h2>
               <button
                 onClick={onClose}
-                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="rounded-full p-2 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <X size={24} className="text-slate-500" />
               </button>
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-6 scroll-smooth">
-              {children}
-            </div>
+            <div className="flex-1 overflow-y-auto scroll-smooth p-6">{children}</div>
           </motion.div>
         </>
       )}

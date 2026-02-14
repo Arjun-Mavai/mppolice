@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     }
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId)
+      where: (users, { eq }) => eq(users.id, decoded.userId),
     });
 
     if (!adminUser || adminUser.role !== 'admin') {
@@ -80,7 +80,9 @@ export async function POST(request: Request) {
       isActive: true,
       accessExpiresAt,
       metadata: JSON.stringify({
-        ...(typeof user.metadata === 'string' ? JSON.parse(user.metadata || '{}') : (user.metadata || {})),
+        ...(typeof user.metadata === 'string'
+          ? JSON.parse(user.metadata || '{}')
+          : user.metadata || {}),
         upgradedFrom: oldTier,
         upgradedAt: new Date().toISOString(),
         upgradedBy: decoded.userId,
@@ -91,20 +93,17 @@ export async function POST(request: Request) {
       updates.password = await bcrypt.hash(newPassword, 10);
     }
 
-    await db.update(mppscUsers)
-      .set(updates)
-      .where(eq(mppscUsers.id, userId));
+    await db.update(mppscUsers).set(updates).where(eq(mppscUsers.id, userId));
 
     logger.info(`User upgraded: ${user.email} | ${oldTier} → pro | by admin ${decoded.userId}`);
 
     return NextResponse.json({
       success: true,
       message: `${user.name || user.email} upgraded from ${oldTier} to Pro (${accessMonths} months)`,
-      user: { id: userId, planTier: 'pro', accessExpiresAt }
+      user: { id: userId, planTier: 'pro', accessExpiresAt },
     });
-
   } catch (error: any) {
-    logger.error("Upgrade error:", error);
+    logger.error('Upgrade error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

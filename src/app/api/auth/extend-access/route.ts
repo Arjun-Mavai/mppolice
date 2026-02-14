@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     }
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId)
+      where: (users, { eq }) => eq(users.id, decoded.userId),
     });
 
     if (!adminUser || adminUser.role !== 'admin') {
@@ -45,7 +45,10 @@ export async function POST(request: Request) {
     const { userId, additionalMonths } = await request.json();
 
     if (!userId || !additionalMonths || additionalMonths < 1) {
-      return NextResponse.json({ error: 'userId and additionalMonths (>= 1) required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'userId and additionalMonths (>= 1) required' },
+        { status: 400 }
+      );
     }
 
     // ── Find User ───────────────────────────────────────────────
@@ -57,7 +60,10 @@ export async function POST(request: Request) {
     }
 
     if (user.deletedAt) {
-      return NextResponse.json({ error: 'Cannot extend access for deactivated user' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Cannot extend access for deactivated user' },
+        { status: 400 }
+      );
     }
 
     // ── Calculate New Expiry ────────────────────────────────────
@@ -77,26 +83,28 @@ export async function POST(request: Request) {
     newExpiry.setMonth(newExpiry.getMonth() + additionalMonths);
 
     // ── Update DB ───────────────────────────────────────────────
-    await db.update(mppscUsers)
+    await db
+      .update(mppscUsers)
       .set({ accessExpiresAt: newExpiry })
       .where(eq(mppscUsers.id, userId));
 
-    logger.info(`Access extended: ${user.email} | +${additionalMonths} months | new expiry: ${newExpiry.toISOString()}`);
+    logger.info(
+      `Access extended: ${user.email} | +${additionalMonths} months | new expiry: ${newExpiry.toISOString()}`
+    );
 
     return NextResponse.json({
       success: true,
       message: `Access extended by ${additionalMonths} months for ${user.name}`,
-      user: { 
-        id: user.id, 
-        name: user.name, 
+      user: {
+        id: user.id,
+        name: user.name,
         email: user.email,
         oldExpiry: user.accessExpiresAt,
-        newExpiry 
-      }
+        newExpiry,
+      },
     });
-
   } catch (error: any) {
-    logger.error("Extend access error:", error);
+    logger.error('Extend access error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

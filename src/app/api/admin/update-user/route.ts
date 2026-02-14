@@ -31,14 +31,15 @@ export async function POST(request: Request) {
     if (!decoded?.userId) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId)
+      where: (users, { eq }) => eq(users.id, decoded.userId),
     });
     if (!adminUser || adminUser.role !== 'admin') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
     const body = await request.json();
-    const { userId, name, email, password, planTier, isActive, isSubscribed, accessMonths } = updateUserSchema.parse(body);
+    const { userId, name, email, password, planTier, isActive, isSubscribed, accessMonths } =
+      updateUserSchema.parse(body);
 
     // Check target user exists
     const targetUser = await db.query.mppscUsers.findFirst({
@@ -63,7 +64,10 @@ export async function POST(request: Request) {
           where: and(eq(mppscUsers.email, normalizedEmail), ne(mppscUsers.id, userId)),
         });
         if (emailExists) {
-          return NextResponse.json({ error: 'Email already in use by another user' }, { status: 409 });
+          return NextResponse.json(
+            { error: 'Email already in use by another user' },
+            { status: 409 }
+          );
         }
         updates.email = normalizedEmail;
         changes.push('email');
@@ -124,7 +128,7 @@ export async function POST(request: Request) {
         details: {
           changes: updates,
           reason: 'Admin manual update',
-        }
+        },
       });
     }
 
@@ -132,10 +136,12 @@ export async function POST(request: Request) {
       success: true,
       message: `Updated: ${changes.join(', ')}`,
     });
-
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0]?.message || 'Invalid input' }, { status: 400 });
+      return NextResponse.json(
+        { error: error.issues[0]?.message || 'Invalid input' },
+        { status: 400 }
+      );
     }
     console.error('Admin update user error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

@@ -1,4 +1,3 @@
-
 {
   "title": "UPSC Prelims GS Paper I - Mock Test 1",
   "description": "Comprehensive mock test covering Indian Polity, Modern History, Geography, and Current Affairs.",
@@ -34,7 +33,12 @@
     },
     {
       "text": "The 'Monetary Policy Committee' (MPC) in India is headed by:",
-      "options": ["The Finance Minister", "The Prime Minister", "The RBI Governor", "The Chief Economic Advisor"],
+      "options": [
+        "The Finance Minister",
+        "The Prime Minister",
+        "The RBI Governor",
+        "The Chief Economic Advisor"
+      ],
       "correct": "The RBI Governor",
       "explanation": "The Monetary Policy Committee is constituted by the Central Government under Section 45ZB of the RBI Act. It is chaired by the Governor of the RBI.",
       "marks": 2,
@@ -42,7 +46,12 @@
     },
     {
       "text": "Which one of the following is the best description of 'Blue Carbon'?",
-      "options": ["Carbon captured by oceans and coastal ecosystems", "Carbon sequestered in forest biomass", "Carbon contained in petroleum and natural gas", "Carbon in the atmosphere"],
+      "options": [
+        "Carbon captured by oceans and coastal ecosystems",
+        "Carbon sequestered in forest biomass",
+        "Carbon contained in petroleum and natural gas",
+        "Carbon in the atmosphere"
+      ],
       "correct": "Carbon captured by oceans and coastal ecosystems",
       "explanation": "Blue carbon is the carbon stored in coastal and marine ecosystems. Mangroves, tidal marshes, and seagrasses sequester and store more carbon per unit area than terrestrial forests.",
       "marks": 2,

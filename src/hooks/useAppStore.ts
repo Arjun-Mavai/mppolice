@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { Quote } from "@/data/quotes";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { Quote } from '@/data/quotes';
 
 interface AppState {
   viewedQuotes: string[];
@@ -9,7 +9,7 @@ interface AppState {
   lastSwipeDate: string;
   isPro: boolean;
   isZenMode: boolean;
-  
+
   // Actions
   markAsViewed: (id: string) => void;
   saveQuote: (quote: Quote) => void;
@@ -31,7 +31,9 @@ export const useAppStore = create<AppState>()(
       isPro: false,
       isZenMode: false,
 
-      markAsViewed: (id) => // Added
+      markAsViewed: (
+        id // Added
+      ) =>
         set((state) => {
           if (state.viewedQuotes.includes(id)) return state;
           return { viewedQuotes: [...state.viewedQuotes, id] };
@@ -64,7 +66,7 @@ export const useAppStore = create<AppState>()(
       resetSwipeCount: () => set((state) => ({ swipeCount: 0 })), // Modified
     }),
     {
-      name: "mindful-storage", // name of the item in localStorage
+      name: 'mindful-storage', // name of the item in localStorage
     }
   )
 );

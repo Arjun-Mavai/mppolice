@@ -1,15 +1,26 @@
-
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogHeader,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Loader2, Shield, BookOpen, Target, BarChart3, Sparkles, Brain } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -41,7 +52,7 @@ const MPPSC_FACTS = [
 
 /**
  * PaymentModal Component - The Gateway to Premium 🚀
- * 
+ *
  * Bhai, ye component pure payment flow ka heart h. Isme humne best UX practices follow ki h:
  * 1. **Zero-Freeze Guarantee**: Radix Dialog ka overlay Razorpay popup ko block karta tha.
  *    Humne 'smart-toggle' logic lagaya h: Dialog close -> Razorpay Open -> Dialog Re-open.
@@ -52,13 +63,20 @@ const MPPSC_FACTS = [
  */
 import { useSettingsStore } from '@/store/useSettingsStore';
 
-export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 'Pro Plan' }: PaymentModalProps) {
+export function PaymentModal({
+  open,
+  onOpenChange,
+  planType = 'pro',
+  planName = 'Pro Plan',
+}: PaymentModalProps) {
   const { user, setUser } = useSettingsStore();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Bhai, ye phases users ko batate h ki abhi background me kya chal raha h.
   // Transparancy = Trust. 🤝
-  const [loadingPhase, setLoadingPhase] = useState<'registering' | 'razorpay-open' | 'verifying' | null>(null);
+  const [loadingPhase, setLoadingPhase] = useState<
+    'registering' | 'razorpay-open' | 'verifying' | null
+  >(null);
   const [factIndex, setFactIndex] = useState(0);
   const [emailCheckInProgress, setEmailCheckInProgress] = useState(false);
   const router = useRouter();
@@ -72,43 +90,46 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { 
-        name: user?.name || '', 
-        email: user?.email || '', 
-        phone: (user as any)?.phone || '', 
-        source: '' 
+    defaultValues: {
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: (user as any)?.phone || '',
+      source: '',
     },
   });
 
   // Update form if user loads late
   useEffect(() => {
     if (user) {
-        form.setValue('name', user.name || '');
-        form.setValue('email', user.email || '');
-        if ((user as any).phone) form.setValue('phone', (user as any).phone);
+      form.setValue('name', user.name || '');
+      form.setValue('email', user.email || '');
+      if ((user as any).phone) form.setValue('phone', (user as any).phone);
     }
   }, [user, form]);
 
   // Check if email already has a plan (for inline validation when user enters details)
-  const checkEmailHasPlan = useCallback(async (emailVal: string) => {
-    const normalized = (emailVal || '').toLowerCase().trim();
-    if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) return false;
-    const isSameUser = !!user && (user.email?.toLowerCase().trim() === normalized);
-    if (isSameUser) return false;
-    try {
-      const res = await fetch('/api/auth/check-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: normalized }),
-      });
-      if (!res.ok) return false;
-      const data = await res.json();
-      const tier = (data.planTier ?? '').toLowerCase();
-      return !!(data.exists && (tier === 'lite' || tier === 'pro' || data.isSubscribed === true));
-    } catch {
-      return false;
-    }
-  }, [user]);
+  const checkEmailHasPlan = useCallback(
+    async (emailVal: string) => {
+      const normalized = (emailVal || '').toLowerCase().trim();
+      if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) return false;
+      const isSameUser = !!user && user.email?.toLowerCase().trim() === normalized;
+      if (isSameUser) return false;
+      try {
+        const res = await fetch('/api/auth/check-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: normalized }),
+        });
+        if (!res.ok) return false;
+        const data = await res.json();
+        const tier = (data.planTier ?? '').toLowerCase();
+        return !!(data.exists && (tier === 'lite' || tier === 'pro' || data.isSubscribed === true));
+      } catch {
+        return false;
+      }
+    },
+    [user]
+  );
 
   const onEmailBlur = useCallback(async () => {
     const emailVal = form.getValues('email');
@@ -120,7 +141,8 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
     if (hasPlan) {
       form.setError('email', {
         type: 'manual',
-        message: 'This email is already registered with a plan. Please log in to access your account.',
+        message:
+          'This email is already registered with a plan. Please log in to access your account.',
       });
     } else {
       form.clearErrors('email');
@@ -141,16 +163,19 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
   useEffect(() => {
     if (!isLoading || loadingPhase === 'razorpay-open') return;
     const interval = setInterval(() => {
-      setFactIndex(prev => (prev + 1) % MPPSC_FACTS.length);
+      setFactIndex((prev) => (prev + 1) % MPPSC_FACTS.length);
     }, 3000);
     return () => clearInterval(interval);
   }, [isLoading, loadingPhase]);
 
   const getLoadingMessage = useCallback(() => {
     switch (loadingPhase) {
-      case 'registering': return user ? 'Setting up payment...' : 'Creating your account...';
-      case 'verifying': return 'Verifying your payment...';
-      default: return 'Processing...';
+      case 'registering':
+        return user ? 'Setting up payment...' : 'Creating your account...';
+      case 'verifying':
+        return 'Verifying your payment...';
+      default:
+        return 'Processing...';
     }
   }, [loadingPhase, user]);
 
@@ -162,7 +187,7 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
 
       // Block if this email already has lite/pro (without same-user login) — validation at submit time
       const emailToCheck = (values.email || '').toLowerCase().trim();
-      const isLoggedInWithSameEmail = !!user && (user.email?.toLowerCase().trim() === emailToCheck);
+      const isLoggedInWithSameEmail = !!user && user.email?.toLowerCase().trim() === emailToCheck;
       if (!isLoggedInWithSameEmail && emailToCheck) {
         const checkRes = await fetch('/api/auth/check-email', {
           method: 'POST',
@@ -173,14 +198,16 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
           const data = await checkRes.json();
           const tier = (data.planTier ?? '').toLowerCase();
           const hasPaidPlan =
-            data.exists &&
-            (tier === 'lite' || tier === 'pro' || data.isSubscribed === true);
+            data.exists && (tier === 'lite' || tier === 'pro' || data.isSubscribed === true);
           if (hasPaidPlan) {
             form.setError('email', {
               type: 'manual',
-              message: 'This email is already registered with a plan. Please log in to access your account.',
+              message:
+                'This email is already registered with a plan. Please log in to access your account.',
             });
-            toast.error('This email is already registered with a plan. Please log in to access your account.');
+            toast.error(
+              'This email is already registered with a plan. Please log in to access your account.'
+            );
             setIsLoading(false);
             setLoadingPhase(null);
             return;
@@ -199,7 +226,9 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
       // Server-side block: existing lite/pro must be same logged-in user — never open Razorpay for 403
       if (startRes.status === 403) {
         const errData = await startRes.json().catch(() => ({}));
-        toast.error(errData.error || 'This email is already registered with a plan. Please log in.');
+        toast.error(
+          errData.error || 'This email is already registered with a plan. Please log in.'
+        );
         setIsLoading(false);
         setLoadingPhase(null);
         return;
@@ -227,11 +256,11 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "MPPSC Syllabus",
+        name: 'MPPSC Syllabus',
         description: planName,
         order_id: orderData.id,
         prefill: { name: values.name, email: values.email, contact: values.phone },
-        theme: { color: "#000000" },
+        theme: { color: '#000000' },
         // Handler tab chalta h jab payment success hota h
         handler: async function (response: any) {
           try {
@@ -257,13 +286,13 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
             if (!verifyRes.ok) throw new Error('Payment verification failed');
 
             const verifyData = await verifyRes.json();
-            
+
             // 🔥 CACHE INVALIDATION MAGIC: Update local store immediately
             // This ensures user sees "Pro" badge everywhere instantly without reload
             if (user) {
-                // If we have previous user object, update it
-                const updatedPlan = verifyData.planTier || 'pro'; // fallback to pro if verification sends nothing
-                setUser({ ...user, planTier: updatedPlan, isSubscribed: true }, true);
+              // If we have previous user object, update it
+              const updatedPlan = verifyData.planTier || 'pro'; // fallback to pro if verification sends nothing
+              setUser({ ...user, planTier: updatedPlan, isSubscribed: true }, true);
             }
             // Trigger a background re-fetch so plan_tier is fresh everywhere (no caching)
             const meRes = await fetch('/api/auth/me');
@@ -278,9 +307,11 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
             setIsLoading(false);
             setLoadingPhase(null);
 
-            const displayPlan = planType === 'upgrade' ? 'pro' : (verifyData.planTier || planType);
+            const displayPlan = planType === 'upgrade' ? 'pro' : verifyData.planTier || planType;
             const upgradeParam = planType === 'upgrade' ? '&type=upgrade' : '';
-            router.push(`/thank-you?plan=${displayPlan}&email=${encodeURIComponent(values.email)}&name=${encodeURIComponent(values.name)}${upgradeParam}`);
+            router.push(
+              `/thank-you?plan=${displayPlan}&email=${encodeURIComponent(values.email)}&name=${encodeURIComponent(values.name)}${upgradeParam}`
+            );
           } catch (error) {
             console.error(error);
             toast.error('Payment verification failed. Please contact support.');
@@ -295,13 +326,12 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
             setIsLoading(false);
             setLoadingPhase(null);
             toast.info('Payment cancelled');
-          }
-        }
+          },
+        },
       };
 
       const paymentObject = new (window as any).Razorpay(options);
       paymentObject.open();
-
     } catch (error: any) {
       console.error(error);
       toast.error(error.message || 'Something went wrong');
@@ -322,14 +352,28 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
 
   return (
     <Dialog open={open} onOpenChange={showLoading ? undefined : onOpenChange} modal={false}>
-      <DialogContent className="sm:max-w-[425px] bg-white text-black border-zinc-200">
+      <DialogContent className="border-zinc-200 bg-white text-black sm:max-w-[425px]">
         {showLoading ? (
           // ── Loading State: MPPSC facts while API calls process ──
-          <div className="flex flex-col items-center justify-center py-8 space-y-6 text-center">
-            <DialogTitle style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', borderWidth: 0 }}>Processing Payment</DialogTitle>
+          <div className="flex flex-col items-center justify-center space-y-6 py-8 text-center">
+            <DialogTitle
+              style={{
+                position: 'absolute',
+                width: '1px',
+                height: '1px',
+                padding: 0,
+                margin: '-1px',
+                overflow: 'hidden',
+                clip: 'rect(0, 0, 0, 0)',
+                whiteSpace: 'nowrap',
+                borderWidth: 0,
+              }}
+            >
+              Processing Payment
+            </DialogTitle>
             <div className="relative">
-              <div className="h-16 w-16 rounded-full border-4 border-zinc-100 border-t-black animate-spin" />
-              <Shield className="h-6 w-6 text-black absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+              <div className="h-16 w-16 animate-spin rounded-full border-4 border-zinc-100 border-t-black" />
+              <Shield className="absolute top-1/2 left-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 text-black" />
             </div>
 
             <div className="space-y-1">
@@ -337,20 +381,25 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
             </div>
 
             {/* MPPSC Fact Card */}
-            <div className="w-full bg-zinc-50 rounded-lg p-4 border border-zinc-100 transition-all duration-500">
-              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Did you know?</p>
+            <div className="w-full rounded-lg border border-zinc-100 bg-zinc-50 p-4 transition-all duration-500">
+              <p className="mb-2 text-[10px] font-bold tracking-wider text-zinc-400 uppercase">
+                Did you know?
+              </p>
               <div className="flex items-start gap-3 text-left">
-                <div className="shrink-0 h-8 w-8 bg-black/5 rounded-lg flex items-center justify-center">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black/5">
                   <CurrentFactIcon className="h-4 w-4 text-zinc-600" />
                 </div>
-                <p className="text-sm text-zinc-700 leading-snug">{MPPSC_FACTS[factIndex].text}</p>
+                <p className="text-sm leading-snug text-zinc-700">{MPPSC_FACTS[factIndex].text}</p>
               </div>
             </div>
 
             {/* Dot indicators */}
             <div className="flex gap-1">
               {MPPSC_FACTS.map((_, i) => (
-                <div key={i} className={`h-1 rounded-full transition-all duration-300 ${i === factIndex ? 'w-4 bg-black' : 'w-1 bg-zinc-200'}`} />
+                <div
+                  key={i}
+                  className={`h-1 rounded-full transition-all duration-300 ${i === factIndex ? 'w-4 bg-black' : 'w-1 bg-zinc-200'}`}
+                />
               ))}
             </div>
 
@@ -362,111 +411,112 @@ export function PaymentModal({ open, onOpenChange, planType = 'pro', planName = 
         ) : (
           // ── Form State ──
           <>
-            <DialogHeader >
+            <DialogHeader>
               <DialogTitle className="text-2xl font-bold">Upgrade to Premium</DialogTitle>
               <DialogDescription className="text-zinc-500">
-                {isUserReady ? 'Confirm your details to proceed.' : 'Enter your details to proceed with the payment.'}
+                {isUserReady
+                  ? 'Confirm your details to proceed.'
+                  : 'Enter your details to proceed with the payment.'}
               </DialogDescription>
             </DialogHeader>
 
             {isUserReady ? (
-                 // SIMPLIFIED VIEW FOR LOGGED IN USERS
-                 <div className="py-4 space-y-4">
-                     <div className="bg-zinc-50 p-4 rounded-lg border border-zinc-100 flex items-center gap-4">
-                         <div className="h-10 w-10 rounded-full bg-black text-white flex items-center justify-center font-bold text-lg">
-                             {user?.name?.charAt(0).toUpperCase()}
-                         </div>
-                         <div>
-                             <p className="font-semibold text-sm text-zinc-900">{user?.name}</p>
-                             <p className="text-xs text-zinc-500">{user?.email}</p>
-                             <p className="text-xs text-zinc-500">{user?.phone ?? (user as any)?.phone}</p>
-                         </div>
-                     </div>
-                     <Button 
-                        onClick={() => onSubmit(form.getValues())}
-                        className="w-full bg-black hover:bg-zinc-800 text-white font-bold py-2 mt-4"
-                        disabled={isLoading}
-                    >
-                        {`Pay — ${planName}`}
-                    </Button>
-                 </div>
+              // SIMPLIFIED VIEW FOR LOGGED IN USERS
+              <div className="space-y-4 py-4">
+                <div className="flex items-center gap-4 rounded-lg border border-zinc-100 bg-zinc-50 p-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-lg font-bold text-white">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-zinc-900">{user?.name}</p>
+                    <p className="text-xs text-zinc-500">{user?.email}</p>
+                    <p className="text-xs text-zinc-500">{user?.phone ?? (user as any)?.phone}</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => onSubmit(form.getValues())}
+                  className="mt-4 w-full bg-black py-2 font-bold text-white hover:bg-zinc-800"
+                  disabled={isLoading}
+                >
+                  {`Pay — ${planName}`}
+                </Button>
+              </div>
             ) : (
-                // FULL FORM FOR GUESTS Or USERS WITHOUT PHONE
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+              // FULL FORM FOR GUESTS Or USERS WITHOUT PHONE
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
                 <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input 
-                    id="name" 
-                    placeholder="John Doe" 
-                    {...form.register('name')} 
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="John Doe"
+                    {...form.register('name')}
                     // Disable if logged in
                     disabled={!!user?.name}
-                    className="bg-white border-zinc-300 focus:ring-black disabled:bg-zinc-100 disabled:text-zinc-500"
-                    />
-                    {form.formState.errors.name && (
+                    className="border-zinc-300 bg-white focus:ring-black disabled:bg-zinc-100 disabled:text-zinc-500"
+                  />
+                  {form.formState.errors.name && (
                     <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
-                    )}
+                  )}
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="john@example.com" 
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="john@example.com"
                     {...form.register('email')}
                     onBlur={() => void onEmailBlur()}
                     disabled={!!user?.email}
-                    className="bg-white border-zinc-300 focus:ring-black disabled:bg-zinc-100 disabled:text-zinc-500"
-                    />
-                    {(form.formState.errors.email || emailCheckInProgress) && (
+                    className="border-zinc-300 bg-white focus:ring-black disabled:bg-zinc-100 disabled:text-zinc-500"
+                  />
+                  {(form.formState.errors.email || emailCheckInProgress) && (
                     <p className="text-sm text-red-500">
                       {emailCheckInProgress ? 'Checking...' : form.formState.errors.email?.message}
                     </p>
-                    )}
+                  )}
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input 
-                    id="phone" 
-                    type="tel" 
-                    placeholder="9876543210" 
-                    {...form.register('phone')} 
-                    className="bg-white border-zinc-300 focus:ring-black"
-                    />
-                    {form.formState.errors.phone && (
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="9876543210"
+                    {...form.register('phone')}
+                    className="border-zinc-300 bg-white focus:ring-black"
+                  />
+                  {form.formState.errors.phone && (
                     <p className="text-sm text-red-500">{form.formState.errors.phone.message}</p>
-                    )}
+                  )}
                 </div>
-                
+
                 {/* Source dropdown not needed for upgrade/logged-in users usually, but keeping it optional */}
                 {!user && (
-                    <div className="space-y-2">
-                        <Label htmlFor="source">How did you hear about us? (Optional)</Label>
-                        <Select onValueChange={(val) => form.setValue('source', val)}>
-                        <SelectTrigger className="bg-white border-zinc-300 focus:ring-black">
-                            <SelectValue placeholder="Select an option" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="telegram">Telegram</SelectItem>
-                            <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                            <SelectItem value="google">Google</SelectItem>
-                            <SelectItem value="friends">Friends/Family</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                        </Select>
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="source">How did you hear about us? (Optional)</Label>
+                    <Select onValueChange={(val) => form.setValue('source', val)}>
+                      <SelectTrigger className="border-zinc-300 bg-white focus:ring-black">
+                        <SelectValue placeholder="Select an option" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="telegram">Telegram</SelectItem>
+                        <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                        <SelectItem value="google">Google</SelectItem>
+                        <SelectItem value="friends">Friends/Family</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 )}
-                
-                <Button 
-                    type="submit" 
-                    className="w-full bg-black hover:bg-zinc-800 text-white font-bold py-2 mt-4"
-                    disabled={isLoading}
+
+                <Button
+                  type="submit"
+                  className="mt-4 w-full bg-black py-2 font-bold text-white hover:bg-zinc-800"
+                  disabled={isLoading}
                 >
-                    {`Pay — ${planName}`}
+                  {`Pay — ${planName}`}
                 </Button>
-                </form>
+              </form>
             )}
-            
           </>
         )}
       </DialogContent>

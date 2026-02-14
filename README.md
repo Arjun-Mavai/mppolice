@@ -541,16 +541,16 @@ echo "🚀 Done!"
 # 🚀 PART 5 — Drizzle Config
 
 ```ts
-import { defineConfig } from "drizzle-kit";
+import { defineConfig } from 'drizzle-kit';
 
-const isDev = process.env.NODE_ENV === "development";
+const isDev = process.env.NODE_ENV === 'development';
 
 export default defineConfig({
-  schema: "./src/db/schema.ts",
-  out: "./drizzle",
-  dialect: isDev ? "sqlite" : "turso",
+  schema: './src/db/schema.ts',
+  out: './drizzle',
+  dialect: isDev ? 'sqlite' : 'turso',
   dbCredentials: {
-    url: isDev ? "file:local_test.db" : process.env.TURSO_DATABASE_URL,
+    url: isDev ? 'file:local_test.db' : process.env.TURSO_DATABASE_URL,
     authToken: isDev ? undefined : process.env.TURSO_AUTH_TOKEN,
   },
 });

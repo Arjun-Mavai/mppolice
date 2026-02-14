@@ -23,48 +23,50 @@ import { logger } from '@/lib/logger';
  * Admin ko fresh data chahiye — no cache
  */
 export async function getAllTopicsForAdmin() {
-    await requireAdmin();
+  await requireAdmin();
 
-    const allTopics = await db.select({
-        id: syllabusTopics.id,
-        unitId: syllabusTopics.unitId,
-        title: syllabusTopics.title,
-        titleEn: syllabusTopics.titleEn,
-        order: syllabusTopics.order,
-        isFree: syllabusTopics.isFree,
-        isLiteAccess: syllabusTopics.isLiteAccess,
-        isProAccess: syllabusTopics.isProAccess,
+  const allTopics = await db
+    .select({
+      id: syllabusTopics.id,
+      unitId: syllabusTopics.unitId,
+      title: syllabusTopics.title,
+      titleEn: syllabusTopics.titleEn,
+      order: syllabusTopics.order,
+      isFree: syllabusTopics.isFree,
+      isLiteAccess: syllabusTopics.isLiteAccess,
+      isProAccess: syllabusTopics.isProAccess,
     })
     .from(syllabusTopics)
     .orderBy(syllabusTopics.unitId, syllabusTopics.order);
 
-    return allTopics;
+  return allTopics;
 }
 
 /**
  * toggleTopicAccess — Single topic ka ek flag toggle karo
- * 
+ *
  * NOTE: isFree toggle karne par isFreeAccess jaisa kaam karega
  * (backward compatible — purana field hai)
  */
 export async function toggleTopicAccess(
-    topicId: string,
-    field: 'isFree' | 'isLiteAccess' | 'isProAccess',
-    value: boolean
+  topicId: string,
+  field: 'isFree' | 'isLiteAccess' | 'isProAccess',
+  value: boolean
 ) {
-    await requireAdmin();
+  await requireAdmin();
 
-    await db.update(syllabusTopics)
-        .set({ [field]: value })
-        .where(eq(syllabusTopics.id, topicId));
+  await db
+    .update(syllabusTopics)
+    .set({ [field]: value })
+    .where(eq(syllabusTopics.id, topicId));
 
-    // Cache bust — syllabus pages re-fetch honge
-    revalidateTag('syllabus', { expire: 0 });
-    revalidateTag('topics', { expire: 0 });
+  // Cache bust — syllabus pages re-fetch honge
+  revalidateTag('syllabus', { expire: 0 });
+  revalidateTag('topics', { expire: 0 });
 
-    logger.info(`Topic access updated: ${topicId} → ${field}=${value}`);
+  logger.info(`Topic access updated: ${topicId} → ${field}=${value}`);
 
-    return { success: true };
+  return { success: true };
 }
 
 /**
@@ -72,20 +74,21 @@ export async function toggleTopicAccess(
  * Example: "Unit 1 ke sab topics Lite ko de do"
  */
 export async function bulkUpdateTopicAccess(
-    unitId: string,
-    field: 'isFree' | 'isLiteAccess' | 'isProAccess',
-    value: boolean
+  unitId: string,
+  field: 'isFree' | 'isLiteAccess' | 'isProAccess',
+  value: boolean
 ) {
-    await requireAdmin();
+  await requireAdmin();
 
-    await db.update(syllabusTopics)
-        .set({ [field]: value })
-        .where(eq(syllabusTopics.unitId, unitId));
+  await db
+    .update(syllabusTopics)
+    .set({ [field]: value })
+    .where(eq(syllabusTopics.unitId, unitId));
 
-    revalidateTag('syllabus', { expire: 0 });
-    revalidateTag('topics', { expire: 0 });
+  revalidateTag('syllabus', { expire: 0 });
+  revalidateTag('topics', { expire: 0 });
 
-    logger.info(`Bulk topic access: ${unitId} → ${field}=${value}`);
+  logger.info(`Bulk topic access: ${unitId} → ${field}=${value}`);
 
-    return { success: true };
+  return { success: true };
 }

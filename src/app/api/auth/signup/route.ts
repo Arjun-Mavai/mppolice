@@ -8,9 +8,12 @@ export async function POST(request: Request) {
     // Rate Limit Check
     const ip = request.headers.get('x-forwarded-for') || 'unknown';
     const { success } = await checkRateLimit(signupLimiter, ip);
-    
+
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
     }
 
     const { email, password, name } = await request.json();
@@ -44,7 +47,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, user: { id: data.id, email: data.email, name: data.name } });
+    return NextResponse.json({
+      success: true,
+      user: { id: data.id, email: data.email, name: data.name },
+    });
   } catch (error) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
