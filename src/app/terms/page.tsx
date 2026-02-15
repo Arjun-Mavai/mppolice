@@ -26,94 +26,84 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-xl font-semibold text-slate-900">1. Acceptance of Terms</h2>
             <p className="mt-3">
-              By accessing or using Mindful MPPSC, you agree to be bound by these Terms of Service.
-              If you do not agree, please do not use the platform. We reserve the right to update
-              these terms at any time; continued use after changes constitutes acceptance.
+              By accessing Mindful MPPSC (&ldquo;the Platform&rdquo;), you acknowledge that you have
+              read, understood, and agree to be bound by these Terms of Service. These terms
+              constitute a legally binding agreement between you and Mindful MPPSC. We reserve the
+              right to amend these terms at our discretion; continued usage after such amendments
+              constitutes formal acceptance of the revised terms.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">2. Account &amp; Registration</h2>
+            <h2 className="text-xl font-semibold text-slate-900">2. Account Responsibility</h2>
             <ul className="mt-3 list-disc space-y-2 pl-5">
-              <li>You must provide accurate information when creating an account.</li>
-              <li>You are responsible for maintaining the security of your account credentials.</li>
-              <li>One account per person. Sharing accounts is not permitted.</li>
-              <li>We may suspend or terminate accounts that violate these terms.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-slate-900">3. Acceptable Use</h2>
-            <p className="mt-3">You agree not to:</p>
-            <ul className="mt-2 list-disc space-y-2 pl-5">
+              <li>Users must provide authentic and verifiable information during registration.</li>
               <li>
-                Copy, redistribute, or resell any content from the platform without permission.
+                You are solely responsible for maintaining the confidentiality of your account and
+                password.
               </li>
-              <li>Use automated tools (bots, scrapers) to access the platform.</li>
-              <li>Attempt to gain unauthorised access to other users' accounts or our systems.</li>
               <li>
-                Upload harmful content or engage in behaviour that disrupts the platform for others.
+                Account sharing is strictly prohibited. Each subscription is for a single user only.
+              </li>
+              <li>
+                We reserve the unilateral right to terminate accounts that engage in fraudulent
+                activity or violate these terms.
               </li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">4. Content Ownership</h2>
+            <h2 className="text-xl font-semibold text-slate-900">
+              3. Intellectual Property Rights
+            </h2>
             <p className="mt-3">
-              All study material, quizzes, mnemonics, and other educational content on Mindful MPPSC
-              is our intellectual property or used under licence. You may use it for personal study
-              purposes only. You retain ownership of any content you submit (e.g., feedback or forum
-              posts), but grant us a licence to use it for improving the platform.
+              All content hosted on the Platform—including but not limited to study materials, test
+              series, mnemonics, and software—is the exclusive intellectual property of Mindful
+              MPPSC. Unauthorized reproduction, distribution, or commercial exploitation of any
+              material is strictly prohibited and may result in legal action.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">5. Payments &amp; Refunds</h2>
+            <h2 className="text-xl font-semibold text-slate-900">
+              4. Payments &amp; Strict No-Refund Policy
+            </h2>
             <ul className="mt-3 list-disc space-y-2 pl-5">
-              <li>Paid plans are billed as described at the time of purchase.</li>
               <li>
-                All purchases are final. Due to the digital nature of the content, refunds are
-                generally not available once access has been granted. For exceptional circumstances,
-                please contact us.
+                <strong>Immediate Digital Access:</strong> Since our services involve immediate
+                access to digital content (test series, mnemonics, etc.), all purchases are final.
               </li>
-              <li>We reserve the right to modify pricing with reasonable notice.</li>
-              {/* <li>
-                For refund queries, please reach out via our{" "}
-                <Link
-                  href="/contact"
-                  className="underline text-slate-900 hover:text-slate-600"
-                >
-                  Contact Page
-                </Link>
-                .
-              </li> */}
+              <li>
+                <strong>No Refunds:</strong> Under no circumstances shall Mindful MPPSC be liable to
+                provide a refund once a subscription has been activated or digital content has been
+                accessed.
+              </li>
+              <li>
+                Pricing and plan features are subject to change with reasonable notice provided on
+                the Platform.
+              </li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">6. Limitation of Liability</h2>
+            <h2 className="text-xl font-semibold text-slate-900">5. Limitation of Liability</h2>
             <p className="mt-3">
-              Mindful MPPSC is provided &ldquo;as is&rdquo; without warranties of any kind. We
-              strive for accuracy in our content but do not guarantee exam results. Our total
-              liability to you shall not exceed the amount you paid for the service in the preceding
-              12 months.
+              Mindful MPPSC provides educational tools on an &ldquo;as-is&rdquo; and
+              &ldquo;as-available&rdquo; basis. While we strive for the highest degree of accuracy,
+              we do not guarantee specific exam results or absolute factual error-freedom. To the
+              maximum extent permitted by law, our liability is limited to the subscription fee paid
+              by the user in the twelve (12) months preceding the claim.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">7. Availability &amp; Changes</h2>
+            <h2 className="text-xl font-semibold text-slate-900">
+              6. Governing Law &amp; Jurisdiction
+            </h2>
             <p className="mt-3">
-              We aim to keep the platform available at all times but do not guarantee uninterrupted
-              access. We may modify, suspend, or discontinue features with reasonable notice.
-              Scheduled maintenance windows will be communicated in advance where possible.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-slate-900">8. Governing Law</h2>
-            <p className="mt-3">
-              These terms are governed by the laws of India. Any disputes shall be subject to the
-              exclusive jurisdiction of courts in Madhya Pradesh, India.
+              These Terms shall be governed by and construed in accordance with the laws of India.
+              Any legal action or proceeding arising under these Terms shall be brought exclusively
+              in the courts of Madhya Pradesh, India.
             </p>
           </section>
 

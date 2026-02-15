@@ -24,87 +24,53 @@ export default function PrivacyPolicyPage() {
 
         <div className="mt-10 space-y-10 leading-relaxed text-slate-700">
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">1. Who We Are</h2>
+            <h2 className="text-xl font-semibold text-slate-900">1. Data Collection Scope</h2>
             <p className="mt-3">
-              Mindful MPPSC is an online platform designed to help aspirants prepare for the Madhya
-              Pradesh Public Service Commission (MPPSC) examinations. This policy explains how we
-              handle your personal information when you use our website and services.
+              To provide a bespoke educational experience, Mindful MPPSC collects essential
+              information including registration details (name, email), academic progress data (quiz
+              scores, study time), and technical metadata to ensure platform stability and
+              performance.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">2. Information We Collect</h2>
-            <ul className="mt-3 list-disc space-y-2 pl-5">
-              <li>
-                <strong>Account Information:</strong> Name, email address, and profile details you
-                provide when signing up.
-              </li>
-              <li>
-                <strong>Usage Data:</strong> Pages visited, quizzes attempted, scores, and study
-                preferences to personalise your experience.
-              </li>
-              <li>
-                <strong>Device Information:</strong> Browser type, operating system, and screen
-                resolution for improving compatibility.
-              </li>
-              <li>
-                <strong>Payment Information:</strong> Processed securely through third-party payment
-                providers. We do not store your card details.
-              </li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-slate-900">3. How We Use Your Data</h2>
-            <ul className="mt-3 list-disc space-y-2 pl-5">
-              <li>To provide and improve our exam preparation services.</li>
-              <li>To track your progress and personalise study recommendations.</li>
-              <li>To send important updates about your account or our platform.</li>
-              <li>To respond to your queries and support requests.</li>
-              <li>To detect and prevent fraud or misuse of our platform.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-slate-900">4. Cookies &amp; Local Storage</h2>
+            <h2 className="text-xl font-semibold text-slate-900">2. Purpose of Processing</h2>
             <p className="mt-3">
-              We use cookies and browser local storage to keep you logged in, remember your
-              preferences (like language choice), and understand how the platform is used. You can
-              disable cookies in your browser settings, but some features may not work correctly.
+              Your data is utilized exclusively to enhance your learning journey. This includes
+              generating personalized performance analytics, providing smart study recommendations,
+              and facilitating secure account management. We also use aggregated, anonymized data to
+              improve our pedagogical tools and content accuracy.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">5. Data Sharing</h2>
+            <h2 className="text-xl font-semibold text-slate-900">3. Information Security</h2>
             <p className="mt-3">
-              We do not sell your personal data. We may share limited information with trusted
-              service providers (hosting, analytics, payment processing) solely to operate the
-              platform. We may also disclose data if required by law.
+              We employ industry-standard encryption protocols (SSL/TLS) and secure server
+              architectures to safeguard your personal information. While no digital system is
+              impenetrable, we maintain rigorous internal controls to prevent unauthorized access,
+              disclosure, or alteration of your data.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">6. Data Security</h2>
+            <h2 className="text-xl font-semibold text-slate-900">4. Third-Party Disclosures</h2>
             <p className="mt-3">
-              We use industry-standard measures to protect your data, including encrypted
-              connections (HTTPS) and secure authentication. However, no method of transmission over
-              the internet is 100% secure.
+              Mindful MPPSC does not sell or trade your personal information. Data sharing is
+              strictly limited to essential service providers (e.g., payment processors, hosting
+              partners) who are contractually bound to maintain your privacy. Legal disclosures are
+              made only when mandated by valid judicial or governmental orders.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">7. Your Rights</h2>
+            <h2 className="text-xl font-semibold text-slate-900">
+              5. User Rights &amp; Governance
+            </h2>
             <p className="mt-3">
-              You may request access to, correction of, or deletion of your personal data at any
-              time. To exercise these rights, please contact us using the details below.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-slate-900">8. Changes to This Policy</h2>
-            <p className="mt-3">
-              We may update this policy from time to time. Changes will be posted on this page with
-              a revised date. Continued use of the platform after changes constitutes acceptance.
+              You retain the right to access, rectify, or request the deletion of your personal
+              data. These terms and our privacy practices are governed by the Information Technology
+              Act, 2000, and other applicable laws of India.
             </p>
           </section>
 
