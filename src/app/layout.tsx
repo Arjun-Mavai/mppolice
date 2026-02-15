@@ -10,6 +10,8 @@ import { ScrollToTop } from '@/components/ScrollToTop';
 import { Toaster } from '@/components/ui/sonner';
 import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
 import dynamic from 'next/dynamic';
+import { VersionManager } from '@/components/VersionManager';
+
 const InstallPrompt = dynamic(() =>
   import('@/components/InstallPrompt').then((m) => m.InstallPrompt)
 );
@@ -143,6 +145,7 @@ export default function RootLayout({
           </Suspense>
           <Toaster position="top-right" richColors />
           <InstallPrompt />
+          <VersionManager />
         </GlobalErrorBoundary>
         <script
           dangerouslySetInnerHTML={{

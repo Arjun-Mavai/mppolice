@@ -118,7 +118,15 @@ const printConsole = (level: LogLevel, message: string, error?: any, context?: L
   }
 };
 
-export const logger = {
+// Explicit type to avoid circular reference
+type Logger = {
+  info: (message: string, context?: LogContext) => void;
+  warn: (message: string, context?: LogContext) => void;
+  error: (message: string, error?: any, context?: LogContext) => void;
+  debug: (message: string, context?: LogContext) => void;
+};
+
+export const logger: Logger = {
   /**
    * ℹ️ INFO: Standard events (User logged in, Payment started)
    * - recorded as Sentry Breadcrumbs

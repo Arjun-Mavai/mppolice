@@ -14,7 +14,7 @@ export default function Page() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    logger.debug('user and its role', user, user?.role);
+    logger.debug('user and its role', { category: 'system', metadata: { user, role: user?.role } });
     // Check if user is logged in AND is an admin
     if (user && user.role === 'admin') {
       setIsAuthorized(true);
