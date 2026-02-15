@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React from 'react';
 import { Clock, X, Zap, Languages } from 'lucide-react';
@@ -44,26 +44,30 @@ export function QuizHeader({
   };
 
   return (
-    <header className="h-14 sm:h-16 bg-white/95 backdrop-blur-lg border-b border-slate-200/80 flex items-center justify-between px-3 sm:px-4 shrink-0 shadow-sm z-20">
+    <header className="z-20 flex h-14 shrink-0 items-center justify-between border-b border-slate-200/80 bg-white/95 px-3 shadow-sm backdrop-blur-lg sm:h-16 sm:px-4">
       {/* Left: Exit + Title */}
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
           size="icon"
           onClick={onExit}
-          className="text-slate-500 hover:text-slate-900 -ml-2 transition-colors"
+          className="-ml-2 text-slate-500 transition-colors hover:text-slate-900"
         >
-          <X className="w-5 h-5 sm:w-6 sm:h-6" />
+          <X className="h-5 w-5 sm:h-6 sm:w-6" />
         </Button>
 
-        <div className="hidden sm:flex items-center gap-2">
-          <div className="h-6 w-px bg-slate-200 mx-2" />
-          <span className="font-display font-bold text-slate-900 tracking-tight text-sm sm:text-base">
-            {title || <>MPPSC<span className="text-slate-700">26</span></>}
+        <div className="hidden items-center gap-2 sm:flex">
+          <div className="mx-2 h-6 w-px bg-slate-200" />
+          <span className="font-display text-sm font-bold tracking-tight text-slate-900 sm:text-base">
+            {title || (
+              <>
+                MPPSC<span className="text-slate-700">26</span>
+              </>
+            )}
           </span>
           <Badge
             variant="outline"
-            className="ml-2 border-slate-200 text-slate-500 font-medium hidden md:inline-flex text-xs"
+            className="ml-2 hidden border-slate-200 text-xs font-medium text-slate-500 md:inline-flex"
           >
             {mode === 'full' ? t.fullTest : t.topicPractice}
           </Badge>
@@ -76,32 +80,40 @@ export function QuizHeader({
         {!isSubmitted && (
           <div
             className={cn(
-              "flex items-center gap-2 rounded-full px-3 py-1.5 border-2 transition-all cursor-pointer select-none",
+              'flex cursor-pointer items-center gap-2 rounded-full border-2 px-3 py-1.5 transition-all select-none',
               instantModeEnabled
-                ? "bg-amber-50 border-amber-400 shadow-sm shadow-amber-100"
-                : "bg-amber-50 border-amber-400 hover:bg-slate-100 hover:border-slate-400"
+                ? 'border-amber-400 bg-amber-50 shadow-sm shadow-amber-100'
+                : 'border-amber-400 bg-amber-50 hover:border-slate-400 hover:bg-slate-100'
             )}
             onClick={onInstantModeToggle}
             title="Toggle Instant Feedback"
           >
-            <span className={cn(
-              "text-xs font-bold uppercase flex items-center gap-1",
-              instantModeEnabled ? "text-amber-700" : "text-slate-400"
-            )}>
-              <Zap className={cn(
-                "w-3.5 h-3.5",
-                instantModeEnabled ? "fill-amber-700" : "fill-slate-300 text-slate-300"
-              )} />
+            <span
+              className={cn(
+                'flex items-center gap-1 text-xs font-bold uppercase',
+                instantModeEnabled ? 'text-amber-700' : 'text-slate-400'
+              )}
+            >
+              <Zap
+                className={cn(
+                  'h-3.5 w-3.5',
+                  instantModeEnabled ? 'fill-amber-700' : 'fill-slate-300 text-slate-300'
+                )}
+              />
               <span className="hidden sm:inline">{t.instantMode}</span>
             </span>
-            <div className={cn(
-              "w-7 h-4 rounded-full relative transition-colors bg-slate-300 shadow-inner",
-              instantModeEnabled && "bg-amber-500"
-            )}>
-              <div className={cn(
-                "absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all shadow-sm",
-                instantModeEnabled ? "left-3.5" : "left-0.5"
-              )} />
+            <div
+              className={cn(
+                'relative h-4 w-7 rounded-full bg-slate-300 shadow-inner transition-colors',
+                instantModeEnabled && 'bg-amber-500'
+              )}
+            >
+              <div
+                className={cn(
+                  'absolute top-0.5 h-3 w-3 rounded-full bg-white shadow-sm transition-all',
+                  instantModeEnabled ? 'left-3.5' : 'left-0.5'
+                )}
+              />
             </div>
           </div>
         )}
@@ -109,37 +121,45 @@ export function QuizHeader({
         {/* Compact Language Switcher */}
         <button
           onClick={onLanguageToggle}
-          className="flex items-center gap-1 rounded-full px-2 py-1 border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-all select-none"
+          className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 transition-all select-none hover:bg-slate-100"
           title={language === 'hi' ? 'Switch to English' : 'हिंदी में बदलें'}
         >
-          <span className={cn(
-            "text-[10px] font-bold px-1 rounded transition-colors",
-            language === 'hi' ? "bg-slate-800 text-white" : "text-slate-400"
-          )}>अ</span>
-          <span className={cn(
-            "text-[10px] font-bold px-1 rounded transition-colors",
-            language === 'en' ? "bg-slate-800 text-white" : "text-slate-400"
-          )}>A</span>
+          <span
+            className={cn(
+              'rounded px-1 text-[10px] font-bold transition-colors',
+              language === 'hi' ? 'bg-slate-800 text-white' : 'text-slate-400'
+            )}
+          >
+            अ
+          </span>
+          <span
+            className={cn(
+              'rounded px-1 text-[10px] font-bold transition-colors',
+              language === 'en' ? 'bg-slate-800 text-white' : 'text-slate-400'
+            )}
+          >
+            A
+          </span>
         </button>
 
         {/* Timer */}
-        <div className={cn(
-          "px-3 py-1.5 rounded-lg font-mono font-bold text-lg flex items-center gap-2 transition-colors min-w-[100px] justify-center",
-          timeLeft < 60 ? "bg-red-50 text-red-600 animate-pulse" : "bg-slate-100 text-slate-900"
-        )}>
-          <Clock className="w-4 h-4 text-slate-400" />
+        <div
+          className={cn(
+            'flex min-w-[100px] items-center justify-center gap-2 rounded-lg px-3 py-1.5 font-mono text-lg font-bold transition-colors',
+            timeLeft < 60 ? 'animate-pulse bg-red-50 text-red-600' : 'bg-slate-100 text-slate-900'
+          )}
+        >
+          <Clock className="h-4 w-4 text-slate-400" />
           {formatTime(timeLeft)}
         </div>
 
         {/* Focus Mode Indicator - subtle pink dot */}
-        <div className="relative hidden sm:flex items-center" title="Focus Mode Active">
-          <span className="w-2 h-2 rounded-full bg-pink-400 animate-[pulse_3s_ease-in-out_infinite] opacity-70" />
+        <div className="relative hidden items-center sm:flex" title="Focus Mode Active">
+          <span className="h-2 w-2 animate-[pulse_3s_ease-in-out_infinite] rounded-full bg-pink-400 opacity-70" />
         </div>
 
         {/* Palette button slot (mobile only - desktop shows sidebar) */}
-        <div className="lg:hidden">
-          {paletteButton}
-        </div>
+        <div className="lg:hidden">{paletteButton}</div>
       </div>
     </header>
   );

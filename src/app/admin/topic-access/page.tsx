@@ -7,14 +7,14 @@ import TopicAccessClient from './TopicAccessClient';
 export const dynamic = 'force-dynamic';
 
 export default async function TopicAccessPage() {
-    // Auth guard — sirf admin
-    await requireAdmin();
+  // Auth guard — sirf admin
+  await requireAdmin();
 
-    const topics = await getAllTopicsForAdmin();
+  const topics = await getAllTopicsForAdmin();
 
-    return (
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
-            <TopicAccessClient topics={topics} />
-        </div>
-    );
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8 md:px-8">
+      <TopicAccessClient topics={topics} />
+    </div>
+  );
 }

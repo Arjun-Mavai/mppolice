@@ -15,14 +15,14 @@
           "negativeMarks": 1
         },
         {
-            "questionText": "Who constructed the Sanchi Stupa?",
-            "questionTextEn": "Who constructed the Sanchi Stupa?",
-            "options": ["Chandragupta Maurya", "Ashoka", "Bindusara", "Kanishka"],
-            "correctAnswer": "Option B",
-            "explanation": "Emperor Ashoka commissioned the Sanchi Stupa in the 3rd century BCE.",
-            "explanationEn": "Emperor Ashoka commissioned the construction of the Great Stupa at Sanchi.",
-            "marks": 3,
-            "negativeMarks": 1
+          "questionText": "Who constructed the Sanchi Stupa?",
+          "questionTextEn": "Who constructed the Sanchi Stupa?",
+          "options": ["Chandragupta Maurya", "Ashoka", "Bindusara", "Kanishka"],
+          "correctAnswer": "Option B",
+          "explanation": "Emperor Ashoka commissioned the Sanchi Stupa in the 3rd century BCE.",
+          "explanationEn": "Emperor Ashoka commissioned the construction of the Great Stupa at Sanchi.",
+          "marks": 3,
+          "negativeMarks": 1
         },
         {
           "type": "matching",
@@ -33,7 +33,7 @@
             { "id": "(2)", "label": "Chambal", "match": "Janapav", "matchId": "(b)" }
           ],
           "options": ["(1)-(a), (2)-(b)", "(1)-(b), (2)-(a)", "None", "All"],
-          "correctAnswer": "0", 
+          "correctAnswer": "0",
           "explanation": "Narmada rises from Amarkantak...",
           "explanationEn": "Narmada rises from Amarkantak...",
           "marks": 3,

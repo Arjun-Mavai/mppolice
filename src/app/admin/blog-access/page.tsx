@@ -6,12 +6,12 @@ import BlogAccessClient from './BlogAccessClient';
 export const dynamic = 'force-dynamic';
 
 export default async function BlogAccessPage() {
-    await requireAdmin();
-    const blogs = await getAllBlogsForAdmin();
+  await requireAdmin();
+  const blogs = await getAllBlogsForAdmin();
 
-    return (
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
-            <BlogAccessClient blogs={blogs} />
-        </div>
-    );
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8 md:px-8">
+      <BlogAccessClient blogs={blogs} />
+    </div>
+  );
 }

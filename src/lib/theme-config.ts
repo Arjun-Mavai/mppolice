@@ -1,6 +1,6 @@
 /**
  * Centralized Theme Configuration
- * 
+ *
  * This file contains all theme-related constants and utilities
  * for maintaining consistent branding across the application.
  */
@@ -9,12 +9,12 @@ export const THEME_COLORS = {
   // Primary Brand Colors
   electricBlue: '#00F0FF',
   electricBlueRGB: '0, 240, 255',
-  
+
   // Derived Colors (for gradients, hover states, etc.)
   electricBlueDark: '#00D0E0',
   electricBlueLight: '#33F3FF',
   electricBluePale: '#E6FCFF',
-  
+
   // Semantic Colors
   success: '#10b981',
   warning: '#f59e0b',

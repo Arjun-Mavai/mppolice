@@ -21,6 +21,7 @@ export const API = {
     MPPSC_LOGOUT: '/api/auth/mppsc-logout',
     MPPSC_FORGOT_PASSWORD: '/api/auth/mppsc-forgot-password',
     MPPSC_CHECK: '/api/auth/mppsc-check',
+    CHECK_EMAIL: '/api/auth/check-email',
   },
 
   // ── Pricing ──────────────────────────────────────────

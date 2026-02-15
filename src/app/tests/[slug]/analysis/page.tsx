@@ -1,4 +1,3 @@
-
 import { getAttemptResult } from '@/data/tests';
 import { notFound, redirect } from 'next/navigation';
 import AnalysisView from './AnalysisView';

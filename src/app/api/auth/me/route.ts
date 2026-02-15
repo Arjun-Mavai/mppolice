@@ -18,24 +18,31 @@ export async function GET() {
     const user = await verifyAuth();
 
     if (!user) {
-      return NextResponse.json({ user: null }, {
-        headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
-      });
+      return NextResponse.json(
+        { user: null },
+        {
+          headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
+        }
+      );
     }
 
-    return NextResponse.json({ 
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        is_subscribed: user.isSubscribed,
-        plan_tier: user.planTier,
-        access_expires_at: user.accessExpiresAt,
+    return NextResponse.json(
+      {
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone ?? undefined,
+          role: user.role,
+          is_subscribed: user.isSubscribed,
+          plan_tier: user.planTier,
+          access_expires_at: user.accessExpiresAt,
+        },
+      },
+      {
+        headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
       }
-    }, {
-      headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
-    });
+    );
   } catch (error) {
     logger.error('Session check failed:', error);
     return NextResponse.json({ user: null }, { status: 500 });

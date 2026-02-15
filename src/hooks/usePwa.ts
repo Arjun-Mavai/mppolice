@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { logger } from "@/lib/logger";
+import { logger } from '@/lib/logger';
 
 /**
  * Interface for the BeforeInstallPromptEvent
@@ -26,24 +26,24 @@ export function usePwa() {
   useEffect(() => {
     // 1. Check if running in standalone mode (Installed)
     const checkStandalone = () => {
-      const isStandalone = 
-        window.matchMedia('(display-mode: standalone)').matches || 
+      const isStandalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window.navigator as any).standalone === true; // For iOS Safari
-      
+
       setIsPwaInstalled(isStandalone);
     };
 
     checkStandalone();
-    
+
     // Listen for changes in display mode
     const mediaQuery = window.matchMedia('(display-mode: standalone)');
     const handleDisplayModeChange = (e: MediaQueryListEvent) => {
-        setIsPwaInstalled(e.matches);
+      setIsPwaInstalled(e.matches);
     };
-    
+
     if (mediaQuery.addEventListener) {
-        mediaQuery.addEventListener('change', handleDisplayModeChange);
+      mediaQuery.addEventListener('change', handleDisplayModeChange);
     }
 
     // 2. Capture the install prompt
@@ -54,37 +54,40 @@ export function usePwa() {
       // We cast it because the event listener uses the standard Event type
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
-      logger.debug("PWA Install Prompt captured");
+      logger.debug('PWA Install Prompt captured');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    
+
     // 3. Register Service Worker (Manual Registration)
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js').then(
-                (registration) => {
-                    logger.debug('ServiceWorker registration successful with scope: ', registration.scope);
-                },
-                (err) => {
-                    logger.error('ServiceWorker registration failed: ', err);
-                }
-            );
-        });
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(
+          (registration) => {
+            logger.debug('ServiceWorker registration successful with scope: ', {
+              scope: registration.scope,
+              category: 'system',
+            });
+          },
+          (err) => {
+            logger.error('ServiceWorker registration failed: ', err, { category: 'system' });
+          }
+        );
+      });
     }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       if (mediaQuery.removeEventListener) {
-          mediaQuery.removeEventListener('change', handleDisplayModeChange);
+        mediaQuery.removeEventListener('change', handleDisplayModeChange);
       }
     };
   }, []);
 
   const installPwa = async () => {
     if (!deferredPrompt) {
-        logger.debug("Install prompt not available");
-        return;
+      logger.debug('Install prompt not available');
+      return;
     }
 
     // Show the install prompt

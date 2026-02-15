@@ -24,36 +24,38 @@ import { logger } from '@/lib/logger';
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export const verifyAuth = cache(async () => {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token');
+  const cookieStore = await cookies();
+  const token = cookieStore.get('mppsc_token');
 
-    if (!token) {
-        return null;
-    }
+  if (!token) {
+    return null;
+  }
 
-    const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token.value);
+  const { verifyToken } = await import('@/lib/jwt');
+  const decoded: any = verifyToken(token.value);
 
-    if (!decoded || !decoded.userId) {
-        return null;
-    }
+  if (!decoded || !decoded.userId) {
+    return null;
+  }
 
-    const userId = decoded.userId;
+  const userId = decoded.userId;
 
-    try {
-        // Only fetch active users — soft-deleted + inactive users are treated as non-existent
-        const users = await db.select()
-            .from(mppscUsers)
-            .where(and(
-                eq(mppscUsers.id, userId),
-                isNull(mppscUsers.deletedAt),
-                eq(mppscUsers.isActive, true)
-            ))
-            .limit(1);
-        return users[0] || null;
-    } catch (error) {
-        // DB errors → null (graceful degradation, user redirected to login)
-        logger.error("Database error during auth verification:", error);
-        return null;
-    }
+  try {
+    // Only fetch active users — soft-deleted + inactive users are treated as non-existent
+    const users = await db
+      .select()
+      .from(mppscUsers)
+      .where(
+        and(eq(mppscUsers.id, userId), isNull(mppscUsers.deletedAt), eq(mppscUsers.isActive, true))
+      )
+      .limit(1);
+    return users[0] || null;
+  } catch (error) {
+    // DB errors → null (graceful degradation, user redirected to login)
+    logger.error('Database error during auth verification:', error, {
+      category: 'auth',
+      userId,
+    });
+    return null;
+  }
 });

@@ -1,19 +1,19 @@
 /**
  * Service Worker — Offline support with auth-safe caching
- * 
+ *
  * STRATEGY:
  * - Static assets (JS/CSS/images): Cache First (fast offline)
  * - API routes & auth: Network Only (NEVER cache)
  * - HTML pages: Network First, fallback to cache (always fresh auth state)
  */
 
-const CACHE_NAME = 'mppsc-cache-v2'; // Bumped version to bust old stale cache
+const CACHE_NAME = 'mppsc-cache-v3'; // Bumped to v3 to force refresh for all users
 
 const urlsToCache = [
   '/offline',
   '/manifest.json',
   '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/icons/icon-512x512.png',
 ];
 
 // Routes that must NEVER be cached (auth, API, dynamic data)
@@ -29,20 +29,23 @@ const NEVER_CACHE_PATTERNS = [
 
 function shouldNeverCache(url) {
   const path = new URL(url).pathname;
-  return NEVER_CACHE_PATTERNS.some(pattern => path.startsWith(pattern));
+  return NEVER_CACHE_PATTERNS.some((pattern) => path.startsWith(pattern));
 }
 
 function isStaticAsset(url) {
   const path = new URL(url).pathname;
-  return path.startsWith('/_next/static/') || 
-         path.startsWith('/icons/') ||
-         path.match(/\.(js|css|png|jpg|jpeg|svg|webp|woff2|woff|ico)$/);
+  return (
+    path.startsWith('/_next/static/') ||
+    path.startsWith('/icons/') ||
+    path.match(/\.(js|css|png|jpg|jpeg|svg|webp|woff2|woff|ico)$/)
+  );
 }
 
 // INSTALL: Cache only essential offline files
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches
+      .open(CACHE_NAME)
       .then((cache) => cache.addAll(urlsToCache))
       .then(() => self.skipWaiting()) // Activate immediately, don't wait
   );
@@ -51,12 +54,11 @@ self.addEventListener('install', (event) => {
 // ACTIVATE: Delete ALL old caches + claim clients immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys()
-      .then((cacheNames) => 
+    caches
+      .keys()
+      .then((cacheNames) =>
         Promise.all(
-          cacheNames
-            .filter((name) => name !== CACHE_NAME)
-            .map((name) => caches.delete(name))
+          cacheNames.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))
         )
       )
       .then(() => self.clients.claim()) // Take control of all tabs immediately
@@ -66,7 +68,7 @@ self.addEventListener('activate', (event) => {
 // FETCH: Smart routing based on request type
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  
+
   // Only handle GET requests
   if (request.method !== 'GET') return;
 
@@ -93,7 +95,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // RULE 3: HTML pages → Network First (always fresh), fallback to cache
+  // RULE 3: HTML pages (Syllabus, Blogs, Quiz) → Network First (FRESH content)
+  // We try network first. If it fails (offline), THEN we use cache.
+  // This ensures users always see the latest blog updates if they have internet.
   if (request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
       fetch(request)

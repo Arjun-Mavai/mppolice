@@ -1,10 +1,10 @@
-"use client";
-import type React from "react";
-import Link from "next/link";
-import { useSettingsStore } from "@/store/useSettingsStore";
-import { Clock, Lock, ArrowRight, Sparkles } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+'use client';
+import type React from 'react';
+import Link from 'next/link';
+import { useSettingsStore } from '@/store/useSettingsStore';
+import { Clock, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface BlogCardProps {
   blog: any;
@@ -18,32 +18,32 @@ const variants = {
     text: 'text-blue-600',
     icon: 'text-blue-400',
     border: 'border-blue-100',
-    shadow: 'shadow-blue-200/40'
+    shadow: 'shadow-blue-200/40',
   },
   pink: {
     bg: 'bg-pink-50',
     text: 'text-pink-600',
     icon: 'text-pink-400',
     border: 'border-pink-100',
-    shadow: 'shadow-pink-200/40'
+    shadow: 'shadow-pink-200/40',
   },
   emerald: {
     bg: 'bg-emerald-50',
     text: 'text-emerald-600',
     icon: 'text-emerald-400',
     border: 'border-emerald-100',
-    shadow: 'shadow-emerald-200/40'
+    shadow: 'shadow-emerald-200/40',
   },
   amber: {
     bg: 'bg-amber-50',
     text: 'text-amber-600',
     icon: 'text-amber-400',
     border: 'border-amber-100',
-    shadow: 'shadow-amber-200/40'
-  }
+    shadow: 'shadow-amber-200/40',
+  },
 };
 
-const bgEmojis = ["📖", "📝", "💡", "🧠", "🎯", "📊", "⚖️", "📜", "🔍", "🎓"];
+const bgEmojis = ['📖', '📝', '💡', '🧠', '🎯', '📊', '⚖️', '📜', '🔍', '🎓'];
 
 export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
   const { setLockModalOpen, language } = useSettingsStore();
@@ -54,9 +54,12 @@ export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
 
   // Bilingual Title Splitting logic
   const splitTitle = (blog.title || '').split('|');
-  const displayTitle = splitTitle.length > 1 
-    ? (language === 'hi' ? splitTitle[1].trim() : splitTitle[0].trim())
-    : blog.title;
+  const displayTitle =
+    splitTitle.length > 1
+      ? language === 'hi'
+        ? splitTitle[1].trim()
+        : splitTitle[0].trim()
+      : blog.title;
 
   // Optional: Apply same split to description if it exists
   // const splitDesc = (blog.description || '').split('|');
@@ -78,58 +81,67 @@ export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
       whileHover={{ y: -8, scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       className={cn(
-        "relative group cursor-pointer w-full h-[360px] rounded-[2.5rem] p-8 flex flex-col justify-between overflow-hidden border transition-all duration-500",
+        'group relative flex h-[360px] w-full cursor-pointer flex-col justify-between overflow-hidden rounded-[2.5rem] border p-8 transition-all duration-500',
         style.bg,
         style.border,
-        "shadow-sm hover:shadow-2xl",
+        'shadow-sm hover:shadow-2xl',
         style.shadow,
-        isLocked && "grayscale-[0.4] opacity-90"
+        isLocked && 'opacity-90 grayscale-[0.4]'
       )}
     >
       {/* 🎭 PREMIUM EMOJI PATTERN BACKGROUND */}
-      <div className="absolute inset-0 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-500 pointer-events-none select-none overflow-hidden">
-        <div className="grid grid-cols-4 gap-12 rotate-12 scale-150">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.03] transition-opacity duration-500 select-none group-hover:opacity-[0.06]">
+        <div className="grid scale-150 rotate-12 grid-cols-4 gap-12">
           {Array.from({ length: 16 }).map((_, i) => (
-            <div key={i} className="text-4xl">{bgEmojis[(i + index) % bgEmojis.length]}</div>
+            <div key={i} className="text-4xl">
+              {bgEmojis[(i + index) % bgEmojis.length]}
+            </div>
           ))}
         </div>
       </div>
 
       {/* Top Bar: Unit/Category + Lock Icon */}
-      <div className="flex items-center justify-between relative z-10">
+      <div className="relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {blog.unitId && (
-            <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm border border-white flex items-center gap-2">
-              <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", 
-                colorVariant === 'emerald' ? 'bg-emerald-500' : 
-                colorVariant === 'blue' ? 'bg-blue-500' : 
-                colorVariant === 'pink' ? 'bg-pink-500' : 'bg-amber-500'
-              )} />
-              <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest">
+            <div className="flex items-center gap-2 rounded-full border border-white bg-white/90 px-3 py-1.5 shadow-sm backdrop-blur-sm">
+              <div
+                className={cn(
+                  'h-1.5 w-1.5 animate-pulse rounded-full',
+                  colorVariant === 'emerald'
+                    ? 'bg-emerald-500'
+                    : colorVariant === 'blue'
+                      ? 'bg-blue-500'
+                      : colorVariant === 'pink'
+                        ? 'bg-pink-500'
+                        : 'bg-amber-500'
+                )}
+              />
+              <span className="text-[10px] font-black tracking-widest text-slate-800 uppercase">
                 Unit {blog.unitId.replace('unit_', '')}
               </span>
             </div>
           )}
           {blog.isFreeAccess && (
-            <div className="bg-emerald-500 text-white px-3 py-1.5 rounded-full shadow-sm text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-emerald-200">
-              <Sparkles className="w-3 h-3" />
+            <div className="flex items-center gap-1.5 rounded-full bg-emerald-500 px-3 py-1.5 text-[10px] font-black tracking-widest text-white uppercase shadow-sm shadow-emerald-200">
+              <Sparkles className="h-3 w-3" />
               Free
             </div>
           )}
         </div>
-        
+
         {isLocked && (
-          <div className="p-2.5 rounded-full bg-white/50 text-amber-600 border border-white/50">
-            <Lock className="w-4 h-4" />
+          <div className="rounded-full border border-white/50 bg-white/50 p-2.5 text-amber-600">
+            <Lock className="h-4 w-4" />
           </div>
         )}
       </div>
 
       {/* Middle Area: Big Featured Emoji */}
-      <div className="flex-1 flex items-center justify-center relative -mt-4">
-        <div className="relative w-32 h-32 flex items-center justify-center">
-          <div className={cn("absolute inset-0 rounded-full blur-3xl opacity-30", style.bg)} />
-          <div className="relative text-8xl drop-shadow-2xl transition-all duration-700 group-hover:scale-125 group-hover:rotate-12 animate-float">
+      <div className="relative -mt-4 flex flex-1 items-center justify-center">
+        <div className="relative flex h-32 w-32 items-center justify-center">
+          <div className={cn('absolute inset-0 rounded-full opacity-30 blur-3xl', style.bg)} />
+          <div className="animate-float relative text-8xl drop-shadow-2xl transition-all duration-700 group-hover:scale-125 group-hover:rotate-12">
             {mainEmoji}
           </div>
         </div>
@@ -138,10 +150,10 @@ export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
       {/* Bottom Content: Title & Meta */}
       <div className="relative z-10 space-y-4">
         <div className="space-y-2">
-          <h3 className="text-2xl font-black text-slate-900 leading-[1.1] tracking-tighter group-hover:text-slate-800 transition-colors line-clamp-3">
+          <h3 className="line-clamp-3 text-2xl leading-[1.1] font-black tracking-tighter text-slate-900 transition-colors group-hover:text-slate-800">
             {displayTitle}
           </h3>
-          <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-1">
+          <div className="flex items-center gap-3 pt-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
             <div className="flex items-center gap-1">
               <Clock size={12} className={style.icon} />
               <span>{displayReadTime} Min Read</span>
@@ -149,7 +161,7 @@ export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
             {isLocked ? (
               <span className="text-amber-500">Premium Content</span>
             ) : (
-              <div className="flex items-center gap-1 text-slate-900 group-hover:translate-x-1 transition-transform">
+              <div className="flex items-center gap-1 text-slate-900 transition-transform group-hover:translate-x-1">
                 Read Now <ArrowRight size={10} className="ml-1" />
               </div>
             )}
@@ -158,20 +170,20 @@ export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
       </div>
 
       {/* Bottom Glow */}
-      <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-white/30 rounded-full blur-3xl group-hover:bg-white/50 transition-colors duration-500" />
+      <div className="absolute -right-12 -bottom-12 h-48 w-48 rounded-full bg-white/30 blur-3xl transition-colors duration-500 group-hover:bg-white/50" />
     </motion.div>
   );
 
   if (isLocked) {
     return (
-      <div onClick={handleClick} className="block group h-full">
+      <div onClick={handleClick} className="group block h-full">
         {CardContent}
       </div>
     );
   }
 
   return (
-    <Link href={`/blogs/${blog.slug}`} className="block group h-full">
+    <Link href={`/blogs/${blog.slug}`} className="group block h-full">
       {CardContent}
     </Link>
   );

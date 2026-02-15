@@ -1,7 +1,3 @@
-export default function QuizPlayLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function QuizPlayLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }

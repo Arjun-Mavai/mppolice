@@ -23,7 +23,7 @@ export default function GlobalLoader({ isLoading = true }: GlobalLoaderProps) {
     const interval = setInterval(() => {
       // Trigger fade out
       setIsFadingOut(true);
-      
+
       // Wait for fade out, then swap fact and fade in
       setTimeout(() => {
         setCurrentFact(getRandomFact());
@@ -39,17 +39,17 @@ export default function GlobalLoader({ isLoading = true }: GlobalLoaderProps) {
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/5 backdrop-blur-sm transition-opacity duration-300",
-        isLoading ? "opacity-100" : "opacity-0 pointer-events-none"
+        'fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/5 backdrop-blur-sm transition-opacity duration-300',
+        isLoading ? 'opacity-100' : 'pointer-events-none opacity-0'
       )}
     >
       <div
-        className="relative flex flex-col items-center max-w-lg px-6 animate-fade-in-up"
+        className="animate-fade-in-up relative flex max-w-lg flex-col items-center px-6"
         style={{ animationDuration: '0.4s' }}
       >
         {/* Outer rotating ring - CSS Spin */}
         <div
-          className="absolute inset-0 rounded-xl border-2 border-transparent border-t-electric-blue border-r-electric-blue animate-spin"
+          className="border-t-electric-blue border-r-electric-blue absolute inset-0 animate-spin rounded-xl border-2 border-transparent"
           style={{
             width: '72px',
             height: '72px',
@@ -60,23 +60,23 @@ export default function GlobalLoader({ isLoading = true }: GlobalLoaderProps) {
 
         {/* Core logo box - CSS Pulse/Glow */}
         <div
-          className="relative h-16 w-16 rounded-xl bg-gradient-to-br from-electric-blue to-[#00D0E0] flex items-center justify-center shadow-lg animate-pulse"
+          className="from-electric-blue relative flex h-16 w-16 animate-pulse items-center justify-center rounded-xl bg-gradient-to-br to-[#00D0E0] shadow-lg"
           style={{
             boxShadow: '0 0 20px 0 rgba(0, 240, 255, 0.3)',
             animationDuration: '2s',
           }}
         >
-          <span className="text-white font-bold text-xl tracking-tighter">MP</span>
+          <span className="text-xl font-bold tracking-tighter text-white">MP</span>
         </div>
 
         {/* Loading text */}
         <div
-          className="absolute -bottom-12 left-1/2 -translate-x-1/2 whitespace-nowrap animate-fade-in-up"
+          className="animate-fade-in-up absolute -bottom-12 left-1/2 -translate-x-1/2 whitespace-nowrap"
           style={{ animationDelay: '0.2s', opacity: 0, animationFillMode: 'forwards' }}
         >
-          <div className="flex items-center gap-2 text-slate-900 font-semibold text-sm uppercase tracking-widest">
+          <div className="flex items-center gap-2 text-sm font-semibold tracking-widest text-slate-900 uppercase">
             <div className="animate-spin" style={{ animationDuration: '1.5s' }}>
-              <Loader2 className="w-4 h-4 text-electric-blue" />
+              <Loader2 className="text-electric-blue h-4 w-4" />
             </div>
             <span>Loading...</span>
           </div>
@@ -87,26 +87,22 @@ export default function GlobalLoader({ isLoading = true }: GlobalLoaderProps) {
           <div
             key={currentFact.id}
             className={cn(
-              "mt-24 bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-slate-200 max-w-md transition-all duration-300 transform",
-              isFadingOut ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"
+              'mt-24 max-w-md transform rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-xl backdrop-blur-md transition-all duration-300',
+              isFadingOut ? 'translate-y-4 opacity-0' : 'translate-y-0 opacity-100'
             )}
           >
-            <div className="flex items-center gap-2 mb-3">
-              <BookOpen className="w-4 h-4 text-electric-blue" />
-              <span className="text-xs font-bold text-electric-blue uppercase tracking-wider">
+            <div className="mb-3 flex items-center gap-2">
+              <BookOpen className="text-electric-blue h-4 w-4" />
+              <span className="text-electric-blue text-xs font-bold tracking-wider uppercase">
                 {currentFact.subject}
               </span>
               <span className="text-xs text-slate-400">•</span>
-              <span className="text-xs text-slate-500 font-medium">{currentFact.tag}</span>
+              <span className="text-xs font-medium text-slate-500">{currentFact.tag}</span>
             </div>
-            
-            <h3 className="text-base font-bold text-slate-900 mb-2">
-              {currentFact.title}
-            </h3>
-            
-            <p className="text-sm text-slate-600 leading-relaxed">
-              {currentFact.text}
-            </p>
+
+            <h3 className="mb-2 text-base font-bold text-slate-900">{currentFact.title}</h3>
+
+            <p className="text-sm leading-relaxed text-slate-600">{currentFact.text}</p>
           </div>
         )}
       </div>

@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ interface GuestEntryDialogProps {
   onEmailChange: (value: string) => void;
   onMobileChange: (value: string) => void;
   onSubmit: () => void;
+  onExit: () => void;
 }
 
 export function GuestEntryDialog({
@@ -34,18 +35,44 @@ export function GuestEntryDialog({
   onEmailChange,
   onMobileChange,
   onSubmit,
+  onExit,
 }: GuestEntryDialogProps) {
   return (
     <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-slate-900 text-center">
+      <DialogContent
+        showCloseButton={false}
+        className="sm:max-w-md"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        <DialogHeader className="relative">
+          <DialogTitle className="text-center text-2xl font-bold text-slate-900">
             Welcome to MPPSC 2026! 🚀
           </DialogTitle>
-          <DialogDescription className="text-slate-600 text-center pt-2">
+          <button
+            onClick={onExit}
+            className="absolute -top-2 -right-2 rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+          >
+            <span className="sr-only">Close</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-5 w-5"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+          <DialogDescription className="pt-2 text-center text-slate-600">
             We value your time and just need your name to get started!
             <br />
-            <span className="text-sm text-slate-500 mt-1 inline-block">
+            <span className="mt-1 inline-block text-sm text-slate-500">
               Email and mobile are optional but help us serve you better.
             </span>
           </DialogDescription>
@@ -53,14 +80,14 @@ export function GuestEntryDialog({
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700 flex items-center gap-1">
+            <label className="flex items-center gap-1 text-sm font-semibold text-slate-700">
               Name <span className="text-red-500">*</span>
             </label>
             <Input
               placeholder="e.g. MPPSC Aspirant"
               value={guestName}
               onChange={(e) => onNameChange(e.target.value)}
-              className="h-11 border-slate-200 focus:border-electric-blue focus:ring-electric-blue"
+              className="focus:border-electric-blue focus:ring-electric-blue h-11 border-slate-200"
             />
           </div>
 
@@ -73,7 +100,7 @@ export function GuestEntryDialog({
               placeholder="email"
               value={guestEmail}
               onChange={(e) => onEmailChange(e.target.value)}
-              className="h-11 border-slate-200 focus:border-electric-blue focus:ring-electric-blue"
+              className="focus:border-electric-blue focus:ring-electric-blue h-11 border-slate-200"
             />
           </div>
 
@@ -86,7 +113,7 @@ export function GuestEntryDialog({
               placeholder="phone number"
               value={guestMobile}
               onChange={(e) => onMobileChange(e.target.value)}
-              className="h-11 border-slate-200 focus:border-electric-blue focus:ring-electric-blue"
+              className="focus:border-electric-blue focus:ring-electric-blue h-11 border-slate-200"
             />
           </div>
         </div>
@@ -95,9 +122,9 @@ export function GuestEntryDialog({
           <Button
             onClick={onSubmit}
             disabled={!guestName.trim() || isSubmitting}
-            className="w-full bg-[#00F0FF] hover:bg-[#00D1E0] text-black font-bold h-12 rounded-xl shadow-lg transition-all"
+            className="h-12 w-full rounded-xl bg-[#00F0FF] font-bold text-black shadow-lg transition-all hover:bg-[#00D1E0]"
           >
-            {isSubmitting ? "Starting..." : "Start Test →"}
+            {isSubmitting ? 'Starting...' : 'Start Test →'}
           </Button>
         </DialogFooter>
       </DialogContent>

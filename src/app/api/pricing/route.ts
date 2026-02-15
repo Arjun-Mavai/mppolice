@@ -23,16 +23,23 @@ const DEFAULTS = { id: 'default' as const, ...PRICING_DEFAULTS };
 // ── GET — Public, cached ────────────────────────────────────
 export async function GET() {
   try {
-    const rows = await db.select().from(pricingConfig).where(eq(pricingConfig.id, 'default')).limit(1);
+    const rows = await db
+      .select()
+      .from(pricingConfig)
+      .where(eq(pricingConfig.id, 'default'))
+      .limit(1);
     const pricing = rows[0] || DEFAULTS;
 
-    return NextResponse.json({ pricing }, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+    return NextResponse.json(
+      { pricing },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+        },
       }
-    });
+    );
   } catch (error) {
-    logger.error("Pricing GET error:", error);
+    logger.error('Pricing GET error:', error);
     // Fallback to defaults on error — pricing page never breaks
     return NextResponse.json({ pricing: DEFAULTS });
   }
@@ -55,7 +62,7 @@ export async function PUT(request: Request) {
     }
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId)
+      where: (users, { eq }) => eq(users.id, decoded.userId),
     });
     if (!adminUser || adminUser.role !== 'admin') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
@@ -64,12 +71,19 @@ export async function PUT(request: Request) {
     const body = await request.json();
 
     // Upsert — insert if not exists, update if exists
-    const existing = await db.select().from(pricingConfig).where(eq(pricingConfig.id, 'default')).limit(1);
+    const existing = await db
+      .select()
+      .from(pricingConfig)
+      .where(eq(pricingConfig.id, 'default'))
+      .limit(1);
 
     if (existing.length === 0) {
       await db.insert(pricingConfig).values({ id: 'default', ...body, updatedAt: new Date() });
     } else {
-      await db.update(pricingConfig).set({ ...body, updatedAt: new Date() }).where(eq(pricingConfig.id, 'default'));
+      await db
+        .update(pricingConfig)
+        .set({ ...body, updatedAt: new Date() })
+        .where(eq(pricingConfig.id, 'default'));
     }
 
     // Bust pricing cache — pricing page reloads with fresh data
@@ -77,9 +91,12 @@ export async function PUT(request: Request) {
 
     logger.info(`Pricing updated by admin: ${JSON.stringify(body)}`);
 
-    return NextResponse.json({ success: true, message: 'Pricing updated! Changes will reflect immediately.' });
+    return NextResponse.json({
+      success: true,
+      message: 'Pricing updated! Changes will reflect immediately.',
+    });
   } catch (error) {
-    logger.error("Pricing PUT error:", error);
+    logger.error('Pricing PUT error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

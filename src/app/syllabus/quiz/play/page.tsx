@@ -2,122 +2,97 @@ import { redirect } from 'next/navigation';
 import { getTestWithQuestions, getUserAttempts } from '@/features/tests/actions/submission';
 import { QuizPlayClient } from './QuizPlayClient';
 import { verifyAuth } from '@/lib/auth';
-import { PLAN_LIMITS } from '@/config/plans';
 import { Question } from '@/types/quiz';
-import { logger } from "@/lib/logger";
+import { logger } from '@/lib/logger';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
+import { canAccessTest, getUserTier } from '@/lib/access-control';
 
 interface PageProps {
-    searchParams: Promise<{
-        testId?: string;
-        mode?: string;
-    }>;
+  searchParams: Promise<{
+    testId?: string;
+    mode?: string;
+  }>;
 }
 
 export default async function QuizPlayPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  logger.debug('params', { params, category: 'system' });
+  const { testId, mode } = params;
 
-    const params = await searchParams;
-    logger.debug("params", params);
-    const { testId, mode } = params;
+  if (!testId) {
+    redirect('/syllabus/quiz/pyq');
+  }
 
-    if (!testId) {
-        redirect('/syllabus/quiz');
-    }
+  // 1. Fetch Test and User Data in Parallel
+  const [testData, user] = await Promise.all([getTestWithQuestions(testId), verifyAuth()]);
 
-    // 1. Fetch Test and User Data in Parallel
-    const [testData, user] = await Promise.all([
-        getTestWithQuestions(testId),
-        verifyAuth()
-    ]);
-
-    if (!testData) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50 pt-[80px]">
-                <div className="text-center space-y-4">
-                    <h1 className="text-2xl font-bold text-slate-900">Test Not Found</h1>
-                    <p className="text-slate-500">The requested test could not be found.</p>
-                </div>
-            </div>
-        );
-    }
-
-    // 2. Map Questions to correct type
-    const questions: Question[] = testData.questions.map((q) => {
-        // Ensure options are parsed if they come as a stringified array
-        const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-
-        return {
-            ...q,
-            question: q.questionText,
-            questionEn: (testData.type === 'CSAT' && (!q.questionTextEn || q.questionTextEn.trim().toLowerCase() === 'n/a' || q.questionTextEn.trim().toLowerCase() === 'na')) 
-                        ? q.questionText 
-                        : (q.questionTextEn || undefined),
-            correctAnswer: Number(q.correctAnswer), 
-            options: parsedOptions as string[], // Cast assumes standard string[] options for now
-            explanation: q.explanation || undefined,
-            explanationEn: q.explanationEn || undefined,
-            subject: q.subject || undefined,
-            type: (q.type as 'standard' | 'matching') || 'standard',
-            matchPairs: (q.matchPairs as any) || undefined,
-            negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING, // Force Global Config (1)
-            marks: SCORING_CONFIG.MARKS_PER_QUESTION // Force Global Config (3)
-        };
-    });
-
-    // 3. Determine Access / Paywall Logic
-    const userTier = user?.planTier || 'free';
-    const effectiveTier = !user ? 'guest' : (user.isSubscribed ? (userTier === 'free' ? 'lite' : userTier) : 'free');
-    
-    // Limits
-    // Note: This page is for PLAYING. The limit check usually happens on the listing page (FLTPage).
-    // However, for direct link access, we should re-verify or rely on "Access Denied" if locked.
-    // Current requirement: "FLT page client hydration issue... sab kuch server se karo".
-    // For this specific 'Play' page, we might want to ensure they CAN play.
-    
-    // Logic from FLT Page:
-    // limit = PLAN_LIMITS[effectiveTier].flt_limit
-    // isOpen = index < limit.
-    // But here we rely on testId. We don't know the index easily without fetching ALL tests.
-    // Optimization: If it's an FLT, maybe we should just check subscription for now, 
-    // OR we trust the "Locked" UI on the previous page prevented entry.
-    // BUT direct navigation is possible.
-    
-    // Simplification for 'Principal Engineer' robustness:
-    // If it's an FLT and user is NOT Pro/Lite (depending on specific logic), maybe show paywall.
-    // But `displayOrder` is key.
-    // Let's assume for now valid entry if they got here, BUT check `isPro` for the test itself.
-    
-    const isProUser = user?.isSubscribed || false;
-    
-    // If test is marked isPro and user is not subscribed -> Paywall
-    // OR if test is FLT and user is Free -> Paywall (typically FLT are premium except demo)
-    
-    let shouldShowPaywall = false;
-    
-    // Very basic check: If test.isPro && !isProUser
-    if (testData.isPro && !isProUser) {
-        shouldShowPaywall = true;
-    }
-    
-    // 4. Content Logic (Attempts)
-    const [attemptsMap, attemptLimits] = await Promise.all([
-        getUserAttempts([testId]),
-        getCachedAttemptLimits()
-    ]);
-    const userAttemptsCount = attemptsMap[testId] || 0;
-    const maxRetries = attemptLimits[testData.type] ?? null;
-    
+  // Access: Guest → only isFreeAccess; Logged-in → canAccessTest (tier + flags)
+  const guestDenied = !user && !testData?.isFreeAccess;
+  const loggedInDenied = user && testData && !canAccessTest(testData, user);
+  if (guestDenied || loggedInDenied) {
+    redirect('/pricing');
+  }
+  if (!testData) {
     return (
-        <QuizPlayClient 
-            questions={questions}
-            mode={(mode as 'topic' | 'full' | 'pyq') || 'topic'}
-            testId={testId}
-            userId={user?.id || null}
-            maxRetries={maxRetries}
-            userAttempts={userAttemptsCount}
-            isPro={isProUser}
-            shouldShowPaywall={shouldShowPaywall}
-        />
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 pt-[80px]">
+        <div className="space-y-4 text-center">
+          <h1 className="text-2xl font-bold text-slate-900">Test Not Found</h1>
+          <p className="text-slate-500">The requested test could not be found.</p>
+        </div>
+      </div>
     );
+  }
+
+  // 2. Map Questions to correct type
+  const questions: Question[] = testData.questions.map((q) => {
+    // Ensure options are parsed if they come as a stringified array
+    const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+
+    return {
+      ...q,
+      question: q.questionText,
+      questionEn:
+        testData.type === 'CSAT' &&
+        (!q.questionTextEn ||
+          q.questionTextEn.trim().toLowerCase() === 'n/a' ||
+          q.questionTextEn.trim().toLowerCase() === 'na')
+          ? q.questionText
+          : q.questionTextEn || undefined,
+      correctAnswer: Number(q.correctAnswer),
+      options: parsedOptions as string[], // Cast assumes standard string[] options for now
+      explanation: q.explanation || undefined,
+      explanationEn: q.explanationEn || undefined,
+      subject: q.subject || undefined,
+      type: (q.type as 'standard' | 'matching') || 'standard',
+      matchPairs: (q.matchPairs as any) || undefined,
+      negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING, // Force Global Config (1)
+      marks: SCORING_CONFIG.MARKS_PER_QUESTION, // Force Global Config (3)
+    };
+  });
+
+  const tier = getUserTier(user);
+  const hasPaidPlan = tier === 'pro' || tier === 'lite';
+  const shouldShowPaywall = false;
+
+  // 4. Content Logic (Attempts)
+  const [attemptsMap, attemptLimits] = await Promise.all([
+    getUserAttempts([testId]),
+    getCachedAttemptLimits(),
+  ]);
+  const userAttemptsCount = attemptsMap[testId] || 0;
+  const maxRetries = attemptLimits[testData.type] ?? null;
+
+  return (
+    <QuizPlayClient
+      questions={questions}
+      mode={(mode as 'topic' | 'full' | 'pyq') || 'topic'}
+      testId={testId}
+      userId={user?.id || null}
+      maxRetries={maxRetries}
+      userAttempts={userAttemptsCount}
+      isPro={hasPaidPlan}
+      shouldShowPaywall={shouldShowPaywall}
+    />
+  );
 }

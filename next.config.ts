@@ -1,4 +1,5 @@
-import type { NextConfig } from "next";
+import { withSentryConfig } from '@sentry/nextjs';
+import type { NextConfig } from 'next';
 
 const hostnames = [
   'riversinsight.com',
@@ -17,17 +18,17 @@ const hostnames = [
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
-      ...hostnames.map(hostname => ({
+      ...hostnames.map((hostname) => ({
         protocol: 'https' as const,
         hostname,
       })),
       {
         protocol: 'https' as const,
         hostname: '**', // Allow all HTTPS images (Optional)
-      }
+      },
     ],
   },
-   
+
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
@@ -38,49 +39,85 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'X-DNS-Prefetch-Control',
-            value: 'on'
+            value: 'on',
           },
           {
             key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload'
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
           {
             key: 'X-XSS-Protection',
-            value: '1; mode=block'
+            value: '1; mode=block',
           },
           {
             key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
+            value: 'SAMEORIGIN',
           },
           {
             key: 'X-Content-Type-Options',
-            value: 'nosniff'
+            value: 'nosniff',
           },
           {
             key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin'
-          }
-        ]
+            value: 'origin-when-cross-origin',
+          },
+        ],
       },
       // Auth-related pages must never be browser-cached
       {
         source: '/login',
-        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }]
+        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }],
       },
       {
         source: '/signup',
-        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }]
+        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }],
       },
       {
         source: '/dashboard',
-        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }]
+        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }],
       },
       {
         source: '/api/auth/:path*',
-        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }]
+        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }],
       },
     ];
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // For all available options, see:
+  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
+
+  org: process.env.SENTRY_ORG || 'mindful-mppsc-zen',
+
+  project: process.env.SENTRY_PROJECT || 'javascript-nextjs',
+
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
+
+  // For all available options, see:
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+
+  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  widenClientFileUpload: true,
+
+  // Uncomment to route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+  // This can increase your server load as well as your hosting bill.
+  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
+  // side errors will fail.
+  // tunnelRoute: "/monitoring",
+
+  webpack: {
+    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
+    // See the following for more information:
+    // https://docs.sentry.io/product/crons/
+    // https://vercel.com/docs/cron-jobs
+    automaticVercelMonitors: true,
+
+    // Tree-shaking options for reducing bundle size
+    treeshake: {
+      // Automatically tree-shake Sentry logger statements to reduce bundle size
+      removeDebugLogging: true,
+    },
+  },
+});

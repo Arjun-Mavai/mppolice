@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -27,7 +27,12 @@ export interface TopicData {
   pro_tip?: string;
   impact_emoji?: string;
   important_facts?: string[];
-  pyq?: { year: number | string; question: string; strategy?: string; type?: string }[];
+  pyq?: {
+    year: number | string;
+    question: string;
+    strategy?: string;
+    type?: string;
+  }[];
   isFree?: boolean;
   // ── Access control flags (DB se aate hain) ──────────────────
   isLiteAccess?: boolean | null;
@@ -36,26 +41,32 @@ export interface TopicData {
 }
 
 interface UnitContentProps {
-    unitId: string;
-    unitTitle: string;
-    unitTitleEn: string;
-    topics: TopicData[];  // Hindi (Default)
-    topicsEn: TopicData[]; // English
+  unitId: string;
+  unitTitle: string;
+  unitTitleEn: string;
+  topics: TopicData[]; // Hindi (Default)
+  topicsEn: TopicData[]; // English
 }
 
-export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, topicsEn }: UnitContentProps) {
+export default function UnitContent({
+  unitId,
+  unitTitle,
+  unitTitleEn,
+  topics,
+  topicsEn,
+}: UnitContentProps) {
   const router = useRouter();
-  
+
   // Language from global Zustand store — same toggle as navbar
   // This replaces the old ?lang= URL param approach for consistency
   const globalLanguage = useSettingsStore((state) => state.language);
   const language = globalLanguage;
-  
+
   // Language setter from global store
   const setLanguage = useSettingsStore((state) => state.setLanguage);
 
   // Search State
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'revision'>('grid');
 
@@ -71,82 +82,80 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
     setVisibleCount(20);
   }, [searchTerm, viewMode, unitId]);
 
-
-
   // New Flip State: Only one card flipped at a time
   const [activeFlippedId, setActiveFlippedId] = useState<string | number | null>(null);
 
   // Keyboard shortcut for Command Palette
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setIsSearchOpen((open) => !open);
       }
-    }
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
+    };
+    document.addEventListener('keydown', down);
+    return () => document.removeEventListener('keydown', down);
   }, []);
 
   // SideDrawer State
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<TopicData | null>(null);
   const [isTopicSheetOpen, setIsTopicSheetOpen] = useState(false);
-  
+
   // Premium/Lock State
   const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
   const { isSubscribed, user } = useSettingsStore();
 
   const isTopicLocked = (topic: TopicData, _filteredIndex: number) => {
-      // Use the original index in rawTopics (not the filtered index) so
-      // search filtering doesn't accidentally unlock premium topics.
-      const originalIndex = rawTopics.findIndex(t => t.id === topic.id);
-      return isSyllabusTopicLocked(
-          topic,
-          originalIndex >= 0 ? originalIndex : _filteredIndex,
-          { isSubscribed: !!isSubscribed, plan_tier: user?.plan_tier },
-          unitId,
-          rawTopics.length
-      );
+    // Use the original index in rawTopics (not the filtered index) so
+    // search filtering doesn't accidentally unlock premium topics.
+    const originalIndex = rawTopics.findIndex((t) => t.id === topic.id);
+    return isSyllabusTopicLocked(
+      topic,
+      originalIndex >= 0 ? originalIndex : _filteredIndex,
+      { isSubscribed: !!isSubscribed, plan_tier: user?.planTier },
+      unitId,
+      rawTopics.length
+    );
   };
 
   const handleQuizClick = (type: 'topic' | 'unit', topicId?: string | number) => {
-      if (type === 'unit') {
-           // Unit Test: Free users can only access first 5 topics in Unit 1, logged users get full access
-           if (user || isSubscribed) {
-               router.push(`/syllabus/quiz/play?mode=topic&unit=${unitId}`);
-               return;
-           }
-           // Free non-logged users: Only Unit 1 allowed
-           if (unitId === 'unit_1') {
-               router.push(`/syllabus/quiz/play?mode=topic&unit=${unitId}`);
-               return;
-           }
-           setIsUnlockModalOpen(true);
-           return;
+    if (type === 'unit') {
+      // Unit Test: Free users can only access first 5 topics in Unit 1, logged users get full access
+      if (user || isSubscribed) {
+        router.push(`/syllabus/quiz/play?mode=topic&unit=${unitId}`);
+        return;
       }
+      // Free non-logged users: Only Unit 1 allowed
+      if (unitId === 'unit_1') {
+        router.push(`/syllabus/quiz/play?mode=topic&unit=${unitId}`);
+        return;
+      }
+      setIsUnlockModalOpen(true);
+      return;
+    }
 
-      if (type === 'topic' && topicId) {
-          const index = currentTopics.findIndex(t => t.id === topicId);
-          if (!isTopicLocked(currentTopics[index], index)) {
-               router.push(`/syllabus/quiz/play?mode=topic&unit=${unitId}&topic=${topicId}`);
-          } else {
-               setIsUnlockModalOpen(true);
-          }
+    if (type === 'topic' && topicId) {
+      const index = currentTopics.findIndex((t) => t.id === topicId);
+      if (!isTopicLocked(currentTopics[index], index)) {
+        router.push(`/syllabus/quiz/play?mode=topic&unit=${unitId}&topic=${topicId}`);
+      } else {
+        setIsUnlockModalOpen(true);
       }
+    }
   };
 
   const container = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
+      transition: { staggerChildren: 0.1 },
+    },
   };
 
   const item = {
     hidden: { opacity: 0, y: 30 },
-    show: { opacity: 1, y: 0 }
+    show: { opacity: 1, y: 0 },
   };
 
   // Select topics based on language
@@ -154,11 +163,12 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
   const rawTopics = language === 'en' ? topicsEn : topics;
 
   // Filter topics based on search
-  const currentTopics = rawTopics.filter(t => 
-    t.front.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.mnemonic?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.pro_tip?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (t.id.toString() === searchTerm)
+  const currentTopics = rawTopics.filter(
+    (t) =>
+      t.front.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.mnemonic?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.pro_tip?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.id.toString() === searchTerm
   );
 
   // Infinite Scroll Observer
@@ -166,10 +176,10 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-            setVisibleCount((prev) => Math.min(prev + 20, currentTopics.length));
+          setVisibleCount((prev) => Math.min(prev + 20, currentTopics.length));
         }
       },
-      { rootMargin: "200px" }
+      { rootMargin: '200px' }
     );
 
     const currentRef = loadMoreRef.current;
@@ -184,29 +194,31 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
 
   const handleOpenDetails = (topic: TopicData, index: number) => {
     if (isTopicLocked(topic, index)) {
-        setIsUnlockModalOpen(true);
-        return;
+      setIsUnlockModalOpen(true);
+      return;
     }
     setSelectedTopic(topic);
-    setIsTopicSheetOpen(true); 
+    setIsTopicSheetOpen(true);
   };
 
-    // Progress Calculation
-    const freeTopicsCount = rawTopics.filter(t => t.isFree).length;
-    // If subscribed, user has access to all topics, so 'unlocked' progress is 100%
-    // If not subscribed, user has access only to free topics
-    const progressPercent = isSubscribed 
-        ? 100 
-        : (freeTopicsCount / (rawTopics.length || 1)) * 100;
+  // Progress Calculation
+  const freeTopicsCount = rawTopics.filter((t) => t.isFree).length;
+  // If subscribed, user has access to all topics, so 'unlocked' progress is 100%
+  // If not subscribed, user has access only to free topics
+  const progressPercent = isSubscribed ? 100 : (freeTopicsCount / (rawTopics.length || 1)) * 100;
 
   // Helper to render markdown-like bold text
   const renderText = (text: string) => {
     if (!text) return null;
     return text.split('\n').map((line, i) => (
-      <span key={i} className="block mb-2">
+      <span key={i} className="mb-2 block">
         {line.split(/(\*\*.*?\*\*)/).map((part, j) => {
           if (part.startsWith('**') && part.endsWith('**')) {
-            return <strong key={j} className="text-slate-900 dark:text-white font-bold">{part.slice(2, -2)}</strong>;
+            return (
+              <strong key={j} className="font-bold text-slate-900 dark:text-white">
+                {part.slice(2, -2)}
+              </strong>
+            );
           }
           return part;
         })}
@@ -215,270 +227,293 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 font-sans pb-24 ">
+    <div className="min-h-screen bg-slate-50/50 pb-24 font-sans">
       {/* Sub-header: Unit title + Language toggle + Progress bar */}
       {/* 🧭 PREMIUM SUB-NAV: Unit Title + Progress */}
-      <div className="sticky top-[72px] md:top-[88px] z-30 bg-white/70 backdrop-blur-xl border-b border-slate-200/40 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
-          <div className="flex items-center gap-4 min-w-0">
-            <button 
+      <div className="sticky top-[72px] z-30 border-b border-slate-200/40 bg-white/70 backdrop-blur-xl transition-all duration-300 md:top-[88px]">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-6">
+          <div className="flex min-w-0 items-center gap-4">
+            <button
               onClick={() => router.push('/syllabus')}
-              className="group p-2 rounded-2xl bg-white border border-slate-200 text-slate-500 hover:text-slate-900 shadow-sm hover:shadow-md transition-all shrink-0"
+              className="group shrink-0 rounded-2xl border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition-all hover:text-slate-900 hover:shadow-md"
             >
-              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
             </button>
             <div className="flex flex-col">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none mb-1">
-                    {language === 'hi' ? 'यूनिट' : 'Unit'} {unitId.replace('unit_', '')}
-                </span>
-                <h1 className="text-lg md:text-xl font-black text-slate-900 truncate max-w-[180px] sm:max-w-md leading-tight">
+              <span className="mb-1 text-[10px] leading-none font-black tracking-[0.2em] text-slate-400 uppercase">
+                {language === 'hi' ? 'यूनिट' : 'Unit'} {unitId.replace('unit_', '')}
+              </span>
+              <h1 className="max-w-[180px] truncate text-lg leading-tight font-black text-slate-900 sm:max-w-md md:text-xl">
                 {currentTitle}
-                </h1>
+              </h1>
             </div>
           </div>
 
           <div className="flex items-center gap-6">
-              {/* Desktop Progress Indicator */}
-              <div className="hidden md:flex items-center gap-3">
-                  <div className="text-right">
-                      <div className="text-sm font-black text-slate-900">{Math.round(progressPercent)}%</div>
-                      <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{language === 'hi' ? 'पूर्ण' : 'Complete'}</div>
-                  </div>
-                  <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progressPercent}%` }}
-                        className="h-full bg-emerald-500"
-                      />
-                  </div>
+            {/* Desktop Progress Indicator */}
+            <div className="hidden items-center gap-3 md:flex">
+              <div className="text-right">
+                <div className="text-sm font-black text-slate-900">
+                  {Math.round(progressPercent)}%
+                </div>
+                <div className="text-[9px] font-black tracking-widest text-slate-400 uppercase">
+                  {language === 'hi' ? 'पूर्ण' : 'Complete'}
+                </div>
               </div>
+              <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-100">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPercent}%` }}
+                  className="h-full bg-emerald-500"
+                />
+              </div>
+            </div>
 
-              {/* Action: Search Shortcut (Visual Only) */}
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200/50 text-slate-400 text-[10px] font-bold">
-                  <Search className="w-3.5 h-3.5" />
-                  <span>CMD+K</span>
-              </div>
+            {/* Action: Search Shortcut (Visual Only) */}
+            <div className="hidden items-center gap-2 rounded-xl border border-slate-200/50 bg-slate-100 px-3 py-1.5 text-[10px] font-bold text-slate-400 sm:flex">
+              <Search className="h-3.5 w-3.5" />
+              <span>CMD+K</span>
+            </div>
           </div>
         </div>
-        
+
         {/* Mobile Progress Bar (Slimmer) */}
         <div className="h-[2px] w-full bg-slate-100 md:hidden">
-          <motion.div 
+          <motion.div
             className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
             initial={{ width: 0 }}
             animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: 1.5, ease: "easeOut" }}
+            transition={{ duration: 1.5, ease: 'easeOut' }}
           />
         </div>
       </div>
 
       <SyllabusSearch open={isSearchOpen} setOpen={setIsSearchOpen} />
 
-      <main className="max-w-7xl mx-auto pt-8 px-6">
+      <main className="mx-auto max-w-7xl px-6 pt-8">
         {/* Animated Intro */}
-        <div className="mb-12 flex flex-col items-center justify-center text-center space-y-6">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="relative"
-            >
-              <div className="absolute inset-0 bg-slate-500/10 blur-3xl rounded-full" />
-              <span className="relative inline-flex items-center px-6 py-2 rounded-full bg-slate-900 text-white text-xs font-black tracking-widest uppercase shadow-lg">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  {currentTopics.length} TOPICS
-              </span>
-            </motion.div>
-            
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-6 w-full">
-                 <Button 
-                    size="lg"
-                    onClick={() => handleQuizClick('unit')}
-                    className="h-14 bg-slate-900 text-white hover:bg-slate-800 rounded-2xl shadow-lg font-bold px-8 text-base group transition-all"
-                 >
-                     <PlayCircle className="w-5 h-5 mr-2 text-emerald-400 group-hover:scale-110 transition-transform" />
-                     {language === 'hi' ? 'यूनिट टेस्ट शुरू करें' : 'Start Revision Test'}                 </Button>
+        <div className="mb-12 flex flex-col items-center justify-center space-y-6 text-center">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="relative"
+          >
+            <div className="absolute inset-0 rounded-full bg-slate-500/10 blur-3xl" />
+            <span className="relative inline-flex items-center rounded-full bg-slate-900 px-6 py-2 text-xs font-black tracking-widest text-white uppercase shadow-lg">
+              <Sparkles className="mr-2 h-4 w-4" />
+              {currentTopics.length} TOPICS
+            </span>
+          </motion.div>
 
-                 <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
-            </div>
+          <div className="flex w-full flex-col items-center justify-center gap-6 sm:flex-row">
+            <Button
+              size="lg"
+              onClick={() => handleQuizClick('unit')}
+              className="group h-14 rounded-2xl bg-slate-900 px-8 text-base font-bold text-white shadow-lg transition-all hover:bg-slate-800"
+            >
+              <PlayCircle className="mr-2 h-5 w-5 text-emerald-400 transition-transform group-hover:scale-110" />
+              {language === 'hi' ? 'यूनिट टेस्ट शुरू करें' : 'Start Revision Test'}{' '}
+            </Button>
+
+            <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
+          </div>
         </div>
 
         {viewMode === 'grid' ? (
-        <motion.div 
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mb-16"
-        >
-          {currentTopics.slice(0, visibleCount).map((topic, idx) => {
-            const locked = isTopicLocked(topic, idx);
-            const isFree = !locked && !isSubscribed && !user && topic.isFree;
-            
-            // Rotate color variants
-            const variants: ('blue' | 'pink' | 'emerald' | 'amber')[] = ['blue', 'pink', 'emerald', 'amber'];
-            const colorVariant = variants[idx % variants.length];
+          <motion.div
+            variants={container}
+            initial="hidden"
+            animate="show"
+            className="mb-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          >
+            {currentTopics.slice(0, visibleCount).map((topic, idx) => {
+              const locked = isTopicLocked(topic, idx);
+              const isFree = !locked && !isSubscribed && !user && topic.isFree;
 
-            return (
-              <motion.div key={topic.id} variants={item}>
-                <SyllabusTopicCard
-                  id={topic.id}
-                  title={topic.front}
-                  impactEmoji={topic.impact_emoji}
-                  imageUrl={topic.image_url}
-                  colorVariant={colorVariant}
-                  isLocked={locked}
-                  isFree={isFree}
-                  onClick={() => handleOpenDetails(topic, idx)}
-                  labels={{
-                    search: language === 'hi' ? 'सर्च' : 'Search',
-                    topic: language === 'hi' ? 'विषय' : 'Topic',
-                    unit: language === 'hi' ? 'यूनिट' : 'Unit'
-                  }}
-                />
-              </motion.div>
-            );
-          })}
-          
-          {/* Sentinel for Lazy Loading */}
-          {visibleCount < currentTopics.length && (
-             <div ref={loadMoreRef} className="col-span-full h-20 flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
-             </div>
-          )}
-        </motion.div>
+              // Rotate color variants
+              const variants: ('blue' | 'pink' | 'emerald' | 'amber')[] = [
+                'blue',
+                'pink',
+                'emerald',
+                'amber',
+              ];
+              const colorVariant = variants[idx % variants.length];
+
+              return (
+                <motion.div key={topic.id} variants={item}>
+                  <SyllabusTopicCard
+                    id={topic.id}
+                    title={topic.front}
+                    impactEmoji={topic.impact_emoji}
+                    imageUrl={topic.image_url}
+                    colorVariant={colorVariant}
+                    isLocked={locked}
+                    isFree={isFree}
+                    onClick={() => handleOpenDetails(topic, idx)}
+                    labels={{
+                      search: language === 'hi' ? 'सर्च' : 'Search',
+                      topic: language === 'hi' ? 'विषय' : 'Topic',
+                      unit: language === 'hi' ? 'यूनिट' : 'Unit',
+                    }}
+                  />
+                </motion.div>
+              );
+            })}
+
+            {/* Sentinel for Lazy Loading */}
+            {visibleCount < currentTopics.length && (
+              <div
+                ref={loadMoreRef}
+                className="col-span-full flex h-20 items-center justify-center"
+              >
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
+              </div>
+            )}
+          </motion.div>
         ) : viewMode === 'list' ? (
-             <div className="max-w-4xl mx-auto space-y-4 mb-12">
-                {currentTopics.slice(0, visibleCount).map((topic, idx) => {
-                    const locked = isTopicLocked(topic, idx);
-                    const showFreeBadge = !locked && !isSubscribed && !user && topic.isFree;
-                    
-                    return (
-                    <motion.div 
-                        key={topic.id} 
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className={cn(
-                            "border-2 rounded-[2.5rem] p-8 hover:shadow-lg transition-all group flex items-start gap-8 cursor-pointer relative overflow-hidden",
-                            locked ? "bg-slate-50/50 border-slate-100 opacity-75 grayscale-[0.5]" : "bg-white border-slate-100 hover:border-slate-300"
-                        )}
-                        onClick={() => handleOpenDetails(topic, idx)}
-                    >
-                         <div className="absolute top-0 right-0 w-48 h-48 bg-slate-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-40" />
-                        
-                        <div className={cn(
-                            "flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center font-black text-2xl shadow-xl transition-transform group-hover:scale-110",
-                            locked ? "bg-slate-200 text-slate-400" : "bg-emerald-100 text-slate-900 shadow-emerald-100/40"
-                        )}>
-                        </div>
-                        <div className="flex-1 relative z-10">
-                            <h3 className="text-2xl font-black text-slate-900 mb-2 group-hover:text-slate-700 transition-colors uppercase tracking-tight">{topic.front}</h3>
-                            <p className="text-slate-500 leading-relaxed mb-4 text-base line-clamp-2 italic font-medium">"{topic.back}"</p>
-                            
-                            <div className="flex items-center gap-3">
-                                {locked ? (
-                                    <span className="inline-flex items-center text-[10px] font-black text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100 uppercase tracking-widest">
-                                        <Lock className="w-3.5 h-3.5 mr-2" /> PREMIUM LOCKED
-                                    </span>
-                                ) : showFreeBadge ? (
-                                    <span className="inline-flex items-center text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 uppercase tracking-widest">
-                                        <Sparkles className="w-3.5 h-3.5 mr-2" /> FREE
-                                    </span>
-                                ) : null}
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 group-hover:border-slate-200 group-hover:bg-slate-100 transition-colors">
-                                    Click for Deep Dive
-                                </span>
-                            </div>
-                        </div>
-                        <ArrowRight className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-2 transition-all" size={24} />
-                    </motion.div>
-                    );
-                })}
+          <div className="mx-auto mb-12 max-w-4xl space-y-4">
+            {currentTopics.slice(0, visibleCount).map((topic, idx) => {
+              const locked = isTopicLocked(topic, idx);
+              const showFreeBadge = !locked && !isSubscribed && !user && topic.isFree;
 
-                {/* Sentinel for Lazy Loading */}
-                {visibleCount < currentTopics.length && (
-                    <div ref={loadMoreRef} className="h-20 flex items-center justify-center">
-                        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+              return (
+                <motion.div
+                  key={topic.id}
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className={cn(
+                    'group relative flex cursor-pointer items-start gap-8 overflow-hidden rounded-[2.5rem] border-2 p-8 transition-all hover:shadow-lg',
+                    locked
+                      ? 'border-slate-100 bg-slate-50/50 opacity-75 grayscale-[0.5]'
+                      : 'border-slate-100 bg-white hover:border-slate-300'
+                  )}
+                  onClick={() => handleOpenDetails(topic, idx)}
+                >
+                  <div className="absolute top-0 right-0 -mt-20 -mr-20 h-48 w-48 rounded-full bg-slate-50 opacity-40 blur-3xl" />
+
+                  <div
+                    className={cn(
+                      'flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl text-2xl font-black shadow-xl transition-transform group-hover:scale-110',
+                      locked
+                        ? 'bg-slate-200 text-slate-400'
+                        : 'bg-emerald-100 text-slate-900 shadow-emerald-100/40'
+                    )}
+                  ></div>
+                  <div className="relative z-10 flex-1">
+                    <h3 className="mb-2 text-2xl font-black tracking-tight text-slate-900 uppercase transition-colors group-hover:text-slate-700">
+                      {topic.front}
+                    </h3>
+                    <p className="mb-4 line-clamp-2 text-base leading-relaxed font-medium text-slate-500 italic">
+                      "{topic.back}"
+                    </p>
+
+                    <div className="flex items-center gap-3">
+                      {locked ? (
+                        <span className="inline-flex items-center rounded-lg border border-amber-100 bg-amber-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-amber-600 uppercase">
+                          <Lock className="mr-2 h-3.5 w-3.5" /> PREMIUM LOCKED
+                        </span>
+                      ) : showFreeBadge ? (
+                        <span className="inline-flex items-center rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-emerald-600 uppercase">
+                          <Sparkles className="mr-2 h-3.5 w-3.5" /> FREE
+                        </span>
+                      ) : null}
+                      <span className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-slate-400 uppercase transition-colors group-hover:border-slate-200 group-hover:bg-slate-100">
+                        Click for Deep Dive
+                      </span>
                     </div>
-                )}
-            </div>
+                  </div>
+                  <ArrowRight
+                    className="absolute top-1/2 right-8 -translate-y-1/2 text-slate-300 transition-all group-hover:translate-x-2 group-hover:text-slate-600"
+                    size={24}
+                  />
+                </motion.div>
+              );
+            })}
+
+            {/* Sentinel for Lazy Loading */}
+            {visibleCount < currentTopics.length && (
+              <div ref={loadMoreRef} className="flex h-20 items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
+              </div>
+            )}
+          </div>
         ) : (
-            /* REVISION MODE: Single Swipeable Card */
-            <div className="max-w-2xl mx-auto mb-12">
-               {currentTopics.length > 0 ? (
-                <div className="space-y-10">
-                   <div className="flex items-center justify-between mb-2">
-                       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                          CARD {revisionIndex + 1} OF {currentTopics.length}
-                       </span>
-                       <div className="flex gap-2">
-                          <button 
-                            disabled={revisionIndex === 0}
-                            onClick={() => setRevisionIndex(Math.max(0, revisionIndex - 1))}
-                            className="p-3 rounded-2xl bg-white border border-slate-200 text-slate-400 hover:text-slate-700 disabled:opacity-30 transition-all shadow-sm"
-                          >
-                             <ArrowLeft className="w-5 h-5" />
-                          </button>
-                          <button 
-                            disabled={revisionIndex === currentTopics.length - 1}
-                            onClick={() => setRevisionIndex(Math.min(currentTopics.length - 1, revisionIndex + 1))}
-                            className="p-3 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-30 transition-all shadow-lg"
-                          >
-                             <ArrowRight className="w-5 h-5" />
-                          </button>
-                       </div>
-                   </div>
-
-                   <motion.div
-                     key={revisionIndex}
-                     initial={{ x: 100, opacity: 0 }}
-                     animate={{ x: 0, opacity: 1 }}
-                     exit={{ x: -100, opacity: 0 }}
-                     className="relative"
-                   >
-                     <FlipCard
-                        id={currentTopics[revisionIndex].id}
-                        className="h-[500px] w-full"
-                        isLocked={isTopicLocked(currentTopics[revisionIndex], revisionIndex)}
-                        isFlipped={activeFlippedId === currentTopics[revisionIndex].id}
-                        onFlip={(id) => {
-                           if (activeFlippedId === id) {
-                              setActiveFlippedId(null);
-                           } else {
-                              setActiveFlippedId(id);
-                           }
-                        }}
-                        onPracticeTest={() => handleQuizClick('unit')}
-                        onReadMore={() => {
-                            handleOpenDetails(currentTopics[revisionIndex], revisionIndex);
-                        }}
-                        
-                        // Content
-                        title={currentTopics[revisionIndex].front}
-                        // subtitle={currentTopics[revisionIndex].id.toString().split('_').pop()?.replace('t', '') || currentTopics[revisionIndex].id.toString()}
-                        impactEmoji={currentTopics[revisionIndex].impact_emoji}
-                        
-                        // Back Side
-                        backMainContent={currentTopics[revisionIndex].back}
-                        facts={currentTopics[revisionIndex].important_facts}
-                        mnemonic={currentTopics[revisionIndex].mnemonic}
-                        
-                        labels={{
-                            tapToFlip: language === 'hi' ? 'पलटने के लिए टैप करें' : 'Tap to Flip',
-                            topicAnalysis: language === 'hi' ? 'विषय विश्लेषण' : 'TOPIC ANALYSIS',
-                            mnemonicLabel: language === 'hi' ? 'स्मरण सूत्र' : 'MNEMONIC',
-                            practiceTest: language === 'hi' ? 'यूनिट टेस्ट दें' : 'Start Unit Test',
-                            closeAnalysis: language === 'hi' ? 'बंद करें' : 'Close Analysis'
-                        }}
-                     />
-                   </motion.div>
+          /* REVISION MODE: Single Swipeable Card */
+          <div className="mx-auto mb-12 max-w-2xl">
+            {currentTopics.length > 0 ? (
+              <div className="space-y-10">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
+                    CARD {revisionIndex + 1} OF {currentTopics.length}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      disabled={revisionIndex === 0}
+                      onClick={() => setRevisionIndex(Math.max(0, revisionIndex - 1))}
+                      className="rounded-2xl border border-slate-200 bg-white p-3 text-slate-400 shadow-sm transition-all hover:text-slate-700 disabled:opacity-30"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </button>
+                    <button
+                      disabled={revisionIndex === currentTopics.length - 1}
+                      onClick={() =>
+                        setRevisionIndex(Math.min(currentTopics.length - 1, revisionIndex + 1))
+                      }
+                      className="rounded-2xl bg-slate-900 p-3 text-white shadow-lg transition-all hover:bg-slate-800 disabled:opacity-30"
+                    >
+                      <ArrowRight className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
-               ) : (
-                 <div className="py-20 text-center text-slate-400 italic font-medium">
-                    No topics found for the current search/filter.
-                 </div>
-               )}
-            </div>
-        )}
 
+                <motion.div
+                  key={revisionIndex}
+                  initial={{ x: 100, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: -100, opacity: 0 }}
+                  className="relative"
+                >
+                  <FlipCard
+                    id={currentTopics[revisionIndex].id}
+                    className="h-[500px] w-full"
+                    isLocked={isTopicLocked(currentTopics[revisionIndex], revisionIndex)}
+                    isFlipped={activeFlippedId === currentTopics[revisionIndex].id}
+                    onFlip={(id) => {
+                      if (activeFlippedId === id) {
+                        setActiveFlippedId(null);
+                      } else {
+                        setActiveFlippedId(id);
+                      }
+                    }}
+                    onPracticeTest={() => handleQuizClick('unit')}
+                    onReadMore={() => {
+                      handleOpenDetails(currentTopics[revisionIndex], revisionIndex);
+                    }}
+                    // Content
+                    title={currentTopics[revisionIndex].front}
+                    // subtitle={currentTopics[revisionIndex].id.toString().split('_').pop()?.replace('t', '') || currentTopics[revisionIndex].id.toString()}
+                    impactEmoji={currentTopics[revisionIndex].impact_emoji}
+                    // Back Side
+                    backMainContent={currentTopics[revisionIndex].back}
+                    facts={currentTopics[revisionIndex].important_facts}
+                    mnemonic={currentTopics[revisionIndex].mnemonic}
+                    labels={{
+                      tapToFlip: language === 'hi' ? 'पलटने के लिए टैप करें' : 'Tap to Flip',
+                      topicAnalysis: language === 'hi' ? 'विषय विश्लेषण' : 'TOPIC ANALYSIS',
+                      mnemonicLabel: language === 'hi' ? 'स्मरण सूत्र' : 'MNEMONIC',
+                      practiceTest: language === 'hi' ? 'यूनिट टेस्ट दें' : 'Start Unit Test',
+                      closeAnalysis: language === 'hi' ? 'बंद करें' : 'Close Analysis',
+                    }}
+                  />
+                </motion.div>
+              </div>
+            ) : (
+              <div className="py-20 text-center font-medium text-slate-400 italic">
+                No topics found for the current search/filter.
+              </div>
+            )}
+          </div>
+        )}
       </main>
 
       {/* Deep Dive Sidebar - Replaced by AI Sheet */}
@@ -492,17 +527,16 @@ export default function UnitContent({ unitId, unitTitle, unitTitleEn, topics, to
       </SideDrawer> 
       */}
 
-      <SyllabusTopicSheet 
-         open={isTopicSheetOpen} 
-         onOpenChange={setIsTopicSheetOpen}
-         topic={selectedTopic}
-         unitTitle={language === 'hi' ? unitTitle : unitTitleEn}
-         unitId={unitId}
-         language={language}
+      <SyllabusTopicSheet
+        open={isTopicSheetOpen}
+        onOpenChange={setIsTopicSheetOpen}
+        topic={selectedTopic}
+        unitTitle={language === 'hi' ? unitTitle : unitTitleEn}
+        unitId={unitId}
+        language={language}
       />
 
       <SyllabusLockModal open={isUnlockModalOpen} onOpenChange={setIsUnlockModalOpen} />
     </div>
   );
 }
-

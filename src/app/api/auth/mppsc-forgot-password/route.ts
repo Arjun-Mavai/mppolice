@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId)
+      where: (users, { eq }) => eq(users.id, decoded.userId),
     });
     if (!adminUser || adminUser.role !== 'admin') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
@@ -57,13 +57,17 @@ export async function POST(request: Request) {
     // Password strength check
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(newPassword)) {
-      return NextResponse.json({
-        error: 'Password weak! Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char.'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Password weak! Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char.',
+        },
+        { status: 400 }
+      );
     }
 
     // ── Find Active User ────────────────────────────────────────
-    const users = await db.select({ id: mppscUsers.id, name: mppscUsers.name })
+    const users = await db
+      .select({ id: mppscUsers.id, name: mppscUsers.name })
       .from(mppscUsers)
       .where(and(eq(mppscUsers.email, email.toLowerCase().trim()), isNull(mppscUsers.deletedAt)))
       .limit(1);
@@ -75,19 +79,16 @@ export async function POST(request: Request) {
 
     // ── Hash + Update Password ──────────────────────────────────
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await db.update(mppscUsers)
-      .set({ password: hashedPassword })
-      .where(eq(mppscUsers.id, user.id));
+    await db.update(mppscUsers).set({ password: hashedPassword }).where(eq(mppscUsers.id, user.id));
 
     logger.info(`Password reset by admin for: ${email} (${user.id})`);
 
     return NextResponse.json({
       success: true,
-      message: `Password reset for ${user.name || email}. User can login with new password.`
+      message: `Password reset for ${user.name || email}. User can login with new password.`,
     });
-
   } catch (error: any) {
-    logger.error("Password reset error:", error);
+    logger.error('Password reset error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

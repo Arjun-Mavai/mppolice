@@ -1,8 +1,8 @@
-
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
@@ -17,20 +17,22 @@ const registerSchema = z.object({
 
 /**
  * Register Init API - The Lead Magnet 🧲
- * 
+ *
  * Bhai, ye payment flow ka 'EntryPoint' h.
  * Hum user se payment lene se PEHLE uska account create karte h.
- * 
+ *
  * 🤔 Why?
  * 1. Data Capture: Agar user payment page par drop ho gaya, tab bhi humare paas uska
  *    name/email h. Hum use follow-up kar sakte h ("Hey, you forgot to unlock Pro!").
  * 2. Identity: Payment gateway ko pre-fill karne ke liye user data chahiye.
- * 
+ *
  * State:
  * User 'Guest' role aur 'isActive: false' ke saath banega.
  * Sirf Payment success hone par hi 'isActive: true' hoga.
  */
 export async function POST(req: Request) {
+  let requestEmail: string | undefined;
+  let requestSource: string | undefined;
   try {
     // 🚦 Strict Rate Limit: 10 signups / hour
     // Prevent abuse of database storage by bots creating junk accounts.
@@ -43,12 +45,19 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { name, email, phone, source } = registerSchema.parse(body);
+    requestEmail = email;
+    requestSource = source;
     const normalizedEmail = email.toLowerCase().trim();
 
     // 🔍 Check Existing User
     // Kya ye banda pehle aaya tha?
+    // 🛡️ FIX: Use LOWER() for case-insensitive email match
+    // Bhai, pehle eq(mppscUsers.email, normalizedEmail) tha —
+    // agar DB mein "Arjun@Email.com" stored hai aur user "arjun@email.com"
+    // bhejta hai, to match nahi hota! Duplicate account ban jaata!
+    // Ab LOWER() dono side pe apply hota hai → consistent matching.
     const existingUser = await db.query.mppscUsers.findFirst({
-      where: eq(mppscUsers.email, normalizedEmail),
+      where: sql`LOWER(${mppscUsers.email}) = ${normalizedEmail}`,
     });
 
     if (existingUser) {
@@ -59,17 +68,18 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
-      
+
       // Update existing inactive user (re-attempting payment)
       // Purane lead ko refresh kar rahe h latest details ke saath.
-      await db.update(mppscUsers)
+      await db
+        .update(mppscUsers)
         .set({
           name,
           phone,
           metadata: JSON.stringify({ source }),
         })
         .where(eq(mppscUsers.id, existingUser.id));
-        
+
       return NextResponse.json({ userId: existingUser.id, isNew: false });
     }
 
@@ -87,12 +97,15 @@ export async function POST(req: Request) {
       isActive: false, // 👈 Key: Inactive until paid
       role: 'guest',
       metadata: JSON.stringify({ source }),
-      planTier: 'free', 
+      planTier: 'free',
     });
 
     return NextResponse.json({ userId, isNew: true });
   } catch (error: any) {
-    console.error('Registration init error:', error);
+    logger.error('Registration init error:', error, {
+      category: 'auth',
+      metadata: { email: requestEmail, source: requestSource },
+    });
     return NextResponse.json(
       { error: error.message || 'Failed to initialize registration' },
       { status: 500 }

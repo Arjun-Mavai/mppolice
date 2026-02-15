@@ -1,5 +1,5 @@
-
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
 import { db } from '@/db';
@@ -10,14 +10,15 @@ import EmailTemplate from '@/components/email-template';
 import { v4 as uuidv4 } from 'uuid';
 import { addHours } from 'date-fns';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { appPath } from '@/lib/app-url';
 import { PRICING_DEFAULTS } from '@/config/pricing';
 
 /**
  * Payment Verification API - The Trust Center 🏦
- * 
+ *
  * Bhai, ye route sabse heavy lifting karta h. Jab user pay karke wapas aata h,
  * humein verify karna padta h ki sach me pay kiya ya bas fake request bhej di.
- * 
+ *
  * Key Pillars of Trust:
  * 1. **HMAC Signature Check**: Cryptographic proof ki data Razorpay se hi aaya h.
  * 2. **Razorpay Server Cross-Check**: Hum Razorpay se order fetch karke amount re-verify karte h.
@@ -25,6 +26,9 @@ import { PRICING_DEFAULTS } from '@/config/pricing';
  * 4. **Transactional Data**: Payment record karo, User ko assign karo, aur Email bhejo.
  */
 export async function POST(req: Request) {
+  let requestUserId: string | undefined;
+  let requestOrderId: string | undefined;
+  let requestPaymentId: string | undefined;
   try {
     // 🛑 Rate Limit: Protect verification endpoint
     const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
@@ -36,6 +40,9 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId } = body;
+    requestUserId = userId;
+    requestOrderId = razorpay_order_id;
+    requestPaymentId = razorpay_payment_id;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !userId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -48,17 +55,34 @@ export async function POST(req: Request) {
     // Formula: HMAC_SHA256(order_id + "|" + payment_id, secret)
     // Agar ye match nahi hua, to pakka koi fraud karne ki koshish kar raha h.
     const hmac = crypto.createHmac('sha256', secret);
-    hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+    hmac.update(razorpay_order_id + '|' + razorpay_payment_id);
     const generated_signature = hmac.digest('hex');
 
-    if (generated_signature !== razorpay_signature) {
+    // 🛡️ CRASH PREVENTION: Validate signature format BEFORE timingSafeEqual
+    // timingSafeEqual THROWS if buffer lengths differ! Attacker could crash server
+    // with garbage signature like "abc" (odd hex → different buffer length)
+    const isValidHex = /^[a-f0-9]+$/i.test(razorpay_signature);
+    if (!isValidHex || razorpay_signature.length !== generated_signature.length) {
+      return NextResponse.json({ error: 'Invalid payment signature format' }, { status: 400 });
+    }
+
+    // 🛡️ Timing-Safe Comparison (Prevents timing attacks)
+    const isValidSignature = crypto.timingSafeEqual(
+      Buffer.from(generated_signature, 'hex'),
+      Buffer.from(razorpay_signature, 'hex')
+    );
+
+    if (!isValidSignature) {
       return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 });
     }
 
     // 🔄 Step 2: Idempotency Check (Double-Spending Prevention)
     // Check karo ki ye payment ID pehle se DB me to nahi h?
-    const existingPayment = await db.select({ id: payments.id }).from(payments)
-      .where(eq(payments.paymentId, razorpay_payment_id)).limit(1);
+    const existingPayment = await db
+      .select({ id: payments.id })
+      .from(payments)
+      .where(eq(payments.paymentId, razorpay_payment_id))
+      .limit(1);
     if (existingPayment.length > 0) {
       return NextResponse.json({ success: true, message: 'Payment already verified' });
     }
@@ -81,25 +105,53 @@ export async function POST(req: Request) {
     const order = await instance.orders.fetch(razorpay_order_id);
     const paidAmount = order.amount as number; // amount in paise
 
+    // 🛡️ CRITICAL FIX: Order Ownership Verification (IDOR Prevention)
+    // Bhai, ye sabse important check hai! Agar order kisi aur user ka hai,
+    // to uska payment claim nahi kar sakte. Cross-user attack block karta hai.
+    const orderUserId = order.notes?.userId;
+    if (orderUserId && orderUserId !== userId) {
+      logger.warn('Payment verification failed: Order ownership mismatch', {
+        category: 'payment',
+        metadata: {
+          orderUserId,
+          requestUserId: userId,
+          orderId: razorpay_order_id,
+        },
+      });
+      return NextResponse.json({ error: 'Order does not belong to this user' }, { status: 403 });
+    }
+
     // 🏷️ Step 5: Logic to assign Plan based on Amount
     // 99900 paise = 999 Rs = Pro Plan
-    const pricingRows = await db.select().from(pricingConfig).where(eq(pricingConfig.id, 'default')).limit(1);
+    const pricingRows = await db
+      .select()
+      .from(pricingConfig)
+      .where(eq(pricingConfig.id, 'default'))
+      .limit(1);
     const p = pricingRows[0] || PRICING_DEFAULTS;
     const proAmountPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
     const planTier = paidAmount >= proAmountPaise ? 'pro' : 'lite';
 
-    // 💾 Step 6: Persist Payment in DB
-    // Transaction log maintain karna zaroori h for audits & analytics.
-    await db.insert(payments).values({
-      id: `pay_${uuidv4()}`,
-      userId,
-      orderId: razorpay_order_id,
-      paymentId: razorpay_payment_id,
-      signature: razorpay_signature,
-      amount: paidAmount,
-      planTier,
-      status: 'captured',
-      currency: 'INR',
+    // 💾 Step 6: Persist Payment in DB + Update User Plan (ATOMIC TRANSACTION)
+    // Bhai, dono operations ek saath hone chahiye! Agar ek fail hua to dusra bhi rollback.
+    // Transaction ensures: Payment record + User update = all-or-nothing.
+    await db.transaction(async (tx) => {
+      await tx.insert(payments).values({
+        id: `pay_${uuidv4()}`,
+        userId,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        signature: razorpay_signature,
+        amount: paidAmount,
+        planTier,
+        status: 'captured',
+        currency: 'INR',
+      });
+
+      await tx
+        .update(mppscUsers)
+        .set({ planTier: planTier as 'lite' | 'pro', isSubscribed: true })
+        .where(eq(mppscUsers.id, userId));
     });
 
     // 🎫 Step 7: Generate 'Magic Link' Token
@@ -116,25 +168,54 @@ export async function POST(req: Request) {
     // 📧 Step 8: Send Welcome Email (The "Wow" Moment)
     // Resend API se beautiful email bhejo jisme Magic Link ho.
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'MPPSC Syllabus <onboarding@resend.dev>';
-    const actionUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/set-password?token=${token}`;
+
+    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
+    const fromAddress = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
+    const fromEmail = `${fromName} <${fromAddress}>`;
+
+    const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
 
     const planLabel = planTier === 'pro' ? 'Pro Plan' : 'Lite Plan';
 
     await resend.emails.send({
       from: fromEmail,
       to: [user.email],
-      subject: '🎉 Welcome to MPPSC Syllabus — Set Your Password',
+      subject: '🎉 Welcome to MPPSC ZEN — Set Your Password',
       react: EmailTemplate({ name: user.name || 'Student', actionUrl, planName: planLabel }),
     });
 
-    return NextResponse.json({ success: true, planTier });
+    // ── Log Activity ──────────────────────────────────────────────
+    try {
+      const { logUserActivity } = await import('@/app/actions/user-activity');
+      await logUserActivity({
+        userId,
+        userEmail: user.email,
+        userName: user.name,
+        adminId: 'system', // System triggered
+        action: 'PLAN_CHANGE',
+        details: {
+          plan: planTier,
+          amount: paidAmount / 100,
+          orderId: razorpay_order_id,
+          paymentId: razorpay_payment_id,
+          reason: 'Initial Payment',
+          isNew: true,
+        },
+      });
+    } catch (err) {
+      logger.warn('Failed to log activity:', {
+        category: 'payment',
+        metadata: { error: err, userId },
+      });
+    }
 
+    return NextResponse.json({ success: true, planTier });
   } catch (error) {
-    console.error('Payment verification error:', error);
-    return NextResponse.json(
-      { error: 'Payment verification failed' },
-      { status: 500 }
-    );
+    logger.error('Payment verification error:', error, {
+      category: 'payment',
+      userId: requestUserId,
+      metadata: { razorpay_order_id: requestOrderId, razorpay_payment_id: requestPaymentId },
+    });
+    return NextResponse.json({ error: 'Payment verification failed' }, { status: 500 });
   }
 }

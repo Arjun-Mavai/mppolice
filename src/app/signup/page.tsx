@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import SignupPage from "@/components/signup";
-import { useSettingsStore } from "@/store/useSettingsStore";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
-import { logger } from "@/lib/logger";
+import SignupPage from '@/components/signup';
+import { useSettingsStore } from '@/store/useSettingsStore';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 export default function Page() {
   const router = useRouter();
@@ -14,21 +14,21 @@ export default function Page() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    logger.debug("user and its role", user, user?.role);
+    logger.debug('user and its role', { category: 'system', metadata: { user, role: user?.role } });
     // Check if user is logged in AND is an admin
     if (user && user.role === 'admin') {
       setIsAuthorized(true);
     } else {
       // Not an admin or not logged in -> Redirect to login
-      router.push("/login"); // or "/"
+      router.push('/login'); // or "/"
     }
     setChecking(false);
   }, [user, router]);
 
   if (checking) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-slate-50">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      <div className="flex h-screen w-full items-center justify-center bg-slate-50">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     );
   }

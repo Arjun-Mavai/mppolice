@@ -24,13 +24,15 @@
  */
 
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import Razorpay from 'razorpay';
 import { z } from 'zod';
 import { db } from '@/db';
 import { mppscUsers, pricingConfig } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { PRICING_DEFAULTS } from '@/config/pricing';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { verifyAuth } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
 
@@ -54,25 +56,47 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { name, email, phone, source, planType } = startSchema.parse(body);
-     const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = email.toLowerCase().trim();
 
-    // ── PHASE 1: User Upsert (Lead Capture) ──
+    // ── PHASE 1: Find existing user by email (case-insensitive so we never create duplicate or overwrite Pro/Lite)
     const existingUser = await db.query.mppscUsers.findFirst({
-      where: eq(mppscUsers.email, normalizedEmail),
+      where: sql`LOWER(${mppscUsers.email}) = ${normalizedEmail}`,
     });
 
-    let userId: string;
+    const currentSession = await verifyAuth();
 
+    // If this email already has a paid plan (lite/pro) or is subscribed — block unless same user is logged in
     if (existingUser) {
-      if (existingUser.isActive) {
-        return NextResponse.json(
-          { error: 'Account already exists. Please login to upgrade.' },
-          { status: 400 }
-        );
+      const tier = String(existingUser.planTier ?? 'free').toLowerCase();
+      const isSubscribed = Boolean(existingUser.isSubscribed);
+      const hasPaidPlan = tier === 'lite' || tier === 'pro' || isSubscribed;
+
+      if (hasPaidPlan) {
+        if (!currentSession || currentSession.id !== existingUser.id) {
+          return NextResponse.json(
+            {
+              error:
+                'This email is already registered with a plan. Please log in to access your account or upgrade.',
+            },
+            { status: 403 }
+          );
+        }
       }
-      // Re-attempting payment — update lead info
-      await db.update(mppscUsers)
-        .set({ name, phone, metadata: JSON.stringify({ source }) })
+    }
+
+    let userId: string;
+    if (existingUser) {
+      // Existing user allowed: only update name/phone/metadata — NEVER touch planTier, isSubscribed, role
+      await db
+        .update(mppscUsers)
+        .set({
+          name: name.trim(),
+          phone: phone.trim(),
+          metadata: JSON.stringify({
+            ...JSON.parse((existingUser.metadata as string) || '{}'),
+            source,
+          }),
+        })
         .where(eq(mppscUsers.id, existingUser.id));
       userId = existingUser.id;
     } else {
@@ -85,7 +109,7 @@ export async function POST(req: Request) {
         phone: phone.trim(),
         password: tempPassword,
         isActive: false,
-        role: 'guest',
+        role: 'user',
         metadata: JSON.stringify({ source }),
         planTier: 'free',
       });
@@ -96,7 +120,11 @@ export async function POST(req: Request) {
       throw new Error('Razorpay keys not configured');
     }
 
-    const rows = await db.select().from(pricingConfig).where(eq(pricingConfig.id, 'default')).limit(1);
+    const rows = await db
+      .select()
+      .from(pricingConfig)
+      .where(eq(pricingConfig.id, 'default'))
+      .limit(1);
     const p = rows[0] || PRICING_DEFAULTS;
 
     const PLAN_AMOUNTS: Record<string, number> = {
@@ -123,11 +151,12 @@ export async function POST(req: Request) {
 
     // Single response — userId + order details
     return NextResponse.json({ userId, order: { ...order, planType } });
-  } catch (error: any) {
-    console.error('Payment start error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to start payment' },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    logger.error('Payment start error:', error, {
+      category: 'payment',
+      metadata: { planType: (error as any)?.planType },
+    });
+    const message = error instanceof Error ? error.message : 'Failed to start payment';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -24,14 +24,14 @@ export default function PaymentSuccessPage() {
   }, [router]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
-      <div className="text-center space-y-6 max-w-md w-full bg-zinc-900 p-8 rounded-2xl border border-zinc-800 shadow-xl">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-black p-4 text-white">
+      <div className="w-full max-w-md space-y-6 rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-center shadow-xl">
         <div className="flex justify-center">
-          <div className="h-20 w-20 bg-green-500/10 rounded-full flex items-center justify-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-500/10">
             <CheckCircle className="h-10 w-10 text-green-500" />
           </div>
         </div>
-        
+
         <div className="space-y-2">
           <h1 className="text-2xl font-bold tracking-tight">Payment Successful!</h1>
           <p className="text-zinc-400">
@@ -42,15 +42,13 @@ export default function PaymentSuccessPage() {
         <div className="pt-4">
           <button
             onClick={() => router.push('/app')}
-            className="w-full bg-white text-black font-medium py-3 px-4 rounded-lg hover:bg-zinc-200 transition-colors"
+            className="w-full rounded-lg bg-white px-4 py-3 font-medium text-black transition-colors hover:bg-zinc-200"
           >
             Continue to App
           </button>
         </div>
 
-        <p className="text-xs text-zinc-500">
-          Redirecting in {countdown} seconds...
-        </p>
+        <p className="text-xs text-zinc-500">Redirecting in {countdown} seconds...</p>
       </div>
     </div>
   );

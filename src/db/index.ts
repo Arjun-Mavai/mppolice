@@ -1,4 +1,3 @@
-
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
 import * as schema from './schema';
@@ -13,11 +12,13 @@ const globalForDb = globalThis as unknown as {
   client: ReturnType<typeof createClient> | undefined;
 };
 
-export const client = globalForDb.client ?? createClient({ 
-  url, 
-  authToken,
-  // syncUrl: process.env.TURSO_SYNC_URL, // Optional: Enable if using embedded replica
-});
+export const client =
+  globalForDb.client ??
+  createClient({
+    url,
+    authToken,
+    // syncUrl: process.env.TURSO_SYNC_URL, // Optional: Enable if using embedded replica
+  });
 
 if (env.NODE_ENV !== 'production') {
   globalForDb.client = client;

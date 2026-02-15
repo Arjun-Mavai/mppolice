@@ -1,4 +1,3 @@
-
 {
   "title": "CSAT (Paper II) - Practice Test 1",
   "description": "Practice test for CSAT focusing on Comprehension, Logical Reasoning, and Quantitative Aptitude.",
@@ -17,12 +16,12 @@
       "negative": 0.83
     },
     {
-       "text": "Find the missing number in the series: 2, 6, 12, 20, 30, ?",
-       "options": ["40", "42", "44", "48"],
-       "correct": "42",
-       "explanation": "Differences are 4, 6, 8, 10. Next difference should be 12. 30 + 12 = 42.",
-       "marks": 2.5,
-       "negative": 0.83
+      "text": "Find the missing number in the series: 2, 6, 12, 20, 30, ?",
+      "options": ["40", "42", "44", "48"],
+      "correct": "42",
+      "explanation": "Differences are 4, 6, 8, 10. Next difference should be 12. 30 + 12 = 42.",
+      "marks": 2.5,
+      "negative": 0.83
     }
   ]
 }

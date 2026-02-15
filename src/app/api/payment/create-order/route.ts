@@ -1,6 +1,7 @@
-
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import Razorpay from 'razorpay';
+import { verifyAuth } from '@/lib/auth';
 import { z } from 'zod';
 import { db } from '@/db';
 import { pricingConfig } from '@/db/schema';
@@ -14,20 +15,21 @@ const createOrderSchema = z.object({
 
 /**
  * Razorpay Order Creation API - The Security Gate 🛡️
- * 
+ *
  * Bhai, ye route sabse critical h. Yaha hum 'Order' create karte h.
- * 
+ *
  * 🔥 Why Server-Side?
  * Agar hum frontend se amount bhejte, to koi bhi right-click karke inspect element se
  * amount ko 999 se 1 kar sakta tha! 😱
  * Isliye hum sirf 'planType' lete h aur amount DB/Config se uthate h.
- * 
+ *
  * Best Practices:
  * 1. Zod Validation: Incoming data ko sanitize karo.
  * 2. Rate Limiting: Spam bots ko roko.
  * 3. Environment Variables: Keys code me hardcode nahi, .env me rakho.
  */
 export async function POST(req: Request) {
+  let planType: string | undefined;
   try {
     // 🚦 Rate Limit Check: 10 requests / 15 mins
     // Bhai, ye zaroori h taaki koi script lagakar hazaro fake orders na banaye.
@@ -39,7 +41,8 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { planType } = createOrderSchema.parse(body);
+    const parsed = createOrderSchema.parse(body);
+    planType = parsed.planType;
 
     if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
       throw new Error('Razorpay keys not configured');
@@ -47,7 +50,11 @@ export async function POST(req: Request) {
 
     // 💰 Amount Calculation: The Single Source of Truth
     // DB se price fetch karo. Agar DB down h, to default constant use karo (Fallback Strategy).
-    const rows = await db.select().from(pricingConfig).where(eq(pricingConfig.id, 'default')).limit(1);
+    const rows = await db
+      .select()
+      .from(pricingConfig)
+      .where(eq(pricingConfig.id, 'default'))
+      .limit(1);
     const p = rows[0] || PRICING_DEFAULTS;
 
     const PLAN_AMOUNTS: Record<string, number> = {
@@ -57,7 +64,8 @@ export async function POST(req: Request) {
     };
 
     const amount = PLAN_AMOUNTS[planType];
-    if (!amount || amount < 100) { // Min 1 Rupee (100 paise)
+    if (!amount || amount < 100) {
+      // Min 1 Rupee (100 paise)
       return NextResponse.json({ error: 'Invalid plan configuration' }, { status: 500 });
     }
 
@@ -66,20 +74,27 @@ export async function POST(req: Request) {
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
 
-    // 📝 Creating Order on Razorpay
+    // � Metadata: Add UserId for verification later
+    const session = await verifyAuth();
+
+    // �📝 Creating Order on Razorpay
     // Ye ID (order_xxx) frontend par jayegi. Payment isi ID ke against hoga.
     const order = await instance.orders.create({
       amount,
       currency: 'INR',
-      notes: { planType }, // Metadata for future reference
+      notes: { planType, userId: session?.id ?? '' }, // Metadata for future reference
     });
 
-    return NextResponse.json({ ...order, planType });
+    return NextResponse.json({ ...(order as any), planType });
   } catch (error: any) {
-    console.error('Razorpay order creation error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create order', details: error.message },
-      { status: 500 }
-    );
+    logger.error('Razorpay order creation error:', error, {
+      category: 'payment',
+      metadata: { planType },
+    });
+    // 🛡️ SECURITY FIX: Don't expose internal error.message to client!
+    // Bhai, error.message mein sensitive info ho sakta hai (stack trace,
+    // DB connection string, etc.). Attacker isse exploit kar sakta hai.
+    // Generic message bhejo, details sirf server logs mein rakhho.
+    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
   }
 }

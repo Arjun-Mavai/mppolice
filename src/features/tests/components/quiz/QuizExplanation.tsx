@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React from 'react';
 import { Lightbulb } from 'lucide-react';
@@ -13,21 +13,17 @@ interface QuizExplanationProps {
   };
 }
 
-export function QuizExplanation({
-  question,
-  language,
-  translations: t,
-}: QuizExplanationProps) {
+export function QuizExplanation({ question, language, translations: t }: QuizExplanationProps) {
   return (
-    <div className="bg-gradient-to-br from-slate-50 to-purple-50 border border-slate-200/50 rounded-xl p-4 sm:p-5 shadow-sm mt-4">
-      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200/50">
-        <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />
-        <span className="text-sm sm:text-base font-bold text-slate-900 uppercase tracking-wide">
+    <div className="mt-4 rounded-xl border border-slate-200/50 bg-gradient-to-br from-slate-50 to-purple-50 p-4 shadow-sm sm:p-5">
+      <div className="mb-3 flex items-center gap-2 border-b border-slate-200/50 pb-2">
+        <Lightbulb className="h-4 w-4 text-slate-700 sm:h-5 sm:w-5" />
+        <span className="text-sm font-bold tracking-wide text-slate-900 uppercase sm:text-base">
           {t.explanation}
         </span>
       </div>
 
-      <div className="text-sm sm:text-base text-slate-700 leading-relaxed">
+      <div className="text-sm leading-relaxed text-slate-700 sm:text-base">
         <PremiumExplanation
           explanation={(question as any).explanation_hi || question.explanation}
           explanationEn={question.explanationEn}

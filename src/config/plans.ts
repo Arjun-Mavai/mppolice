@@ -5,7 +5,7 @@ export const PLAN_LIMITS = {
     unit_tests_limit: 0,
     flt_limit: 0,
     pyq_limit: 0,
-    tier_name: 'Free'
+    tier_name: 'Free',
   },
   lite: {
     blog_limit: 1000, // Effectively unlimited for paying users as per user request
@@ -13,7 +13,7 @@ export const PLAN_LIMITS = {
     unit_tests_limit: 5, // 5 total across units (as per request "units tests me 5 milenge")
     flt_limit: 2,
     pyq_limit: 2,
-    tier_name: 'Lite'
+    tier_name: 'Lite',
   },
   pro: {
     blog_limit: 10000,
@@ -21,7 +21,7 @@ export const PLAN_LIMITS = {
     unit_tests_limit: 10000,
     flt_limit: 10000,
     pyq_limit: 10000,
-    tier_name: 'Pro'
+    tier_name: 'Pro',
   },
   guest: {
     blog_limit: 4,
@@ -29,8 +29,8 @@ export const PLAN_LIMITS = {
     unit_tests_limit: 2, // First 2 units
     flt_limit: 0,
     pyq_limit: 0,
-    tier_name: 'Guest'
-  }
+    tier_name: 'Guest',
+  },
 };
 
 export type PlanType = keyof typeof PLAN_LIMITS;

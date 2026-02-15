@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { usePwa } from "@/hooks/usePwa";
-import { X, Share, PlusSquare } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { useState, useEffect } from 'react';
+import { usePwa } from '@/hooks/usePwa';
+import { X, Share, PlusSquare } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export function InstallPrompt() {
   const { isInstallable, installPwa, isPwaInstalled } = usePwa();
@@ -12,11 +12,18 @@ export function InstallPrompt() {
   const [isIos, setIsIos] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     // Detect iOS
     const isIosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIos(isIosDevice);
+
+    // Detect Mobile (Android/iOS) for the main prompt
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+    setIsMobile(isMobileDevice);
 
     // If iOS and not standalone, show prompt after a delay (once per session)
     if (isIosDevice && !isPwaInstalled && !sessionStorage.getItem('ios-prompt-dismissed')) {
@@ -31,18 +38,18 @@ export function InstallPrompt() {
 
   useEffect(() => {
     if (isInstallable && !dismissed) {
-         requestAnimationFrame(() => setIsVisible(true));
+      requestAnimationFrame(() => setIsVisible(true));
     }
   }, [isInstallable, dismissed]);
 
   const handleDismiss = () => {
     setIsVisible(false);
     setTimeout(() => {
-        setDismissed(true);
-        setShowIosPrompt(false);
-        if (isIos) {
-            sessionStorage.setItem('ios-prompt-dismissed', 'true');
-        }
+      setDismissed(true);
+      setShowIosPrompt(false);
+      if (isIos) {
+        sessionStorage.setItem('ios-prompt-dismissed', 'true');
+      }
     }, 300); // Wait for transition
   };
 
@@ -52,88 +59,85 @@ export function InstallPrompt() {
   // Render iOS Prompt
   if (showIosPrompt) {
     return (
-        <div
-            className={cn(
-                "fixed bottom-4 left-4 right-4 z-50 bg-slate-900 text-white p-4 rounded-2xl shadow-2xl border border-slate-700 md:max-w-md md:mx-auto transition-all duration-500 ease-in-out transform",
-                isVisible ? "translate-y-0 opacity-100" : "translate-y-[120%] opacity-0"
-            )}
+      <div
+        className={cn(
+          'fixed right-4 bottom-4 left-4 z-50 transform rounded-2xl border border-slate-700 bg-slate-900 p-4 text-white shadow-2xl transition-all duration-500 ease-in-out md:mx-auto md:max-w-md',
+          isVisible ? 'translate-y-0 opacity-100' : 'translate-y-[120%] opacity-0'
+        )}
+      >
+        <button
+          onClick={handleDismiss}
+          className="absolute top-2 right-2 p-1 text-slate-400 hover:text-white"
         >
-            <button 
-                onClick={handleDismiss} 
-                className="absolute top-2 right-2 p-1 text-slate-400 hover:text-white"
-            >
-                <X size={20} />
-            </button>
-            <div className="flex gap-4">
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center flex-shrink-0">
-                        {/* Use the new icon here if you want */}
-                        <span className="text-slate-900 font-bold text-lg">MP</span>
-                </div>
-                <div className="flex-1">
-                    <h3 className="font-bold text-sm mb-1">Install Mindful MPPSC</h3>
-                    <p className="text-xs text-slate-300 leading-relaxed">
-                        Install this app on your iPhone for a better experience.
-                    </p>
-                    <div className="mt-3 flex flex-col gap-2 text-xs text-slate-300">
-                            <div className="flex items-center gap-2">
-                            1. Tap the <Share size={14} className="text-blue-400" /> Share button
-                            </div>
-                            <div className="flex items-center gap-2">
-                            2. Scroll down and tap <span className="font-bold text-white">Add to Home Screen</span> <PlusSquare size={14} />
-                            </div>
-                    </div>
-                </div>
+          <X size={20} />
+        </button>
+        <div className="flex gap-4">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-white">
+            {/* Use the new icon here if you want */}
+            <span className="text-lg font-bold text-slate-900">MP</span>
+          </div>
+          <div className="flex-1">
+            <h3 className="mb-1 text-sm font-bold">Install Mindful MPPSC</h3>
+            <p className="text-xs leading-relaxed text-slate-300">
+              Install this app on your iPhone for a better experience.
+            </p>
+            <div className="mt-3 flex flex-col gap-2 text-xs text-slate-300">
+              <div className="flex items-center gap-2">
+                1. Tap the <Share size={14} className="text-blue-400" /> Share button
+              </div>
+              <div className="flex items-center gap-2">
+                2. Scroll down and tap{' '}
+                <span className="font-bold text-white">Add to Home Screen</span>{' '}
+                <PlusSquare size={14} />
+              </div>
             </div>
-            {/* Pointer arrow for iOS bottom bar */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-900 rotate-45 border-b border-r border-slate-700 md:hidden"></div>
+          </div>
         </div>
+        {/* Pointer arrow for iOS bottom bar */}
+        <div className="absolute -bottom-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-r border-b border-slate-700 bg-slate-900 md:hidden"></div>
+      </div>
     );
   }
 
   // Render Android/Desktop Prompt (when beforeinstallprompt is captured)
   if (isInstallable) {
     return (
-        <div
-            className={cn(
-                "fixed bottom-4 left-4 right-4 z-50 bg-white p-4 rounded-2xl shadow-xl border border-slate-100 md:max-w-md md:mx-auto transition-all duration-500 ease-in-out transform",
-                isVisible ? "translate-y-0 opacity-100" : "translate-y-[120%] opacity-0"
-            )}
+      <div
+        className={cn(
+          'fixed right-4 bottom-4 left-4 z-50 transform rounded-2xl border border-slate-100 bg-white p-4 shadow-xl transition-all duration-500 ease-in-out md:mx-auto md:max-w-md',
+          isVisible && isMobile ? 'translate-y-0 opacity-100' : 'translate-y-[120%] opacity-0' // Only show on mobile
+        )}
+      >
+        <button
+          onClick={handleDismiss}
+          className="absolute top-2 right-2 p-1 text-slate-400 hover:text-slate-900"
         >
-                <button 
-                onClick={handleDismiss} 
-                className="absolute top-2 right-2 p-1 text-slate-400 hover:text-slate-900"
-            >
-                <X size={20} />
-            </button>
-            <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-slate-900/20">
-                        <span className="font-bold text-lg">MP</span>
-                </div>
-                <div className="flex-1">
-                    <h3 className="font-bold text-slate-900 text-sm">Install App</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                        Add to Home Screen for quick access and full screen experience.
-                    </p>
-                </div>
-            </div>
-            <div className="mt-4 flex gap-2">
-                <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleDismiss}
-                    className="flex-1 rounded-xl"
-                >
-                    Maybe Later
-                </Button>
-                <Button 
-                    size="sm" 
-                    onClick={installPwa}
-                    className="flex-1 rounded-xl bg-slate-900 text-white hover:bg-slate-800"
-                >
-                    Install Now
-                </Button>
-            </div>
+          <X size={20} />
+        </button>
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white shadow-lg shadow-slate-900/20">
+            <span className="text-lg font-bold">MP</span>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-bold text-slate-900">Install App</h3>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Add to Home Screen for quick access and full screen experience.
+            </p>
+          </div>
         </div>
+        <div className="mt-4 flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleDismiss} className="flex-1 rounded-xl">
+            Maybe Later
+          </Button>
+          <Button
+            size="sm"
+            onClick={installPwa}
+            className="flex-1 rounded-xl bg-slate-900 text-white hover:bg-slate-800"
+          >
+            Install Now
+          </Button>
+        </div>
+      </div>
     );
   }
 

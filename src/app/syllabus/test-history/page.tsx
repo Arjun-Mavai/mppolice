@@ -1,5 +1,5 @@
 import { verifyAuth } from '@/lib/auth';
-import { getUserAnalytics } from "@/features/analytics/actions";
+import { getUserAnalytics } from '@/features/analytics/actions';
 import { redirect } from 'next/navigation';
 import { TestHistoryClient } from './TestHistoryClient';
 
@@ -7,13 +7,13 @@ import { TestHistoryClient } from './TestHistoryClient';
 export const dynamic = 'force-dynamic';
 
 export default async function TestHistoryPage() {
-    const user = await verifyAuth();
+  const user = await verifyAuth();
 
-    if (!user) {
-        redirect('/login');
-    }
+  if (!user) {
+    redirect('/login');
+  }
 
-    const analyticsData = await getUserAnalytics(user.id);
+  const analyticsData = await getUserAnalytics(user.id);
 
-    return <TestHistoryClient analytics={analyticsData} />;
+  return <TestHistoryClient analytics={analyticsData} />;
 }

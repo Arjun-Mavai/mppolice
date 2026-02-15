@@ -1,43 +1,47 @@
 import { getCachedPYQTests, getUserAttempts } from '@/features/tests/actions/submission';
 import PYQPageClient from './PYQPageClient';
 import { verifyAuth } from '@/lib/auth';
-import { getUserTier } from '@/lib/access-control';
+import { getUserTier, hasAccessToContent } from '@/lib/access-control';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 
 // Server Component — DB flags se access control
 export default async function PYQPage() {
-    const [tests, user, attemptLimits] = await Promise.all([
-        getCachedPYQTests(),
-        verifyAuth(),
-        getCachedAttemptLimits()
-    ]);
+  const [tests, user, attemptLimits] = await Promise.all([
+    getCachedPYQTests(),
+    verifyAuth(),
+    getCachedAttemptLimits(),
+  ]);
 
-    const tier = getUserTier(user);
-    const maxRetries = attemptLimits['PYQ'] ?? null;
-    
-    // User attempts fetch karo
-    const testIds = tests.map(t => t.id);
-    const attempts = await getUserAttempts(testIds);
+  const tier = getUserTier(user);
+  const maxRetries = attemptLimits['PYQ'] ?? null;
 
-    // Har test ko access info ke saath enrich karo
-    const enrichedTests = tests.map((test) => {
-        const hasAccess = tier === 'pro'
-            ? (test.isProAccess ?? true)
-            : tier === 'lite'
-                ? ((test.isLiteAccess ?? false) || (test.isFreeAccess ?? false))
-                : (test.isFreeAccess ?? false);
+  // User attempts fetch karo
+  const testIds = tests.map((t) => t.id);
+  const attempts = await getUserAttempts(testIds);
 
-        const attemptsCount = attempts[test.id] || 0;
-        const attemptsLeft = maxRetries != null ? Math.max(0, maxRetries - attemptsCount) : null;
+  // Har test ko access info ke saath enrich karo
+  const enrichedTests = tests.map((test) => {
+    const hasAccess =
+      user?.role === 'admin' ||
+      hasAccessToContent(
+        {
+          isFreeAccess: test.isFreeAccess,
+          isLiteAccess: test.isLiteAccess,
+          isProAccess: test.isProAccess,
+        },
+        tier
+      );
+    const attemptsCount = attempts[test.id] || 0;
+    const attemptsLeft = maxRetries != null ? Math.max(0, maxRetries - attemptsCount) : null;
 
-        return {
-            ...test,
-            isLocked: !hasAccess && user?.role !== 'admin' && !(test.isFreeAccess ?? false),
-            isFree: (test.isFreeAccess ?? false) && !user, // Badge only for guests
-            attemptsLeft: user ? attemptsLeft : null,
-            maxRetries: user ? maxRetries : null,
-        };
-    });
+    return {
+      ...test,
+      isLocked: !hasAccess && !(test.isFreeAccess ?? false),
+      isFree: (test.isFreeAccess ?? false) && !user, // Badge only for guests
+      attemptsLeft: user ? attemptsLeft : null,
+      maxRetries: user ? maxRetries : null,
+    };
+  });
 
-    return <PYQPageClient initialTests={enrichedTests} />;
+  return <PYQPageClient initialTests={enrichedTests} />;
 }

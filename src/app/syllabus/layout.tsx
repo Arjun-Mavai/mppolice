@@ -1,17 +1,10 @@
+import { AppHeader } from '@/components/layout/AppHeader';
 
-import { AppHeader } from "@/components/layout/AppHeader";
-
-export default function SyllabusLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function SyllabusLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-slate-50">
       <AppHeader />
-      <div className="">
-        {children}
-      </div>
+      <div className="">{children}</div>
     </div>
   );
 }

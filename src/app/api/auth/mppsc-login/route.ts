@@ -21,34 +21,45 @@ import { logger } from '@/lib/logger';
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export async function POST(request: Request) {
+  let email: string | undefined;
+
   try {
     // ── Rate Limiting ───────────────────────────────────────────
     const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
     const { loginLimiter, checkRateLimit } = await import('@/lib/rate-limit');
-    
+
     const { success, limit, remaining, reset } = await checkRateLimit(loginLimiter, ip);
-    
+
     if (!success) {
-        return NextResponse.json({ 
-            error: 'Too many login attempts. Please try again after 15 minutes.' 
-        }, { 
-            status: 429,
-            headers: {
-                'X-RateLimit-Limit': limit.toString(),
-                'X-RateLimit-Remaining': remaining.toString(),
-                'X-RateLimit-Reset': reset.toString()
-            }
-        });
+      return NextResponse.json(
+        {
+          error: 'Too many login attempts. Please try again after 15 minutes.',
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': limit.toString(),
+            'X-RateLimit-Remaining': remaining.toString(),
+            'X-RateLimit-Reset': reset.toString(),
+          },
+        }
+      );
     }
 
-    const { email, password } = await request.json();
+    const body = await request.json();
+    email = body.email;
+    const password = body.password;
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
     // ── Find User by Email ──────────────────────────────────────
-    const users = await db.select().from(mppscUsers).where(eq(mppscUsers.email, email.toLowerCase().trim())).limit(1);
+    const users = await db
+      .select()
+      .from(mppscUsers)
+      .where(eq(mppscUsers.email, email.toLowerCase().trim()))
+      .limit(1);
     const user = users[0];
 
     if (!user) {
@@ -57,17 +68,23 @@ export async function POST(request: Request) {
 
     // ── Soft Delete Check — deactivated account can't login ─────
     if (user.deletedAt) {
-      return NextResponse.json({ 
-        error: 'Account deactivated. Contact admin for reactivation.' 
-      }, { status: 403 });
+      return NextResponse.json(
+        {
+          error: 'Account deactivated. Contact admin for reactivation.',
+        },
+        { status: 403 }
+      );
     }
 
     // ── Active Check — admin can toggle this off to block login ──
     if (user.isActive === false) {
-      return NextResponse.json({ 
-        error: 'Account is currently inactive. Contact admin to reactivate.',
-        code: 'ACCOUNT_INACTIVE'
-      }, { status: 403 });
+      return NextResponse.json(
+        {
+          error: 'Account is currently inactive. Contact admin to reactivate.',
+          code: 'ACCOUNT_INACTIVE',
+        },
+        { status: 403 }
+      );
     }
 
     // ── Access Expiry Check — only for paid plans with expiry set ──
@@ -77,7 +94,8 @@ export async function POST(request: Request) {
       const expiryDate = new Date(user.accessExpiresAt);
       if (expiryDate < now) {
         // Downgrade to free instead of blocking login
-        await db.update(mppscUsers)
+        await db
+          .update(mppscUsers)
           .set({ planTier: 'free', isSubscribed: false })
           .where(eq(mppscUsers.id, user.id));
         // Still allow login — user sees free tier content
@@ -88,48 +106,51 @@ export async function POST(request: Request) {
 
     // ── Password Verification ───────────────────────────────────
     const isMatch = await bcrypt.compare(password, user.password);
-    
+
     if (!isMatch) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
     // ── Sign JWT Token ──────────────────────────────────────────
     const payload = {
-        userId: user.id,
-        email: user.email,
-        role: user.role
+      userId: user.id,
+      email: user.email,
+      role: user.role,
     };
 
     const { signToken } = await import('@/lib/jwt');
     const token = signToken(payload);
 
     if (!token) {
-        throw new Error('Token generation failed');
+      throw new Error('Token generation failed');
     }
 
     // ── Set HTTP-Only Cookie (30 days) ──────────────────────────
     const cookieStore = await cookies();
     cookieStore.set('mppsc_token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        path: '/',
-        maxAge: 60 * 60 * 24 * 30,
-        sameSite: 'lax'
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30,
+      sameSite: 'lax',
     });
 
-    return NextResponse.json({ 
-        success: true, 
-        user: { 
-            email: user.email, 
-            name: user.name,
-            is_subscribed: user.isSubscribed,
-            plan_tier: user.planTier,
-            role: user.role,
-            access_expires_at: user.accessExpiresAt
-        } 
+    return NextResponse.json({
+      success: true,
+      user: {
+        email: user.email,
+        name: user.name,
+        is_subscribed: user.isSubscribed,
+        plan_tier: user.planTier,
+        role: user.role,
+        access_expires_at: user.accessExpiresAt,
+      },
     });
   } catch (error) {
-    logger.error("Login error:", error);
+    logger.error('Login error:', error, {
+      category: 'auth',
+      metadata: { email },
+    });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

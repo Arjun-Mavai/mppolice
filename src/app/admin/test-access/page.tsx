@@ -6,10 +6,7 @@ import { getAllTestsForAdmin, getAttemptLimits } from './actions';
 export const dynamic = 'force-dynamic';
 
 export default async function TestAccessPage() {
-    await requireAdmin();
-    const [tests, attemptLimits] = await Promise.all([
-        getAllTestsForAdmin(),
-        getAttemptLimits()
-    ]);
-    return <TestAccessClient initialTests={tests} initialAttemptLimits={attemptLimits} />;
+  await requireAdmin();
+  const [tests, attemptLimits] = await Promise.all([getAllTestsForAdmin(), getAttemptLimits()]);
+  return <TestAccessClient initialTests={tests} initialAttemptLimits={attemptLimits} />;
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { eq, and, ne } from 'drizzle-orm';
@@ -20,6 +21,8 @@ const updateUserSchema = z.object({
 const PLAN_MONTHS: Record<string, number> = { lite: 4, pro: 7 };
 
 export async function POST(request: Request) {
+  let decoded: any;
+  let targetUserId: string | undefined;
   try {
     // Admin Auth
     const cookieStore = await cookies();
@@ -27,18 +30,22 @@ export async function POST(request: Request) {
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token);
+    const decodedToken: any = verifyToken(token);
+    decoded = decodedToken;
     if (!decoded?.userId) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId)
+      where: (users, { eq }) => eq(users.id, decoded.userId),
     });
     if (!adminUser || adminUser.role !== 'admin') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
     const body = await request.json();
-    const { userId, name, email, password, planTier, isActive, isSubscribed, accessMonths } = updateUserSchema.parse(body);
+    const parsed = updateUserSchema.parse(body);
+    targetUserId = parsed.userId;
+    const { userId, name, email, password, planTier, isActive, isSubscribed, accessMonths } =
+      parsed;
 
     // Check target user exists
     const targetUser = await db.query.mppscUsers.findFirst({
@@ -63,7 +70,10 @@ export async function POST(request: Request) {
           where: and(eq(mppscUsers.email, normalizedEmail), ne(mppscUsers.id, userId)),
         });
         if (emailExists) {
-          return NextResponse.json({ error: 'Email already in use by another user' }, { status: 409 });
+          return NextResponse.json(
+            { error: 'Email already in use by another user' },
+            { status: 409 }
+          );
         }
         updates.email = normalizedEmail;
         changes.push('email');
@@ -112,16 +122,38 @@ export async function POST(request: Request) {
 
     await db.update(mppscUsers).set(updates).where(eq(mppscUsers.id, userId));
 
+    // ── Log Activity ──────────────────────────────────────────────
+    if (Object.keys(updates).length > 0) {
+      const { logUserActivity } = await import('@/app/actions/user-activity');
+      await logUserActivity({
+        userId: targetUser.id,
+        userEmail: targetUser.email,
+        userName: targetUser.name,
+        adminId: adminUser.id,
+        action: updates.planTier ? 'PLAN_CHANGE' : 'UPDATE',
+        details: {
+          changes: updates,
+          reason: 'Admin manual update',
+        },
+      });
+    }
+
     return NextResponse.json({
       success: true,
-      message: `Updated: ${changes.join(', ')} for ${targetUser.name || targetUser.email}`,
+      message: `Updated: ${changes.join(', ')}`,
     });
-
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0]?.message || 'Invalid input' }, { status: 400 });
+      return NextResponse.json(
+        { error: error.issues[0]?.message || 'Invalid input' },
+        { status: 400 }
+      );
     }
-    console.error('Admin update user error:', error);
+    logger.error('Admin update user error:', error, {
+      category: 'system',
+      userId: decoded?.userId,
+      metadata: { targetUserId },
+    });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
