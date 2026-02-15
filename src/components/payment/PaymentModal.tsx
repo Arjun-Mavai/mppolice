@@ -24,6 +24,9 @@ import {
 import { toast } from 'sonner';
 import { Loader2, Shield, BookOpen, Target, BarChart3, Sparkles, Brain } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { verifyPayment, startPayment } from '@/actions/payment-actions';
+import { checkEmailExists } from '@/actions/email-actions';
+import { getCurrentUser } from '@/actions/auth-actions';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -117,13 +120,9 @@ export function PaymentModal({
       const isSameUser = !!user && user.email?.toLowerCase().trim() === normalized;
       if (isSameUser) return false;
       try {
-        const res = await fetch('/api/auth/check-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: normalized }),
-        });
-        if (!res.ok) return false;
-        const data = await res.json();
+        // ✅ Server Action instead of fetch!
+        const data = await checkEmailExists(normalized);
+        if (data.error) return false;
         const tier = (data.planTier ?? '').toLowerCase();
         return !!(data.exists && (tier === 'lite' || tier === 'pro' || data.isSubscribed === true));
       } catch {
@@ -191,16 +190,13 @@ export function PaymentModal({
       const emailToCheck = (values.email || '').toLowerCase().trim();
       const isLoggedInWithSameEmail = !!user && user.email?.toLowerCase().trim() === emailToCheck;
       if (!isLoggedInWithSameEmail && emailToCheck) {
-        const checkRes = await fetch('/api/auth/check-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: emailToCheck }),
-        });
-        if (checkRes.ok) {
-          const data = await checkRes.json();
-          const tier = (data.planTier ?? '').toLowerCase();
+        // ✅ Server Action instead of fetch!
+        const checkRes = await checkEmailExists(emailToCheck);
+        if (!checkRes.error) {
+          const tier = (checkRes.planTier ?? '').toLowerCase();
           const hasPaidPlan =
-            data.exists && (tier === 'lite' || tier === 'pro' || data.isSubscribed === true);
+            checkRes.exists &&
+            (tier === 'lite' || tier === 'pro' || checkRes.isSubscribed === true);
           if (hasPaidPlan) {
             form.setError('email', {
               type: 'manual',
@@ -218,28 +214,19 @@ export function PaymentModal({
         form.clearErrors('email');
       }
 
-      // 🚀 COMBINED API CALL: Register + Create Order in ONE request
-      const startRes = await fetch('/api/payment/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...values, planType }),
-      });
+      // 🚀 Server Action: Register + Create Order in ONE call
+      const startRes = await startPayment({ ...values, planType });
 
-      // Server-side block: existing lite/pro must be same logged-in user — never open Razorpay for 403
-      if (startRes.status === 403) {
-        const errData = await startRes.json().catch(() => ({}));
-        toast.error(
-          errData.error || 'This email is already registered with a plan. Please log in.'
-        );
+      // Server-side block: existing lite/pro must be same logged-in user
+      if (!startRes.success || !startRes.data) {
+        toast.error(startRes.error || 'Failed to start payment');
         setIsLoading(false);
         setLoadingPhase(null);
         return;
       }
-      if (!startRes.ok) {
-        const error = await startRes.json();
-        throw new Error(error.error || 'Failed to start payment');
-      }
-      const { userId, order: orderData } = await startRes.json();
+
+      // TypeScript: After error check, userId and order are guaranteed to exist
+      const { userId, order: orderData } = startRes.data;
       userIdRef.current = userId;
 
       // Launch Razorpay
@@ -270,36 +257,38 @@ export function PaymentModal({
             setLoadingPhase('verifying');
             onOpenChange(true);
 
-            // Verify Payment — Frontend se mat maano, Server par signature verify karo.
-            // 🔄 ROUTING UPDATE: User requested separate endpoint for upgrades.
-            const isUpgrade = planType === 'upgrade';
-            const verifyUrl = isUpgrade ? '/api/payment/verify-upgrade' : '/api/payment/verify';
-
-            const verifyRes = await fetch(verifyUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                userId: userId,
-              }),
+            // 🔒 SECURITY UPGRADE: Server Action instead of API route!
+            // userId from JWT if logged in, else from startPayment (verified against order)
+            const verifyResult = await verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              userId: userIdRef.current || undefined, // Fallback for new users without JWT
             });
-            if (!verifyRes.ok) throw new Error('Payment verification failed');
 
-            const verifyData = await verifyRes.json();
+            if (verifyResult.error) {
+              throw new Error(verifyResult.error);
+            }
 
             // 🔥 CACHE INVALIDATION MAGIC: Update local store immediately
             // This ensures user sees "Pro" badge everywhere instantly without reload
             if (user) {
               // If we have previous user object, update it
-              const updatedPlan = verifyData.planTier || 'pro'; // fallback to pro if verification sends nothing
+              // Fix TypeScript: Ensure planTier is properly typed
+              const updatedPlan = (verifyResult.planTier as 'free' | 'lite' | 'pro') || 'pro';
               setUser({ ...user, planTier: updatedPlan, isSubscribed: true }, true);
             }
-            // Trigger a background re-fetch so plan_tier is fresh everywhere (no caching)
-            const meRes = await fetch('/api/auth/me');
-            const meData = await meRes.json();
-            if (meData?.user) setUser(meData.user, true);
+            // 🔒 Server Action: Re-fetch user data (no API visible!)
+            const meData = await getCurrentUser();
+            if (meData?.user) {
+              const u = {
+                ...meData.user,
+                role: meData.user.role ?? undefined,
+                isSubscribed: meData.user.is_subscribed ?? undefined,
+                planTier: meData.user.plan_tier ?? undefined,
+              };
+              setUser(u, true);
+            }
             router.refresh();
 
             toast.success('Payment successful! 🎉');
@@ -309,7 +298,7 @@ export function PaymentModal({
             setIsLoading(false);
             setLoadingPhase(null);
 
-            const displayPlan = planType === 'upgrade' ? 'pro' : verifyData.planTier || planType;
+            const displayPlan = planType === 'upgrade' ? 'pro' : verifyResult.planTier || planType;
             const upgradeParam = planType === 'upgrade' ? '&type=upgrade' : '';
             router.push(
               `/thank-you?plan=${displayPlan}&email=${encodeURIComponent(values.email)}&name=${encodeURIComponent(values.name)}${upgradeParam}`

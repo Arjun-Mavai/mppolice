@@ -47,7 +47,7 @@ export function SyllabusTopicSheet({
   useEffect(() => {
     if (open && topic && user) {
       getRevisionCount(topic.id.toString()).then((count) => {
-        logger.debug('Fetched revision count:', count);
+        logger.debug('Fetched revision count:', { count, category: 'system' });
         setRevisionCount(count);
       });
     } else {
@@ -69,7 +69,11 @@ export function SyllabusTopicSheet({
     if (!topic || isRevising) return;
     setIsRevising(true);
     const targetUnitId = unitId || topic.unitId;
-    logger.debug('Marking revised:', topic.id, targetUnitId);
+    logger.debug('Marking revised:', {
+      topicId: topic.id,
+      unitId: targetUnitId,
+      category: 'system',
+    });
 
     startTransition(async () => {
       try {

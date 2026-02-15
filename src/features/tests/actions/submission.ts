@@ -133,6 +133,57 @@ export async function submitTestAttempt(
   questionTimes: Record<string, number>
 ) {
   try {
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 🔒 IDOR Prevention: Verify userId from JWT matches parameter
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Bhai, bina ye check ke koi Postman se kisi aur ka userId bhej ke
+    // uski attempt count badha sakta tha! Ab JWT se userId verify hota hai.
+    //
+    // Attack scenario (before fix):
+    //   POST /submitTestAttempt body: { userId: "victim-123", ... }
+    //   → Attacker's request inserts attempt for victim's account!
+    //
+    // Fix: JWT se nikalo asli userId, match karo parameter se
+    const session = await verifyAuth();
+    if (!session) {
+      return { error: 'Unauthorized — please login to submit test' };
+    }
+    if (session.id !== userId) {
+      // 🚨 Someone tried to submit as a different user!
+      logger.warn('IDOR attempt: userId mismatch in test submission', {
+        category: 'system',
+        metadata: {
+          jwtUserId: session.id,
+          paramUserId: userId,
+          testId,
+        },
+      });
+      return { error: 'Unauthorized — userId mismatch' };
+    }
+
+    // 🛡️ CRITICAL FIX: Prevent Double Submit (Race Condition Protection)
+    // Bhai, agar user ne 30 second pehle hi submit kiya hai, to dobara nahi hone denge!
+    // SQLite's datetime('now') uses UTC, which might mismatch DB if not careful.
+    // JS Date.now() is reliable for relative comparison.
+    const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
+
+    const recentAttempt = await db.query.userAttempts.findFirst({
+      where: and(
+        eq(userAttempts.userId, userId),
+        eq(userAttempts.testId, testId),
+        eq(userAttempts.isCompleted, true),
+        sql`${userAttempts.endTime} > ${thirtySecondsAgo}`
+      ),
+    });
+
+    if (recentAttempt) {
+      logger.warn('Duplicate test submission attempt blocked', {
+        category: 'system',
+        metadata: { userId, testId, recentAttemptId: recentAttempt.id },
+      });
+      return { error: 'Test already submitted recently. Please wait.' };
+    }
+
     // 1. Fetch Correct Answers from DB (Secure)
     const testQuestions = await db
       .select({
@@ -184,6 +235,24 @@ export async function submitTestAttempt(
       }
     });
 
+    // 🛡️ Server-Side Timer Validation (Prevent Time Manipulation)
+    // Bhai, client se jo time aaya hai wo sahi hai ya nahi check karo!
+    const test = await db.query.tests.findFirst({ where: eq(tests.id, testId) });
+    const maxDuration = (test?.durationMinutes || 60) * 60; // Convert to seconds
+    const validDuration = Math.min(Math.max(durationSeconds, 0), maxDuration);
+
+    if (validDuration !== durationSeconds) {
+      logger.warn('Invalid test duration detected', {
+        category: 'system',
+        metadata: {
+          userId,
+          testId,
+          submittedDuration: durationSeconds,
+          validatedDuration: validDuration,
+        },
+      });
+    }
+
     // 3. Create Attempt Record
     const attemptId = crypto.randomUUID();
 
@@ -194,7 +263,7 @@ export async function submitTestAttempt(
         id: attemptId,
         userId,
         testId,
-        startTime: new Date(Date.now() - durationSeconds * 1000), // Approx start
+        startTime: new Date(Date.now() - validDuration * 1000), // Use validated duration
         endTime: new Date(),
         score: parseFloat(totalScore.toFixed(2)),
         isCompleted: true,
@@ -243,7 +312,11 @@ export async function submitTestAttempt(
         userId,
         displayName: user.name,
         score: parseFloat(totalScore.toFixed(2)),
-        timeTaken: durationSeconds,
+        // 🛡️ FIX: Use validDuration (server-validated) instead of raw durationSeconds
+        // Bhai, pehle yahan raw durationSeconds ja raha tha — manipulated value
+        // leaderboard mein aa jaati thi! "5 second mein 100 sawal" type entries!
+        // Ab server-clamped validDuration use hota hai (0 to maxDuration range)
+        timeTaken: validDuration,
         totalMarks: totalTestMarks,
       });
     }

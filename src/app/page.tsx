@@ -13,6 +13,7 @@ export default function Home() {
     <main>
       <AppNavbar user={null} />
       <UpgradePage />
+
       {/* AppInstallGuide moved to UpgradePage */}
       <Testimonials />
     </main>

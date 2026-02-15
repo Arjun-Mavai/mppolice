@@ -8,7 +8,10 @@ import { AppFooter } from '@/components/layout/AppFooter';
 import { GlobalLockModal } from '@/components/GlobalLockModal';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { Toaster } from '@/components/ui/sonner';
+import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
 import dynamic from 'next/dynamic';
+import { VersionManager } from '@/components/VersionManager';
+
 const InstallPrompt = dynamic(() =>
   import('@/components/InstallPrompt').then((m) => m.InstallPrompt)
 );
@@ -128,19 +131,22 @@ export default function RootLayout({
       <body
         className={`${outfit.variable} ${playfair.variable} bg-gray-50 font-sans text-gray-900 antialiased`}
       >
-        <PwaRegistry />
-        <Providers>
-          <div className="min-h-screen">{children}</div>
+        <GlobalErrorBoundary>
+          <PwaRegistry />
+          <Providers>
+            <div className="min-h-screen">{children}</div>
 
-          <AppFooter />
-          <GlobalLockModal />
-          <ScrollToTop />
-        </Providers>
-        <Suspense fallback={null}>
-          <SupportButton />
-        </Suspense>
-        <Toaster position="top-right" richColors />
-        <InstallPrompt />
+            <AppFooter />
+            <GlobalLockModal />
+            <ScrollToTop />
+          </Providers>
+          <Suspense fallback={null}>
+            <SupportButton />
+          </Suspense>
+          <Toaster position="top-right" richColors />
+          <InstallPrompt />
+          <VersionManager />
+        </GlobalErrorBoundary>
         <script
           dangerouslySetInnerHTML={{
             __html: `

@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Quote, Loader2, ArrowLeft } from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { logger } from '@/lib/logger';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -53,6 +54,10 @@ export default function LoginPage() {
         });
       }
     } catch (err) {
+      logger.error('Login submit error', err, {
+        category: 'auth',
+        metadata: { email },
+      });
       setError('Something went wrong. Please try again.');
 
       // Notify user about unexpected error

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
 import { db } from '@/db';
@@ -25,6 +26,9 @@ import { PRICING_DEFAULTS } from '@/config/pricing';
  * 4. **Transactional Data**: Payment record karo, User ko assign karo, aur Email bhejo.
  */
 export async function POST(req: Request) {
+  let requestUserId: string | undefined;
+  let requestOrderId: string | undefined;
+  let requestPaymentId: string | undefined;
   try {
     // 🛑 Rate Limit: Protect verification endpoint
     const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
@@ -36,6 +40,9 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId } = body;
+    requestUserId = userId;
+    requestOrderId = razorpay_order_id;
+    requestPaymentId = razorpay_payment_id;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !userId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -51,7 +58,21 @@ export async function POST(req: Request) {
     hmac.update(razorpay_order_id + '|' + razorpay_payment_id);
     const generated_signature = hmac.digest('hex');
 
-    if (generated_signature !== razorpay_signature) {
+    // 🛡️ CRASH PREVENTION: Validate signature format BEFORE timingSafeEqual
+    // timingSafeEqual THROWS if buffer lengths differ! Attacker could crash server
+    // with garbage signature like "abc" (odd hex → different buffer length)
+    const isValidHex = /^[a-f0-9]+$/i.test(razorpay_signature);
+    if (!isValidHex || razorpay_signature.length !== generated_signature.length) {
+      return NextResponse.json({ error: 'Invalid payment signature format' }, { status: 400 });
+    }
+
+    // 🛡️ Timing-Safe Comparison (Prevents timing attacks)
+    const isValidSignature = crypto.timingSafeEqual(
+      Buffer.from(generated_signature, 'hex'),
+      Buffer.from(razorpay_signature, 'hex')
+    );
+
+    if (!isValidSignature) {
       return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 });
     }
 
@@ -84,6 +105,22 @@ export async function POST(req: Request) {
     const order = await instance.orders.fetch(razorpay_order_id);
     const paidAmount = order.amount as number; // amount in paise
 
+    // 🛡️ CRITICAL FIX: Order Ownership Verification (IDOR Prevention)
+    // Bhai, ye sabse important check hai! Agar order kisi aur user ka hai,
+    // to uska payment claim nahi kar sakte. Cross-user attack block karta hai.
+    const orderUserId = order.notes?.userId;
+    if (orderUserId && orderUserId !== userId) {
+      logger.warn('Payment verification failed: Order ownership mismatch', {
+        category: 'payment',
+        metadata: {
+          orderUserId,
+          requestUserId: userId,
+          orderId: razorpay_order_id,
+        },
+      });
+      return NextResponse.json({ error: 'Order does not belong to this user' }, { status: 403 });
+    }
+
     // 🏷️ Step 5: Logic to assign Plan based on Amount
     // 99900 paise = 999 Rs = Pro Plan
     const pricingRows = await db
@@ -95,24 +132,27 @@ export async function POST(req: Request) {
     const proAmountPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
     const planTier = paidAmount >= proAmountPaise ? 'pro' : 'lite';
 
-    // 💾 Step 6: Persist Payment in DB + Update User Plan
-    // Transaction log + user plan update so DB is consistent even before set-password.
-    await db.insert(payments).values({
-      id: `pay_${uuidv4()}`,
-      userId,
-      orderId: razorpay_order_id,
-      paymentId: razorpay_payment_id,
-      signature: razorpay_signature,
-      amount: paidAmount,
-      planTier,
-      status: 'captured',
-      currency: 'INR',
-    });
+    // 💾 Step 6: Persist Payment in DB + Update User Plan (ATOMIC TRANSACTION)
+    // Bhai, dono operations ek saath hone chahiye! Agar ek fail hua to dusra bhi rollback.
+    // Transaction ensures: Payment record + User update = all-or-nothing.
+    await db.transaction(async (tx) => {
+      await tx.insert(payments).values({
+        id: `pay_${uuidv4()}`,
+        userId,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        signature: razorpay_signature,
+        amount: paidAmount,
+        planTier,
+        status: 'captured',
+        currency: 'INR',
+      });
 
-    await db
-      .update(mppscUsers)
-      .set({ planTier: planTier as 'lite' | 'pro', isSubscribed: true })
-      .where(eq(mppscUsers.id, userId));
+      await tx
+        .update(mppscUsers)
+        .set({ planTier: planTier as 'lite' | 'pro', isSubscribed: true })
+        .where(eq(mppscUsers.id, userId));
+    });
 
     // 🎫 Step 7: Generate 'Magic Link' Token
     // User ko ab password set karna h. Hum ek secure, temporary token banate h.
@@ -163,12 +203,19 @@ export async function POST(req: Request) {
         },
       });
     } catch (err) {
-      console.error('Failed to log activity:', err);
+      logger.warn('Failed to log activity:', {
+        category: 'payment',
+        metadata: { error: err, userId },
+      });
     }
 
     return NextResponse.json({ success: true, planTier });
   } catch (error) {
-    console.error('Payment verification error:', error);
+    logger.error('Payment verification error:', error, {
+      category: 'payment',
+      userId: requestUserId,
+      metadata: { razorpay_order_id: requestOrderId, razorpay_payment_id: requestPaymentId },
+    });
     return NextResponse.json({ error: 'Payment verification failed' }, { status: 500 });
   }
 }

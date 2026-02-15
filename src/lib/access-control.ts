@@ -547,13 +547,13 @@ export function getUpgradeMessage(user: User): string {
  * @param user - Current user
  * @returns true if unit is accessible
  */
-export function canAccessUnit(unitId: string, user: User): boolean {
-  // Unit 1 always open (sample)
-  if (unitId === 'unit_1') return true;
+// export function canAccessUnit(unitId: string, user: User): boolean {
+//   // Unit 1 always open (sample)
+//   if (unitId === 'unit_1') return true;
 
-  // Admin access
-  if (user?.role === 'admin') return true;
+//   // Admin access
+//   if (user?.role === 'admin') return true;
 
-  // Subscribed users
-  return user?.isSubscribed || false;
-}
+//   // Subscribed users
+//   return user?.isSubscribed || false;
+// }

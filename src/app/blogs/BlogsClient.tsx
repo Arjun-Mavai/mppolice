@@ -3,6 +3,7 @@ import { useState, useTransition, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Search, BookOpen, Loader2 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 import { BlogCard } from '@/components/blog/BlogCard';
 import { SearchInput } from '@/components/blog/SearchInput';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -47,16 +48,23 @@ export default function BlogsClient({
   // Initial Fetch / Filter Change
   const fetchBlogs = async (reset = false) => {
     startTransition(async () => {
-      const result = await getBlogs({
-        page: 1,
-        limit: 10,
-        unitId: activeUnit === 'Free' ? 'All' : activeUnit,
-        search: searchQuery,
-        isFreeAccess: activeUnit === 'Free' ? true : undefined,
-      });
+      try {
+        const result = await getBlogs({
+          page: 1,
+          limit: 10,
+          unitId: activeUnit === 'Free' ? 'All' : activeUnit,
+          search: searchQuery,
+          isFreeAccess: activeUnit === 'Free' ? true : undefined,
+        });
 
-      setBlogs(result.blogs);
-      setPagination(result.pagination);
+        setBlogs(result.blogs);
+        setPagination(result.pagination);
+      } catch (error) {
+        logger.error('Failed to fetch blogs', error, {
+          category: 'content',
+          metadata: { unit: activeUnit, search: searchQuery },
+        });
+      }
     });
   };
 
@@ -65,18 +73,26 @@ export default function BlogsClient({
     if (!pagination.hasMore || isLoadingMore) return;
     setIsLoadingMore(true);
 
-    const nextPage = pagination.page + 1;
-    const result = await getBlogs({
-      page: nextPage,
-      limit: 10,
-      unitId: activeUnit === 'Free' ? 'All' : activeUnit,
-      search: searchQuery,
-      isFreeAccess: activeUnit === 'Free' ? true : undefined,
-    });
+    try {
+      const nextPage = pagination.page + 1;
+      const result = await getBlogs({
+        page: nextPage,
+        limit: 10,
+        unitId: activeUnit === 'Free' ? 'All' : activeUnit,
+        search: searchQuery,
+        isFreeAccess: activeUnit === 'Free' ? true : undefined,
+      });
 
-    setBlogs((prev) => [...prev, ...result.blogs]);
-    setPagination(result.pagination);
-    setIsLoadingMore(false);
+      setBlogs((prev) => [...prev, ...result.blogs]);
+      setPagination(result.pagination);
+    } catch (error) {
+      logger.error('Failed to load more blogs', error, {
+        category: 'content',
+        metadata: { page: pagination.page + 1, unit: activeUnit },
+      });
+    } finally {
+      setIsLoadingMore(false);
+    }
   };
 
   // Debounce Search & Filter Effect

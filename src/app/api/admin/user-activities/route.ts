@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { mppscUserActivities } from '@/db/schema';
 import { desc } from 'drizzle-orm';
@@ -7,6 +8,7 @@ import { cookies } from 'next/headers';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  let decoded: any;
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('mppsc_token')?.value;
@@ -14,7 +16,8 @@ export async function GET() {
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token);
+    const decodedToken: any = verifyToken(token);
+    decoded = decodedToken;
 
     if (!decoded?.userId) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
 
@@ -34,7 +37,10 @@ export async function GET() {
 
     return NextResponse.json({ logs });
   } catch (error) {
-    console.error('Fetch activities error:', error);
+    logger.error('Fetch activities error:', error, {
+      category: 'system',
+      userId: decoded?.userId,
+    });
     return NextResponse.json({ error: 'Failed to fetch logs' }, { status: 500 });
   }
 }

@@ -15,15 +15,22 @@ async function getUserId() {
 
 export async function markTopicRevised(topicId: string, unitId: string) {
   const userId = await getUserId();
-  logger.info('markTopicRevised called:', { topicId, unitId, userId }); // Debug log
+  logger.info('markTopicRevised called:', {
+    category: 'system',
+    metadata: { topicId, unitId, userId },
+  }); // Debug log
 
   if (!userId) {
-    logger.error('markTopicRevised: No user ID found');
+    logger.error('markTopicRevised: No user ID found', { category: 'system' });
     return { error: 'Unauthorized' };
   }
 
   if (!topicId || !unitId) {
-    logger.error('markTopicRevised: Missing topicId or unitId', { topicId, unitId });
+    logger.error(
+      'markTopicRevised: Missing topicId or unitId',
+      { topicId, unitId },
+      { category: 'system' }
+    );
     return { error: 'Invalid data' };
   }
 

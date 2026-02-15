@@ -64,10 +64,13 @@ export function usePwa() {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').then(
           (registration) => {
-            logger.debug('ServiceWorker registration successful with scope: ', registration.scope);
+            logger.debug('ServiceWorker registration successful with scope: ', {
+              scope: registration.scope,
+              category: 'system',
+            });
           },
           (err) => {
-            logger.error('ServiceWorker registration failed: ', err);
+            logger.error('ServiceWorker registration failed: ', err, { category: 'system' });
           }
         );
       });

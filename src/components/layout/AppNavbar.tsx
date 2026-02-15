@@ -45,6 +45,7 @@ import { logger } from '@/lib/logger';
 import { toast } from 'sonner';
 import { usePwa } from '@/hooks/usePwa';
 import { useQuery } from '@tanstack/react-query';
+import { getCurrentUser } from '@/actions/auth-actions';
 
 interface PropUser {
   name?: string | null;
@@ -129,26 +130,27 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   }, [setUser, setAuthCheckStatus]);
 
   // ------------------------------------------------------------------
-  // QUERY: SESSION RESTORATION (The "Hydration")
+  // QUERY: SESSION RESTORATION (The "Hydration") - NOW WITH SERVER ACTION!
   // ------------------------------------------------------------------
-  // Use React Query to fetch and cache user session
+  // 🔒 SECURITY UPGRADE: Using Server Action instead of API route
+  // Benefits: No userId visible in Network tab, automatic JWT handling
   const { data: sessionData, isLoading: isSessionLoading } = useQuery({
     queryKey: ['me'],
     queryFn: async () => {
-      const res = await fetch('/api/auth/me');
-      if (!res.ok) throw new Error('Failed to fetch session');
-      const data = await res.json();
-      // Transform API response (snake_case) to Store format (camelCase)
-      if (data.user) {
+      // ✅ Server Action - No API endpoint visible!
+      const result = await getCurrentUser();
+
+      // Transform to match expected format
+      if (result.user) {
         return {
           user: {
-            ...data.user,
-            isSubscribed: data.user.is_subscribed,
-            planTier: data.user.plan_tier,
+            ...result.user,
+            isSubscribed: result.user.is_subscribed,
+            planTier: result.user.plan_tier,
           },
         };
       }
-      return data;
+      return result;
     },
     // Only fetch if we don't have a user yet
     enabled: !initialUser && !globalUser,
@@ -160,8 +162,18 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   useEffect(() => {
     if (sessionData) {
       if (sessionData.user) {
-        logger.info('Session restored successfully for:', sessionData.user.email);
-        setUser(sessionData.user, true);
+        logger.info('Session restored successfully for:', {
+          category: 'auth',
+          user: sessionData.user,
+        });
+        // Fix TypeScript: Convert null to undefined for role, isSubscribed, planTier
+        const userToStore = {
+          ...sessionData.user,
+          role: sessionData.user.role ?? undefined,
+          isSubscribed: sessionData.user.isSubscribed ?? undefined,
+          planTier: sessionData.user.planTier ?? undefined,
+        };
+        setUser(userToStore, true);
       } else {
         logger.debug('No active session found during hydration.');
         setAuthCheckStatus('checked');

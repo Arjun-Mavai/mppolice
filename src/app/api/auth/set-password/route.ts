@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { mppscUsers, verificationTokens, payments } from '@/db/schema';
 import { eq, desc, sql } from 'drizzle-orm';
@@ -19,6 +20,7 @@ const passwordSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  let requestToken: string | undefined;
   try {
     // Rate limit
     const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
@@ -30,6 +32,7 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { token, password } = passwordSchema.parse(body);
+    requestToken = token;
 
     // Verify token
     const storedToken = await db.query.verificationTokens.findFirst({
@@ -97,7 +100,10 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-    console.error('Set password error:', error);
+    logger.error('Set password error:', error, {
+      category: 'auth',
+      metadata: { hasToken: !!requestToken },
+    });
     return NextResponse.json({ error: 'Failed to set password' }, { status: 500 });
   }
 }

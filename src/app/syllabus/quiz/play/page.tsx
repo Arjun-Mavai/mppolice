@@ -17,7 +17,7 @@ interface PageProps {
 
 export default async function QuizPlayPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  logger.debug('params', params);
+  logger.debug('params', { params, category: 'system' });
   const { testId, mode } = params;
 
   if (!testId) {

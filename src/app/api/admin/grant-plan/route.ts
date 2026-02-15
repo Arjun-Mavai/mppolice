@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -32,6 +33,8 @@ const grantSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  let decoded: any;
+  let targetEmail: string | undefined;
   try {
     // Admin Auth
     const cookieStore = await cookies();
@@ -41,7 +44,8 @@ export async function POST(request: Request) {
     }
 
     const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token);
+    const decodedToken: any = verifyToken(token);
+    decoded = decodedToken;
     if (!decoded?.userId) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
@@ -56,6 +60,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email, name, phone, planTier, password, accessMonths, reason } =
       grantSchema.parse(body);
+    targetEmail = email;
 
     const normalizedEmail = email.toLowerCase().trim();
     const months = accessMonths || PLAN_MONTHS[planTier] || 7;
@@ -168,7 +173,11 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    console.error('Grant plan error:', error);
+    logger.error('Grant plan error:', error, {
+      category: 'system',
+      userId: decoded?.userId,
+      metadata: { targetEmail },
+    });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

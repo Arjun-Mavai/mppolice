@@ -12,11 +12,18 @@ export function InstallPrompt() {
   const [isIos, setIsIos] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     // Detect iOS
     const isIosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIos(isIosDevice);
+
+    // Detect Mobile (Android/iOS) for the main prompt
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+    setIsMobile(isMobileDevice);
 
     // If iOS and not standalone, show prompt after a delay (once per session)
     if (isIosDevice && !isPwaInstalled && !sessionStorage.getItem('ios-prompt-dismissed')) {
@@ -98,7 +105,7 @@ export function InstallPrompt() {
       <div
         className={cn(
           'fixed right-4 bottom-4 left-4 z-50 transform rounded-2xl border border-slate-100 bg-white p-4 shadow-xl transition-all duration-500 ease-in-out md:mx-auto md:max-w-md',
-          isVisible ? 'translate-y-0 opacity-100' : 'translate-y-[120%] opacity-0'
+          isVisible && isMobile ? 'translate-y-0 opacity-100' : 'translate-y-[120%] opacity-0' // Only show on mobile
         )}
       >
         <button

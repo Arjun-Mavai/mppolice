@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { eq, and, ne } from 'drizzle-orm';
@@ -20,6 +21,8 @@ const updateUserSchema = z.object({
 const PLAN_MONTHS: Record<string, number> = { lite: 4, pro: 7 };
 
 export async function POST(request: Request) {
+  let decoded: any;
+  let targetUserId: string | undefined;
   try {
     // Admin Auth
     const cookieStore = await cookies();
@@ -27,7 +30,8 @@ export async function POST(request: Request) {
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token);
+    const decodedToken: any = verifyToken(token);
+    decoded = decodedToken;
     if (!decoded?.userId) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
 
     const adminUser = await db.query.mppscUsers.findFirst({
@@ -38,8 +42,10 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
+    const parsed = updateUserSchema.parse(body);
+    targetUserId = parsed.userId;
     const { userId, name, email, password, planTier, isActive, isSubscribed, accessMonths } =
-      updateUserSchema.parse(body);
+      parsed;
 
     // Check target user exists
     const targetUser = await db.query.mppscUsers.findFirst({
@@ -143,7 +149,11 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    console.error('Admin update user error:', error);
+    logger.error('Admin update user error:', error, {
+      category: 'system',
+      userId: decoded?.userId,
+      metadata: { targetUserId },
+    });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

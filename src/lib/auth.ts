@@ -52,7 +52,10 @@ export const verifyAuth = cache(async () => {
     return users[0] || null;
   } catch (error) {
     // DB errors → null (graceful degradation, user redirected to login)
-    logger.error('Database error during auth verification:', error);
+    logger.error('Database error during auth verification:', error, {
+      category: 'auth',
+      userId,
+    });
     return null;
   }
 });
