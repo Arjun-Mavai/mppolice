@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Loader2, LockKeyhole, Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const passwordSchema = z
   .object({
@@ -86,6 +87,10 @@ function SetPasswordContent() {
       toast.success(`Password set! Your ${data.planTier || ''} plan is active.`);
       setTimeout(() => router.push('/login'), 3000);
     } catch (error: any) {
+      logger.error('Set password failed', error, {
+        category: 'auth',
+        metadata: { component: 'SetPasswordPage' },
+      });
       toast.error(error.message);
     } finally {
       setIsLoading(false);

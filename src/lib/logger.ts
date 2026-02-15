@@ -1,71 +1,156 @@
+import * as Sentry from '@sentry/nextjs';
+
 /**
- * Advanced Logger for Next.js Application
+ * 📢 EXPERT LOGGER SYSTEM
  *
- * Controls logging based on environment variables.
- * - In Development: Logs everything.
- * - In Production: Logs ONLY if NEXT_PUBLIC_ENABLE_LOGGING is 'true'.
- *
- * Features:
- * - Structured Output: Adds Timestamps and Levels.
- * - Error Safety: Always logs critical errors if not strictly silenced.
+ * Designed for:
+ * 1. Deep Observability (Categorized logs)
+ * 2. structured Context (User IDs, Metadata)
+ * 3. Sentry Integration (Automatic tagging)
  */
 
-const isDev = process.env.NODE_ENV === 'development';
-const isLoggingEnabled = process.env.NEXT_PUBLIC_ENABLE_LOGGING === 'true';
+export type LogCategory =
+  | 'auth'
+  | 'payment'
+  | 'db'
+  | 'api'
+  | 'content' // Added for blogs/syllabus
+  | 'uncategorized'
+  | 'email'
+  | 'system'
+  | 'ui';
 
-// Helper to format timestamp
-const getTimestamp = () => {
-  return new Date().toISOString().split('T')[1].split('.')[0];
+export type LogLevel = 'info' | 'warn' | 'error' | 'debug';
+
+interface LogContext {
+  category: LogCategory;
+  userId?: string;
+  metadata?: Record<string, any>;
+  [key: string]: any;
+}
+
+const isDev = process.env.NODE_ENV === 'development';
+
+/**
+ * Formats options into a context object for Sentry
+ */
+const formatContext = (context?: LogContext) => {
+  const { category, userId, metadata, ...rest } = context || {};
+  return {
+    tags: {
+      category: category || 'system',
+    },
+    user: userId ? { id: userId } : undefined,
+    extra: {
+      ...metadata,
+      ...rest,
+    },
+  };
 };
 
-type LogLevel = 'INFO' | 'WARN' | 'ERROR' | 'DEBUG';
+/**
+ * Internal printer that handles both Console and Sentry
+ */
+const logToSentry = (level: LogLevel, message: string, error?: any, context?: LogContext) => {
+  const { tags, user, extra } = formatContext(context);
 
-const print = (level: LogLevel, ...args: any[]) => {
-  // Determine if we should log
-  // 1. If it's Dev, always log.
-  // 2. If it's Prod, log ONLY IF explicitly enabled.
-  const shouldLog = isDev || isLoggingEnabled;
+  Sentry.withScope((scope) => {
+    scope.setTags(tags);
+    if (user) {
+      scope.setUser(user);
+    }
+    if (extra) {
+      scope.setExtras(extra);
+    }
+    // Set level level via scope if needed, or rely on capture methods
 
-  if (!shouldLog) return;
+    if (level === 'error') {
+      if (error instanceof Error) {
+        Sentry.captureException(error);
+      } else {
+        Sentry.captureMessage(message || 'Unknown Error', 'error');
+        if (error) {
+          scope.setExtra('original_error_object', error);
+        }
+      }
+    } else if (level === 'warn') {
+      Sentry.captureMessage(message, 'warning');
+    } else if (level === 'info') {
+      Sentry.addBreadcrumb({
+        category: tags.category,
+        message: message,
+        level: 'info',
+        data: extra,
+      });
+    }
+  });
+};
 
-  const prefix = `[${level}] [${getTimestamp()}]`;
+const printConsole = (level: LogLevel, message: string, error?: any, context?: LogContext) => {
+  if (!isDev) return; // Optional: Silence console in prod to keep logs clean, or keep it for Vercel logs
 
-  // Enhance console visibility
+  const timestamp = new Date().toISOString().substring(11, 19);
+  const category = context?.category || 'system';
+
   const styles = {
-    INFO: 'color: #2563eb; font-weight: bold;', // Blue
-    WARN: 'color: #d97706; font-weight: bold;', // Amber
-    ERROR: 'color: #dc2626; font-weight: bold;', // Red
-    DEBUG: 'color: #9333ea; font-weight: bold;', // Purple
+    info: 'color: #3b82f6; font-weight: bold;',
+    warn: 'color: #f59e0b; font-weight: bold;',
+    error: 'color: #ef4444; font-weight: bold;',
+    debug: 'color: #a855f7; font-weight: bold;',
   };
 
-  // Use specific console methods for browser capabilities
+  const prefix = `[${timestamp}] [${category.toUpperCase()}]`;
+
   switch (level) {
-    case 'ERROR':
-      console.error(`%c${prefix}`, styles.ERROR, ...args);
+    case 'error':
+      console.error(`%c${prefix} ${message}`, styles.error);
+      if (error) console.error(error);
       break;
-    case 'WARN':
-      console.warn(`%c${prefix}`, styles.WARN, ...args);
+    case 'warn':
+      console.warn(`%c${prefix} ${message}`, styles.warn, context?.metadata || '');
       break;
-    case 'DEBUG':
-      console.debug(`%c${prefix}`, styles.DEBUG, ...args);
+    case 'info':
+      console.log(`%c${prefix} ${message}`, styles.info, context?.metadata || '');
       break;
-    case 'INFO':
-    default:
-      console.log(`%c${prefix}`, styles.INFO, ...args);
+    case 'debug':
+      console.debug(`%c${prefix} ${message}`, styles.debug, context?.metadata || '');
       break;
   }
 };
 
 export const logger = {
-  log: (...args: any[]) => print('INFO', ...args),
-  info: (...args: any[]) => print('INFO', ...args),
-  warn: (...args: any[]) => print('WARN', ...args),
-  error: (...args: any[]) => {
-    // Critical errors should ideally always be visible in Dev.
-    // In Prod, we might still want to suppress them to avoid leaking info to users console
-    // unless Debugging is ON.
-    // Current Logic: Adhere to the master switch.
-    print('ERROR', ...args);
+  /**
+   * ℹ️ INFO: Standard events (User logged in, Payment started)
+   * - recorded as Sentry Breadcrumbs
+   */
+  info: (message: string, context?: LogContext) => {
+    printConsole('info', message, undefined, context);
+    logToSentry('info', message, undefined, context);
   },
-  debug: (...args: any[]) => print('DEBUG', ...args),
+
+  /**
+   * ⚠️ WARN: Unexpected but handled issues (Rate limit hit, invalid input)
+   * - recorded as Sentry Issues (Warning level)
+   */
+  warn: (message: string, context?: LogContext) => {
+    printConsole('warn', message, undefined, context);
+    logToSentry('warn', message, undefined, context);
+  },
+
+  /**
+   * 🚨 ERROR: Critical failures (DB connection lost, Payment failed)
+   * - recorded as Sentry Issues (Error level) w/ Stack Trace
+   */
+  error: (message: string, error?: any, context?: LogContext) => {
+    printConsole('error', message, error, context);
+    logToSentry('error', message, error, context);
+  },
+
+  /**
+   * 🐛 DEBUG: Dev-only traces
+   * - Not sent to Sentry (usually)
+   */
+  debug: (message: string, context?: LogContext) => {
+    printConsole('debug', message, undefined, context);
+  },
 };

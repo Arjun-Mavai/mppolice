@@ -29,6 +29,7 @@ import {
   FormattedQuestionText,
   RenderTableQuestion,
 } from '@/features/tests/utils/questionFormatter';
+import { logger } from '@/lib/logger';
 
 interface QuizResultProps {
   questions: Question[];
@@ -64,17 +65,25 @@ export function QuizResult({
 
   useEffect(() => {
     const refreshData = async () => {
-      setIsLoadingStats(true);
-      await revalidateAnalyticsAction();
-      router.refresh(); // Refresh Client Router Cache
+      try {
+        setIsLoadingStats(true);
+        await revalidateAnalyticsAction();
+        router.refresh(); // Refresh Client Router Cache
 
-      if (testId) {
-        const data = await getTestLeaderboard(testId, userId);
-        setLeaderboard(data);
+        if (testId) {
+          const data = await getTestLeaderboard(testId, userId);
+          setLeaderboard(data);
+        }
+      } catch (error) {
+        logger.error('Failed to refresh quiz result stats', error, {
+          category: 'ui',
+          metadata: { testId, userId },
+        });
+      } finally {
+        // Add a small artificial delay for the "feel" if it's too fast, or just let it be natural
+        // "Bhai thoda suspense to banta hai"
+        setTimeout(() => setIsLoadingStats(false), 2000);
       }
-      // Add a small artificial delay for the "feel" if it's too fast, or just let it be natural
-      // "Bhai thoda suspense to banta hai"
-      setTimeout(() => setIsLoadingStats(false), 2000);
     };
     refreshData();
   }, [router, testId, userId]);

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/jwt';
 import { db } from '@/db';
@@ -6,13 +7,14 @@ import { payments, mppscUsers } from '@/db/schema';
 import { desc, eq } from 'drizzle-orm';
 
 export async function GET(req: Request) {
+  let payload: any;
   try {
     // Auth check — admin only
     const cookieStore = await cookies();
     const token = cookieStore.get('mppsc_token')?.value;
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const payload = (await verifyToken(token)) as any;
+    payload = (await verifyToken(token)) as any;
     if (!payload?.userId) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
 
     const [admin] = await db
@@ -140,7 +142,10 @@ export async function GET(req: Request) {
       })),
     });
   } catch (error) {
-    console.error('Admin payments error:', error);
+    logger.error('Admin payments error:', error, {
+      category: 'system',
+      userId: payload?.userId,
+    });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -1,6 +1,8 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { logger } from '@/lib/logger';
+import { Button } from '@/components/ui/button';
 import { Lock, Sparkles, Check } from 'lucide-react';
 
 interface PaywallModalProps {
@@ -8,7 +10,10 @@ interface PaywallModalProps {
   onClose: () => void;
 }
 
+import { useState } from 'react';
+
 export const PaywallModal = ({ isOpen, onClose }: PaywallModalProps) => {
+  const [isLoading, setIsLoading] = useState(false);
   return (
     <AnimatePresence>
       {isOpen && (
@@ -52,14 +57,31 @@ export const PaywallModal = ({ isOpen, onClose }: PaywallModalProps) => {
               </div>
 
               <button
-                onClick={() => {
-                  // Redirect to secure backend endpoint
-                  window.location.href = '/api/payment/checkout';
+                onClick={async () => {
+                  try {
+                    setIsLoading(true);
+                    // Redirect to secure backend endpoint
+                    window.location.href = '/api/payment/checkout';
+                  } catch (error) {
+                    logger.error('Payment initiation failed', error, {
+                      category: 'payment',
+                      metadata: { component: 'PaywallModal' },
+                    });
+                    alert('Something went wrong. Please try again.');
+                    setIsLoading(false);
+                  }
                 }}
                 className="group flex w-full transform items-center justify-center gap-2 rounded-xl bg-gray-900 py-4 text-lg font-bold text-white shadow-lg transition-all hover:bg-gray-800 active:scale-95"
+                disabled={isLoading} // Disable button while loading
               >
-                <span>Upgrade for $3.99/mo</span>
-                <Sparkles size={18} className="transition-colors group-hover:text-yellow-400" />
+                {isLoading ? (
+                  <span>Processing...</span>
+                ) : (
+                  <>
+                    <span>Upgrade for $3.99/mo</span>
+                    <Sparkles size={18} className="transition-colors group-hover:text-yellow-400" />
+                  </>
+                )}
               </button>
 
               {/* Removed "Maybe later" button to enforce paywall */}

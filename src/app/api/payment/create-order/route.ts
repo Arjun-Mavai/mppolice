@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import Razorpay from 'razorpay';
 import { verifyAuth } from '@/lib/auth';
 import { z } from 'zod';
@@ -28,6 +29,7 @@ const createOrderSchema = z.object({
  * 3. Environment Variables: Keys code me hardcode nahi, .env me rakho.
  */
 export async function POST(req: Request) {
+  let planType: string | undefined;
   try {
     // 🚦 Rate Limit Check: 10 requests / 15 mins
     // Bhai, ye zaroori h taaki koi script lagakar hazaro fake orders na banaye.
@@ -39,7 +41,8 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { planType } = createOrderSchema.parse(body);
+    const parsed = createOrderSchema.parse(body);
+    planType = parsed.planType;
 
     if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
       throw new Error('Razorpay keys not configured');
@@ -84,7 +87,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ...(order as any), planType });
   } catch (error: any) {
-    console.error('Razorpay order creation error:', error);
+    logger.error('Razorpay order creation error:', error, {
+      category: 'payment',
+      metadata: { planType },
+    });
     return NextResponse.json(
       { error: 'Failed to create order', details: error.message },
       { status: 500 }

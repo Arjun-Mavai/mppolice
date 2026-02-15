@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -30,6 +31,8 @@ const registerSchema = z.object({
  * Sirf Payment success hone par hi 'isActive: true' hoga.
  */
 export async function POST(req: Request) {
+  let requestEmail: string | undefined;
+  let requestSource: string | undefined;
   try {
     // 🚦 Strict Rate Limit: 10 signups / hour
     // Prevent abuse of database storage by bots creating junk accounts.
@@ -42,6 +45,8 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { name, email, phone, source } = registerSchema.parse(body);
+    requestEmail = email;
+    requestSource = source;
     const normalizedEmail = email.toLowerCase().trim();
 
     // 🔍 Check Existing User
@@ -92,7 +97,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ userId, isNew: true });
   } catch (error: any) {
-    console.error('Registration init error:', error);
+    logger.error('Registration init error:', error, {
+      category: 'auth',
+      metadata: { email: requestEmail, source: requestSource },
+    });
     return NextResponse.json(
       { error: error.message || 'Failed to initialize registration' },
       { status: 500 }

@@ -7,7 +7,7 @@
  * - HTML pages: Network First, fallback to cache (always fresh auth state)
  */
 
-const CACHE_NAME = 'mppsc-cache-v2'; // Bumped version to bust old stale cache
+const CACHE_NAME = 'mppsc-cache-v3'; // Bumped to v3 to force refresh for all users
 
 const urlsToCache = [
   '/offline',
@@ -95,7 +95,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // RULE 3: HTML pages → Network First (always fresh), fallback to cache
+  // RULE 3: HTML pages (Syllabus, Blogs, Quiz) → Network First (FRESH content)
+  // We try network first. If it fails (offline), THEN we use cache.
+  // This ensures users always see the latest blog updates if they have internet.
   if (request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
       fetch(request)

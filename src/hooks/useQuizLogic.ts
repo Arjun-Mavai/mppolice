@@ -221,7 +221,10 @@ export function useQuizLogic({
         finalTimes
       );
     } catch (error) {
-      logger.error('Failed to save test attempt:', error);
+      logger.error('Failed to save test attempt:', error, {
+        category: 'ui',
+        metadata: { testId, userId, questionsCount: questions.length },
+      });
       // Note: We don't revert isSubmitted=false because partial save might have happened
     }
   }, [

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
 import { db } from '@/db';
@@ -25,6 +26,9 @@ import { PRICING_DEFAULTS } from '@/config/pricing';
  * 4. **Transactional Data**: Payment record karo, User ko assign karo, aur Email bhejo.
  */
 export async function POST(req: Request) {
+  let requestUserId: string | undefined;
+  let requestOrderId: string | undefined;
+  let requestPaymentId: string | undefined;
   try {
     // 🛑 Rate Limit: Protect verification endpoint
     const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
@@ -36,6 +40,9 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId } = body;
+    requestUserId = userId;
+    requestOrderId = razorpay_order_id;
+    requestPaymentId = razorpay_payment_id;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !userId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -163,12 +170,19 @@ export async function POST(req: Request) {
         },
       });
     } catch (err) {
-      console.error('Failed to log activity:', err);
+      logger.warn('Failed to log activity:', {
+        category: 'payment',
+        metadata: { error: err, userId },
+      });
     }
 
     return NextResponse.json({ success: true, planTier });
   } catch (error) {
-    console.error('Payment verification error:', error);
+    logger.error('Payment verification error:', error, {
+      category: 'payment',
+      userId: requestUserId,
+      metadata: { razorpay_order_id: requestOrderId, razorpay_payment_id: requestPaymentId },
+    });
     return NextResponse.json({ error: 'Payment verification failed' }, { status: 500 });
   }
 }

@@ -21,6 +21,8 @@ import { logger } from '@/lib/logger';
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export async function POST(request: Request) {
+  let email: string | undefined;
+
   try {
     // ── Rate Limiting ───────────────────────────────────────────
     const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
@@ -44,7 +46,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const { email, password } = await request.json();
+    const body = await request.json();
+    email = body.email;
+    const password = body.password;
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
@@ -143,7 +147,10 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    logger.error('Login error:', error);
+    logger.error('Login error:', error, {
+      category: 'auth',
+      metadata: { email },
+    });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

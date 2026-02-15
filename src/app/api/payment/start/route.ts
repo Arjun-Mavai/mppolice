@@ -24,6 +24,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import Razorpay from 'razorpay';
 import { z } from 'zod';
 import { db } from '@/db';
@@ -151,7 +152,10 @@ export async function POST(req: Request) {
     // Single response — userId + order details
     return NextResponse.json({ userId, order: { ...order, planType } });
   } catch (error: unknown) {
-    console.error('Payment start error:', error);
+    logger.error('Payment start error:', error, {
+      category: 'payment',
+      metadata: { planType: (error as any)?.planType },
+    });
     const message = error instanceof Error ? error.message : 'Failed to start payment';
     return NextResponse.json({ error: message }, { status: 500 });
   }

@@ -7,6 +7,7 @@ import { useQuizLogic } from '@/hooks/useQuizLogic';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { createGuestEntry as createGuestUser } from '@/actions/guest-actions';
 import { GuestResultTeaser } from '@/app/syllabus/quiz/play/GuestResultTeaser';
+import { logger } from '@/lib/logger';
 
 import { QuizHeader } from './quiz/QuizHeader';
 import { QuizQuestion } from './quiz/QuizQuestion';
@@ -153,10 +154,19 @@ export function QuizInterface(props: QuizInterfaceProps) {
   const handleGuestEntrySubmit = async () => {
     if (!guestName.trim()) return;
     setIsSubmittingGuest(true);
-    localStorage.setItem('mppsc_guest_name', guestName.trim());
-    await createGuestUser({ name: guestName, email: guestEmail, mobile: guestMobile });
-    setShowGuestEntryDialog(false);
-    setIsSubmittingGuest(false);
+    try {
+      localStorage.setItem('mppsc_guest_name', guestName.trim());
+      await createGuestUser({ name: guestName, email: guestEmail, mobile: guestMobile });
+      setShowGuestEntryDialog(false);
+    } catch (error) {
+      logger.error('Guest entry creation failed', error, {
+        category: 'auth',
+        metadata: { guestName, guestEmail },
+      });
+      // Optionally show an alert or toast here
+    } finally {
+      setIsSubmittingGuest(false);
+    }
   };
 
   // ── Auto-fullscreen on mount ──

@@ -1,4 +1,5 @@
 // Basic Lemon Squeezy checkout link generator
+import { logger } from '@/lib/logger';
 // In a real app, you would use their API to generate a link for a specific user.
 // For now, we use a direct payment link concept but we should use the API to pass custom data (userId).
 
@@ -12,7 +13,9 @@ const LS_API_KEY = process.env.LEMONSQUEEZY_API_KEY;
 
 export async function createCheckoutSession(userId: string, userEmail: string) {
   if (!LS_STORE_ID || !LS_VARIANT_ID || !LS_API_KEY) {
-    console.warn('Lemon Squeezy credentials missing. Using fallback/demo link.');
+    logger.warn('Lemon Squeezy credentials missing. Using fallback/demo link.', {
+      category: 'payment',
+    });
     // Fallback for demo purposes if env vars are not set
     return 'https://lemonsqueezy.com/checkout?demo=true';
   }
@@ -60,7 +63,11 @@ export async function createCheckoutSession(userId: string, userEmail: string) {
     const data = await response.json();
     return data.data.attributes.url;
   } catch (error) {
-    console.error('Error creating Lemon Squeezy checkout:', error);
+    logger.error('Error creating Lemon Squeezy checkout:', error, {
+      category: 'payment',
+      userId,
+      metadata: { userEmail },
+    });
     return null;
   }
 }

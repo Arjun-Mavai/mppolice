@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     const secret = process.env.DODO_WEBHOOK_SECRET;
 
     if (!secret) {
-      logger.error('Webhook secret not configured');
+      logger.error('Webhook secret not configured', undefined, { category: 'payment' });
       return NextResponse.json({ error: 'Configuration Error' }, { status: 500 });
     }
 
@@ -76,7 +76,10 @@ export async function POST(request: Request) {
     const event = JSON.parse(payload);
 
     // Log event for debugging (optional)
-    logger.info(`Received secure webhook event: ${event.type}`);
+    logger.info(`Received secure webhook event: ${event.type}`, {
+      category: 'payment',
+      metadata: { type: event.type },
+    });
 
     // Handle 'payment.succeeded'
     // Dodo payload structure variant: Check generic 'type' or Dodo specific
@@ -115,21 +118,33 @@ export async function POST(request: Request) {
           .eq('email', email);
 
         if (error) {
-          logger.error('Failed to update user status:', error);
+          logger.error('Failed to update user status:', error, {
+            category: 'payment',
+            metadata: { email, subscriptionId, customerId },
+          });
           return NextResponse.json({ error: 'Database Update Failed' }, { status: 500 });
         }
 
-        logger.info(`Upgraded user ${email} to Pro with sub_id: ${subscriptionId}`);
+        logger.info(`Upgraded user ${email} to Pro with sub_id: ${subscriptionId}`, {
+          category: 'payment',
+          metadata: { email, subscriptionId },
+        });
         // return NextResponse.redirect(new URL('/app', request.url));
       } else {
-        logger.warn('No email found in payment payload');
+        logger.warn('No email found in payment payload', {
+          category: 'payment',
+          metadata: { eventId: event.id },
+        });
       }
     }
 
     // Handle 'payment.failed' or 'subscription.deleted' for cancellations
     if (event.type === 'payment.failed' || event.type === 'subscription.deleted') {
       const { data } = event;
-      logger.info('Payment failed or subscription deleted', data);
+      logger.info('Payment failed or subscription deleted', {
+        category: 'payment',
+        metadata: data,
+      });
       const email = data.customer_email || data.customer?.email || data.email;
 
       if (email) {
@@ -147,17 +162,23 @@ export async function POST(request: Request) {
           .eq('email', email);
 
         if (error) {
-          logger.error('Failed to update user status on failure:', error);
+          logger.error('Failed to update user status on failure:', error, {
+            category: 'payment',
+            metadata: { email },
+          });
           return NextResponse.json({ error: 'Database Update Failed' }, { status: 500 });
         }
 
-        logger.info(`Downgraded user ${email} to Free`);
+        logger.info(`Downgraded user ${email} to Free`, {
+          category: 'payment',
+          metadata: { email },
+        });
       }
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error('Webhook Error:', error);
+    logger.error('Webhook Error:', error, { category: 'payment' });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
