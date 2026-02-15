@@ -13,46 +13,56 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { calculateScore } from '@/lib/quiz-scoring';
 
 export function ExamSimulationSection() {
   const { language } = useSettingsStore();
 
   const [mockStep, setMockStep] = React.useState<'intro' | 'active' | 'result'>('intro');
   const [mockQIndex, setMockQIndex] = React.useState(0);
-  const [mockScore, setMockScore] = React.useState(0);
+  const [correctCount, setCorrectCount] = React.useState(0);
+  const [wrongCount, setWrongCount] = React.useState(0);
   const [mockSelected, setMockSelected] = React.useState<number | null>(null);
 
   const mockQuestions = [
     {
       id: 1,
-      q: 'Which article of the Constitution deals with the Election Commission?',
-      q_hi: 'संविधान का कौन सा अनुच्छेद चुनाव आयोग से संबंधित है?',
-      options: ['Article 324', 'Article 325', 'Article 326', 'Article 328'],
-      options_hi: ['अनुच्छेद 324', 'अनुच्छेद 325', 'अनुच्छेद 326', 'अनुच्छेद 328'],
-      correct: 0,
+      q: 'As of 2024, what is the total number of districts in Madhya Pradesh?',
+      q_hi: '2024 तक मध्य प्रदेश में कुल जिलों की संख्या कितनी है?',
+      options: ['52', '53', '54', '55'],
+      options_hi: ['52', '53', '54', '55'],
+      correct: 3,
     },
     {
       id: 2,
-      q: 'Who was the first Governor of Madhya Pradesh?',
-      q_hi: 'मध्य प्रदेश के प्रथम राज्यपाल कौन थे?',
-      options: ['H.V. Pataskar', 'Pattabhi Sitaramayya', 'K.C. Reddy', 'S.N. Sinha'],
-      options_hi: ['एच.वी. पाटस्कर', 'पट्टाभि सितारमैया', 'के.सी. रेड्डी', 'एस.एन. सिन्हा'],
+      q: 'Which Article of the Constitution empowers the High Court to issue writs for the enforcement of Fundamental Rights?',
+      q_hi: 'संविधान का कौन सा अनुच्छेद उच्च न्यायालय को मौलिक अधिकारों के प्रवर्तन के लिए रिट जारी करने की शक्ति देता है?',
+      options: ['Article 32', 'Article 226', 'Article 131', 'Article 214'],
+      options_hi: ['अनुच्छेद 32', 'अनुच्छेद 226', 'अनुच्छेद 131', 'अनुच्छेद 214'],
       correct: 1,
     },
     {
       id: 3,
-      q: 'Kalidas Samman is given in which text?',
-      q_hi: 'कालिदास सम्मान किस क्षेत्र में दिया जाता है?',
-      options: ['Folk Art', 'Classical Music', 'Literature', 'All of these'],
-      options_hi: ['लोक कला', 'शास्त्रीय संगीत', 'साहित्य', 'ये सभी'],
-      correct: 3,
+      q: 'The "Patalkot" region of Chhindwara is primarily inhabited by which tribe?',
+      q_hi: 'छिंदवाड़ा का "पातालकोट" क्षेत्र मुख्य रूप से किस जनजाति द्वारा बसा हुआ है?',
+      options: ['Bhil', 'Gond', 'Bharia', 'Sahariya'],
+      options_hi: ['भील', 'गोंड', 'भारिया', 'सहरिया'],
+      correct: 2,
     },
     {
       id: 4,
-      q: 'River Narmada originates from?',
-      q_hi: 'नर्मदा नदी का उद्गम स्थल है?',
-      options: ['Multai', 'Amarkantak', 'Jana-Pava', 'Kakri-Bardi'],
-      options_hi: ['मुलताई', 'अमरकंटक', 'जना-पावा', 'काकरी-बर्डी'],
+      q: 'Who appoints the Judges of the Supreme Court of India under Article 124(2)?',
+      q_hi: 'अनुच्छेद 124(2) के तहत भारत के सर्वोच्च न्यायालय के न्यायाधीशों की नियुक्ति कौन करता है?',
+      options: ['Chief Justice of India', 'Prime Minister', 'President of India', 'Law Minister'],
+      options_hi: ['भारत के मुख्य न्यायाधीश', 'प्रधानमंत्री', 'भारत के राष्ट्रपति', 'कानून मंत्री'],
+      correct: 2,
+    },
+    {
+      id: 5,
+      q: 'Which is the newly formed 55th district of Madhya Pradesh?',
+      q_hi: 'मध्य प्रदेश का नवनिर्मित 55वां जिला कौन सा है?',
+      options: ['Mauganj', 'Maihar', 'Pandhurna', 'Niwari'],
+      options_hi: ['मऊगंज', 'मैहर', 'पांढुर्णा', 'निवाड़ी'],
       correct: 1,
     },
   ];
@@ -60,7 +70,8 @@ export function ExamSimulationSection() {
   const handleMockStart = () => {
     setMockStep('active');
     setMockQIndex(0);
-    setMockScore(0);
+    setCorrectCount(0);
+    setWrongCount(0);
     setMockSelected(null);
   };
 
@@ -70,7 +81,9 @@ export function ExamSimulationSection() {
 
     setTimeout(() => {
       if (idx === mockQuestions[mockQIndex].correct) {
-        setMockScore((s) => s + 1);
+        setCorrectCount((s) => s + 1);
+      } else {
+        setWrongCount((s) => s + 1);
       }
 
       if (mockQIndex < mockQuestions.length - 1) {
@@ -81,6 +94,8 @@ export function ExamSimulationSection() {
       }
     }, 800);
   };
+
+  const results = calculateScore(mockQuestions.length, correctCount, wrongCount);
 
   return (
     <section className="relative overflow-hidden bg-slate-900 py-32 text-white">
@@ -205,9 +220,12 @@ export function ExamSimulationSection() {
                         <div className="absolute -inset-4 animate-pulse rounded-full bg-emerald-500/20 blur-xl"></div>
                         <div className="relative flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-slate-900 shadow-xl">
                           <div className="text-center">
-                            <div className="text-3xl font-bold text-emerald-400">{mockScore}/4</div>
+                            <div className="text-2xl font-bold text-emerald-400">
+                              {results.totalScore}
+                              <span className="text-sm text-slate-500">/{results.maxMarks}</span>
+                            </div>
                             <div className="text-[10px] font-bold text-slate-400 uppercase">
-                              Score
+                              Marks
                             </div>
                           </div>
                         </div>
@@ -215,11 +233,11 @@ export function ExamSimulationSection() {
 
                       <div className="space-y-2">
                         <h3 className="text-2xl font-bold text-slate-900">
-                          {mockScore === 4
+                          {correctCount === 4
                             ? language === 'hi'
                               ? 'शानदार!'
                               : 'Outstanding!'
-                            : mockScore >= 2
+                            : correctCount >= 2
                               ? language === 'hi'
                                 ? 'बहुत अच्छे!'
                                 : 'Good Job!'
@@ -236,14 +254,22 @@ export function ExamSimulationSection() {
 
                       <div className="flex justify-around rounded-xl border border-slate-100 bg-slate-50 p-3 text-center">
                         <div>
-                          <div className="text-xl font-bold text-slate-900">92%</div>
+                          <div className="text-xl font-bold text-slate-900">
+                            {results.percentage}%
+                          </div>
                           <div className="text-xs text-slate-500">
                             {language === 'hi' ? 'सटीकता' : 'Accuracy'}
                           </div>
                         </div>
                         <div className="w-px bg-slate-200"></div>
                         <div>
-                          <div className="text-xl font-bold text-slate-900">Top 5%</div>
+                          <div className="text-xl font-bold text-slate-900">
+                            {results.percentage >= 80
+                              ? 'Top 5%'
+                              : results.percentage >= 50
+                                ? 'Top 25%'
+                                : 'Top 60%'}
+                          </div>
                           <div className="text-xs text-slate-500">
                             {language === 'hi' ? 'रैंक' : 'Rank'}
                           </div>
@@ -273,8 +299,8 @@ export function ExamSimulationSection() {
             </h2>
             <p className="text-lg leading-relaxed font-medium text-slate-400">
               {language === 'hi'
-                ? '2 घंटे के मैराथन के लिए अपने दिमाग को प्रशिक्षित करें। असली परीक्षा जैसा इंटरफ़ेस, टाइमर दबाव और कठिनाई स्तर — अब आपके हाथ में।'
-                : 'Train your brain for the 2-hour marathon. Full-length mock tests with the exact same interface, timer pressure, and difficulty level as the real exam.'}
+                ? 'MPPSC 2026 के नए पैटर्न (3 अंक/प्रश्न, 1/3 नेगेटिव मार्किंग) पर आधारित लेटेस्ट सिमुलेशन। नए 300-अंकों वाले फॉर्मेट में अपनी तैयारी परखें।'
+                : 'Master the new MPPSC 2026 pattern: 3 marks per question with 1/3rd negative marking. Real-time simulation for the latest 300-mark format.'}
             </p>
             <Button className="h-14 rounded-full bg-rose-600 px-8 text-lg font-bold text-white shadow-lg shadow-rose-600/20 hover:bg-rose-500">
               {language === 'hi' ? 'फ्री मॉक टेस्ट शुरू करें' : 'Start Free Mock Test'}
