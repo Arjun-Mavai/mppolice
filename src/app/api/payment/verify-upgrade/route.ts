@@ -49,7 +49,13 @@ export async function POST(req: Request) {
     hmac.update(razorpay_order_id + '|' + razorpay_payment_id);
     const generated_signature = hmac.digest('hex');
 
-    if (generated_signature !== razorpay_signature) {
+    // 🛡️ Timing-Safe Comparison (Prevents timing attacks)
+    const isValidSignature = crypto.timingSafeEqual(
+      Buffer.from(generated_signature, 'hex'),
+      Buffer.from(razorpay_signature, 'hex')
+    );
+
+    if (!isValidSignature) {
       return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 });
     }
 

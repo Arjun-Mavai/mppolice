@@ -133,6 +133,25 @@ export async function submitTestAttempt(
   questionTimes: Record<string, number>
 ) {
   try {
+    // 🛡️ CRITICAL FIX: Prevent Double Submit (Race Condition Protection)
+    // Bhai, agar user ne 2 second pehle hi submit kiya hai, to dobara nahi hone denge!
+    const recentAttempt = await db.query.userAttempts.findFirst({
+      where: and(
+        eq(userAttempts.userId, userId),
+        eq(userAttempts.testId, testId),
+        eq(userAttempts.isCompleted, true),
+        sql`${userAttempts.endTime} > datetime('now', '-30 seconds')`
+      ),
+    });
+
+    if (recentAttempt) {
+      logger.warn('Duplicate test submission attempt blocked', {
+        category: 'system',
+        metadata: { userId, testId, recentAttemptId: recentAttempt.id },
+      });
+      return { error: 'Test already submitted recently. Please wait.' };
+    }
+
     // 1. Fetch Correct Answers from DB (Secure)
     const testQuestions = await db
       .select({
@@ -184,6 +203,24 @@ export async function submitTestAttempt(
       }
     });
 
+    // 🛡️ Server-Side Timer Validation (Prevent Time Manipulation)
+    // Bhai, client se jo time aaya hai wo sahi hai ya nahi check karo!
+    const test = await db.query.tests.findFirst({ where: eq(tests.id, testId) });
+    const maxDuration = (test?.durationMinutes || 60) * 60; // Convert to seconds
+    const validDuration = Math.min(Math.max(durationSeconds, 0), maxDuration);
+
+    if (validDuration !== durationSeconds) {
+      logger.warn('Invalid test duration detected', {
+        category: 'system',
+        metadata: {
+          userId,
+          testId,
+          submittedDuration: durationSeconds,
+          validatedDuration: validDuration,
+        },
+      });
+    }
+
     // 3. Create Attempt Record
     const attemptId = crypto.randomUUID();
 
@@ -194,7 +231,7 @@ export async function submitTestAttempt(
         id: attemptId,
         userId,
         testId,
-        startTime: new Date(Date.now() - durationSeconds * 1000), // Approx start
+        startTime: new Date(Date.now() - validDuration * 1000), // Use validated duration
         endTime: new Date(),
         score: parseFloat(totalScore.toFixed(2)),
         isCompleted: true,

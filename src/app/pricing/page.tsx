@@ -48,6 +48,8 @@ import {
 import { API } from '@/config/endpoints';
 import { PaymentModal } from '@/components/payment/PaymentModal';
 import { PricingCard } from '@/components/PricingCard';
+import { getPricingData } from '@/actions/pricing-actions';
+import { useQuery } from '@tanstack/react-query';
 
 import { AppNavbar } from '@/components/layout/AppNavbar';
 import { ExitSurveyModal } from '@/components/ExitSurveyModal';
@@ -137,7 +139,6 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
 // ... (existing imports)
 
 export default function PricingPage() {
-  const [p, setP] = useState<PricingData>(PRICING_DEFAULTS);
   // Payment Modal State
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState({
@@ -154,24 +155,21 @@ export default function PricingPage() {
   const isLiteUser = planTier === 'lite';
   const isLoggedIn = !!user;
 
+  // 🔒 Fetch pricing with React Query + Server Action
+  const { data: pricingData } = useQuery({
+    queryKey: ['pricing'],
+    queryFn: async () => await getPricingData(),
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+  });
+
+  const p = pricingData?.pricing || PRICING_DEFAULTS;
+
   // Pro users ko pricing page bilkul na dikhao — redirect to quiz
   useEffect(() => {
     if (isProUser) {
       router.replace('/syllabus/quiz/pyq');
     }
   }, [isProUser, router]);
-
-  // ── Fetch dynamic pricing from API ────────────────────────
-  useEffect(() => {
-    fetch(API.PRICING)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.pricing) setP(d.pricing);
-      })
-      .catch(() => {
-        /* defaults stay */
-      });
-  }, []);
 
   const handleBuy = (plan: 'lite' | 'pro' | 'upgrade') => {
     if (plan === 'lite') {
@@ -185,10 +183,10 @@ export default function PricingPage() {
   };
 
   // Calculated values
-  const liteDiscount = calcDiscount(p.litePrice, p.liteOriginalPrice);
-  const proDiscount = calcDiscount(p.proPrice, p.proOriginalPrice);
-  const liteMonthly = calcMonthly(p.litePrice, p.liteMonths);
-  const proMonthly = calcMonthly(p.proPrice, p.proMonths);
+  // const liteDiscount = calcDiscount(p.litePrice, p.liteOriginalPrice);
+  // const proDiscount = calcDiscount(p.proPrice, p.proOriginalPrice);
+  // const liteMonthly = calcMonthly(p.litePrice, p.liteMonths);
+  // const proMonthly = calcMonthly(p.proPrice, p.proMonths);
 
   // Intercept back button
   useEffect(() => {

@@ -14,6 +14,7 @@ import { type PricingData, LITE_FEATURES, PRO_FEATURES, PRICING_DEFAULTS } from 
 import { PricingCard } from '@/components/PricingCard';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useQuery } from '@tanstack/react-query';
+import { getPricingData } from '@/actions/pricing-actions';
 
 interface PremiumMarketingProps {
   onUnlock: (amount: number) => void;
@@ -24,17 +25,14 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
   const hi = language === 'hi';
   const isLiteUser = user?.planTier === 'lite';
 
-  // Dynamic pricing — fetch from backend, fallback to defaults
-  const { data: p = PRICING_DEFAULTS, isLoading } = useQuery({
+  // 🔒 Dynamic pricing — Server Action + React Query (no API visible!)
+  const { data: pricingData, isLoading } = useQuery({
     queryKey: ['pricing'],
-    queryFn: async () => {
-      const res = await fetch('/api/pricing');
-      if (!res.ok) throw new Error('Failed to fetch pricing');
-      const data = await res.json();
-      return data.pricing || PRICING_DEFAULTS;
-    },
+    queryFn: getPricingData,
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
+
+  const p = pricingData?.pricing ?? PRICING_DEFAULTS;
 
   // Loading Skeleton State
   if (isLoading) {

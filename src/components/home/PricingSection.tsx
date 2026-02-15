@@ -1,10 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { CheckCircle2, Zap, Crown, Clock, Users, Flame, Shield } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import React from 'react';
+import { Zap, Crown, Clock, Users, Flame, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -16,8 +13,9 @@ import {
   calcDiscount,
   calcMonthly,
 } from '@/config/pricing';
-import { API } from '@/config/endpoints';
 import { PricingCard } from '@/components/PricingCard';
+import { useQuery } from '@tanstack/react-query';
+import { getPricingData } from '@/actions/pricing-actions';
 
 export function PricingSection() {
   const { user: globalUser, language } = useSettingsStore();
@@ -26,15 +24,14 @@ export function PricingSection() {
 
   if ((globalUser as any)?.is_subscribed) return null;
 
-  const [p, setP] = useState<PricingData>(PRICING_DEFAULTS);
-  useEffect(() => {
-    fetch(API.PRICING)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.pricing) setP(d.pricing);
-      })
-      .catch(() => {});
-  }, []);
+  // 🔒 Server Action + React Query (shared cache with /pricing page!)
+  const { data: pricingData } = useQuery({
+    queryKey: ['pricing'],
+    queryFn: getPricingData,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const p = pricingData?.pricing ?? PRICING_DEFAULTS;
 
   const liteDiscount = calcDiscount(p.litePrice, p.liteOriginalPrice);
   const proDiscount = calcDiscount(p.proPrice, p.proOriginalPrice);
