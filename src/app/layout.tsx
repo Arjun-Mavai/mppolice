@@ -9,7 +9,6 @@ import { GlobalLockModal } from '@/components/GlobalLockModal';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { Toaster } from '@/components/ui/sonner';
 import dynamic from 'next/dynamic';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 const InstallPrompt = dynamic(() =>
   import('@/components/InstallPrompt').then((m) => m.InstallPrompt)
 );
@@ -132,7 +131,7 @@ export default function RootLayout({
         <PwaRegistry />
         <Providers>
           <div className="min-h-screen">{children}</div>
-          <ReactQueryDevtools initialIsOpen={false} />
+
           <AppFooter />
           <GlobalLockModal />
           <ScrollToTop />

@@ -37,7 +37,7 @@ export default function BlogsClient({
   const [isPending, startTransition] = useTransition();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const isGuest = !(currentUser as any)?.is_subscribed;
+  const isGuest = !currentUser?.isSubscribed;
 
   // Units: Free tab first for non-subscribed users
   const units = isGuest

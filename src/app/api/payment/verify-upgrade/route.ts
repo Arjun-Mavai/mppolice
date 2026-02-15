@@ -66,7 +66,7 @@ export async function POST(req: Request) {
 
     // 🕵️ Razorpay Cross-Check
     const instance = new Razorpay({
-      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+      key_id: process.env.RAZORPAY_KEY_ID!,
       key_secret: secret,
     });
     const order = await instance.orders.fetch(razorpay_order_id);
