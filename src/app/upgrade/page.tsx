@@ -4,55 +4,27 @@ import React from 'react';
 import dynamic from 'next/dynamic';
 import { HeroSection } from '@/components/home/HeroSection';
 import { PremiumExplanationSection } from '@/components/home/PremiumExplanationSection';
+import { InstantFeedbackSection } from '@/components/home/InstantFeedbackSection';
+import { SubjectMasterySection } from '@/components/home/SubjectMasterySection';
+import { ContentSuiteSection } from '@/components/home/ContentSuiteSection';
+import { AppInstallGuide } from '@/components/home/AppInstallGuide';
 
-// Below-fold sections — lazy loaded for faster initial paint
-const InstantFeedbackSection = dynamic(
-  () =>
-    import('@/components/home/InstantFeedbackSection').then((m) => ({
-      default: m.InstantFeedbackSection,
-    })),
-  { ssr: false }
+// Below-fold sections — keep dynamic for performance but consolidate if possible
+const DualLanguageShowcase = dynamic(() =>
+  import('@/components/home/DualLanguageShowcase').then((m) => ({
+    default: m.DualLanguageShowcase,
+  }))
 );
-const SubjectMasterySection = dynamic(
-  () =>
-    import('@/components/home/SubjectMasterySection').then((m) => ({
-      default: m.SubjectMasterySection,
-    })),
-  { ssr: false }
+const FlashCardsSection = dynamic(() =>
+  import('@/components/home/FlashCardsSection').then((m) => ({ default: m.FlashCardsSection }))
 );
-const ContentSuiteSection = dynamic(
-  () =>
-    import('@/components/home/ContentSuiteSection').then((m) => ({
-      default: m.ContentSuiteSection,
-    })),
-  { ssr: false }
+const ExamSimulationSection = dynamic(() =>
+  import('@/components/home/ExamSimulationSection').then((m) => ({
+    default: m.ExamSimulationSection,
+  }))
 );
-const DualLanguageShowcase = dynamic(
-  () =>
-    import('@/components/home/DualLanguageShowcase').then((m) => ({
-      default: m.DualLanguageShowcase,
-    })),
-  { ssr: false }
-);
-const FlashCardsSection = dynamic(
-  () =>
-    import('@/components/home/FlashCardsSection').then((m) => ({ default: m.FlashCardsSection })),
-  { ssr: false }
-);
-const ExamSimulationSection = dynamic(
-  () =>
-    import('@/components/home/ExamSimulationSection').then((m) => ({
-      default: m.ExamSimulationSection,
-    })),
-  { ssr: false }
-);
-const PricingSection = dynamic(
-  () => import('@/components/home/PricingSection').then((m) => ({ default: m.PricingSection })),
-  { ssr: false }
-);
-const AppInstallGuide = dynamic(
-  () => import('@/components/home/AppInstallGuide').then((m) => ({ default: m.AppInstallGuide })),
-  { ssr: false }
+const PricingSection = dynamic(() =>
+  import('@/components/home/PricingSection').then((m) => ({ default: m.PricingSection }))
 );
 
 export default function UpgradePage() {

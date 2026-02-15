@@ -41,12 +41,12 @@ export function HeroSection() {
         </div>
 
         <div className="space-y-4 md:space-y-8">
-          <h1 className="font-display flex flex-col justify-center text-4xl leading-[1.1] font-black tracking-tight text-slate-900 drop-shadow-sm sm:text-5xl md:text-9xl md:leading-[1.1]">
+          <div className="font-display flex flex-col justify-center text-4xl leading-[1.1] font-black tracking-tight text-slate-900 drop-shadow-sm sm:text-5xl md:text-9xl md:leading-[1.1]">
             <span className="mb-1 md:mb-4">{language === 'hi' ? 'आपकी MPPSC' : 'Your MPPSC'}</span>
             <span className="animate-gradient-x bg-gradient-to-r from-slate-900 via-emerald-800 to-slate-900 bg-[length:200%_auto] bg-clip-text pb-2 text-transparent md:pb-4">
               {language === 'hi' ? 'टेस्ट सीरीज़।' : 'Test Series.'}
             </span>
-          </h1>
+          </div>
 
           <p className="mx-auto max-w-4xl px-2 text-lg leading-relaxed font-medium text-slate-600 md:text-3xl">
             {language === 'hi'

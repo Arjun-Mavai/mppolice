@@ -41,20 +41,17 @@ export const viewport: Viewport = {
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://mppsc.zenscroll.app';
 export const metadata: Metadata = {
   title: {
-    default: 'Mindful MPPSC | Crack MPPSC 2026 with Mnemonics',
+    default: 'Mindful MPPSC - Crack MPPSC 2026 | Bilingual Tests & Mnemonics',
     template: '%s | Mindful MPPSC',
   },
   description:
-    "🏆 MPPSC 2026 Best Test Series | Crack Prelims with 5+ Years PYQs, CSAT & Full Length Tests. India's First Bilingual App with Mnemonics for guaranteed selection. Start Free!",
+    "Master the new MPPSC 2026 pattern with India's first bilingual mnemonic-based platform. Get 100+ topic tests, 5+ years PYQs, and smart explanations in Hindi & English.",
   keywords: [
     'MPPSC 2026 Test Series',
     'MPPSC Prelims Mock Test',
     'MPPSC Previous Year Papers',
     'MPPSC Mnemonics',
     'MPPSC Notes Hindi',
-    'MPPSC Syllabus 2026',
-    'Best MPPSC App',
-    'MP Govt Exams',
   ],
   metadataBase: new URL(baseUrl),
   openGraph: {
