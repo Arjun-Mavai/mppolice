@@ -67,10 +67,10 @@ export const metadata: Metadata = {
     siteName: 'Mindful MPPSC',
     images: [
       {
-        url: '/og-hero.webp', // Assuming we will place this image in public
+        url: '/og-hero.webp',
         width: 1200,
         height: 630,
-        alt: 'MPPSC 2026 Test Series Platform',
+        alt: 'Mindful MPPSC - Crack MPPSC 2026',
       },
     ],
   },
@@ -78,6 +78,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Mindful MPPSC | Best App for MPPSC 2026',
     description: "Master MPPSC with India's first Bilingual Mnemonic App.",
+    images: ['/og-hero.webp'],
   },
   manifest: '/manifest.json',
   appleWebApp: {
