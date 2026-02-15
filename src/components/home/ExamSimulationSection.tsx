@@ -144,8 +144,8 @@ export function ExamSimulationSection() {
                         </h3>
                         <p className="mt-2 text-slate-500">
                           {language === 'hi'
-                            ? 'अपनी तैयारी के स्तर को जांचने के लिए 4-प्रश्नों का डेमो टेस्ट लें।'
-                            : 'Take a quick 4-question demo to see your preparation level.'}
+                            ? 'अपनी तैयारी के स्तर को जांचने के लिए 5-प्रश्नों का डेमो टेस्ट लें।'
+                            : 'Take a quick 5-question demo to see your preparation level.'}
                         </p>
                       </div>
                       <Button
