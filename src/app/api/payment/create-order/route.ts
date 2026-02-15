@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
+import { verifyAuth } from '@/lib/auth';
 import { z } from 'zod';
 import { db } from '@/db';
 import { pricingConfig } from '@/db/schema';
@@ -70,15 +71,18 @@ export async function POST(req: Request) {
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
 
-    // 📝 Creating Order on Razorpay
+    // � Metadata: Add UserId for verification later
+    const session = await verifyAuth();
+
+    // �📝 Creating Order on Razorpay
     // Ye ID (order_xxx) frontend par jayegi. Payment isi ID ke against hoga.
     const order = await instance.orders.create({
       amount,
       currency: 'INR',
-      notes: { planType }, // Metadata for future reference
+      notes: { planType, userId: session?.id ?? '' }, // Metadata for future reference
     });
 
-    return NextResponse.json({ ...order, planType });
+    return NextResponse.json({ ...(order as any), planType });
   } catch (error: any) {
     console.error('Razorpay order creation error:', error);
     return NextResponse.json(

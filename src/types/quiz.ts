@@ -1,8 +1,12 @@
+export type BilingualOption =
+  | string
+  | { text: string; textEn?: string; text_en?: string; [key: string]: any };
+
 export interface Question {
   id: string;
   question: string;
   questionEn?: string | null;
-  options: string[];
+  options: BilingualOption[];
   correctAnswer: number;
   explanation?: string;
   explanationEn?: string | null;

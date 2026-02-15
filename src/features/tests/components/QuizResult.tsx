@@ -489,6 +489,18 @@ export function QuizResult({
                         styleClass =
                           'border-red-500 bg-red-50 text-red-800 line-through decoration-red-500/50';
 
+                      // Handle object options (bilingual support)
+                      let optionText: string;
+                      if (typeof opt === 'string') {
+                        optionText = opt;
+                      } else {
+                        // It's an object (BilingualOption)
+                        optionText =
+                          language === 'hi'
+                            ? opt.text || opt.textEn || opt.text_en || JSON.stringify(opt)
+                            : opt.textEn || opt.text_en || opt.text || JSON.stringify(opt);
+                      }
+
                       return (
                         <div
                           key={optIdx}
@@ -497,7 +509,7 @@ export function QuizResult({
                             styleClass
                           )}
                         >
-                          <span>{opt}</span>
+                          <span>{optionText}</span>
                           {isCorrectOpt && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
                           {isSelected && !isCorrectOpt && (
                             <XCircle className="h-4 w-4 text-red-600" />

@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,6 @@ import {
   Target,
   AlertCircle,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -167,8 +166,9 @@ export function DashboardView({ data, userName }: DashboardViewProps) {
                 {recentActivity.length > 0 ? (
                   <div className="divide-y divide-slate-100">
                     {recentActivity.map((activity: any, idx: number) => {
-                      const accuracy = Math.round(
-                        (activity.score / (activity.totalMarks || 1)) * 100
+                      const accuracy = Math.min(
+                        100,
+                        Math.round((activity.score / (activity.totalMarks || 1)) * 100)
                       );
                       return (
                         <div

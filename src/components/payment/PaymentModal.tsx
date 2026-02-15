@@ -41,12 +41,14 @@ interface PaymentModalProps {
 
 const MPPSC_FACTS = [
   { icon: BookOpen, text: 'MPPSC Prelims has 100 MCQs in GS Paper 1' },
+  { icon: BarChart3, text: 'Practice tests improve scores by up to 30%' },
+  { icon: Target, text: 'MP Geography is high-scoring in MPPSC Prelims' },
   { icon: Target, text: '2 lakh+ students appear for MPPSC every year' },
   { icon: Brain, text: 'Indian History covers 15-20% of Prelims questions' },
-  { icon: BarChart3, text: 'Practice tests improve scores by up to 30%' },
-  { icon: Sparkles, text: 'MPPSC 2026 Prelims expected in June-July' },
+
+  { icon: Sparkles, text: 'MPPSC 2026 Prelims expected date is 26 April' },
   { icon: BookOpen, text: 'GS Paper 2 (CSAT) is qualifying — 33% needed' },
-  { icon: Target, text: 'MP Geography is high-scoring in MPPSC Prelims' },
+
   { icon: Brain, text: 'Current Affairs covers 20-25% of questions' },
 ];
 

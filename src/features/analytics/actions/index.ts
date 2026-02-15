@@ -47,6 +47,7 @@ async function fetchAnalyticsInternal(userId: string) {
         type: tests.type, // Added for categorization
         tags: tests.tags,
         totalMarks: tests.totalMarks,
+        totalQuestions: tests.totalQuestions, // Added for dynamic verification
         createdAt: userAttempts.endTime,
         startTime: userAttempts.startTime,
         endTime: userAttempts.endTime,
@@ -70,6 +71,19 @@ async function fetchAnalyticsInternal(userId: string) {
     let totalPercentage = 0;
     let validAttemptsCount = 0;
 
+    // 2.5: Resolve Topics EARLY (Moved up from below for Mastery Calculation)
+    const { getSyllabusTopics } = await import('@/actions/getSyllabusTopics');
+    const syllabusRes = await getSyllabusTopics();
+    const topicMap = new Map<string, any>();
+
+    if (syllabusRes.success && syllabusRes.data) {
+      Object.values(syllabusRes.data)
+        .flat()
+        .forEach((t: any) => {
+          topicMap.set(t.id, t);
+        });
+    }
+
     // 3. Granular Analysis by Subject (Question Level)
     const attemptIds = attempts.map((a) => a.id);
 
@@ -88,6 +102,7 @@ async function fetchAnalyticsInternal(userId: string) {
           isCorrect: attemptAnswers.isCorrect,
           marks: questions.marks,
           subject: questions.subject,
+          attemptId: attemptAnswers.attemptId, // Added for fallback subject resolution
         })
         .from(attemptAnswers)
         .leftJoin(questions, eq(attemptAnswers.questionId, questions.id))
@@ -97,7 +112,30 @@ async function fetchAnalyticsInternal(userId: string) {
         const marks = ans.marks || 0;
         // Only process if marks are valid numbers
         if (typeof marks === 'number') {
-          const subject = ans.subject || 'General';
+          let subject = ans.subject;
+
+          // Fallback: If subject is missing (e.g. 'General'), try to infer from Test Topic
+          if (!subject || subject === 'General') {
+            const attempt = attempts.find((a) => a.id === ans.attemptId);
+            if (attempt) {
+              if (attempt.topicId && topicMap.has(attempt.topicId)) {
+                const topic = topicMap.get(attempt.topicId);
+                // Check if it's a specific Unit/Topic test to use its name?
+                // Generally, if it's a Topic Test, the whole test is about that topic.
+                subject = topic.title || topic.titleEn || attempt.testTitle || 'General';
+              } else {
+                // Use test title as fallback if no topic
+                // But test title might be "Full Length Test 1" -> Keep General?
+                // If it's a "Topic Test", testTitle IS the subject mostly.
+                // Let's use testTitle if it seems specific, or just fallback to 'General' for FLTs.
+                // For now, if topicId is present, use it.
+                subject = attempt.testTitle || 'General';
+              }
+            }
+          }
+
+          subject = subject || 'General';
+
           if (!subjectStats[subject]) {
             subjectStats[subject] = { totalScore: 0, totalMax: 0, count: 0, name: subject };
           }
@@ -112,8 +150,16 @@ async function fetchAnalyticsInternal(userId: string) {
     }
 
     attempts.forEach((attempt) => {
-      if (attempt.totalMarks && attempt.totalMarks > 0) {
-        const percentage = ((attempt.score || 0) / attempt.totalMarks) * 100;
+      // Logic Update: User requested "Exam Pattern" calculation.
+      // Instead of trusting DB totalMarks, we calculate: Total Questions * 3
+      // This ensures 100% accuracy in logic.
+
+      const estimatedMaxMarks = (attempt.totalQuestions || 0) * 3;
+      // Fallback to DB totalMarks if question count is missing (legacy)
+      const finalMaxMarks = estimatedMaxMarks > 0 ? estimatedMaxMarks : attempt.totalMarks || 1;
+
+      if (finalMaxMarks > 0) {
+        const percentage = Math.min(100, ((attempt.score || 0) / finalMaxMarks) * 100);
         totalPercentage += percentage;
         validAttemptsCount++;
       }
@@ -159,10 +205,12 @@ async function fetchAnalyticsInternal(userId: string) {
       aiSuggestion = `Urgent: You need to focus on "${weakest.name}". Your accuracy is currently at a critical level (${weakest.percentage}%). Re-read the revision cards for this unit before taking another test.`;
     } else if (weakest.percentage < 60) {
       aiSuggestion = `Focus Area: Your performance in "${weakest.name}" is below average. Try practicing topic-specific quizzes to bridge the gap. You're doing great in ${strongest?.name || 'others'} though!`;
-    } else if (weakest.percentage < 80) {
+    } else if (overallAvg < 80) {
+      // Changed condition to Overall Average instead of Weakest
       aiSuggestion = `Optimization: You're doing well, but "${weakest.name}" could use some polish to reach excellence. Aim for 80%+ mastery across all topics.`;
     } else {
-      aiSuggestion = `Expert Level: You've mastered all current topics with 80%+ accuracy! Keep the momentum going by taking Full Length Tests (FLTs) to simulate the real exam pressure.`;
+      // Dynamic message based on actual score
+      aiSuggestion = `Expert Level: You've mastered all current topics with ${overallAvg}%+ accuracy! Keep the momentum going by taking Full Length Tests (FLTs) to simulate the real exam pressure.`;
     }
 
     // Deduplicate attempts - Keep only the LATEST attempt for each testId
@@ -178,17 +226,7 @@ async function fetchAnalyticsInternal(userId: string) {
     });
 
     // Use server data to enrich history with proper Topic & Unit names
-    const { getSyllabusTopics } = await import('@/actions/getSyllabusTopics');
-    const syllabusRes = await getSyllabusTopics();
-    const topicMap = new Map<string, any>();
-
-    if (syllabusRes.success && syllabusRes.data) {
-      Object.values(syllabusRes.data)
-        .flat()
-        .forEach((t: any) => {
-          topicMap.set(t.id, t);
-        });
-    }
+    // (Moved to top - Step 2.5)
 
     const recentActivity = Array.from(uniqueAttemptsMap.values()).map((activity: any) => {
       const unitId = activity.unitId || 'unknown';

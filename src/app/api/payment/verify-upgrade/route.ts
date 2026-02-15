@@ -70,6 +70,16 @@ export async function POST(req: Request) {
       key_secret: secret,
     });
     const order = await instance.orders.fetch(razorpay_order_id);
+
+    // 🛡️ Vulnerability Fix: Cross-Check UserId
+    // Check agar order kisi aur user (order.notes.userId) ka h, to block karo.
+    const orderUserId = order.notes?.userId;
+    if (orderUserId && orderUserId !== userId) {
+      console.error(`Fraud Attempt: Order User ${orderUserId} !== Request User ${userId}`);
+      return NextResponse.json({ error: 'Order does not belong to this user' }, { status: 400 });
+    }
+
+    // 💡 Note: razorpay_key_id public hota h (safe to expose), secret server par safe h.
     const paidAmount = order.amount as number;
 
     // 🏷️ Plan Verification (Allows Upgrade Price OR Full Pro Price)

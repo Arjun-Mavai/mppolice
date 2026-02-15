@@ -5,16 +5,33 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 // Bhai ye MPPSC related facts + motivation h - loading ke time user ko engage rakho
 const QUOTES = [
-  '🏛️ MP ka sabse bada jila: Chhindwara (area me)',
-  '📊 Tumhara rank calculate ho raha h...',
-  '📖 MPPSC Prelims me 2 papers hote h - GS + CSAT',
-  '🎯 MP me total 52 districts h (2024 tak)',
-  '⏳ Thoda sabr karo, result aa raha h...',
-  '🏆 Toppers bhi pehle fail hue the, consistency matters!',
-  '📝 MP ki rajdhani: Bhopal, judicial capital: Jabalpur',
-  '💡 Negative marking h 1/3 — guess mat karo!',
-  '🌊 Narmada MP ki sabse lambi nadi h',
-  '🔥 Mehnat rang layegi, bas loading khatam hone do...',
+  // --- Geography & Map Updates ---
+  '🗺️ Update: MP me ab **55 Districts** hain! (Mauganj, Pandhurna, Maihar jud gaye)',
+  '⛰️ MP ki sabse oonchi choti: **Dhupgarh (1350m)**, Mahadeo hills (Satpura) me h.',
+  '📍 MP ka sabse Paschimi (Western) jila: **Alirajpur**, Sabse Purvi (Eastern): **Singrauli**.',
+
+  // --- Capitals of MP ---
+  '⚖️ Judicial Capital: **Jabalpur**, Energy Capital: **Singrauli**, Sports Capital: **Indore**.',
+  '🎼 Music Capital: **Maihar**, Summer Capital: **Pachmarhi**.',
+
+  // --- Exam Strategy (Strategic Value) ---
+  '💡 Pro Tip: MPPSC Prelims me **Negative Marking nahi hoti** (GS Paper 1) — Saare attempt karna!',
+  '📚 Unit 10 par focus rakho: **MP ki Janjatiya (Tribes)** ab game-changer h.',
+  '⏳ Loading... Tab tak socho: **Article 164** me Tribal Welfare Minister ka zikr kyu h?',
+
+  // --- History & Culture (Unit 1) ---
+  '🏛️ UNESCO Sites: Khajuraho (1986), Sanchi (1989), Bhimbetka (2003).',
+  '🏹 MP ki sabse badi Janjati (Tribe): **Bhil** (Population wise), lekin Gond sabse bada Samuh (Group) h.',
+  '🦁 **Kuno National Park** (Sheopur) me African Cheetahs ka naya ghar h.',
+
+  // --- Polity & Economy (Unit 5 & 6) ---
+  '🗳️ MP me **230 Vidhan Sabha seats** aur **29 Lok Sabha seats** hain.',
+  '💰 **Soyabean State:** MP ko ab "Leopard State" aur "Tiger State" bhi kehte hain.',
+
+  // --- Motivation & Loading ---
+  '📊 Rank calculate ho rahi h... lekin asli competition tumhara khud se h.',
+  '🔥 Sabr rakho, **Deputy Collector** wali feeling loading par h...',
+  '🏆 Consistency matters! Roz ke 50 MCQs tumhe bheed se alag banayenge.',
 ];
 
 export function LoadingQuotes() {
