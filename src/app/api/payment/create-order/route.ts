@@ -91,9 +91,10 @@ export async function POST(req: Request) {
       category: 'payment',
       metadata: { planType },
     });
-    return NextResponse.json(
-      { error: 'Failed to create order', details: error.message },
-      { status: 500 }
-    );
+    // 🛡️ SECURITY FIX: Don't expose internal error.message to client!
+    // Bhai, error.message mein sensitive info ho sakta hai (stack trace,
+    // DB connection string, etc.). Attacker isse exploit kar sakta hai.
+    // Generic message bhejo, details sirf server logs mein rakhho.
+    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
   }
 }

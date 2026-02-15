@@ -133,6 +133,34 @@ export async function submitTestAttempt(
   questionTimes: Record<string, number>
 ) {
   try {
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 🔒 IDOR Prevention: Verify userId from JWT matches parameter
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Bhai, bina ye check ke koi Postman se kisi aur ka userId bhej ke
+    // uski attempt count badha sakta tha! Ab JWT se userId verify hota hai.
+    //
+    // Attack scenario (before fix):
+    //   POST /submitTestAttempt body: { userId: "victim-123", ... }
+    //   → Attacker's request inserts attempt for victim's account!
+    //
+    // Fix: JWT se nikalo asli userId, match karo parameter se
+    const session = await verifyAuth();
+    if (!session) {
+      return { error: 'Unauthorized — please login to submit test' };
+    }
+    if (session.id !== userId) {
+      // 🚨 Someone tried to submit as a different user!
+      logger.warn('IDOR attempt: userId mismatch in test submission', {
+        category: 'system',
+        metadata: {
+          jwtUserId: session.id,
+          paramUserId: userId,
+          testId,
+        },
+      });
+      return { error: 'Unauthorized — userId mismatch' };
+    }
+
     // 🛡️ CRITICAL FIX: Prevent Double Submit (Race Condition Protection)
     // Bhai, agar user ne 2 second pehle hi submit kiya hai, to dobara nahi hone denge!
     const recentAttempt = await db.query.userAttempts.findFirst({
@@ -280,7 +308,11 @@ export async function submitTestAttempt(
         userId,
         displayName: user.name,
         score: parseFloat(totalScore.toFixed(2)),
-        timeTaken: durationSeconds,
+        // 🛡️ FIX: Use validDuration (server-validated) instead of raw durationSeconds
+        // Bhai, pehle yahan raw durationSeconds ja raha tha — manipulated value
+        // leaderboard mein aa jaati thi! "5 second mein 100 sawal" type entries!
+        // Ab server-clamped validDuration use hota hai (0 to maxDuration range)
+        timeTaken: validDuration,
         totalMarks: totalTestMarks,
       });
     }

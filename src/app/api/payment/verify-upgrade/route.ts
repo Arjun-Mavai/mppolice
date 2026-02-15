@@ -49,6 +49,14 @@ export async function POST(req: Request) {
     hmac.update(razorpay_order_id + '|' + razorpay_payment_id);
     const generated_signature = hmac.digest('hex');
 
+    // 🛡️ CRASH PREVENTION: Validate signature format BEFORE timingSafeEqual
+    // timingSafeEqual THROWS if buffer lengths differ! Attacker could crash server
+    // with garbage signature like "abc" (odd hex → different buffer length)
+    const isValidHex = /^[a-f0-9]+$/i.test(razorpay_signature);
+    if (!isValidHex || razorpay_signature.length !== generated_signature.length) {
+      return NextResponse.json({ error: 'Invalid payment signature format' }, { status: 400 });
+    }
+
     // 🛡️ Timing-Safe Comparison (Prevents timing attacks)
     const isValidSignature = crypto.timingSafeEqual(
       Buffer.from(generated_signature, 'hex'),

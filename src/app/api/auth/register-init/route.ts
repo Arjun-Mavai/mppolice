@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
@@ -51,8 +51,13 @@ export async function POST(req: Request) {
 
     // 🔍 Check Existing User
     // Kya ye banda pehle aaya tha?
+    // 🛡️ FIX: Use LOWER() for case-insensitive email match
+    // Bhai, pehle eq(mppscUsers.email, normalizedEmail) tha —
+    // agar DB mein "Arjun@Email.com" stored hai aur user "arjun@email.com"
+    // bhejta hai, to match nahi hota! Duplicate account ban jaata!
+    // Ab LOWER() dono side pe apply hota hai → consistent matching.
     const existingUser = await db.query.mppscUsers.findFirst({
-      where: eq(mppscUsers.email, normalizedEmail),
+      where: sql`LOWER(${mppscUsers.email}) = ${normalizedEmail}`,
     });
 
     if (existingUser) {

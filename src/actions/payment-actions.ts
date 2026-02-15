@@ -185,6 +185,27 @@ export async function verifyPayment(input: VerifyPaymentInput) {
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
 
+    // 🛡️ CRASH PREVENTION: Validate signature format before timingSafeEqual
+    // ─────────────────────────────────────────────────────────────────────
+    // Bhai, timingSafeEqual THROW karta hai agar dono buffers ka length
+    // different ho! Attacker garbage signature bhej ke server crash kara sakta tha.
+    //
+    // Attack scenario: razorpay_signature = "abc" (odd-length, not valid hex)
+    //   → Buffer.from("abc", 'hex') = <Buffer ab> (1 byte, 'c' dropped!)
+    //   → generated_signature buffer = 32 bytes (SHA256)
+    //   → timingSafeEqual THROWS: "Input buffers must have the same length"
+    //   → Unhandled error = 500 response + potential info leak
+    //
+    // Fix: Check length match BEFORE calling timingSafeEqual
+    const isValidHex = /^[a-f0-9]+$/i.test(razorpay_signature);
+    if (!isValidHex || razorpay_signature.length !== generated_signature.length) {
+      logger.warn('Malformed payment signature rejected', {
+        category: 'payment',
+        metadata: { userId, orderId: razorpay_order_id, sigLength: razorpay_signature.length },
+      });
+      return { error: 'Invalid signature format' };
+    }
+
     const isValidSignature = crypto.timingSafeEqual(
       Buffer.from(generated_signature, 'hex'),
       Buffer.from(razorpay_signature, 'hex')
