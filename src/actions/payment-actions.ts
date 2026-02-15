@@ -253,9 +253,17 @@ export async function verifyPayment(input: VerifyPaymentInput) {
       return { error: 'Order does not belong to this user' };
     }
 
-    // Determine plan tier from amount
-    // order.amount is in paise (number), convert to rupees
-    const amount = Number(order.amount) / 100;
+    // 💰 Determine plan tier from amount
+    // ─────────────────────────────────────────────────────────────────────
+    // IMPORTANT: order.amount is ALREADY in paise (Razorpay standard).
+    // DB column `payments.amount` is integer → store paise directly!
+    //
+    // Before fix: amount = order.amount / 100 → stored rupees in integer
+    //   column → 49900 paise became 499 rupees → DB stored 499 (truncated!)
+    //
+    // After fix: Keep paise throughout. Compare against pricing × 100.
+    // ─────────────────────────────────────────────────────────────────────
+    const amountInPaise = Number(order.amount); // Already paise from Razorpay
     const rows = await db
       .select()
       .from(pricingConfig)
@@ -263,12 +271,30 @@ export async function verifyPayment(input: VerifyPaymentInput) {
       .limit(1);
     const p = rows[0] || PRICING_DEFAULTS;
 
-    let planTier: 'lite' | 'pro' = 'pro';
-    if (amount === p.litePrice) planTier = 'lite';
-    else if (amount === p.proPrice) planTier = 'pro';
+    // Compare paise against expected prices (config stores rupees, ×100 for paise)
+    const litePaise = (p.litePrice ?? PRICING_DEFAULTS.litePrice) * 100;
+    const proPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
+    const upgradePaise = (p.upgradePrice ?? PRICING_DEFAULTS.upgradePrice) * 100;
+
+    let planTier: 'lite' | 'pro';
+    if (amountInPaise === litePaise) {
+      planTier = 'lite';
+    } else if (amountInPaise === proPaise || amountInPaise === upgradePaise) {
+      // 🛡️ Both pro purchase and lite→pro upgrade grant 'pro' tier
+      planTier = 'pro';
+    } else {
+      // 🚨 SECURITY: Reject unknown amounts instead of defaulting to pro!
+      // Before this fix, ANY amount → 'pro' tier (free pro for everyone!)
+      logger.warn('Unknown payment amount — does not match any plan', {
+        category: 'payment',
+        metadata: { userId, orderId: razorpay_order_id, amountInPaise },
+      });
+      return { error: 'Payment amount does not match any valid plan' };
+    }
 
     // 💾 Step 5: Atomic Transaction (Payment + User Update)
     // DB columns: orderId, paymentId, signature, planTier, status (enum: created/captured/failed)
+    // amount stored in PAISE (integer column, Razorpay standard)
     await db.transaction(async (tx) => {
       await tx.insert(payments).values({
         id: uuidv4(),
@@ -276,7 +302,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         orderId: razorpay_order_id,
         paymentId: razorpay_payment_id,
         signature: razorpay_signature,
-        amount,
+        amount: amountInPaise, // ✅ Store paise (integer), NOT rupees
         planTier,
         status: 'captured', // Razorpay marks successful payments as 'captured'
       });

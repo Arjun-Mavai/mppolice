@@ -16,13 +16,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  CheckCircle2,
-  Star,
   ChevronDown,
   Shield,
   Zap,
-  Crown,
-  ArrowLeft,
   Clock,
   Users,
   Sparkles,
@@ -33,19 +29,10 @@ import {
   Flame,
   History,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+
 import { Badge } from '@/components/ui/badge';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import {
-  type PricingData,
-  PRICING_DEFAULTS,
-  LITE_FEATURES,
-  PRO_FEATURES,
-  calcDiscount,
-  calcMonthly,
-} from '@/config/pricing';
-import { API } from '@/config/endpoints';
+import { PRICING_DEFAULTS, LITE_FEATURES, PRO_FEATURES } from '@/config/pricing';
 import { PaymentModal } from '@/components/payment/PaymentModal';
 import { PricingCard } from '@/components/PricingCard';
 import { getPricingData } from '@/actions/pricing-actions';
@@ -106,7 +93,7 @@ const ICON_MAP: Record<string, any> = {
   History,
 };
 
-const liteFeatures = LITE_FEATURES.map((f) => ({ ...f, icon: ICON_MAP[f.icon || ''] || Target }));
+// const liteFeatures = LITE_FEATURES.map((f) => ({ ...f, icon: ICON_MAP[f.icon || ''] || Target }));
 const proFeatures = PRO_FEATURES.map((f) => ({ ...f, icon: ICON_MAP[f.icon || ''] || Target }));
 
 // ── Pricing data from centralized config ────────────────
@@ -153,7 +140,7 @@ export default function PricingPage() {
   const planTier = user?.planTier ?? 'free';
   const isProUser = planTier === 'pro';
   const isLiteUser = planTier === 'lite';
-  const isLoggedIn = !!user;
+  // const isLoggedIn = !!user;
 
   // 🔒 Fetch pricing with React Query + Server Action
   const { data: pricingData } = useQuery({

@@ -5,15 +5,23 @@
 import * as Sentry from '@sentry/nextjs';
 
 Sentry.init({
-  dsn: 'https://44eb742d444c7bf4e61fbbfe0c1732ca@o4510888425553920.ingest.us.sentry.io/4510888465399808',
+  // 🛡️ ENV-DRIVEN DSN: Don't hardcode secrets in source code!
+  // Bhai, DSN source code mein hardcoded tha — koi bhi GitHub se dekh sakta tha.
+  // Ab .env se aata hai. Agar missing hai toh Sentry silently disable ho jaata hai.
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN || undefined,
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+  // 📊 CONSERVATIVE SAMPLING: Production mein 10% traces enough hain
+  // 100% tracing = massive Sentry bill + performance overhead!
+  // Override via `SENTRY_TRACES_SAMPLE_RATE=0.5` in .env for more coverage
+  tracesSampleRate: process.env.SENTRY_TRACES_SAMPLE_RATE
+    ? Number(process.env.SENTRY_TRACES_SAMPLE_RATE)
+    : 0.1,
 
   // Enable logs to be sent to Sentry
   enableLogs: true,
 
-  // Enable sending user PII (Personally Identifiable Information)
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
-  sendDefaultPii: true,
+  // 🔒 PII DISABLED BY DEFAULT: Only enable when explicitly needed
+  // sendDefaultPii sends user IPs, cookies, headers to Sentry servers.
+  // For GDPR/privacy: keep disabled unless `SENTRY_SEND_DEFAULT_PII=true` in .env
+  sendDefaultPii: process.env.SENTRY_SEND_DEFAULT_PII === 'true',
 });
