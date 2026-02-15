@@ -62,7 +62,7 @@ const logToSentry = (level: LogLevel, message: string, error?: any, context?: Lo
     if (extra) {
       scope.setExtras(extra);
     }
-    // Set level level via scope if needed, or rely on capture methods
+    // Set level via scope if needed, or rely on capture methods
 
     if (level === 'error') {
       if (error instanceof Error) {

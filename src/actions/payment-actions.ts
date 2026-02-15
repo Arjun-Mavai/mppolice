@@ -89,7 +89,7 @@ export async function startPayment(input: StartPaymentInput) {
           } catch {
             existingMeta = {};
           }
-        } else if (typeof raw === 'object') {
+        } else if (typeof raw === 'object' && raw !== null && !Array.isArray(raw)) {
           existingMeta = raw as Record<string, unknown>;
         }
       }
@@ -154,14 +154,20 @@ export async function startPayment(input: StartPaymentInput) {
       notes: { planType, userId },
     });
 
-    return { userId, order: { ...order, planType } };
+    return {
+      success: true,
+      data: {
+        userId,
+        order: { ...order, planType },
+      },
+    };
   } catch (error: unknown) {
     logger.error('Payment start error:', error, {
       category: 'payment',
       metadata: { planType: input.planType },
     });
     const message = error instanceof Error ? error.message : 'Failed to start payment';
-    return { error: message };
+    return { success: false, error: message };
   }
 }
 

@@ -218,16 +218,15 @@ export function PaymentModal({
       const startRes = await startPayment({ ...values, planType });
 
       // Server-side block: existing lite/pro must be same logged-in user
-      if (startRes.error) {
-        toast.error(startRes.error);
+      if (!startRes.success || !startRes.data) {
+        toast.error(startRes.error || 'Failed to start payment');
         setIsLoading(false);
         setLoadingPhase(null);
         return;
       }
 
       // TypeScript: After error check, userId and order are guaranteed to exist
-      const userId = startRes.userId!;
-      const orderData = startRes.order!;
+      const { userId, order: orderData } = startRes.data;
       userIdRef.current = userId;
 
       // Launch Razorpay

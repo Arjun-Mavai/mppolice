@@ -162,13 +162,17 @@ export async function submitTestAttempt(
     }
 
     // 🛡️ CRITICAL FIX: Prevent Double Submit (Race Condition Protection)
-    // Bhai, agar user ne 2 second pehle hi submit kiya hai, to dobara nahi hone denge!
+    // Bhai, agar user ne 30 second pehle hi submit kiya hai, to dobara nahi hone denge!
+    // SQLite's datetime('now') uses UTC, which might mismatch DB if not careful.
+    // JS Date.now() is reliable for relative comparison.
+    const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
+
     const recentAttempt = await db.query.userAttempts.findFirst({
       where: and(
         eq(userAttempts.userId, userId),
         eq(userAttempts.testId, testId),
         eq(userAttempts.isCompleted, true),
-        sql`${userAttempts.endTime} > datetime('now', '-30 seconds')`
+        sql`${userAttempts.endTime} > ${thirtySecondsAgo}`
       ),
     });
 
