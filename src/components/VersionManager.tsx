@@ -2,11 +2,39 @@
 
 import { useEffect } from 'react';
 import { logger } from '@/lib/logger';
+import { toast } from 'sonner';
 
 export function VersionManager() {
   useEffect(() => {
     // Only run in production to avoid dev loop
     if (process.env.NODE_ENV !== 'production') return;
+
+    const applyUpdate = async (serverVersion: string) => {
+      try {
+        // 1. Unregister Service Worker
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const registration of registrations) {
+            await registration.unregister();
+          }
+        }
+
+        // 2. Clear Caches
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map((name) => caches.delete(name)));
+        }
+
+        // 3. Update Local Storage
+        localStorage.setItem('app_version', serverVersion);
+
+        // 4. Hard Reload to get fresh HTML/JS
+        window.location.reload();
+      } catch (err) {
+        logger.error('Update application failed', err, { category: 'system' });
+        window.location.reload(); // Fallback to reload anyway
+      }
+    };
 
     const checkVersion = async () => {
       try {
@@ -31,25 +59,16 @@ export function VersionManager() {
             metadata: { oldVersion: localVersion, newVersion: serverVersion },
           });
 
-          // 1. Unregister Service Worker
-          if ('serviceWorker' in navigator) {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            for (const registration of registrations) {
-              await registration.unregister();
-            }
-          }
-
-          // 2. Clear Caches
-          if ('caches' in window) {
-            const cacheNames = await caches.keys();
-            await Promise.all(cacheNames.map((name) => caches.delete(name)));
-          }
-
-          // 3. Update Local Storage
-          localStorage.setItem('app_version', serverVersion);
-
-          // 4. Hard Reload to get fresh HTML/JS
-          window.location.reload();
+          // Bhai, sudden reload user ko gussa dila sakta hai (especially during tests).
+          // Toast dikhao taaki user apne timeline pe update kare. 🤝
+          toast.info('New Update Available!', {
+            description: 'A new version of the app is ready. Update now for the best experience.',
+            duration: Infinity, // Important: Don't let it disappear
+            action: {
+              label: 'Update Now',
+              onClick: () => void applyUpdate(serverVersion),
+            },
+          });
         }
       } catch (err) {
         logger.error('Version check failed', err, { category: 'system' });

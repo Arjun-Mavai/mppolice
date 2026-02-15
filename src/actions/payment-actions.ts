@@ -10,18 +10,21 @@ import bcrypt from 'bcryptjs';
 import Razorpay from 'razorpay';
 import { logger } from '@/lib/logger';
 import crypto from 'crypto';
+import { z } from 'zod';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 💳 START PAYMENT (Register + Create Order)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-interface StartPaymentInput {
-  name: string;
-  email: string;
-  phone: string;
-  source?: string;
-  planType: 'lite' | 'pro' | 'upgrade';
-}
+const startPaymentSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters').max(100),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().min(10, 'Phone must be at least 10 digits').max(20),
+  source: z.string().optional(),
+  planType: z.enum(['lite', 'pro', 'upgrade']),
+});
+
+interface StartPaymentInput extends z.infer<typeof startPaymentSchema> {}
 
 /**
  * 💳 Start Payment (Server Action)
@@ -36,7 +39,16 @@ interface StartPaymentInput {
  */
 export async function startPayment(input: StartPaymentInput) {
   try {
-    const { name, email, phone, source, planType } = input;
+    // ── PHASE 0: Validate Input
+    const validatedInput = startPaymentSchema.safeParse(input);
+    if (!validatedInput.success) {
+      return {
+        success: false,
+        error: validatedInput.error.issues[0]?.message || 'Invalid input data',
+      };
+    }
+
+    const { name, email, phone, source, planType } = validatedInput.data;
     const normalizedEmail = email.toLowerCase().trim();
 
     // ── PHASE 1: Find existing user by email (case-insensitive)
