@@ -111,9 +111,16 @@ export async function POST(request: Request) {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      // 🚨 Robust Rate Limiting: Count failure against a stricter limiter
+      // 🚨 Robust Rate Limiting: Count failure against a stricter limiter and ENFORCE it
       const { loginFailureLimiter, checkRateLimit } = await import('@/lib/rate-limit');
-      await checkRateLimit(loginFailureLimiter, ip);
+      const { success } = await checkRateLimit(loginFailureLimiter, ip);
+
+      if (!success) {
+        return NextResponse.json(
+          { error: 'Too many failed login attempts. Please try again after 15 minutes.' },
+          { status: 429 }
+        );
+      }
 
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }

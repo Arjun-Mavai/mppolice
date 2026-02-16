@@ -120,9 +120,15 @@ export async function loginUserAction(formData: LoginParams) {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      // 🚨 Robust Rate Limiting: Count failure against a stricter limiter
+      // 🚨 Robust Rate Limiting: Count failure against a stricter limiter and ENFORCE it
       const { loginFailureLimiter, checkRateLimit } = await import('@/lib/rate-limit');
-      await checkRateLimit(loginFailureLimiter, ip);
+      const { success } = await checkRateLimit(loginFailureLimiter, ip);
+
+      if (!success) {
+        return {
+          error: 'Too many failed login attempts. Please try again after 15 minutes.',
+        };
+      }
 
       return { error: 'Invalid credentials' };
     }
