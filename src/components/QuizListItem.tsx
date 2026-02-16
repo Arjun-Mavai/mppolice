@@ -83,7 +83,7 @@ export function QuizListItem({
         isExhausted && 'border-slate-200 bg-slate-50 opacity-70 grayscale'
       )}
     >
-      <div className="flex flex-row items-center gap-4 sm:gap-6">
+      <div className="flex flex-row items-start gap-4 sm:gap-6">
         {/* 🔢 Index / Status Indicator */}
         <div className="relative flex-shrink-0">
           <div
@@ -125,7 +125,7 @@ export function QuizListItem({
           <div className="mb-1 flex items-center gap-2">
             <h3
               className={cn(
-                'truncate text-base font-black tracking-tight transition-colors sm:text-lg',
+                'text-base font-black tracking-tight transition-colors sm:text-lg',
                 isLocked || isExhausted ? 'text-slate-500' : 'text-slate-900'
               )}
             >

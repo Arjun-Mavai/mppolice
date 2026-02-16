@@ -100,6 +100,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
             features={PRO_FEATURES.slice(1)}
             language={language}
             onBuy={() => onUnlock(p.upgradePrice)}
+            href="/pricing"
           />
         </div>
 
@@ -143,6 +144,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
           features={LITE_FEATURES}
           language={language}
           onBuy={() => onUnlock(p.litePrice)}
+          href="/pricing"
         />
         <PricingCard
           planType="pro"
@@ -150,6 +152,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
           features={PRO_FEATURES}
           language={language}
           onBuy={() => onUnlock(p.proPrice)}
+          href="/pricing"
           isPopular
         />
       </div>
