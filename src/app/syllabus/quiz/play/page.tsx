@@ -25,14 +25,16 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
   }
 
   // 1. Fetch Initial Data in Parallel (Reduces waterfall)
-  const [testData, user, attemptLimits, attemptsMap] = await Promise.all([
+  const [testData, user, attemptLimits] = await Promise.all([
     getTestWithQuestions(testId),
     verifyAuth(),
     getCachedAttemptLimits(),
-    verifyAuth().then((u) =>
-      u ? getUserAttempts([testId], u.id) : ({} as Record<string, number>)
-    ),
   ]);
+
+  // Only fetch attempts if user exists to avoid redundant DB call for guests
+  const attemptsMap = user
+    ? await getUserAttempts([testId], user.id)
+    : ({} as Record<string, number>);
 
   if (!testData) {
     return (

@@ -32,6 +32,9 @@ export const signupLimiter = createLimiter(10, '1 h', 'signup');
 // Login: 10 per 15 min — allows typos + retries, blocks brute force
 export const loginLimiter = createLimiter(10, '15 m', 'login');
 
+// Login Failure: 5 per 15 min — more strict limit for failed attempts
+export const loginFailureLimiter = createLimiter(5, '15 m', 'login-failure');
+
 // General API: 120 requests/min — normal browsing won't hit this
 export const genApiLimiter = createLimiter(120, '1 m', 'api');
 

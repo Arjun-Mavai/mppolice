@@ -98,6 +98,9 @@ export async function loginUserAction(formData: LoginParams) {
     }
 
     // ── Access Expiry Check ────────────────────────────────────
+    let currentPlanTier = (user.planTier as any) || 'free';
+    let currentIsSubscribed = !!user.isSubscribed;
+
     if (user.accessExpiresAt && user.planTier !== 'free') {
       const now = new Date();
       const expiryDate = new Date(user.accessExpiresAt);
@@ -108,8 +111,8 @@ export async function loginUserAction(formData: LoginParams) {
           .set({ planTier: 'free', isSubscribed: false })
           .where(eq(mppscUsers.id, user.id));
 
-        user.planTier = 'free';
-        user.isSubscribed = false;
+        currentPlanTier = 'free';
+        currentIsSubscribed = false;
       }
     }
 
@@ -117,6 +120,10 @@ export async function loginUserAction(formData: LoginParams) {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
+      // 🚨 Robust Rate Limiting: Count failure against a stricter limiter
+      const { loginFailureLimiter, checkRateLimit } = await import('@/lib/rate-limit');
+      await checkRateLimit(loginFailureLimiter, ip);
+
       return { error: 'Invalid credentials' };
     }
 
@@ -150,8 +157,8 @@ export async function loginUserAction(formData: LoginParams) {
         id: user.id,
         email: user.email,
         name: user.name,
-        isSubscribed: !!user.isSubscribed,
-        planTier: (user.planTier as any) || 'free',
+        isSubscribed: currentIsSubscribed,
+        planTier: currentPlanTier,
         role: user.role ?? undefined,
         accessExpiresAt: user.accessExpiresAt ?? undefined,
       },

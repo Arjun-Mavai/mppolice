@@ -148,7 +148,15 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     if (isSessionLoading) {
       setAuthCheckStatus('loading');
     }
-  }, [sessionData, isSessionLoading, setUser, setAuthCheckStatus]);
+  }, [
+    sessionData,
+    isSessionLoading,
+    authCheckStatus,
+    initialUser,
+    globalUser,
+    setUser,
+    setAuthCheckStatus,
+  ]);
 
   const handleLogout = async () => {
     try {

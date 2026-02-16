@@ -89,6 +89,9 @@ export async function POST(request: Request) {
 
     // ── Access Expiry Check — only for paid plans with expiry set ──
     // Free users have no expiry (null) → always allowed
+    let currentPlanTier = user.planTier;
+    let currentIsSubscribed = user.isSubscribed;
+
     if (user.accessExpiresAt && user.planTier !== 'free') {
       const now = new Date();
       const expiryDate = new Date(user.accessExpiresAt);
@@ -99,8 +102,8 @@ export async function POST(request: Request) {
           .set({ planTier: 'free', isSubscribed: false })
           .where(eq(mppscUsers.id, user.id));
         // Still allow login — user sees free tier content
-        user.planTier = 'free';
-        user.isSubscribed = false;
+        currentPlanTier = 'free';
+        currentIsSubscribed = false;
       }
     }
 
@@ -108,6 +111,10 @@ export async function POST(request: Request) {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
+      // 🚨 Robust Rate Limiting: Count failure against a stricter limiter
+      const { loginFailureLimiter, checkRateLimit } = await import('@/lib/rate-limit');
+      await checkRateLimit(loginFailureLimiter, ip);
+
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
@@ -140,8 +147,8 @@ export async function POST(request: Request) {
       user: {
         email: user.email,
         name: user.name,
-        is_subscribed: user.isSubscribed,
-        plan_tier: user.planTier,
+        is_subscribed: currentIsSubscribed,
+        plan_tier: currentPlanTier,
         role: user.role,
         access_expires_at: user.accessExpiresAt,
       },

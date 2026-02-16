@@ -204,7 +204,7 @@ export default function BlogsClient({
                           ? '📚 Subjects'
                           : `Unit ${tab.split('_')[1]}`}
                   </span>
-                  {tab !== 'General' && count > 0 && (
+                  {count > 0 && (
                     <span
                       className={`flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[10px] font-black transition-colors ${activeUnit === tab ? 'bg-white text-slate-900' : 'bg-emerald-500 text-white group-hover:bg-emerald-600'} `}
                     >
