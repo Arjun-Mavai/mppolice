@@ -65,12 +65,13 @@ export function QuizListItem({
       layout
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      whileHover={!isExhausted && !isLoading ? { scale: 1.002 } : {}}
-      transition={{ duration: 0.2 }}
+      whileHover={!isExhausted && !isLoading ? { y: -2, scale: 1.01 } : {}}
+      whileTap={!isExhausted && !isLoading ? { scale: 0.985 } : {}}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       onClick={isExhausted || isLoading ? undefined : onClick}
       className={cn(
         'group relative rounded-[1.8rem] border p-4 transition-all sm:p-5',
-        isExhausted || isLoading ? 'cursor-not-allowed' : 'cursor-pointer',
+        isExhausted || isLoading ? 'cursor-not-allowed' : 'cursor-pointer active:bg-slate-50/80',
         style,
         isLocked && 'opacity-80 grayscale-[0.4]',
         isExhausted && 'border-slate-200 bg-slate-50 opacity-70 grayscale'

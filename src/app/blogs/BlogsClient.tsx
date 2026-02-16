@@ -106,7 +106,6 @@ export default function BlogsClient({
 
   const handleUnitChange = (unit: string) => {
     setActiveUnit(unit);
-    // Effect will trigger fetch
   };
 
   return (

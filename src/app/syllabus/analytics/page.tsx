@@ -15,6 +15,8 @@ import AnalyticsDashboardWrapper from './AnalyticsDashboardWrapper';
 //
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+import { Suspense } from 'react';
+
 export default async function AnalyticsPage() {
   const user = await verifyAuth();
 
@@ -22,7 +24,20 @@ export default async function AnalyticsPage() {
     redirect('/login');
   }
 
-  const analyticsData = await getUserAnalytics(user.id);
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[400px] items-center justify-center p-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-slate-800"></div>
+        </div>
+      }
+    >
+      <AnalyticsContent userId={user.id} />
+    </Suspense>
+  );
+}
 
+async function AnalyticsContent({ userId }: { userId: string }) {
+  const analyticsData = await getUserAnalytics(userId);
   return <AnalyticsDashboardWrapper analytics={analyticsData} />;
 }

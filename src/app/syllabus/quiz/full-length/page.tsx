@@ -1,29 +1,46 @@
-import { getCachedFLTTests, getUserAttempts } from '@/features/tests/actions/submission';
+import { getCachedFLTTests, getUserAttemptsByType } from '@/features/tests/actions/submission';
 import FLTPageClient, { TestWithAccess } from './FLTPageClient';
 import { verifyAuth } from '@/lib/auth';
 import { getUserTier, hasAccessToContent } from '@/lib/access-control';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
+import { Suspense } from 'react';
+import { QuizListSkeleton } from '@/components/QuizListSkeleton';
 
-// Server Component — FLT tests ko DB flags se access control karta hai
 export default async function FLTPage() {
-  // 1. Parallel fetch — test list + current user + attempt limits
-  const [tests, user, attemptLimits] = await Promise.all([
-    getCachedFLTTests(),
+  return (
+    <div className="relative min-h-screen bg-[#fafbfc] pb-20 font-sans">
+      <Suspense fallback={<QuizListFallback />}>
+        <FLTPageData />
+      </Suspense>
+    </div>
+  );
+}
+
+function QuizListFallback() {
+  return (
+    <div className="relative z-10 mx-auto max-w-5xl px-6 pt-32">
+      <div className="mb-12 space-y-2 text-center">
+        <div className="mx-auto mb-4 h-12 w-64 animate-pulse rounded-xl bg-slate-200" />
+        <div className="mx-auto h-4 w-96 animate-pulse rounded-lg bg-slate-100" />
+      </div>
+      <QuizListSkeleton />
+    </div>
+  );
+}
+
+async function FLTPageData() {
+  const [user, tests, attemptLimits] = await Promise.all([
     verifyAuth(),
+    getCachedFLTTests(),
     getCachedAttemptLimits(),
   ]);
 
-  // 2. User ke attempts fetch karo (kitni baar de chuka har test)
-  const testIds = tests.map((t) => t.id);
-  const attempts = await getUserAttempts(testIds);
+  const userId = user?.id;
+  const attempts = userId ? await getUserAttemptsByType('FLT', userId) : {};
 
-  // 3. User tier nikalo — DB flags is tier se match honge
   const tier = getUserTier(user);
-
-  // Max attempts from attempt_limits table (source of truth)
   const maxRetries = attemptLimits['FLT'] ?? null;
 
-  // 4. Har test ko access info ke saath enrich karo
   const enrichedTests: TestWithAccess[] = tests.map((test) => {
     const hasAccess =
       user?.role === 'admin' ||

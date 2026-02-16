@@ -78,8 +78,9 @@ export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
 
   const CardContent = (
     <motion.div
-      whileHover={{ y: -8, scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ y: -8, scale: 1.01 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
       className={cn(
         'group relative flex h-[360px] w-full cursor-pointer flex-col justify-between overflow-hidden rounded-[2.5rem] border p-8 transition-all duration-500',
         style.bg,

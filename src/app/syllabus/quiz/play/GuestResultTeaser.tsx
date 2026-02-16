@@ -81,21 +81,26 @@ export function GuestResultTeaser({
                 <span className="mt-2 text-xs font-medium text-slate-400">Score</span>
               </div>
 
-              <div className="group relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-800/50 p-4">
+              <div
+                onClick={() => router.push('/pricing')}
+                className="group relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-800/50 p-4 transition-all hover:border-emerald-500/50 hover:bg-slate-800"
+              >
                 {/* Blurred Effect */}
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-slate-900/10 backdrop-blur-[2px]">
-                  <Lock className="h-6 w-6 text-slate-400" />
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-slate-900/10 backdrop-blur-[2px] transition-all group-hover:bg-transparent group-hover:backdrop-blur-none">
+                  <Lock className="h-6 w-6 text-slate-400 group-hover:text-emerald-400" />
                   <span className="text-[10px] font-bold tracking-wider text-slate-300 uppercase">
                     Unlock
                   </span>
                 </div>
 
-                <span className="text-3xl font-bold text-white blur-sm">#{rank}</span>
+                <span className="text-3xl font-bold text-white blur-sm group-hover:blur-none">
+                  #{rank}
+                </span>
                 <span className="mt-2 text-xs font-medium text-slate-400">Global Rank</span>
               </div>
             </div>
 
-            {/* Locked Insights List */}
+            {/* Locked Insights List slice */}
             <div className="space-y-3">
               <h3 className="pl-1 text-sm font-bold tracking-widest text-slate-300 uppercase">
                 Locked Insights
@@ -123,18 +128,19 @@ export function GuestResultTeaser({
               ].map((item, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between rounded-xl border border-slate-800/50 bg-slate-800/30 p-3"
+                  onClick={() => router.push('/pricing')}
+                  className="group/item flex cursor-pointer items-center justify-between rounded-xl border border-slate-800/50 bg-slate-800/30 p-3 transition-all hover:border-slate-700 hover:bg-slate-800/50"
                 >
-                  <div className="flex items-center gap-3 opacity-60">
+                  <div className="flex items-center gap-3 opacity-60 transition-opacity group-hover/item:opacity-100">
                     <div className={`rounded-lg p-2 ${item.bg} ${item.color}`}>
                       <item.icon className="h-4 w-4" />
                     </div>
                     <div className="space-y-1">
-                      <div className="h-2 w-32 rounded bg-slate-700 blur-[2px]" />
-                      <div className="h-2 w-20 rounded bg-slate-700 blur-[2px]" />
+                      <div className="h-2 w-32 rounded bg-slate-700 blur-[2px] transition-all group-hover/item:blur-none" />
+                      <div className="h-2 w-20 rounded bg-slate-700 blur-[2px] transition-all group-hover/item:blur-none" />
                     </div>
                   </div>
-                  <div className="rounded-full bg-slate-800 p-2 text-slate-500">
+                  <div className="rounded-full bg-slate-800 p-2 text-slate-500 transition-colors group-hover/item:text-emerald-400">
                     <Lock className="h-3 w-3" />
                   </div>
                 </div>

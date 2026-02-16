@@ -76,14 +76,15 @@ export const SyllabusTopicCard: React.FC<SyllabusTopicCardProps> = ({
 
   return (
     <motion.div
-      whileHover={{ y: -5, scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ y: -8, scale: 1.01 }}
+      whileTap={{ scale: 0.96 }}
       onClick={onClick}
+      transition={{ type: 'spring', stiffness: 500, damping: 15 }}
       className={cn(
         'group relative flex h-[320px] w-full cursor-pointer flex-col justify-between overflow-hidden rounded-[2.5rem] border p-6 transition-all duration-300',
         style.bg,
         style.border,
-        'shadow-sm hover:shadow-xl',
+        'shadow-sm hover:shadow-2xl',
         style.shadow,
         isLocked && 'opacity-90 grayscale-[0.5]'
       )}
