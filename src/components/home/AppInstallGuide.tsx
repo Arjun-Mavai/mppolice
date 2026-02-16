@@ -6,6 +6,7 @@ import { Apple, Smartphone, Share, PlusSquare, ArrowRight, Download, Check } fro
 import { cn } from '@/lib/utils';
 
 import { useSettingsStore } from '@/store/useSettingsStore';
+import Image from 'next/image';
 
 export function AppInstallGuide() {
   const [activeTab, setActiveTab] = useState<'ios' | 'android'>('ios');
@@ -296,7 +297,13 @@ export function AppInstallGuide() {
                     <div className="z-10 flex h-14 items-center justify-between bg-white px-6 shadow-sm">
                       <div className="flex items-center gap-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
-                          <img src="/icon.png" alt="Icon" className="h-5 w-5" />
+                          <Image
+                            src="/icon.png"
+                            alt="Icon"
+                            width={20}
+                            height={20}
+                            className="h-5 w-5"
+                          />
                         </div>
                         <span className="text-sm font-bold text-slate-900">Mindful</span>
                       </div>

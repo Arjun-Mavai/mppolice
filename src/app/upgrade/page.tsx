@@ -1,13 +1,32 @@
 'use client';
 
-import React from 'react';
 import dynamic from 'next/dynamic';
 import { HeroSection } from '@/components/home/HeroSection';
-import { PremiumExplanationSection } from '@/components/home/PremiumExplanationSection';
-import { InstantFeedbackSection } from '@/components/home/InstantFeedbackSection';
-import { SubjectMasterySection } from '@/components/home/SubjectMasterySection';
-import { ContentSuiteSection } from '@/components/home/ContentSuiteSection';
-import { AppInstallGuide } from '@/components/home/AppInstallGuide';
+
+// Below-fold sections — keep dynamic for performance but consolidate if possible
+const PremiumExplanationSection = dynamic(() =>
+  import('@/components/home/PremiumExplanationSection').then((m) => ({
+    default: m.PremiumExplanationSection,
+  }))
+);
+const InstantFeedbackSection = dynamic(() =>
+  import('@/components/home/InstantFeedbackSection').then((m) => ({
+    default: m.InstantFeedbackSection,
+  }))
+);
+const SubjectMasterySection = dynamic(() =>
+  import('@/components/home/SubjectMasterySection').then((m) => ({
+    default: m.SubjectMasterySection,
+  }))
+);
+const ContentSuiteSection = dynamic(() =>
+  import('@/components/home/ContentSuiteSection').then((m) => ({
+    default: m.ContentSuiteSection,
+  }))
+);
+const AppInstallGuide = dynamic(() =>
+  import('@/components/home/AppInstallGuide').then((m) => ({ default: m.AppInstallGuide }))
+);
 
 // Below-fold sections — keep dynamic for performance but consolidate if possible
 const DualLanguageShowcase = dynamic(() =>
