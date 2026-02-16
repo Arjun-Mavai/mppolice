@@ -179,7 +179,7 @@ export default function BlogsClient({
             {tabs.map((tab) => {
               const count =
                 tab === 'General'
-                  ? initialCounts.categories['General'] || 0
+                  ? initialCounts.categories['general'] || 0
                   : initialCounts.units[tab] || 0;
               return (
                 <button

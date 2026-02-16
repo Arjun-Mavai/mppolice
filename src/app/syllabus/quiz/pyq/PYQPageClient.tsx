@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
@@ -35,7 +35,7 @@ export default function PYQPageClient({ initialTests }: PYQPageClientProps) {
   const [loadingTestId, setLoadingTestId] = useState<string | null>(null);
 
   // Prefetch test routes for "light speed" transition
-  React.useEffect(() => {
+  useEffect(() => {
     initialTests.slice(0, 12).forEach((test) => {
       if (!test.isLocked) {
         router.prefetch(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);

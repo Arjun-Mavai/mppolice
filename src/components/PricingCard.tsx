@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { type PricingData, calcDiscount, calcMonthly, PlanFeatureWithIcon } from '@/config/pricing';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Target,
@@ -248,6 +249,34 @@ export function PricingCard({
           {/* Action Button */}
           {href ? (
             <Link href={href} prefetch={true} className="w-full">
+              <motion.div whileTap={{ scale: 0.96 }} className="w-full">
+                <Button
+                  onClick={onBuy}
+                  variant={isLite ? 'outline' : 'default'}
+                  className={cn(
+                    'h-12 w-full rounded-xl font-bold transition-all',
+                    isLite &&
+                      'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900',
+                    (isPro || isUpgrade) &&
+                      'bg-slate-800 text-white shadow-lg shadow-slate-300 hover:bg-slate-700'
+                  )}
+                >
+                  {isLite
+                    ? hi
+                      ? `₹${price} में लाइट लें`
+                      : `Get Lite — ₹${price}`
+                    : isUpgrade
+                      ? hi
+                        ? `₹${price} में प्रो लें`
+                        : `Upgrade to Pro — ₹${price}`
+                      : hi
+                        ? `₹${price} में प्रो लें`
+                        : `Get Pro — ₹${price}`}
+                </Button>
+              </motion.div>
+            </Link>
+          ) : (
+            <motion.div whileTap={{ scale: 0.96 }} className="w-full">
               <Button
                 onClick={onBuy}
                 variant={isLite ? 'outline' : 'default'}
@@ -271,31 +300,7 @@ export function PricingCard({
                       ? `₹${price} में प्रो लें`
                       : `Get Pro — ₹${price}`}
               </Button>
-            </Link>
-          ) : (
-            <Button
-              onClick={onBuy}
-              variant={isLite ? 'outline' : 'default'}
-              className={cn(
-                'h-12 w-full rounded-xl font-bold transition-all',
-                isLite &&
-                  'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900',
-                (isPro || isUpgrade) &&
-                  'bg-slate-800 text-white shadow-lg shadow-slate-300 hover:bg-slate-700'
-              )}
-            >
-              {isLite
-                ? hi
-                  ? `₹${price} में लाइट लें`
-                  : `Get Lite — ₹${price}`
-                : isUpgrade
-                  ? hi
-                    ? `₹${price} में प्रो लें`
-                    : `Upgrade to Pro — ₹${price}`
-                  : hi
-                    ? `₹${price} में प्रो लें`
-                    : `Get Pro — ₹${price}`}
-            </Button>
+            </motion.div>
           )}
         </CardContent>
       </Card>
