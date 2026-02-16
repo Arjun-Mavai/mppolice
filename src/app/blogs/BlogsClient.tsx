@@ -71,7 +71,7 @@ export default function BlogsClient({
     initialBlogs.slice(0, 5).forEach((blog) => {
       router.prefetch(`/blogs/${blog.slug}`);
     });
-  }, [initialBlogs, router]);
+  }, []);
 
   // Initial Fetch / Filter Change
   const fetchBlogs = async (reset = false) => {
@@ -220,7 +220,13 @@ export default function BlogsClient({
           {activeUnit === 'General' && (
             <div className="animate-in fade-in slide-in-from-top-2 no-scrollbar -mx-4 mt-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
               {subjects.map((subject) => {
-                const count = initialCounts.categories[subject.id] || 0;
+                const count =
+                  subject.id === 'All'
+                    ? Object.values(initialCounts.categories || {}).reduce(
+                        (sum, value) => (typeof value === 'number' ? sum + value : sum),
+                        0
+                      )
+                    : initialCounts.categories[subject.id] || 0;
                 const isActive = activeCategory === subject.id;
                 return (
                   <button
