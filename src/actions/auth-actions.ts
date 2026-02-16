@@ -38,13 +38,18 @@ export async function getCurrentUser() {
   };
 }
 
+interface LoginParams {
+  email?: string;
+  password?: string;
+}
+
 /**
  * 🔑 Login User (Server Action)
  *
  * Bhai, ye function email aur password leke user ko login karata hai.
  * API route se move kiya gaya taaki security aur consistency bani rahe.
  */
-export async function loginUserAction(formData: any) {
+export async function loginUserAction(formData: LoginParams) {
   const { email, password } = formData;
 
   try {

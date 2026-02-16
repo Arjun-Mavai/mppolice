@@ -47,15 +47,14 @@ export default function FLTPageClient({ tests }: FLTPageClientProps) {
     });
   }, [tests, router]);
 
-  const handleTestClick = (testId: string, isLocked: boolean, attemptsLeft: number | null) => {
-    if (isLocked) {
+  const handleTestClick = (test: TestWithAccess) => {
+    if (test.isLocked) {
       setPaywallOpen(true);
       return;
     }
 
-    if (attemptsLeft !== null && attemptsLeft > 0) {
-      router.push(`/syllabus/quiz/play?mode=full&testId=${testId}`);
-    }
+    setLoadingTestId(test.id);
+    router.push(`/syllabus/quiz/play?mode=full&testId=${test.id}`);
   };
 
   const hi = language === 'hi';
@@ -120,14 +119,7 @@ export default function FLTPageClient({ tests }: FLTPageClientProps) {
                 language={language}
                 colorVariant={(['amber', 'emerald', 'pink', 'blue', 'indigo'] as const)[idx % 5]}
                 isLoading={loadingTestId === test.id}
-                onClick={() => {
-                  if (test.isLocked) {
-                    setPaywallOpen(true);
-                  } else {
-                    setLoadingTestId(test.id);
-                    router.push(`/syllabus/quiz/play?mode=full&testId=${test.id}`);
-                  }
-                }}
+                onClick={() => handleTestClick(test)}
                 onMouseEnter={() => {
                   if (!test.isLocked) {
                     router.prefetch(`/syllabus/quiz/play?mode=full&testId=${test.id}`);

@@ -36,10 +36,11 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
   // ⚡ LIGHT SPEED PREFETCH: First 6 units on mount
   useEffect(() => {
     availableTests.slice(0, 6).forEach((test) => {
-      if (!test.isFreeAccess) return; // Only prefetch free ones for guests, or all for users
+      // Only prefetch free ones for guests, or all for users
+      if (!user && !test.isFreeAccess) return;
       router.prefetch(`/syllabus/quiz/play?mode=topic&testId=${test.id}`);
     });
-  }, [availableTests, router]);
+  }, [availableTests, router, user]);
 
   const isAdmin = (user as any)?.role === 'admin';
   const isSubscribed = user?.isSubscribed || false;

@@ -179,12 +179,7 @@ export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
 
   if (isLocked) {
     return (
-      <div
-        onClick={handleClick}
-        className="group block h-full"
-        onMouseEnter={() => !isLocked && router.prefetch(`/blogs/${blog.slug}`)}
-        onTouchStart={() => !isLocked && router.prefetch(`/blogs/${blog.slug}`)}
-      >
+      <div onClick={handleClick} className="group block h-full">
         {CardContent}
       </div>
     );

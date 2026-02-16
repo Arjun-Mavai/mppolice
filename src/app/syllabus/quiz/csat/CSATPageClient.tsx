@@ -50,6 +50,7 @@ export default function CSATPageClient({ initialTests }: CSATPageClientProps) {
       setPaywallOpen(true);
       return;
     }
+    setLoadingTestId(test.id);
     router.push(`/syllabus/quiz/play?mode=full&testId=${test.id}`);
   };
 
@@ -114,14 +115,7 @@ export default function CSATPageClient({ initialTests }: CSATPageClientProps) {
                 language={language}
                 colorVariant={(['amber', 'emerald', 'pink', 'blue', 'indigo'] as const)[idx % 5]}
                 isLoading={loadingTestId === test.id}
-                onClick={() => {
-                  if (test.isLocked) {
-                    setPaywallOpen(true);
-                  } else {
-                    setLoadingTestId(test.id);
-                    router.push(`/syllabus/quiz/play?mode=full&testId=${test.id}`);
-                  }
-                }}
+                onClick={() => handleTestClick(test)}
                 onMouseEnter={() => {
                   if (!test.isLocked) {
                     router.prefetch(`/syllabus/quiz/play?mode=full&testId=${test.id}`);

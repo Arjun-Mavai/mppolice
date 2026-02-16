@@ -212,7 +212,21 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   if (pathname.includes('/quiz/play')) return null;
 
   return (
-    <header className="fixed top-0 right-0 left-0 z-50 border-b border-slate-200 bg-white/90 py-2 shadow-sm backdrop-blur-md">
+    <header className="fixed top-0 right-0 left-0 z-50 [animation:navbar-scroll_linear_both] border-b border-slate-200 bg-white/80 shadow-sm backdrop-blur-md transition-all duration-300 [animation-range:0px_50px] [animation-timeline:scroll()]">
+      <style jsx>{`
+        @keyframes navbar-scroll {
+          from {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            background-color: rgb(255 255 255 / 0.5);
+          }
+          to {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            background-color: rgb(255 255 255 / 0.9);
+          }
+        }
+      `}</style>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between">
           {/* Logo — logged in users go to quiz, others go home */}

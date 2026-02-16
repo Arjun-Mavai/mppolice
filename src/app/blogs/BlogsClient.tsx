@@ -178,7 +178,9 @@ export default function BlogsClient({
           <div className="no-scrollbar -mx-4 mt-4 flex snap-x gap-2 overflow-x-auto px-4 pt-2 pb-2 md:mx-0 md:px-0">
             {tabs.map((tab) => {
               const count =
-                tab === 'General' ? initialPagination.total : initialCounts.units[tab] || 0;
+                tab === 'General'
+                  ? initialCounts.categories['General'] || 0
+                  : initialCounts.units[tab] || 0;
               return (
                 <button
                   key={tab}
