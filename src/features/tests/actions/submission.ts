@@ -54,9 +54,16 @@ export const getCachedCSATTests = unstable_cache(
 
 // --- Dynamic User Data Fetchers ---
 
-export async function getUserAttempts(testIds: string[]) {
-  const user = await verifyAuth();
-  if (!user || testIds.length === 0) return {};
+export async function getUserAttempts(testIds: string[], userId?: string) {
+  let finalUserId = userId;
+
+  if (!finalUserId) {
+    const user = await verifyAuth();
+    if (!user) return {};
+    finalUserId = user.id;
+  }
+
+  if (testIds.length === 0) return {};
 
   const attempts = await db
     .select({
@@ -64,13 +71,40 @@ export async function getUserAttempts(testIds: string[]) {
       count: sql<number>`count(*)`,
     })
     .from(userAttempts)
-    // Optimization: Added limit to prevent massive fetching if user has 1000s of attempts
-    // Ideally this should be paginated from the client side, but capping it for safety here.
+    .where(and(eq(userAttempts.userId, finalUserId), inArray(userAttempts.testId, testIds)))
     .limit(100)
-    .where(and(eq(userAttempts.userId, user.id), inArray(userAttempts.testId, testIds)))
+
     .groupBy(userAttempts.testId);
 
   // Return as a Record<string, number> for easy client-side mapping
+  return attempts.reduce(
+    (acc, curr) => {
+      acc[curr.testId] = Number(curr.count);
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+}
+
+/**
+ * getUserAttemptsByType
+ * Faster way to get all attempts for a specific type (FLT, PYQ, etc)
+ */
+export async function getUserAttemptsByType(
+  type: 'FLT' | 'UNIT' | 'CSAT' | 'PYQ' | 'TOPIC',
+  userId: string
+) {
+  const attempts = await db
+    .select({
+      testId: userAttempts.testId,
+      count: sql<number>`count(*)`,
+    })
+    .from(userAttempts)
+    .innerJoin(tests, eq(userAttempts.testId, tests.id))
+    .where(and(eq(userAttempts.userId, userId), eq(tests.type, type)))
+    .limit(1000)
+    .groupBy(userAttempts.testId);
+
   return attempts.reduce(
     (acc, curr) => {
       acc[curr.testId] = Number(curr.count);

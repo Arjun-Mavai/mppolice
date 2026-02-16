@@ -24,15 +24,13 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     redirect('/syllabus/quiz/pyq');
   }
 
-  // 1. Fetch Test and User Data in Parallel
-  const [testData, user] = await Promise.all([getTestWithQuestions(testId), verifyAuth()]);
+  // 1. Fetch Initial Data in Parallel (Reduces waterfall)
+  const [testData, user, attemptLimits] = await Promise.all([
+    getTestWithQuestions(testId),
+    verifyAuth(),
+    getCachedAttemptLimits(),
+  ]);
 
-  // Access: Guest → only isFreeAccess; Logged-in → canAccessTest (tier + flags)
-  const guestDenied = !user && !testData?.isFreeAccess;
-  const loggedInDenied = user && testData && !canAccessTest(testData, user);
-  if (guestDenied || loggedInDenied) {
-    redirect('/pricing');
-  }
   if (!testData) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 pt-[80px]">
@@ -44,7 +42,17 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     );
   }
 
-  // 2. Map Questions to correct type
+  // 🛡️ [PR FIX]: Access check as early as possible before any processing
+  const guestDenied = !user && !testData.isFreeAccess;
+  const loggedInDenied = user && !canAccessTest(testData, user);
+  if (guestDenied || loggedInDenied) {
+    redirect('/pricing');
+  }
+
+  const userId = user?.id;
+
+  // 3. Map Questions to correct type
+
   const questions: Question[] = testData.questions.map((q) => {
     // Ensure options are parsed if they come as a stringified array
     const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
@@ -71,17 +79,14 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     };
   });
 
+  // 2. Fetch Attempts if user exists (can be parallelized but depends on testId)
+  const attemptsMap = userId ? await getUserAttempts([testId], userId) : {};
+  const userAttemptsCount = attemptsMap[testId] || 0;
+  const maxRetries = attemptLimits[testData.type] ?? null;
+
   const tier = getUserTier(user);
   const hasPaidPlan = tier === 'pro' || tier === 'lite';
   const shouldShowPaywall = false;
-
-  // 4. Content Logic (Attempts)
-  const [attemptsMap, attemptLimits] = await Promise.all([
-    getUserAttempts([testId]),
-    getCachedAttemptLimits(),
-  ]);
-  const userAttemptsCount = attemptsMap[testId] || 0;
-  const maxRetries = attemptLimits[testData.type] ?? null;
 
   return (
     <QuizPlayClient

@@ -43,8 +43,9 @@ async function AttemptContent({ attemptId }: { attemptId: string }) {
   }
 
   const { meta, answers } = attempt;
-  // Fetch Leaderboard Data
-  const leaderboard = await getTestLeaderboard(meta.testId, meta.userId);
+
+  // Parallelize Leaderboard while processing the review logic
+  const leaderboardPromise = getTestLeaderboard(meta.testId, meta.userId);
 
   // Categorize answers first to use lengths for calculation
   const correctAns = answers.filter((a) => a.isCorrect);
@@ -175,7 +176,7 @@ async function AttemptContent({ attemptId }: { attemptId: string }) {
       </div>
 
       {/* LEADERBOARD SECTION - Integrated for History */}
-      <HistoryLeaderboard leaderboard={leaderboard} currentUserId={meta.userId} />
+      <HistoryLeaderboard leaderboard={await leaderboardPromise} currentUserId={meta.userId} />
 
       {/* Question List */}
       <div className="mx-auto max-w-4xl space-y-4 px-3 py-6 sm:space-y-6 sm:px-6 sm:py-10">

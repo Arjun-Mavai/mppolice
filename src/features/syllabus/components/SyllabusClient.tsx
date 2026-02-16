@@ -163,7 +163,8 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                     key={key}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 15 }}
                   >
                     <div
                       onClick={() => {
@@ -177,7 +178,7 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                     >
                       <div
                         className={cn(
-                          'group relative flex items-center gap-6 overflow-hidden rounded-xl border border-slate-200 bg-white p-5 transition-all hover:border-slate-300 hover:shadow-md',
+                          'group relative flex items-center gap-6 overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-slate-300 hover:shadow-md',
                           isLocked && 'grayscale-[0.8]'
                         )}
                       >
