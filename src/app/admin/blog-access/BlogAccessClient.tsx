@@ -18,9 +18,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Loader2, FileText, Zap, Search, EyeOff, Calendar } from 'lucide-react';
+import { Loader2, FileText, Zap, Search, EyeOff, Calendar, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { toggleBlogAccess, bulkUpdateBlogAccess, toggleBlogHidden } from './actions';
+import { toggleBlogAccess, bulkUpdateBlogAccess, toggleBlogHidden, deleteBlog } from './actions';
 
 interface BlogItem {
   id: string;
@@ -98,6 +98,23 @@ export default function BlogAccessClient({ blogs: initialBlogs }: { blogs: BlogI
         toast.error('Failed to update');
       } else {
         toast.success(isHidden ? 'Blog hidden!' : 'Blog visible!');
+      }
+    });
+  };
+
+  // ── Delete handler ─────────────────────────────────────────
+  const handleDelete = async (blogId: string, title: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)) {
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await deleteBlog(blogId);
+      if (!result.success) {
+        toast.error(result.error || 'Failed to delete blog');
+      } else {
+        setBlogs((prev) => prev.filter((b) => b.id !== blogId));
+        toast.success('Blog deleted successfully');
       }
     });
   };
@@ -344,6 +361,17 @@ export default function BlogAccessClient({ blogs: initialBlogs }: { blogs: BlogI
                           <EyeOff className="mr-1 h-3 w-3" /> Hidden
                         </Badge>
                       )}
+
+                      {/* Delete Button */}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 shrink-0 text-slate-300 hover:bg-red-50 hover:text-red-500"
+                        onClick={() => handleDelete(blog.id, blog.title)}
+                        disabled={isPending}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
 
                     {/* Access Switches + Hidden */}

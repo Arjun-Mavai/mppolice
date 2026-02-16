@@ -260,7 +260,7 @@ export function PricingCard({
                     'bg-slate-800 text-white shadow-lg shadow-slate-300 hover:bg-slate-700'
                 )}
               >
-                <Link href={href} prefetch={true} onClick={onBuy}>
+                <Link href={href} prefetch={true}>
                   {isLite
                     ? hi
                       ? `₹${price} में लाइट लें`
