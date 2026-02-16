@@ -248,19 +248,19 @@ export function PricingCard({
 
           {/* Action Button */}
           {href ? (
-            <Link href={href} prefetch={true} className="w-full">
-              <motion.div whileTap={{ scale: 0.96 }} className="w-full">
-                <Button
-                  onClick={onBuy}
-                  variant={isLite ? 'outline' : 'default'}
-                  className={cn(
-                    'h-12 w-full rounded-xl font-bold transition-all',
-                    isLite &&
-                      'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900',
-                    (isPro || isUpgrade) &&
-                      'bg-slate-800 text-white shadow-lg shadow-slate-300 hover:bg-slate-700'
-                  )}
-                >
+            <motion.div whileTap={{ scale: 0.96 }} className="w-full">
+              <Button
+                asChild
+                variant={isLite ? 'outline' : 'default'}
+                className={cn(
+                  'h-12 w-full rounded-xl font-bold transition-all',
+                  isLite &&
+                    'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900',
+                  (isPro || isUpgrade) &&
+                    'bg-slate-800 text-white shadow-lg shadow-slate-300 hover:bg-slate-700'
+                )}
+              >
+                <Link href={href} prefetch={true} onClick={onBuy}>
                   {isLite
                     ? hi
                       ? `₹${price} में लाइट लें`
@@ -272,9 +272,9 @@ export function PricingCard({
                       : hi
                         ? `₹${price} में प्रो लें`
                         : `Get Pro — ₹${price}`}
-                </Button>
-              </motion.div>
-            </Link>
+                </Link>
+              </Button>
+            </motion.div>
           ) : (
             <motion.div whileTap={{ scale: 0.96 }} className="w-full">
               <Button
