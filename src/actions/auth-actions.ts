@@ -1,6 +1,12 @@
 'use server';
 
 import { verifyAuth } from '@/lib/auth';
+import { db } from '@/db';
+import { mppscUsers } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { cookies, headers } from 'next/headers';
+import bcrypt from 'bcryptjs';
+import { logger } from '@/lib/logger';
 
 /**
  * 🔐 Get Current User (Server Action)
@@ -22,14 +28,134 @@ export async function getCurrentUser() {
 
   return {
     user: {
-      id: user.id,
-      name: user.name,
       email: user.email,
-      phone: user.phone ?? undefined,
-      role: user.role,
-      is_subscribed: user.isSubscribed,
-      plan_tier: user.planTier,
-      access_expires_at: user.accessExpiresAt,
+      name: user.name,
+      isSubscribed: !!user.isSubscribed,
+      planTier: (user.planTier as any) || 'free',
+      role: user.role ?? undefined,
+      accessExpiresAt: user.accessExpiresAt ?? undefined,
     },
   };
+}
+
+/**
+ * 🔑 Login User (Server Action)
+ *
+ * Bhai, ye function email aur password leke user ko login karata hai.
+ * API route se move kiya gaya taaki security aur consistency bani rahe.
+ */
+export async function loginUserAction(formData: any) {
+  const { email, password } = formData;
+
+  try {
+    // ── Rate Limiting ───────────────────────────────────────────
+    const headersList = await headers();
+    const ip = headersList.get('x-forwarded-for') ?? '127.0.0.1';
+    const { loginLimiter, checkRateLimit } = await import('@/lib/rate-limit');
+
+    const { success } = await checkRateLimit(loginLimiter, ip);
+
+    if (!success) {
+      return {
+        error: 'Too many login attempts. Please try again after 15 minutes.',
+      };
+    }
+
+    if (!email || !password) {
+      return { error: 'Email and password are required' };
+    }
+
+    // ── Find User by Email ──────────────────────────────────────
+    const users = await db
+      .select()
+      .from(mppscUsers)
+      .where(eq(mppscUsers.email, email.toLowerCase().trim()))
+      .limit(1);
+    const user = users[0];
+
+    if (!user) {
+      return { error: 'Invalid credentials' };
+    }
+
+    // ── Soft Delete Check ──────────────────────────────────────
+    if (user.deletedAt) {
+      return {
+        error: 'Account deactivated. Contact admin for reactivation.',
+      };
+    }
+
+    // ── Active Check ──────────────────────────────────────────
+    if (user.isActive === false) {
+      return {
+        error: 'Account is currently inactive. Contact admin to reactivate.',
+        code: 'ACCOUNT_INACTIVE',
+      };
+    }
+
+    // ── Access Expiry Check ────────────────────────────────────
+    if (user.accessExpiresAt && user.planTier !== 'free') {
+      const now = new Date();
+      const expiryDate = new Date(user.accessExpiresAt);
+      if (expiryDate < now) {
+        // Downgrade to free instead of blocking login
+        await db
+          .update(mppscUsers)
+          .set({ planTier: 'free', isSubscribed: false })
+          .where(eq(mppscUsers.id, user.id));
+
+        user.planTier = 'free';
+        user.isSubscribed = false;
+      }
+    }
+
+    // ── Password Verification ───────────────────────────────────
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return { error: 'Invalid credentials' };
+    }
+
+    // ── Sign JWT Token ──────────────────────────────────────────
+    const payload = {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    };
+
+    const { signToken } = await import('@/lib/jwt');
+    const token = signToken(payload);
+
+    if (!token) {
+      throw new Error('Token generation failed');
+    }
+
+    // ── Set HTTP-Only Cookie (30 days) ──────────────────────────
+    const cookieStore = await cookies();
+    cookieStore.set('mppsc_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30,
+      sameSite: 'lax',
+    });
+
+    return {
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        isSubscribed: !!user.isSubscribed,
+        planTier: (user.planTier as any) || 'free',
+        role: user.role ?? undefined,
+        accessExpiresAt: user.accessExpiresAt ?? undefined,
+      },
+    };
+  } catch (error) {
+    logger.error('Login action error:', error, {
+      category: 'auth',
+      metadata: { email },
+    });
+    return { error: 'Internal Server Error' };
+  }
 }

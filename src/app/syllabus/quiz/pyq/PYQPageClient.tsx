@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
@@ -33,6 +33,15 @@ export default function PYQPageClient({ initialTests }: PYQPageClientProps) {
   const { language } = useSettingsStore();
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [loadingTestId, setLoadingTestId] = useState<string | null>(null);
+
+  // Prefetch test routes for "light speed" transition
+  React.useEffect(() => {
+    initialTests.slice(0, 12).forEach((test) => {
+      if (!test.isLocked) {
+        router.prefetch(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);
+      }
+    });
+  }, [initialTests, router]);
 
   const hi = language === 'hi';
   return (
@@ -101,6 +110,16 @@ export default function PYQPageClient({ initialTests }: PYQPageClientProps) {
                   } else {
                     setLoadingTestId(test.id);
                     router.push(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);
+                  }
+                }}
+                onMouseEnter={() => {
+                  if (!test.isLocked) {
+                    router.prefetch(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);
+                  }
+                }}
+                onTouchStart={() => {
+                  if (!test.isLocked) {
+                    router.prefetch(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);
                   }
                 }}
               />

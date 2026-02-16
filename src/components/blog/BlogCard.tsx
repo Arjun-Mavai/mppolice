@@ -5,6 +5,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { Clock, Lock, ArrowRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 interface BlogCardProps {
   blog: any;
@@ -47,6 +48,7 @@ const bgEmojis = ['📖', '📝', '💡', '🧠', '🎯', '📊', '⚖️', '�
 
 export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
   const { setLockModalOpen, language } = useSettingsStore();
+  const router = useRouter();
 
   const colorVariant = (['blue', 'pink', 'emerald', 'amber'] as const)[index % 4];
   const style = variants[colorVariant];
@@ -177,14 +179,24 @@ export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
 
   if (isLocked) {
     return (
-      <div onClick={handleClick} className="group block h-full">
+      <div
+        onClick={handleClick}
+        className="group block h-full"
+        onMouseEnter={() => !isLocked && router.prefetch(`/blogs/${blog.slug}`)}
+        onTouchStart={() => !isLocked && router.prefetch(`/blogs/${blog.slug}`)}
+      >
         {CardContent}
       </div>
     );
   }
 
   return (
-    <Link href={`/blogs/${blog.slug}`} className="group block h-full">
+    <Link
+      href={`/blogs/${blog.slug}`}
+      className="group block h-full"
+      onMouseEnter={() => router.prefetch(`/blogs/${blog.slug}`)}
+      onTouchStart={() => router.prefetch(`/blogs/${blog.slug}`)}
+    >
       {CardContent}
     </Link>
   );

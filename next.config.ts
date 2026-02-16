@@ -12,6 +12,7 @@ const hostnames = [
   'framerusercontent.com',
   'chrysalishigh.com',
   'i.pravatar.cc',
+  'images.unsplash.com',
   // 'example.com',
 ];
 

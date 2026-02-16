@@ -22,8 +22,8 @@ import { Info, MessageSquare, Mail, Shield, FileText } from 'lucide-react';
 export function AppFooter() {
   const pathname = usePathname();
 
-  // 🚫 Quiz play page pe footer nahi dikhana — user test de raha hai, bhagao isko!
-  if (pathname.startsWith('/syllabus/quiz/play')) return null;
+  // 🚫 Quiz pages pe footer nahi dikhana — user test de raha hai ya prepare kar raha hai!
+  if (pathname.startsWith('/syllabus/quiz')) return null;
 
   return (
     <footer className="min-h-[250px] border-t border-slate-200 bg-slate-50 py-12 pb-24 sm:min-h-[200px] md:pb-12">

@@ -25,10 +25,13 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
   }
 
   // 1. Fetch Initial Data in Parallel (Reduces waterfall)
-  const [testData, user, attemptLimits] = await Promise.all([
+  const [testData, user, attemptLimits, attemptsMap] = await Promise.all([
     getTestWithQuestions(testId),
     verifyAuth(),
     getCachedAttemptLimits(),
+    verifyAuth().then((u) =>
+      u ? getUserAttempts([testId], u.id) : ({} as Record<string, number>)
+    ),
   ]);
 
   if (!testData) {
@@ -79,9 +82,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     };
   });
 
-  // 2. Fetch Attempts if user exists (can be parallelized but depends on testId)
-  const attemptsMap = userId ? await getUserAttempts([testId], userId) : {};
-  const userAttemptsCount = attemptsMap[testId] || 0;
+  const userAttemptsCount = (attemptsMap as Record<string, number>)[testId] || 0;
   const maxRetries = attemptLimits[testData.type] ?? null;
 
   const tier = getUserTier(user);

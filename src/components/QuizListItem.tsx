@@ -21,7 +21,9 @@ interface QuizListItemProps {
   language?: 'en' | 'hi';
   colorVariant?: 'blue' | 'pink' | 'emerald' | 'amber' | 'slate' | 'indigo';
   isLoading?: boolean;
-  itemLabel?: string; // New: Custom label for "Questions" vs "Topics"
+  itemLabel?: string;
+  onMouseEnter?: () => void;
+  onTouchStart?: () => void;
 }
 
 export function QuizListItem({
@@ -40,6 +42,8 @@ export function QuizListItem({
   colorVariant = 'slate',
   isLoading = false,
   itemLabel,
+  onMouseEnter,
+  onTouchStart,
 }: QuizListItemProps) {
   const hi = language === 'hi';
   const num = index + 1;
@@ -69,6 +73,8 @@ export function QuizListItem({
       whileTap={!isExhausted && !isLoading ? { scale: 0.985 } : {}}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       onClick={isExhausted || isLoading ? undefined : onClick}
+      onMouseEnter={onMouseEnter}
+      onTouchStart={onTouchStart}
       className={cn(
         'group relative rounded-[1.8rem] border p-4 transition-all sm:p-5',
         isExhausted || isLoading ? 'cursor-not-allowed' : 'cursor-pointer active:bg-slate-50/80',

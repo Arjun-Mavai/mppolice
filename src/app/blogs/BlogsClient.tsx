@@ -3,6 +3,8 @@ import { useState, useTransition, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Search, BookOpen, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 import { logger } from '@/lib/logger';
 import { BlogCard } from '@/components/blog/BlogCard';
 import { SearchInput } from '@/components/blog/SearchInput';
@@ -19,7 +21,10 @@ interface BlogsClientProps {
     total: number;
     hasMore: boolean;
   };
-  initialCounts: Record<string, number>;
+  initialCounts: {
+    units: Record<string, number>;
+    categories: Record<string, number>;
+  };
 }
 
 export default function BlogsClient({
@@ -28,11 +33,13 @@ export default function BlogsClient({
   initialCounts,
 }: BlogsClientProps) {
   const { user: currentUser } = useSettingsStore();
+  const router = useRouter();
 
   // State
   const [blogs, setBlogs] = useState<any[]>(initialBlogs);
   const [pagination, setPagination] = useState(initialPagination);
   const [activeUnit, setActiveUnit] = useState<string>('Free');
+  const [activeCategory, setActiveCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
 
   const [isPending, startTransition] = useTransition();
@@ -40,10 +47,31 @@ export default function BlogsClient({
 
   const isGuest = !currentUser?.isSubscribed;
 
-  // Units: Free tab first for non-subscribed users
-  const units = isGuest
-    ? ['Free', 'All', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)]
-    : ['All', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)];
+  // Tabs: Free first, then General (Subjects), then Unit 1-10
+  const tabs = isGuest
+    ? ['Free', 'General', 'All', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)]
+    : ['General', 'All', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)];
+
+  // Subject options (categories) - mapping database categories to readable names
+  const subjects = [
+    { id: 'All', label: 'All Subjects' },
+    { id: 'general', label: 'General / Exam Info' }, // (Syllabus, Result, Notifications)
+    { id: 'history', label: 'History' },
+    { id: 'geography', label: 'Geography' },
+    { id: 'polity', label: 'Polity' },
+    { id: 'economy', label: 'Economy' },
+    { id: 'science_tech', label: 'Science & Tech' },
+    { id: 'tribal_culture', label: 'Tribal Culture' },
+    { id: 'mp_general', label: 'MP General' },
+    { id: 'current_affairs', label: 'Current Affairs' },
+  ];
+
+  // Mount prefetching for initial blogs to ensure "light speed"
+  useEffect(() => {
+    initialBlogs.slice(0, 5).forEach((blog) => {
+      router.prefetch(`/blogs/${blog.slug}`);
+    });
+  }, [initialBlogs, router]);
 
   // Initial Fetch / Filter Change
   const fetchBlogs = async (reset = false) => {
@@ -52,7 +80,8 @@ export default function BlogsClient({
         const result = await getBlogs({
           page: 1,
           limit: 10,
-          unitId: activeUnit === 'Free' ? 'All' : activeUnit,
+          unitId: activeUnit === 'Free' || activeUnit === 'General' ? 'All' : activeUnit,
+          category: activeUnit === 'General' ? activeCategory : 'All',
           search: searchQuery,
           isFreeAccess: activeUnit === 'Free' ? true : undefined,
         });
@@ -78,7 +107,8 @@ export default function BlogsClient({
       const result = await getBlogs({
         page: nextPage,
         limit: 10,
-        unitId: activeUnit === 'Free' ? 'All' : activeUnit,
+        unitId: activeUnit === 'Free' || activeUnit === 'General' ? 'All' : activeUnit,
+        category: activeUnit === 'General' ? activeCategory : 'All',
         search: searchQuery,
         isFreeAccess: activeUnit === 'Free' ? true : undefined,
       });
@@ -102,7 +132,7 @@ export default function BlogsClient({
       fetchBlogs(true);
     }, 300);
     return () => clearTimeout(timer);
-  }, [activeUnit, searchQuery]); // Re-fetch when unit or search changes
+  }, [activeUnit, activeCategory, searchQuery]); // Re-fetch when unit, category or search changes
 
   const handleUnitChange = (unit: string) => {
     setActiveUnit(unit);
@@ -145,34 +175,36 @@ export default function BlogsClient({
             </div>
           </div>
 
-          {/* Unit Tabs (Scrollable) — clean slate style */}
           <div className="no-scrollbar -mx-4 mt-4 flex snap-x gap-2 overflow-x-auto px-4 pt-2 pb-2 md:mx-0 md:px-0">
-            {units.map((unit) => {
-              const count = initialCounts[unit] || 0;
+            {tabs.map((tab) => {
+              const count =
+                tab === 'General' ? initialPagination.total : initialCounts.units[tab] || 0;
               return (
                 <button
-                  key={unit}
-                  onClick={() => handleUnitChange(unit)}
+                  key={tab}
+                  onClick={() => handleUnitChange(tab)}
                   className={`group flex snap-start items-center gap-2 rounded-full border px-5 py-2.5 text-xs font-bold whitespace-nowrap transition-all ${
-                    unit === 'Free' && activeUnit === 'Free'
+                    tab === 'Free' && activeUnit === 'Free'
                       ? 'scale-105 border-emerald-600 bg-emerald-600 text-white shadow-lg shadow-emerald-200'
-                      : unit === 'Free' && activeUnit !== 'Free'
+                      : tab === 'Free' && activeUnit !== 'Free'
                         ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                        : activeUnit === unit
+                        : activeUnit === tab
                           ? 'scale-105 border-slate-900 bg-slate-900 text-white shadow-lg shadow-slate-300'
                           : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                   } `}
                 >
                   <span>
-                    {unit === 'All'
+                    {tab === 'All'
                       ? 'All Units'
-                      : unit === 'Free'
+                      : tab === 'Free'
                         ? '🎁 Free'
-                        : `Unit ${unit.split('_')[1]}`}
+                        : tab === 'General'
+                          ? '📚 Subjects'
+                          : `Unit ${tab.split('_')[1]}`}
                   </span>
-                  {count > 0 && (
+                  {tab !== 'General' && count > 0 && (
                     <span
-                      className={`flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[10px] font-black transition-colors ${activeUnit === unit ? 'bg-white text-slate-900' : 'bg-emerald-500 text-white group-hover:bg-emerald-600'} `}
+                      className={`flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[10px] font-black transition-colors ${activeUnit === tab ? 'bg-white text-slate-900' : 'bg-emerald-500 text-white group-hover:bg-emerald-600'} `}
                     >
                       {count}
                     </span>
@@ -182,10 +214,50 @@ export default function BlogsClient({
             })}
           </div>
 
+          {/* Subject Tabs (Visible only when General is active) */}
+          {activeUnit === 'General' && (
+            <div className="animate-in fade-in slide-in-from-top-2 no-scrollbar -mx-4 mt-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
+              {subjects.map((subject) => {
+                const count = initialCounts.categories[subject.id] || 0;
+                const isActive = activeCategory === subject.id;
+                return (
+                  <button
+                    key={subject.id}
+                    onClick={() => setActiveCategory(subject.id)}
+                    className={`group flex snap-start items-center gap-2 rounded-lg border px-4 py-2 text-[11px] font-black tracking-tight whitespace-nowrap transition-all ${
+                      isActive
+                        ? 'border-slate-900 bg-slate-100 text-slate-900'
+                        : 'border-slate-100 bg-slate-50 text-slate-500 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>{subject.label}</span>
+                    {count > 0 && (
+                      <span
+                        className={cn(
+                          'flex h-4 min-w-[1rem] items-center justify-center rounded-md px-1 text-[9px]',
+                          isActive ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600'
+                        )}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* Active Unit Breadcrumb */}
-          {activeUnit !== 'All' && (
+          {activeUnit !== 'All' && activeUnit !== 'General' && activeUnit !== 'Free' && (
             <div className="animate-in fade-in slide-in-from-top-1 mt-3 flex items-center gap-2 text-sm text-slate-600">
               <span className="font-bold text-slate-800">Unit {activeUnit.split('_')[1]}</span>
+            </div>
+          )}
+          {activeUnit === 'General' && activeCategory !== 'All' && (
+            <div className="animate-in fade-in slide-in-from-top-1 mt-3 flex items-center gap-2 text-sm text-slate-600">
+              <span className="font-bold text-slate-800">
+                {subjects.find((s) => s.id === activeCategory)?.label}
+              </span>
             </div>
           )}
         </div>

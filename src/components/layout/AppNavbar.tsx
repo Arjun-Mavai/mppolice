@@ -66,7 +66,6 @@ type UnifiedUser = StoreUser & PropUser;
 export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [isScrolled, setIsScrolled] = React.useState(false);
 
   // Use Global Store
   const {
@@ -93,43 +92,6 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     : null;
 
   // ------------------------------------------------------------------
-  // EFFECT 1: SCROLL LISTENER (The "Visuals")
-  // ------------------------------------------------------------------
-  useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          setIsScrolled(window.scrollY > 10);
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // ------------------------------------------------------------------
-  // EFFECT 1.5: CROSS-TAB LOGOUT SYNC
-  // ------------------------------------------------------------------
-  // When user logs out in one tab, localStorage is cleared.
-  // This listener detects that change in other tabs and forces a reload
-  // so stale auth state doesn't persist across browser tabs.
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'settings-storage' && e.newValue === null) {
-        // Another tab cleared auth — reload this tab to reflect logged-out state
-        setUser(null, false);
-        setAuthCheckStatus('checked');
-        window.location.href = '/';
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [setUser, setAuthCheckStatus]);
-
-  // ------------------------------------------------------------------
   // QUERY: SESSION RESTORATION (The "Hydration") - NOW WITH SERVER ACTION!
   // ------------------------------------------------------------------
   // 🔒 SECURITY UPGRADE: Using Server Action instead of API route
@@ -145,8 +107,8 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
         return {
           user: {
             ...result.user,
-            isSubscribed: result.user.is_subscribed,
-            planTier: result.user.plan_tier,
+            isSubscribed: result.user.isSubscribed,
+            planTier: result.user.planTier,
           },
         };
       }
@@ -186,15 +148,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     if (isSessionLoading) {
       setAuthCheckStatus('loading');
     }
-  }, [
-    sessionData,
-    isSessionLoading,
-    setUser,
-    setAuthCheckStatus,
-    authCheckStatus,
-    initialUser,
-    globalUser,
-  ]);
+  }, [sessionData, isSessionLoading, setUser, setAuthCheckStatus]);
 
   const handleLogout = async () => {
     try {
@@ -258,14 +212,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   if (pathname.includes('/quiz/play')) return null;
 
   return (
-    <header
-      className={cn(
-        'fixed top-0 right-0 left-0 z-50 border-b transition-all duration-300',
-        isScrolled
-          ? 'border-slate-200 bg-white/90 py-2 shadow-sm backdrop-blur-md'
-          : 'border-transparent bg-white/50 py-4 backdrop-blur-sm'
-      )}
-    >
+    <header className="fixed top-0 right-0 left-0 z-50 border-b border-slate-200 bg-white/90 py-2 shadow-sm backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between">
           {/* Logo — logged in users go to quiz, others go home */}
