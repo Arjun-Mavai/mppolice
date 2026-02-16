@@ -227,7 +227,7 @@ export default function TopicSelectionClient({ initialDbData }: TopicSelectionCl
                 ) : (
                   <div className="rounded-[2.5rem] border border-dashed border-slate-100 bg-white py-20 text-center shadow-sm">
                     <h3 className="mb-2 text-lg font-black text-slate-900">
-                      {hi ? 'अापकी जानकारी उपलब्ध नहीं है' : 'No units available'}
+                      {hi ? 'आपकी जानकारी उपलब्ध नहीं है' : 'No units available'}
                     </h3>
                     <p className="text-sm text-slate-500">
                       {hi ? 'कृपया बाद में प्रयास करें' : 'Please check back later.'}

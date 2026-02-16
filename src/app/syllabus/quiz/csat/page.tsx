@@ -29,14 +29,17 @@ function QuizListFallback() {
 }
 
 async function CSATPageData() {
-  const [user, tests, attemptLimits] = await Promise.all([
-    verifyAuth(),
+  const userPromise = verifyAuth();
+  const [user, tests, attemptLimits, attempts] = await Promise.all([
+    userPromise,
     getCachedCSATTests(),
     getCachedAttemptLimits(),
+    (async () => {
+      const resolvedUser = await userPromise;
+      const userId = resolvedUser?.id;
+      return userId ? getUserAttemptsByType('CSAT', userId) : ({} as Record<string, number>);
+    })(),
   ]);
-
-  const userId = user?.id;
-  const attempts = userId ? await getUserAttemptsByType('CSAT', userId) : {};
 
   const tier = getUserTier(user);
   const maxRetries = attemptLimits['CSAT'] ?? null;

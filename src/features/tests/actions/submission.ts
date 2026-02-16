@@ -72,6 +72,7 @@ export async function getUserAttempts(testIds: string[], userId?: string) {
     })
     .from(userAttempts)
     .where(and(eq(userAttempts.userId, finalUserId), inArray(userAttempts.testId, testIds)))
+    .limit(100)
 
     .groupBy(userAttempts.testId);
 
@@ -101,6 +102,7 @@ export async function getUserAttemptsByType(
     .from(userAttempts)
     .innerJoin(tests, eq(userAttempts.testId, tests.id))
     .where(and(eq(userAttempts.userId, userId), eq(tests.type, type)))
+    .limit(1000)
     .groupBy(userAttempts.testId);
 
   return attempts.reduce(

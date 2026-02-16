@@ -29,16 +29,17 @@ function QuizListFallback() {
 }
 
 async function PYQPageData() {
-  const [user, tests, attemptLimits] = await Promise.all([
-    verifyAuth(),
+  const userPromise = verifyAuth();
+  const [user, tests, attemptLimits, attempts] = await Promise.all([
+    userPromise,
     getCachedPYQTests(),
     getCachedAttemptLimits(),
+    (async () => {
+      const resolvedUser = await userPromise;
+      const userId = resolvedUser?.id;
+      return userId ? getUserAttemptsByType('PYQ', userId) : ({} as Record<string, number>);
+    })(),
   ]);
-
-  const userId = user?.id;
-
-  // Parallel fetch for attempts if user is logged in
-  const attempts = userId ? await getUserAttemptsByType('PYQ', userId) : {};
 
   const tier = getUserTier(user);
   const maxRetries = attemptLimits['PYQ'] ?? null;

@@ -29,14 +29,17 @@ function QuizListFallback() {
 }
 
 async function FLTPageData() {
-  const [user, tests, attemptLimits] = await Promise.all([
-    verifyAuth(),
+  const userPromise = verifyAuth();
+  const [user, tests, attemptLimits, attempts] = await Promise.all([
+    userPromise,
     getCachedFLTTests(),
     getCachedAttemptLimits(),
+    (async () => {
+      const resolvedUser = await userPromise;
+      const userId = resolvedUser?.id;
+      return userId ? getUserAttemptsByType('FLT', userId) : ({} as Record<string, number>);
+    })(),
   ]);
-
-  const userId = user?.id;
-  const attempts = userId ? await getUserAttemptsByType('FLT', userId) : {};
 
   const tier = getUserTier(user);
   const maxRetries = attemptLimits['FLT'] ?? null;

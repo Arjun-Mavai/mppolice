@@ -42,9 +42,17 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     );
   }
 
+  // 🛡️ [PR FIX]: Access check as early as possible before any processing
+  const guestDenied = !user && !testData.isFreeAccess;
+  const loggedInDenied = user && !canAccessTest(testData, user);
+  if (guestDenied || loggedInDenied) {
+    redirect('/pricing');
+  }
+
   const userId = user?.id;
 
   // 3. Map Questions to correct type
+
   const questions: Question[] = testData.questions.map((q) => {
     // Ensure options are parsed if they come as a stringified array
     const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
@@ -79,13 +87,6 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
   const tier = getUserTier(user);
   const hasPaidPlan = tier === 'pro' || tier === 'lite';
   const shouldShowPaywall = false;
-
-  // Access: Guest → only isFreeAccess; Logged-in → canAccessTest (tier + flags)
-  const guestDenied = !user && !testData?.isFreeAccess;
-  const loggedInDenied = user && !canAccessTest(testData, user);
-  if (guestDenied || loggedInDenied) {
-    redirect('/pricing');
-  }
 
   return (
     <QuizPlayClient
