@@ -284,8 +284,8 @@ export function PaymentModal({
               const u = {
                 ...meData.user,
                 role: meData.user.role ?? undefined,
-                isSubscribed: meData.user.is_subscribed ?? undefined,
-                planTier: meData.user.plan_tier ?? undefined,
+                isSubscribed: meData.user.isSubscribed ?? undefined,
+                planTier: meData.user.planTier ?? undefined,
               };
               setUser(u, true);
             }

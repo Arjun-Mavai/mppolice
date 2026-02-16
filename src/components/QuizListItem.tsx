@@ -21,7 +21,9 @@ interface QuizListItemProps {
   language?: 'en' | 'hi';
   colorVariant?: 'blue' | 'pink' | 'emerald' | 'amber' | 'slate' | 'indigo';
   isLoading?: boolean;
-  itemLabel?: string; // New: Custom label for "Questions" vs "Topics"
+  itemLabel?: string;
+  onMouseEnter?: () => void;
+  onTouchStart?: () => void;
 }
 
 export function QuizListItem({
@@ -40,6 +42,8 @@ export function QuizListItem({
   colorVariant = 'slate',
   isLoading = false,
   itemLabel,
+  onMouseEnter,
+  onTouchStart,
 }: QuizListItemProps) {
   const hi = language === 'hi';
   const num = index + 1;
@@ -69,6 +73,8 @@ export function QuizListItem({
       whileTap={!isExhausted && !isLoading ? { scale: 0.985 } : {}}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       onClick={isExhausted || isLoading ? undefined : onClick}
+      onMouseEnter={onMouseEnter}
+      onTouchStart={onTouchStart}
       className={cn(
         'group relative rounded-[1.8rem] border p-4 transition-all sm:p-5',
         isExhausted || isLoading ? 'cursor-not-allowed' : 'cursor-pointer active:bg-slate-50/80',
@@ -77,7 +83,7 @@ export function QuizListItem({
         isExhausted && 'border-slate-200 bg-slate-50 opacity-70 grayscale'
       )}
     >
-      <div className="flex flex-row items-center gap-4 sm:gap-6">
+      <div className="flex flex-row items-start gap-4 sm:gap-6">
         {/* 🔢 Index / Status Indicator */}
         <div className="relative flex-shrink-0">
           <div
@@ -119,7 +125,7 @@ export function QuizListItem({
           <div className="mb-1 flex items-center gap-2">
             <h3
               className={cn(
-                'truncate text-base font-black tracking-tight transition-colors sm:text-lg',
+                'text-base font-black tracking-tight transition-colors sm:text-lg',
                 isLocked || isExhausted ? 'text-slate-500' : 'text-slate-900'
               )}
             >
@@ -192,39 +198,41 @@ export function QuizListItem({
             </div>
           )}
 
-          <Button
-            size="sm"
-            disabled={isExhausted || isLoading}
-            className={cn(
-              'flex h-10 flex-shrink-0 items-center gap-2 rounded-xl border-0 px-4 text-xs font-black shadow-sm transition-all',
-              isLocked
-                ? 'bg-slate-100 text-slate-400'
-                : isExhausted
-                  ? 'border border-slate-200 bg-slate-100 text-slate-400'
-                  : 'border border-slate-200 bg-white text-slate-900 hover:bg-slate-900 hover:text-white active:scale-95'
-            )}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 size={14} className="animate-spin" />
-                <span className="xs:inline hidden">{hi ? 'खुल रहा है...' : 'Opening...'}</span>
-              </>
-            ) : isLocked ? (
-              <Lock size={14} />
-            ) : isExhausted ? (
-              <Lock size={14} />
-            ) : (
-              <>
-                <Play
-                  size={14}
-                  className={cn('transition-transform group-hover:scale-110', 'fill-current')}
-                />
-                <span className="xs:inline hidden">
-                  {isCompleted ? (hi ? 'फिर से' : 'Redo') : hi ? 'शुरू' : 'Start'}
-                </span>
-              </>
-            )}
-          </Button>
+          <motion.div whileTap={{ scale: 0.95 }}>
+            <Button
+              size="sm"
+              disabled={isExhausted || isLoading}
+              className={cn(
+                'flex h-10 flex-shrink-0 items-center gap-2 rounded-xl border-0 px-4 text-xs font-black shadow-sm transition-all',
+                isLocked
+                  ? 'bg-slate-100 text-slate-400'
+                  : isExhausted
+                    ? 'border border-slate-200 bg-slate-100 text-slate-400'
+                    : 'border border-slate-200 bg-white text-slate-900 hover:bg-slate-900 hover:text-white active:scale-95'
+              )}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  <span className="xs:inline hidden">{hi ? 'खुल रहा है...' : 'Opening...'}</span>
+                </>
+              ) : isLocked ? (
+                <Lock size={14} />
+              ) : isExhausted ? (
+                <Lock size={14} />
+              ) : (
+                <>
+                  <Play
+                    size={14}
+                    className={cn('transition-transform group-hover:scale-110', 'fill-current')}
+                  />
+                  <span className="xs:inline hidden">
+                    {isCompleted ? (hi ? 'फिर से' : 'Redo') : hi ? 'शुरू' : 'Start'}
+                  </span>
+                </>
+              )}
+            </Button>
+          </motion.div>
         </div>
       </div>
     </motion.div>

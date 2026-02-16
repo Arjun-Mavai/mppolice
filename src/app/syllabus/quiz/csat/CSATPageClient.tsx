@@ -1,15 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { useRouter } from 'next/navigation';
 import { QuizListItem } from '@/components/QuizListItem';
 import { QuizSubNav } from '@/features/syllabus/components/QuizSubNav';
-import { QUIZ_CONSTANTS } from '@/config/quiz';
 
 interface Test {
   id: string;
@@ -36,12 +34,23 @@ export default function CSATPageClient({ initialTests }: CSATPageClientProps) {
   const router = useRouter();
   const { language, user } = useSettingsStore();
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const [loadingTestId, setLoadingTestId] = useState<string | null>(null);
+
+  // ⚡ LIGHT SPEED PREFETCH: First 4 tests on mount
+  useEffect(() => {
+    initialTests.slice(0, 4).forEach((test) => {
+      if (!test.isLocked) {
+        router.prefetch(`/syllabus/quiz/play?mode=full&testId=${test.id}`);
+      }
+    });
+  }, [initialTests, router]);
 
   const handleTestClick = (test: Test) => {
     if (test.isLocked) {
       setPaywallOpen(true);
       return;
     }
+    setLoadingTestId(test.id);
     router.push(`/syllabus/quiz/play?mode=full&testId=${test.id}`);
   };
 
@@ -105,7 +114,18 @@ export default function CSATPageClient({ initialTests }: CSATPageClientProps) {
                 maxAttempts={test.maxRetries}
                 language={language}
                 colorVariant={(['amber', 'emerald', 'pink', 'blue', 'indigo'] as const)[idx % 5]}
+                isLoading={loadingTestId === test.id}
                 onClick={() => handleTestClick(test)}
+                onMouseEnter={() => {
+                  if (!test.isLocked) {
+                    router.prefetch(`/syllabus/quiz/play?mode=full&testId=${test.id}`);
+                  }
+                }}
+                onTouchStart={() => {
+                  if (!test.isLocked) {
+                    router.prefetch(`/syllabus/quiz/play?mode=full&testId=${test.id}`);
+                  }
+                }}
               />
             ))}
           </AnimatePresence>

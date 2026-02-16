@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -58,6 +59,16 @@ export function QuizSubNav() {
 
   const springConfig: any = { type: 'spring', stiffness: 400, damping: 40 };
 
+  // ⚡ LIGHT SPEED PREFETCH: All categories on mount
+  useEffect(() => {
+    // Only prefetch other routes to avoid redundant current page prefetch
+    NAV_ITEMS.forEach((item) => {
+      if (item.href !== pathname) {
+        router.prefetch(item.href);
+      }
+    });
+  }, [router, pathname]);
+
   return (
     <>
       {/* 🖥️ DESKTOP NAV (Hidden on Mobile) */}
@@ -69,6 +80,8 @@ export function QuizSubNav() {
               <button
                 key={item.id}
                 onClick={() => router.push(item.href)}
+                onMouseEnter={() => router.prefetch(item.href)}
+                onTouchStart={() => router.prefetch(item.href)}
                 className={cn(
                   'relative rounded-full px-5 py-2.5 text-xs font-black tracking-widest whitespace-nowrap uppercase transition-all outline-none',
                   isActive ? 'text-white' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
@@ -100,6 +113,8 @@ export function QuizSubNav() {
               <button
                 key={item.id}
                 onClick={() => router.push(item.href)}
+                onMouseEnter={() => router.prefetch(item.href)}
+                onTouchStart={() => router.prefetch(item.href)}
                 className={cn(
                   'relative flex min-w-[64px] shrink-0 flex-col items-center gap-1 transition-all',
                   isActive ? item.activeText : 'text-slate-400'

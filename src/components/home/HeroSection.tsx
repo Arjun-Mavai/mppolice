@@ -58,8 +58,13 @@ export function HeroSection() {
         <div className="mx-auto flex w-full max-w-[420px] flex-col items-center justify-center gap-6 px-4">
           {/* GOOGLE-STYLE HERO BUTTON (ID: 74) */}
           {!globalUser ? (
-            <Link href="/syllabus/quiz/pyq" className="group relative w-full">
-              <div className="relative flex h-14 w-full transform items-center justify-center overflow-hidden rounded-full shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-all duration-500 group-hover:-translate-y-0.5 group-hover:scale-[1.02] group-hover:shadow-[0_30px_60px_rgba(79,70,229,0.25)] group-active:scale-[0.98] md:h-24">
+            <Link
+              href="/syllabus/quiz/pyq"
+              className="group relative w-full"
+              onMouseEnter={() => router.prefetch('/syllabus/quiz/pyq')}
+              onTouchStart={() => router.prefetch('/syllabus/quiz/pyq')}
+            >
+              <div className="relative flex h-14 w-full transform items-center justify-center overflow-hidden rounded-full shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-all duration-500 group-hover:-translate-y-0.5 group-hover:scale-[1.02] group-hover:shadow-[0_30px_60px_rgba(79,70,229,0.25)] group-active:scale-[0.96] md:h-24">
                 {/* 🌈 PREMIUM MOVING GRADIENT (ID: 75) */}
                 <div className="animate-gradient-x absolute inset-0 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 bg-[length:200%_auto]" />
 
@@ -84,7 +89,7 @@ export function HeroSection() {
             </Link>
           ) : (
             <Link href="/dashboard" className="group relative w-full">
-              <div className="relative flex h-14 w-full transform items-center justify-center overflow-hidden rounded-full shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-all duration-500 group-hover:-translate-y-0.5 group-hover:scale-[1.02] group-hover:shadow-[0_30px_60px_rgba(16,185,129,0.2)] group-active:scale-[0.98] md:h-24">
+              <div className="relative flex h-14 w-full transform items-center justify-center overflow-hidden rounded-full shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-all duration-500 group-hover:-translate-y-0.5 group-hover:scale-[1.02] group-hover:shadow-[0_30px_60px_rgba(16,185,129,0.2)] group-active:scale-[0.96] md:h-24">
                 <div className="animate-gradient-x absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 bg-[length:200%_auto]" />
 
                 <div className="relative z-10 flex h-full w-full items-center justify-center gap-3 px-6 md:gap-6 md:px-14">

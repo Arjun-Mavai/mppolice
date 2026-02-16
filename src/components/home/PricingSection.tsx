@@ -72,6 +72,7 @@ export function PricingSection() {
             features={LITE_FEATURES}
             language={language}
             onBuy={() => router.push('/pricing')}
+            href="/pricing"
           />
           <PricingCard
             planType="pro"
@@ -79,6 +80,7 @@ export function PricingSection() {
             features={PRO_FEATURES}
             language={language}
             onBuy={() => router.push('/pricing')}
+            href="/pricing"
             isPopular
           />
         </div>

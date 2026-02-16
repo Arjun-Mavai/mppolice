@@ -11,8 +11,7 @@ import { CACHE, cachedData } from '@/lib/cache';
 export const getBlogCounts = cachedData(
   async () => {
     try {
-      // Get counts grouped by unitId
-      const counts = await db
+      const unitCounts = await db
         .select({
           unitId: contentBlogs.unitId,
           count: count(),
@@ -20,6 +19,16 @@ export const getBlogCounts = cachedData(
         .from(contentBlogs)
         .where(and(eq(contentBlogs.isPublished, true), eq(contentBlogs.isHidden, false)))
         .groupBy(contentBlogs.unitId);
+
+      // Get counts grouped by category (subjects)
+      const categoryCounts = await db
+        .select({
+          category: contentBlogs.category,
+          count: count(),
+        })
+        .from(contentBlogs)
+        .where(and(eq(contentBlogs.isPublished, true), eq(contentBlogs.isHidden, false)))
+        .groupBy(contentBlogs.category);
 
       // Get count for Free articles
       const freeResult = await db
@@ -34,7 +43,19 @@ export const getBlogCounts = cachedData(
         );
 
       const countsMap: Record<string, number> = {};
-      let total = 0;
+      const categoryCountsMap: Record<string, number> = {};
+
+      unitCounts.forEach((row) => {
+        if (row.unitId) {
+          countsMap[row.unitId] = row.count;
+        }
+      });
+
+      categoryCounts.forEach((row) => {
+        if (row.category) {
+          categoryCountsMap[row.category] = row.count;
+        }
+      });
 
       // Simple sum of all published and non-hidden blogs
       const allResult = await db
@@ -42,19 +63,13 @@ export const getBlogCounts = cachedData(
         .from(contentBlogs)
         .where(and(eq(contentBlogs.isPublished, true), eq(contentBlogs.isHidden, false)));
 
-      counts.forEach((row) => {
-        if (row.unitId) {
-          countsMap[row.unitId] = row.count;
-        }
-      });
-
       countsMap['All'] = allResult[0]?.count || 0;
       countsMap['Free'] = freeResult[0]?.count || 0;
 
-      return countsMap;
+      return { units: countsMap, categories: categoryCountsMap };
     } catch (error) {
       logger.error('Get Blog Counts Error:', error);
-      return { All: 0, Free: 0 };
+      return { units: { All: 0, Free: 0 }, categories: {} };
     }
   },
   ['blog-counts-meta'],
@@ -89,6 +104,7 @@ export async function getBlogs({
   limit = 10,
   search = '',
   unitId = 'All',
+  category = 'All',
   isPremium = undefined, // undefined = all, true = premium, false = free
   isFreeAccess = undefined,
 }: {
@@ -96,6 +112,7 @@ export async function getBlogs({
   limit?: number;
   search?: string;
   unitId?: string;
+  category?: string;
   isPremium?: boolean;
   isFreeAccess?: boolean;
 } = {}) {
@@ -114,6 +131,11 @@ export async function getBlogs({
     // Filter by Unit
     if (unitId && unitId !== 'All') {
       whereConditions.push(eq(contentBlogs.unitId, unitId));
+    }
+
+    // Filter by Category (Subject)
+    if (category && category !== 'All') {
+      whereConditions.push(eq(contentBlogs.category, category));
     }
 
     // Filter by Search

@@ -155,3 +155,34 @@ export async function toggleBlogHidden(blogId: string, isHidden: boolean) {
   logger.info(`Blog hidden toggled: ${blogId} → isHidden=${isHidden}`);
   return { success: true };
 }
+
+/**
+ * deleteBlog — Blog ko permanent delete karo
+ */
+export async function deleteBlog(blogId: string) {
+  await requireAdmin();
+
+  try {
+    // Slug fetch karo cache bust karne ke liye
+    const blog = await db
+      .select({ slug: contentBlogs.slug })
+      .from(contentBlogs)
+      .where(eq(contentBlogs.id, blogId))
+      .get();
+
+    await db.delete(contentBlogs).where(eq(contentBlogs.id, blogId));
+
+    // Cache bust
+    revalidateTag(CACHE.BLOGS.TAGS.ALL, { expire: 0 });
+    revalidatePath('/blogs');
+    if (blog) {
+      revalidateTag(CACHE.BLOGS.TAGS.DETAIL(blog.slug), { expire: 0 });
+    }
+
+    logger.info(`Blog deleted: ${blogId}`);
+    return { success: true };
+  } catch (error: any) {
+    logger.error('Delete Blog Error:', error);
+    return { success: false, error: error.message };
+  }
+}

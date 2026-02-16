@@ -21,6 +21,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { type PricingData, calcDiscount, calcMonthly, PlanFeatureWithIcon } from '@/config/pricing';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Target,
@@ -43,6 +45,7 @@ interface PricingCardProps {
   language: 'en' | 'hi';
   onBuy: () => void;
   isPopular?: boolean;
+  href?: string;
 }
 
 export function PricingCard({
@@ -52,6 +55,7 @@ export function PricingCard({
   language,
   onBuy,
   isPopular,
+  href,
 }: PricingCardProps) {
   const hi = language === 'hi';
   const p = pricing;
@@ -243,29 +247,61 @@ export function PricingCard({
           </ul>
 
           {/* Action Button */}
-          <Button
-            onClick={onBuy}
-            variant={isLite ? 'outline' : 'default'}
-            className={cn(
-              'h-12 w-full rounded-xl font-bold transition-all',
-              isLite &&
-                'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900',
-              (isPro || isUpgrade) &&
-                'bg-slate-800 text-white shadow-lg shadow-slate-300 hover:bg-slate-700'
-            )}
-          >
-            {isLite
-              ? hi
-                ? `₹${price} में लाइट लें`
-                : `Get Lite — ₹${price}`
-              : isUpgrade
-                ? hi
-                  ? `₹${price} में प्रो लें`
-                  : `Upgrade to Pro — ₹${price}`
-                : hi
-                  ? `₹${price} में प्रो लें`
-                  : `Get Pro — ₹${price}`}
-          </Button>
+          {href ? (
+            <motion.div whileTap={{ scale: 0.96 }} className="w-full">
+              <Button
+                asChild
+                variant={isLite ? 'outline' : 'default'}
+                className={cn(
+                  'h-12 w-full rounded-xl font-bold transition-all',
+                  isLite &&
+                    'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900',
+                  (isPro || isUpgrade) &&
+                    'bg-slate-800 text-white shadow-lg shadow-slate-300 hover:bg-slate-700'
+                )}
+              >
+                <Link href={href} prefetch={true}>
+                  {isLite
+                    ? hi
+                      ? `₹${price} में लाइट लें`
+                      : `Get Lite — ₹${price}`
+                    : isUpgrade
+                      ? hi
+                        ? `₹${price} में प्रो लें`
+                        : `Upgrade to Pro — ₹${price}`
+                      : hi
+                        ? `₹${price} में प्रो लें`
+                        : `Get Pro — ₹${price}`}
+                </Link>
+              </Button>
+            </motion.div>
+          ) : (
+            <motion.div whileTap={{ scale: 0.96 }} className="w-full">
+              <Button
+                onClick={onBuy}
+                variant={isLite ? 'outline' : 'default'}
+                className={cn(
+                  'h-12 w-full rounded-xl font-bold transition-all',
+                  isLite &&
+                    'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900',
+                  (isPro || isUpgrade) &&
+                    'bg-slate-800 text-white shadow-lg shadow-slate-300 hover:bg-slate-700'
+                )}
+              >
+                {isLite
+                  ? hi
+                    ? `₹${price} में लाइट लें`
+                    : `Get Lite — ₹${price}`
+                  : isUpgrade
+                    ? hi
+                      ? `₹${price} में प्रो लें`
+                      : `Upgrade to Pro — ₹${price}`
+                    : hi
+                      ? `₹${price} में प्रो लें`
+                      : `Get Pro — ₹${price}`}
+              </Button>
+            </motion.div>
+          )}
         </CardContent>
       </Card>
     </div>

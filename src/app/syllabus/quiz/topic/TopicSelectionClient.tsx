@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -54,8 +54,20 @@ export default function TopicSelectionClient({ initialDbData }: TopicSelectionCl
 
   const [dbData, setDbData] = useState<Record<string, Topic[]> | null>(initialDbData);
   const [loading, setLoading] = useState(false);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const hi = language === 'hi';
+
+  // ⚡ LIGHT SPEED PREFETCH: Topics inside the selected unit
+  useEffect(() => {
+    if (selectedUnitId && dbData?.[selectedUnitId]) {
+      dbData[selectedUnitId].slice(0, 6).forEach((t) => {
+        if (t.testId) {
+          router.prefetch(`/syllabus/quiz/play?unitId=${selectedUnitId}&testId=${t.testId}`);
+        }
+      });
+    }
+  }, [selectedUnitId, dbData, router]);
 
   // No more client-side fetch on mount — data comes from server!
 
@@ -270,7 +282,25 @@ export default function TopicSelectionClient({ initialDbData }: TopicSelectionCl
                         colorVariant={
                           (['amber', 'emerald', 'pink', 'blue', 'indigo'] as const)[index % 5]
                         }
-                        onClick={() => handleTopicClick(selectedUnitId, topic)}
+                        isLoading={loadingId === topic.id}
+                        onClick={() => {
+                          if (!isLocked) setLoadingId(topic.id);
+                          handleTopicClick(selectedUnitId, topic);
+                        }}
+                        onMouseEnter={() => {
+                          if (!isLocked && topic.testId) {
+                            router.prefetch(
+                              `/syllabus/quiz/play?unitId=${selectedUnitId}&testId=${topic.testId}`
+                            );
+                          }
+                        }}
+                        onTouchStart={() => {
+                          if (!isLocked && topic.testId) {
+                            router.prefetch(
+                              `/syllabus/quiz/play?unitId=${selectedUnitId}&testId=${topic.testId}`
+                            );
+                          }
+                        }}
                       />
                     );
                   })

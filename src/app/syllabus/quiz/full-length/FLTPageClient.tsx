@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,16 +36,25 @@ export default function FLTPageClient({ tests }: FLTPageClientProps) {
   const router = useRouter();
   const { language } = useSettingsStore();
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const [loadingTestId, setLoadingTestId] = useState<string | null>(null);
 
-  const handleTestClick = (testId: string, isLocked: boolean, attemptsLeft: number | null) => {
-    if (isLocked) {
+  // ⚡ LIGHT SPEED PREFETCH: First 4 tests on mount
+  React.useEffect(() => {
+    tests.slice(0, 4).forEach((test) => {
+      if (!test.isLocked) {
+        router.prefetch(`/syllabus/quiz/play?mode=full&testId=${test.id}`);
+      }
+    });
+  }, [tests, router]);
+
+  const handleTestClick = (test: TestWithAccess) => {
+    if (test.isLocked) {
       setPaywallOpen(true);
       return;
     }
 
-    if (attemptsLeft !== null && attemptsLeft > 0) {
-      router.push(`/syllabus/quiz/play?mode=full&testId=${testId}`);
-    }
+    setLoadingTestId(test.id);
+    router.push(`/syllabus/quiz/play?mode=full&testId=${test.id}`);
   };
 
   const hi = language === 'hi';
@@ -109,7 +118,18 @@ export default function FLTPageClient({ tests }: FLTPageClientProps) {
                 isFree={test.isFree}
                 language={language}
                 colorVariant={(['amber', 'emerald', 'pink', 'blue', 'indigo'] as const)[idx % 5]}
-                onClick={() => handleTestClick(test.id, test.isLocked, test.attemptsLeft)}
+                isLoading={loadingTestId === test.id}
+                onClick={() => handleTestClick(test)}
+                onMouseEnter={() => {
+                  if (!test.isLocked) {
+                    router.prefetch(`/syllabus/quiz/play?mode=full&testId=${test.id}`);
+                  }
+                }}
+                onTouchStart={() => {
+                  if (!test.isLocked) {
+                    router.prefetch(`/syllabus/quiz/play?mode=full&testId=${test.id}`);
+                  }
+                }}
               />
             ))}
           </AnimatePresence>

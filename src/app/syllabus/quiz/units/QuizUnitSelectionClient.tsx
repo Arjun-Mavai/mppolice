@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
@@ -31,6 +31,16 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
   const router = useRouter();
   const { language, user } = useSettingsStore();
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  // ⚡ LIGHT SPEED PREFETCH: First 6 units on mount
+  useEffect(() => {
+    availableTests.slice(0, 6).forEach((test) => {
+      // Only prefetch free ones for guests, or all for users
+      if (!user && !test.isFreeAccess) return;
+      router.prefetch(`/syllabus/quiz/play?mode=topic&testId=${test.id}`);
+    });
+  }, [availableTests, router, user]);
 
   const isAdmin = (user as any)?.role === 'admin';
   const isSubscribed = user?.isSubscribed || false;
@@ -116,7 +126,19 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
                   attemptsLeft={test.attemptsLeft}
                   language={language}
                   colorVariant={(['amber', 'emerald', 'pink', 'blue', 'indigo'] as const)[idx % 5]}
-                  onClick={() => handleUnitClick(test.id, isLocked)}
+                  isLoading={loadingId === test.id}
+                  onClick={() => {
+                    if (!isLocked) setLoadingId(test.id);
+                    handleUnitClick(test.id, isLocked);
+                  }}
+                  onMouseEnter={() => {
+                    if (!isLocked)
+                      router.prefetch(`/syllabus/quiz/play?mode=topic&testId=${test.id}`);
+                  }}
+                  onTouchStart={() => {
+                    if (!isLocked)
+                      router.prefetch(`/syllabus/quiz/play?mode=topic&testId=${test.id}`);
+                  }}
                 />
               );
             })}

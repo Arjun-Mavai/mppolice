@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Quote, Loader2, ArrowLeft } from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { logger } from '@/lib/logger';
+import { loginUserAction } from '@/actions/auth-actions';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -24,24 +25,18 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const res = await fetch('/api/auth/mppsc-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      const data = await loginUserAction({ email, password });
 
-      const data = await res.json();
-
-      if (res.ok) {
+      if (data.success) {
         // Update Global Store with fresh user data
         useSettingsStore.getState().setUser(data.user, true);
         toast.success('Welcome back!', {
           description: 'Accessing your syllabus...',
         });
-        // Hard reload to flush all server component cache and ensure fresh auth state
-        // router.push + router.refresh can leave stale RSC payloads
+
+        // Wait a bit for store to sync then redirect
         setTimeout(() => {
-          if (data.user?.is_subscribed) {
+          if (data.user?.isSubscribed) {
             window.location.href = '/syllabus/quiz';
           } else {
             window.location.href = '/';
@@ -60,7 +55,6 @@ export default function LoginPage() {
       });
       setError('Something went wrong. Please try again.');
 
-      // Notify user about unexpected error
       toast.error('Connection Error', {
         description: 'Unable to connect to server. Please check your internet connection.',
         duration: 5000,

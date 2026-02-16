@@ -31,6 +31,11 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     getCachedAttemptLimits(),
   ]);
 
+  // Only fetch attempts if user exists to avoid redundant DB call for guests
+  const attemptsMap = user
+    ? await getUserAttempts([testId], user.id)
+    : ({} as Record<string, number>);
+
   if (!testData) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 pt-[80px]">
@@ -79,9 +84,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     };
   });
 
-  // 2. Fetch Attempts if user exists (can be parallelized but depends on testId)
-  const attemptsMap = userId ? await getUserAttempts([testId], userId) : {};
-  const userAttemptsCount = attemptsMap[testId] || 0;
+  const userAttemptsCount = (attemptsMap as Record<string, number>)[testId] || 0;
   const maxRetries = attemptLimits[testData.type] ?? null;
 
   const tier = getUserTier(user);

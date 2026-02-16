@@ -38,7 +38,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
   if (isLoading) {
     if (isLiteUser) {
       return (
-        <div className="animate-in fade-in zoom-in-95 relative flex min-h-[500px] flex-col items-center justify-center bg-slate-50 p-4 duration-300 md:p-8">
+        <div className="animate-in fade-in zoom-in-95 relative flex min-h-[500px] flex-col items-center justify-center bg-slate-50 p-4 duration-200 md:p-8">
           <Skeleton className="mb-6 h-6 w-32 rounded-full" />
           <Skeleton className="mb-4 h-10 w-3/4 max-w-sm" />
           <Skeleton className="mb-8 h-4 w-full max-w-md" />
@@ -51,7 +51,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
     }
 
     return (
-      <div className="animate-in fade-in zoom-in-95 relative flex flex-col items-center bg-slate-50 px-4 py-6 duration-300 md:p-8">
+      <div className="animate-in fade-in zoom-in-95 relative flex flex-col items-center bg-slate-50 px-4 py-6 duration-200 md:p-8">
         <Skeleton className="mb-4 h-10 w-3/4 max-w-lg" />
         <Skeleton className="mb-8 h-4 w-1/2 max-w-md" />
 
@@ -74,7 +74,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
   // Lite user ko Pro upgrade dikhao — dynamic price
   if (isLiteUser) {
     return (
-      <div className="relative flex min-h-[500px] flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-slate-100/50 to-slate-50 p-4 text-center md:p-8">
+      <div className="relative flex min-h-[500px] flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-slate-100/50 to-slate-50 p-4 text-center duration-200 md:p-8">
         <Badge className="mb-4 cursor-default border-amber-200 bg-amber-100 px-3 py-1 text-amber-700 transition-colors hover:bg-amber-200 md:mb-6">
           <Star className="mr-1 h-3 w-3 fill-current" />
           {hi ? 'अपग्रेड उपलब्ध है' : 'UPGRADE AVAILABLE'}
@@ -100,19 +100,20 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
             features={PRO_FEATURES.slice(1)}
             language={language}
             onBuy={() => onUnlock(p.upgradePrice)}
+            href="/pricing"
           />
         </div>
 
         {/* Manual Dismiss - Top Right Icon */}
-        <DialogPrimitive.Close className="absolute top-2 right-2 z-50 rounded-full border border-black bg-white/80 p-2 text-slate-900 shadow-sm backdrop-blur-sm transition-all hover:scale-110 hover:bg-white">
-          <X className="h-6 w-6" />
+        <DialogPrimitive.Close className="absolute top-2 right-2 z-50 rounded-full border-2 border-rose-100 bg-white p-2 text-rose-500 shadow-sm transition-all hover:scale-110 hover:bg-rose-50 hover:text-rose-600 active:scale-95">
+          <X className="h-6 w-6" strokeWidth={3} />
         </DialogPrimitive.Close>
       </div>
     );
   }
 
   return (
-    <div className="relative flex flex-col items-center bg-slate-50 px-4 py-6 text-center md:p-8">
+    <div className="animate-in fade-in zoom-in-95 relative flex flex-col items-center bg-slate-50 px-4 py-6 text-center duration-200 md:p-8">
       {/* Header */}
       {/* Header */}
       <h2 className="font-display mb-3 text-2xl leading-tight font-black tracking-tighter text-slate-900 uppercase md:text-5xl">
@@ -143,6 +144,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
           features={LITE_FEATURES}
           language={language}
           onBuy={() => onUnlock(p.litePrice)}
+          href="/pricing"
         />
         <PricingCard
           planType="pro"
@@ -150,20 +152,14 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
           features={PRO_FEATURES}
           language={language}
           onBuy={() => onUnlock(p.proPrice)}
+          href="/pricing"
           isPopular
         />
       </div>
 
-      {/* Trust signals */}
-      <p className="mt-8 text-xs text-slate-400">
-        {hi
-          ? 'सुरक्षित भुगतान • कोई ऑटो-रिन्यूअल नहीं • RazorPay से एक्टिवेट'
-          : 'Secure Payment • No Auto-Renewal • Activate via RazorPay'}
-      </p>
-
       {/* Manual Dismiss - Top Right Icon */}
-      <DialogPrimitive.Close className="absolute top-0 right-0 z-50 rounded-full border border-black bg-white/80 p-2 text-slate-900 shadow-sm backdrop-blur-sm transition-all hover:scale-110 hover:bg-white">
-        <X className="h-6 w-6" />
+      <DialogPrimitive.Close className="absolute top-2 right-2 z-50 rounded-full border-2 border-rose-100 bg-white p-2 text-rose-500 shadow-sm transition-all hover:scale-110 hover:bg-rose-50 hover:text-rose-600 active:scale-95">
+        <X className="h-6 w-6" strokeWidth={3} />
       </DialogPrimitive.Close>
     </div>
   );

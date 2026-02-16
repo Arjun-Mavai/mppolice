@@ -66,7 +66,6 @@ type UnifiedUser = StoreUser & PropUser;
 export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [isScrolled, setIsScrolled] = React.useState(false);
 
   // Use Global Store
   const {
@@ -93,43 +92,6 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     : null;
 
   // ------------------------------------------------------------------
-  // EFFECT 1: SCROLL LISTENER (The "Visuals")
-  // ------------------------------------------------------------------
-  useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          setIsScrolled(window.scrollY > 10);
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // ------------------------------------------------------------------
-  // EFFECT 1.5: CROSS-TAB LOGOUT SYNC
-  // ------------------------------------------------------------------
-  // When user logs out in one tab, localStorage is cleared.
-  // This listener detects that change in other tabs and forces a reload
-  // so stale auth state doesn't persist across browser tabs.
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'settings-storage' && e.newValue === null) {
-        // Another tab cleared auth — reload this tab to reflect logged-out state
-        setUser(null, false);
-        setAuthCheckStatus('checked');
-        window.location.href = '/';
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [setUser, setAuthCheckStatus]);
-
-  // ------------------------------------------------------------------
   // QUERY: SESSION RESTORATION (The "Hydration") - NOW WITH SERVER ACTION!
   // ------------------------------------------------------------------
   // 🔒 SECURITY UPGRADE: Using Server Action instead of API route
@@ -145,8 +107,8 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
         return {
           user: {
             ...result.user,
-            isSubscribed: result.user.is_subscribed,
-            planTier: result.user.plan_tier,
+            isSubscribed: result.user.isSubscribed,
+            planTier: result.user.planTier,
           },
         };
       }
@@ -189,11 +151,11 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   }, [
     sessionData,
     isSessionLoading,
-    setUser,
-    setAuthCheckStatus,
     authCheckStatus,
     initialUser,
     globalUser,
+    setUser,
+    setAuthCheckStatus,
   ]);
 
   const handleLogout = async () => {
@@ -258,14 +220,21 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   if (pathname.includes('/quiz/play')) return null;
 
   return (
-    <header
-      className={cn(
-        'fixed top-0 right-0 left-0 z-50 border-b transition-all duration-300',
-        isScrolled
-          ? 'border-slate-200 bg-white/90 py-2 shadow-sm backdrop-blur-md'
-          : 'border-transparent bg-white/50 py-4 backdrop-blur-sm'
-      )}
-    >
+    <header className="fixed top-0 right-0 left-0 z-50 [animation:navbar-scroll_linear_both] border-b border-slate-200 bg-white/80 shadow-sm backdrop-blur-md transition-all duration-300 [animation-range:0px_50px] [animation-timeline:scroll()]">
+      <style jsx>{`
+        @keyframes navbar-scroll {
+          from {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            background-color: rgb(255 255 255 / 0.5);
+          }
+          to {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            background-color: rgb(255 255 255 / 0.9);
+          }
+        }
+      `}</style>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between">
           {/* Logo — logged in users go to quiz, others go home */}
