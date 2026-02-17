@@ -23,10 +23,12 @@ const nextConfig: NextConfig = {
         protocol: 'https' as const,
         hostname,
       })),
+      /*
       {
         protocol: 'https' as const,
-        hostname: '**', // Allow all HTTPS images (Optional)
+        hostname: '**', // ❌ Removed for security (SSRF Risk)
       },
+      */
     ],
   },
 
@@ -61,6 +63,23 @@ const nextConfig: NextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: `
+              default-src 'self';
+              script-src 'self' 'unsafe-eval' 'unsafe-inline' https://checkout.razorpay.com https://apis.google.com;
+              style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+              img-src 'self' blob: data: https:;
+              font-src 'self' https://fonts.gstatic.com data:;
+              frame-src 'self' https://checkout.razorpay.com https://www.youtube.com;
+              connect-src 'self' https:;
+              object-src 'none';
+              base-uri 'self';
+              form-action 'self';
+            `
+              .replace(/\s{2,}/g, ' ')
+              .trim(),
           },
         ],
       },
