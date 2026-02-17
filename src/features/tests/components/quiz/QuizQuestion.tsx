@@ -52,8 +52,16 @@ export function QuizQuestion({
     <div className="mx-auto max-w-3xl space-y-4 sm:space-y-5">
       {/* Question Header */}
       <div className="flex items-center justify-between">
-        <div className="text-sm font-bold tracking-wider text-slate-400 uppercase sm:text-base">
-          {t.question} {questionIndex + 1}/{totalQuestions}
+        <div className="flex items-center gap-3">
+          <div className="text-sm font-bold tracking-wider text-slate-400 uppercase sm:text-base">
+            {t.question} {questionIndex + 1}/{totalQuestions}
+          </div>
+          {/* 🏷️ YEAR / SUBJECT TAG */}
+          {question.subject && (
+            <div className="rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-bold text-indigo-700 sm:text-sm">
+              {question.subject}
+            </div>
+          )}
         </div>
         <Button
           variant="ghost"

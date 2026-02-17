@@ -14,6 +14,7 @@ export interface Question {
   marks?: number;
   negativeMarks?: number;
   type?: 'standard' | 'matching';
+  subject?: string; // 🏷️ New field for mixed quizzes
   matchPairs?: {
     id: string;
     label: string;
