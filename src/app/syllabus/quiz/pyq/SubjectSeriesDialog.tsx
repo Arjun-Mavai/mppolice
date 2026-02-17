@@ -130,7 +130,7 @@ export function SubjectSeriesDialog({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-[60] bg-slate-900/40 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm"
           />
 
           {/* Dialog */}
@@ -139,7 +139,7 @@ export function SubjectSeriesDialog({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-h-[85vh] w-full max-w-lg overflow-hidden rounded-t-[2.5rem] bg-white shadow-2xl sm:top-1/2 sm:bottom-auto sm:-translate-y-1/2 sm:rounded-[2.5rem]"
+            className="fixed inset-x-0 bottom-0 z-[101] mx-auto max-h-[85vh] min-h-[50vh] w-full max-w-lg overflow-hidden rounded-t-[2.5rem] bg-white shadow-2xl sm:top-1/2 sm:bottom-auto sm:-translate-y-1/2 sm:rounded-[2.5rem]"
           >
             {/* Header */}
             <div className={cn('relative border-b px-6 py-5', style.bg, style.border)}>
