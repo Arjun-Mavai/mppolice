@@ -125,16 +125,13 @@ export default function PYQPageClient({ initialTests, subjectStats }: PYQPageCli
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
       {/* Header */}
-      <div className="sticky top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-md">
+      <div className="sticky top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-md transition-all md:top-[89px]">
         <div className="mx-auto max-w-5xl px-4 pt-12 pb-4 sm:px-6 md:py-4 lg:px-8">
           <div className="flex flex-col gap-4">
-            {/* Desktop Nav - Moved Top to match CSAT - Only visible on md+ */}
-            <div className="hidden pt-16 md:block">
-              <QuizSubNav />
-            </div>
+            {/* Desktop Nav - Moved to Layout */}
 
             {/* Top Row: Back + Title */}
-            <div className="flex items-center gap-3 pt-16 md:pt-2">
+            <div className="flex items-center gap-3 pt-6 md:pt-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -278,11 +275,6 @@ export default function PYQPageClient({ initialTests, subjectStats }: PYQPageCli
 
       {/* Paywall Modal */}
       <SyllabusLockModal open={paywallOpen} onOpenChange={setPaywallOpen} />
-
-      {/* Mobile Nav - Fixed Bottom (Only visible on mobile) */}
-      <div className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white md:hidden">
-        <QuizSubNav />
-      </div>
     </div>
   );
 }

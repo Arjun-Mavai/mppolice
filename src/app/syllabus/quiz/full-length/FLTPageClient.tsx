@@ -66,7 +66,7 @@ export default function FLTPageClient({ tests }: FLTPageClientProps) {
       <div className="pointer-events-none absolute top-[-100px] right-[-100px] h-[500px] w-[500px] rounded-full bg-indigo-50/40 blur-[100px]" />
       <div className="pointer-events-none absolute bottom-[20%] left-[-150px] h-[400px] w-[400px] rounded-full bg-emerald-50/30 blur-[100px]" />
 
-      <div className="relative z-10 mx-auto max-w-5xl px-6 pt-32">
+      <div className="relative z-10 mx-auto max-w-5xl px-6 pt-10 md:pt-8">
         {/* Header Row */}
         {/* <div className="flex items-center justify-between mb-8">
                      <Button 
@@ -81,8 +81,7 @@ export default function FLTPageClient({ tests }: FLTPageClientProps) {
                     </Button>
                 </div> */}
 
-        {/* 🧭 CONSOLIDATED SUB-NAV */}
-        <QuizSubNav />
+        {/* 🧭 CONSOLIDATED SUB-NAV - Moved to Layout */}
 
         <motion.div
           initial={{ opacity: 0, y: 10 }}
