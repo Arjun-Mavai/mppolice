@@ -35,8 +35,8 @@ export async function getSubjectPartAccess(subject: string) {
     const partNum = parseInt(parts[parts.length - 1]);
 
     if (!isNaN(partNum)) {
-      // Create a minimal user object or pass undefined if not logged in
-      const hasAccess = await canAccessTest(test, user ?? undefined);
+      // Create a minimal user object or pass null (not undefined) if not logged in
+      const hasAccess = await canAccessTest(test, user ?? null);
       accessMap[partNum] = {
         isLocked: !hasAccess,
         slug: test.slug,
