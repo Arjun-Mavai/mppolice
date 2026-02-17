@@ -138,7 +138,7 @@ export default function PYQPageClient({ initialTests, subjectStats }: PYQPageCli
                 onClick={() => router.back()}
                 className="-ml-2 h-9 w-9 rounded-full px-0 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
               >
-                <ArrowLeft className="h-5 w-5" />
+                {/* <ArrowLeft className="h-5 w-5" /> */}
               </Button>
               <div>
                 <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">
