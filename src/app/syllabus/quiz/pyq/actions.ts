@@ -16,6 +16,22 @@ export interface PartAccessStatus {
 
 export async function getSubjectPartAccess(subject: string) {
   const user = await verifyAuth();
+  const ALLOWED_SUBJECTS = [
+    'mp gk',
+    'history',
+    'geography',
+    'polity',
+    'economy',
+    'science',
+    'ict',
+    'current affairs',
+    'misc',
+  ];
+
+  if (!ALLOWED_SUBJECTS.includes(subject.toLowerCase())) {
+    return {};
+  }
+
   const subjectSlug = subject.toLowerCase().replace(/\s+/g, '-');
   const pattern = `pyq-${subjectSlug}-part-%`;
 

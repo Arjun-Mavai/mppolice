@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { questions, tests } from '@/db/schema';
 import { and, eq, like, or } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
+import { logger } from '@/lib/logger';
 
 // ------------------------------------------------------------------
 // 🏷️ Subject Normalization Logic
@@ -125,6 +126,10 @@ function normalizeSubject(rawSubject: string | null): string {
   }
 
   // Fallback
+  logger.warn(`normalizeSubject: Unmatched subject category for '${rawSubject}'`, {
+    rawSubject,
+    category: 'system',
+  });
   return 'Misc';
 }
 
@@ -222,9 +227,10 @@ export async function getQuestionsBySubject(subject: string): Promise<MixedQuest
   });
 
   // 2. Fetch ALL questions from these tests
-  // We have to fetch ALL because filtering by normalized subject logic (JS) is impossible in SQL easily
-  // Optimization: If we had a `canonical_subject` column in DB, we could filter SQL.
-  // For now, fetch all PYQ questions (e.g. 500-1000 items) is fast enough.
+  // NOTE: Fetching ALL questions (rows) and filtering in memory is inefficient for large datasets.
+  // Ideally, we should have a `canonical_subject` column in the database to allow SQL-level filtering.
+  // However, given the current complexity of `normalizeSubject` (300+ rules), reproducing this logic in SQL is risky.
+  // For the current scale (<10k questions), in-memory filtering is acceptable but should be monitored.
   const allQuestions = await db
     .select()
     .from(questions)
@@ -243,7 +249,12 @@ export async function getQuestionsBySubject(subject: string): Promise<MixedQuest
       };
     });
 
-  // Shuffle? Maybe let client do it or shuffle here.
-  // Let's simple shuffle here so it feels like a test.
-  return filterederQuestions.sort(() => Math.random() - 0.5);
+  // Fisher-Yates Shuffle
+  const shuffled = [...filterederQuestions];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled;
 }

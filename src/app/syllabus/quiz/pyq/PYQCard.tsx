@@ -1,8 +1,7 @@
 'use client';
 
-import React from 'react';
 import { motion } from 'framer-motion';
-import { LucideIcon, Search, Plus, Sparkles, FolderOpen } from 'lucide-react';
+import { LucideIcon, Plus, Sparkles, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 

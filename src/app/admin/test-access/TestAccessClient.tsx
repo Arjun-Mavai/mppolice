@@ -53,6 +53,7 @@ import {
 } from './actions';
 import { toast } from 'sonner';
 import { revalidateSyllabus } from '@/actions/revalidate';
+import { syncSubjectParts } from '@/app/admin/tests/sync-actions';
 
 // Test type ka full form aur color — admin ko samajh aaye
 const TYPE_CONFIG = {
@@ -312,13 +313,18 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
           </Badge>
           <form
             action={async () => {
-              const { syncSubjectParts } = await import('@/app/admin/tests/sync-actions');
-              const res = await syncSubjectParts();
-              if (res.success) {
-                toast.success(`Synced ${res.createdCount} new subject parts!`);
-                router.refresh();
-              } else {
-                toast.error('Sync failed');
+              try {
+                // Use top-level import
+                const res = await syncSubjectParts();
+                if (res?.success) {
+                  toast.success(`Synced ${res.createdCount} new subject parts!`);
+                  router.refresh();
+                } else {
+                  toast.error('Sync failed');
+                }
+              } catch (err: any) {
+                console.error('Sync error:', err);
+                toast.error('Sync failed: ' + (err.message || 'Unknown error'));
               }
             }}
           >

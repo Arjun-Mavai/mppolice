@@ -79,18 +79,6 @@ export function SubjectSeriesDialog({
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
   });
 
-  // Lock body scroll
-  React.useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-
   const config = SUBJECT_CONFIG[subject] || { color: 'blue', icon: Layers };
   const style = VARIANTS[config.color];
   const Icon = config.icon;
@@ -139,6 +127,7 @@ export function SubjectSeriesDialog({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            data-overlay-open="true"
             className="fixed inset-x-0 bottom-0 z-[101] mx-auto max-h-[85vh] min-h-[50vh] w-full max-w-lg overflow-hidden rounded-t-[2.5rem] bg-white shadow-2xl sm:top-1/2 sm:bottom-auto sm:-translate-y-1/2 sm:rounded-[2.5rem]"
           >
             {/* Header */}
@@ -176,20 +165,12 @@ export function SubjectSeriesDialog({
                 {parts.map((item) => {
                   const status = accessMap[item.part];
 
-                  // STRICT BACKEND CONTROL:
-                  // If status is not loaded yet, assume locked (or use skeleton).
-                  // If loaded, check `isFree`.
-                  const isFree = status?.isFree; // WAS: item.part === 1 || status?.isFree
-
-                  // If loading, don't lock yet (or show skeleton). But for now let's show status.
-                  // If status is missing, we default to LOCKED (safe default).
-                  const userHasAccess = !status?.isLocked;
-                  // If loading, we permit click? No, safe to block until loaded.
-                  // But user experience wise, if data isn't here, we show skeleton.
-                  // For now, let's assume 'loading' state covers entire dialog content usually.
-                  // But here we load individually? No, we load all at once.
-
-                  const locked = !loading && !userHasAccess;
+                  const hasStatus = Object.prototype.hasOwnProperty.call(accessMap, item.part);
+                  const userHasAccess = hasStatus && !status?.isLocked;
+                  const isFree = status?.isFree;
+                  // Default to LOCKED if status is missing or explicitly locked
+                  // Also wait for loading to complete
+                  const locked = !loading && (!hasStatus || !userHasAccess);
 
                   return (
                     <motion.button

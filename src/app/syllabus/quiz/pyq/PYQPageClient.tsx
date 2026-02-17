@@ -87,6 +87,12 @@ const SUBJECTS = [
     color: 'blue' as const, // Was Pink
     description: 'National & International Events',
   },
+  {
+    name: 'Misc',
+    icon: Layers,
+    color: 'amber' as const,
+    description: 'Other topics and uncategorized questions',
+  },
 ];
 
 export default function PYQPageClient({ initialTests, subjectStats }: PYQPageClientProps) {
