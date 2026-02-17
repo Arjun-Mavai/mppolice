@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_IN',
     url: baseUrl,
-    title: 'MPPSC 2026 Elite Test Series | Updated as per New Pattern',
+    title: 'MPPSC 2026 Elite Test Series | नवीनतम पैटर्न पर आधारित सर्वश्रेष्ठ अभ्यास',
     description:
       'Looking for MPPSC 2026 Test Series? Get 5+ Years PYQs, Topic-wise Tests, and Mnemonics in Hindi & English. The smartest way to clear MPPSC Prelims.',
     siteName: 'Mindful MPPSC',
