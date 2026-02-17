@@ -38,7 +38,6 @@ import { PricingCard } from '@/components/PricingCard';
 import { getPricingData } from '@/actions/pricing-actions';
 import { useQuery } from '@tanstack/react-query';
 
-import { AppNavbar } from '@/components/layout/AppNavbar';
 import { ExitSurveyModal } from '@/components/ExitSurveyModal';
 
 // ── FAQ data — bilingual ────────────────────────────────────
@@ -206,9 +205,6 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-slate-100 selection:text-slate-900">
-      {/* Common header — same navbar as rest of the app */}
-      <AppNavbar user={null} />
-
       {/* ── Hero Header ──────────────────────────────────── */}
       <section className="px-4 pt-24 pb-4 text-center md:pt-28 md:pb-6">
         <Badge className="mb-5 cursor-default border-slate-200 bg-slate-100 px-4 py-1.5 text-xs font-semibold tracking-wide text-slate-700 transition-colors hover:bg-slate-200">

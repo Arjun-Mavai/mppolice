@@ -1,7 +1,6 @@
 // Bhai ye home page h — SSG (Static Site Generation) se ultimate fast render hota h
 // AppNavbar + UpgradePage + Testimonials = poora landing page
 import UpgradePage from './upgrade/page';
-import { AppNavbar } from '@/components/layout/AppNavbar';
 import dynamic from 'next/dynamic';
 
 const Testimonials = dynamic(() =>
@@ -11,9 +10,6 @@ const Testimonials = dynamic(() =>
 export default function Home() {
   return (
     <main>
-      <AppNavbar user={null} />
-
-      {/* Hidden H1 for SEO - matches metadata title */}
       <h1 className="sr-only">Mindful MPPSC - Crack MPPSC 2026 with Bilingual Tests & Mnemonics</h1>
 
       <UpgradePage />

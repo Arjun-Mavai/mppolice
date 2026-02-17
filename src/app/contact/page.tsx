@@ -3,7 +3,7 @@
 import { Mail, MapPin, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ContactForm } from '@/components/ContactForm';
-import { AppNavbar } from '@/components/layout/AppNavbar';
+
 import { useSettingsStore } from '@/store/useSettingsStore';
 export const contactEmail = 'mppsc@zenscroll.app';
 export default function ContactPage() {
@@ -32,7 +32,6 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
-      <AppNavbar user={null} />
       <div className="pt-32 pb-20">
         <div className="mx-auto max-w-6xl px-4 lg:px-8">
           <div className="mb-16 space-y-4 text-center">

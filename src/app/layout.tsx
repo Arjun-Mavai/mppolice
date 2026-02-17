@@ -85,11 +85,32 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+import { verifyAuth } from '@/lib/auth';
+import { AppNavbar } from '@/components/layout/AppNavbar';
+import { MainContentWrapper } from '@/components/layout/MainContentWrapper';
+
+// ... imports ...
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // 1. Fetch User on Server (Once per request)
+  const user = await verifyAuth();
+
+  // 2. Transform for Navbar
+  const navbarUser = user
+    ? {
+        name: user.name,
+        email: user.email,
+        image: null, // Add image if in DB
+        role: user.role || undefined,
+        is_subscribed: user.isSubscribed || undefined,
+        plan_tier: user.planTier || undefined,
+      }
+    : null;
+
   // JSON-LD structured data — helps Google show rich results
   const websiteSchema = {
     '@context': 'https://schema.org',
@@ -132,7 +153,8 @@ export default function RootLayout({
         <GlobalErrorBoundary>
           <PwaRegistry />
           <Providers>
-            <div className="min-h-screen">{children}</div>
+            <AppNavbar user={navbarUser} />
+            <MainContentWrapper>{children}</MainContentWrapper>
 
             <AppFooter />
             <GlobalLockModal />

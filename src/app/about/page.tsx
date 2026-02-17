@@ -2,15 +2,13 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { AppNavbar } from '@/components/layout/AppNavbar';
+
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Brain, Target, Users, BookOpen, CheckCircle2 } from 'lucide-react';
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-100 selection:text-indigo-900">
-      <AppNavbar user={null} />
-
       {/* Hero Section */}
       <section className="bg-white px-4 pt-32 pb-16 md:pt-40 md:pb-24">
         <div className="mx-auto max-w-4xl text-center">
