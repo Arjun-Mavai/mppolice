@@ -6,7 +6,8 @@ import { X, Play, BookOpen, Calendar, LayoutGrid, Layers, LucideIcon, Lock } fro
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { type PartAccessStatus } from './actions';
+import { getSubjectPartAccess } from './actions';
+import { useQuery } from '@tanstack/react-query';
 
 interface SubjectSeriesDialogProps {
   isOpen: boolean;
@@ -70,22 +71,13 @@ export function SubjectSeriesDialog({
   const hi = language === 'hi';
   const CHUNK_SIZE = 30;
 
-  // State for access status
-  const [accessMap, setAccessMap] = React.useState<Record<number, PartAccessStatus>>({});
-  const [loading, setLoading] = React.useState(true);
-
-  // Fetch access status on mount/open
-  React.useEffect(() => {
-    if (isOpen) {
-      setLoading(true);
-      import('./actions').then(({ getSubjectPartAccess }) => {
-        getSubjectPartAccess(subject).then((data) => {
-          setAccessMap(data);
-          setLoading(false);
-        });
-      });
-    }
-  }, [isOpen, subject]);
+  // Use React Query for caching
+  const { data: accessMap = {}, isLoading: loading } = useQuery({
+    queryKey: ['subject-access', subject],
+    queryFn: () => getSubjectPartAccess(subject),
+    enabled: isOpen, // Only fetch when dialog is open
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
+  });
 
   // Lock body scroll
   React.useEffect(() => {
