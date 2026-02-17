@@ -22,14 +22,14 @@ export function PricingSection() {
   const router = useRouter();
   const hi = language === 'hi';
 
-  if ((globalUser as any)?.is_subscribed) return null;
-
   // 🔒 Server Action + React Query (shared cache with /pricing page!)
   const { data: pricingData } = useQuery({
     queryKey: ['pricing'],
     queryFn: getPricingData,
     staleTime: 5 * 60 * 1000,
   });
+
+  if (globalUser?.isSubscribed) return null;
 
   const p = pricingData?.pricing ?? PRICING_DEFAULTS;
 

@@ -3,10 +3,14 @@
 import { useEffect, useState } from 'react';
 import { ArrowUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePathname } from 'next/navigation';
 
 export function ScrollToTop() {
   const [isVisible, setIsVisible] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const pathname = usePathname();
+
+  if (pathname === '/tests') return null;
 
   useEffect(() => {
     setIsMounted(true);

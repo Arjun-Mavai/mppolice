@@ -1,30 +1,150 @@
 import { redirect } from 'next/navigation';
 import { getTestWithQuestions, getUserAttempts } from '@/features/tests/actions/submission';
+import { getQuestionsBySubject } from '@/features/tests/actions/pyq-analytics'; // NEW
 import { QuizPlayClient } from './QuizPlayClient';
 import { verifyAuth } from '@/lib/auth';
 import { Question } from '@/types/quiz';
 import { logger } from '@/lib/logger';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
+import { getSubjectPartAccess } from '@/app/syllabus/quiz/pyq/actions';
 import { canAccessTest, getUserTier } from '@/lib/access-control';
 
 interface PageProps {
   searchParams: Promise<{
     testId?: string;
     mode?: string;
+    subject?: string;
+    limit?: string;
+    offset?: string;
   }>;
 }
 
 export default async function QuizPlayPage({ searchParams }: PageProps) {
   const params = await searchParams;
   logger.debug('params', { params, category: 'system' });
-  const { testId, mode } = params;
+  const { testId, mode, subject } = params;
 
+  // 📝 0. Validate Subject Whiteslist for Security
+  const ALLOWED_SUBJECTS = [
+    'MP GK',
+    'History',
+    'Geography',
+    'Polity',
+    'Economy',
+    'Science',
+    'ICT',
+    'Current Affairs',
+    'Misc',
+  ];
+  if (subject && !ALLOWED_SUBJECTS.includes(subject)) {
+    // Prevent arbitrary subject injection
+    redirect('/syllabus/quiz/pyq');
+  }
+
+  // 1. Handle Subject Practice Mode (Mixed PYQ)
+  if (mode === 'pyq-subject' && subject) {
+    const user = await verifyAuth();
+
+    // Validate Pagination First (to calculate Part Access)
+    const rawLimit = Number(params.limit);
+    const limitDefault = 30; // Changed from 1000 to match CHUNK_SIZE default if not specified
+    const limit = Math.min(
+      Math.max(Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : limitDefault, 1),
+      limitDefault
+    );
+
+    const rawOffset = Number(params.offset);
+    const offset = Math.max(Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0, 0);
+
+    // Determine Part Number using fixed CHUNK_SIZE
+    const CHUNK_SIZE = 30;
+    const partNum = Math.floor(offset / CHUNK_SIZE) + 1;
+
+    // 🔒 Granular Access Control (Check if this Part is Free/Unlocked)
+    const accessMap = await getSubjectPartAccess(subject);
+    const partAccess = accessMap?.[partNum];
+
+    // Status: Locked if explicitly locked in DB, OR if generic practice (no part found) and user is Free tier
+    let isLocked = false;
+
+    if (partAccess) {
+      // Test exists for this part -> Respect its flags (free/paid/user-owned)
+      isLocked = partAccess.isLocked; // getSubjectPartAccess logic handles user/guest checks
+    } else {
+      // No specific part found -> Treat as generic Premium Practice
+      const tier = user ? getUserTier(user) : 'free';
+      isLocked = tier === 'free';
+    }
+
+    if (isLocked) {
+      redirect('/pricing');
+    }
+
+    // ✅ Access Granted - Fetch Questions
+    const rawQuestions = await getQuestionsBySubject(subject);
+
+    // Slice questions for pagination (Chunking)
+    const questionsSlice = rawQuestions.slice(offset, offset + limit);
+
+    if (!questionsSlice || questionsSlice.length === 0) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-slate-50 pt-[80px]">
+          <div className="space-y-4 text-center">
+            <h1 className="text-2xl font-bold text-slate-900">No Questions Found</h1>
+            <p className="text-slate-500">No questions available for this selection.</p>
+          </div>
+        </div>
+      );
+    }
+
+    const questions: Question[] = questionsSlice.map((q: any) => {
+      const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+      return {
+        id: q.id,
+        question: q.questionText,
+        questionEn: q.questionTextEn || undefined,
+        correctAnswer: Number(q.correctAnswer),
+        options: parsedOptions as string[],
+        explanation: q.explanation || undefined,
+        explanationEn: q.explanationEn || undefined,
+        // 🏷️ INJECT YEAR INTO SUBJECT FIELD FOR DISPLAY
+        subject: `PYQ ${q.year}`,
+        type: q.type || 'standard',
+        matchPairs: q.matchPairs, // Fixed typo matchPairs
+        negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING,
+        marks: SCORING_CONFIG.MARKS_PER_QUESTION,
+      };
+    });
+
+    const userAttempts = 0; // No attempts tracking for practice mode yet
+    const hasPaidPlan = user ? getUserTier(user) !== 'free' : false;
+
+    const seriesTitle = limit < 1000 ? `${subject} Part ${partNum}` : `${subject} Practice`;
+    // For free guests, show free mode UI
+    const isProUI = hasPaidPlan || (partAccess && partAccess.isFree);
+
+    return (
+      <QuizPlayClient
+        questions={questions}
+        mode="pyq" // Reuse 'pyq' mode for UI styling
+        testId={`practice-${subject}-${offset}`}
+        title={seriesTitle}
+        userId={user?.id || null}
+        maxRetries={null} // Unlimited
+        userAttempts={userAttempts}
+        isPro={!!isProUI}
+        shouldShowPaywall={false}
+      />
+    );
+  }
+
+  // 2. Standard Test Mode
   if (!testId) {
     redirect('/syllabus/quiz/pyq');
   }
 
-  // 1. Fetch Initial Data in Parallel (Reduces waterfall)
+  // Fetch Initial Data in Parallel (Reduces waterfall)
   const [testData, user, attemptLimits] = await Promise.all([
     getTestWithQuestions(testId),
     verifyAuth(),
@@ -47,7 +167,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     );
   }
 
-  // 🛡️ [PR FIX]: Access check as early as possible before any processing
+  // 🛡️ Access Control
   const guestDenied = !user && !testData.isFreeAccess;
   const loggedInDenied = user && !canAccessTest(testData, user);
   if (guestDenied || loggedInDenied) {
@@ -56,8 +176,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
 
   const userId = user?.id;
 
-  // 3. Map Questions to correct type
-
+  // Map Questions
   const questions: Question[] = testData.questions.map((q) => {
     // Ensure options are parsed if they come as a stringified array
     const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
@@ -96,6 +215,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
       questions={questions}
       mode={(mode as 'topic' | 'full' | 'pyq') || 'topic'}
       testId={testId}
+      title={testData.title}
       userId={user?.id || null}
       maxRetries={maxRetries}
       userAttempts={userAttemptsCount}

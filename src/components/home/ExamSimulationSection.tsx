@@ -302,7 +302,10 @@ export function ExamSimulationSection() {
                 ? 'MPPSC 2026 के नए पैटर्न (3 अंक/प्रश्न, 1/3 नेगेटिव मार्किंग) पर आधारित लेटेस्ट सिमुलेशन। नए 300-अंकों वाले फॉर्मेट में अपनी तैयारी परखें।'
                 : 'Master the new MPPSC 2026 pattern: 3 marks per question with 1/3rd negative marking. Real-time simulation for the latest 300-mark format.'}
             </p>
-            <Button className="h-14 rounded-full bg-rose-600 px-8 text-lg font-bold text-white shadow-lg shadow-rose-600/20 hover:bg-rose-500">
+            <Button
+              onClick={handleMockStart}
+              className="h-14 rounded-full bg-rose-600 px-8 text-lg font-bold text-white shadow-lg shadow-rose-600/20 hover:bg-rose-500"
+            >
               {language === 'hi' ? 'फ्री मॉक टेस्ट शुरू करें' : 'Start Free Mock Test'}
             </Button>
           </div>

@@ -14,7 +14,8 @@ const TESTIMONIALS = [
     name: 'Arjun Gurjar',
     role: 'Aspirant',
     location: 'Gwalior',
-    comment: 'Blogs ki quality next level h mindful prep par.',
+    comment:
+      'PYQs ke liye ek gazab ki cheez mili hai. Main abhi tak sirf ratta maar raha tha, par is website (mppsc.zenscroll.app) par explanation ka tarika ekdum alag hai',
     image: '/testimonials/arjun.png',
     stars: 5,
   },

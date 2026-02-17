@@ -345,3 +345,9 @@ a,
 .animate-marquee {
   animation: marquee 80s linear infinite;
 }
+
+/* Scroll Lock for Dialogs (Native CSS approach) */
+body:has([data-overlay-open='true']) {
+  overflow: hidden;
+  touch-action: none;
+}

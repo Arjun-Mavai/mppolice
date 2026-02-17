@@ -71,7 +71,7 @@ export const PRO_FEATURES: PlanFeatureWithIcon[] = [
   { en: 'CSAT Mock Papers', hi: 'CSAT मॉक पेपर', icon: 'BookOpen' },
   { en: 'PYQ Papers (2020-2025)', hi: 'PYQ पेपर (2020-2025)', icon: 'BookOpen' },
   { en: 'Smart Analytics Dashboard', hi: 'स्मार्ट एनालिटिक्स डैशबोर्ड', icon: 'BarChart3' },
-  { en: 'Premium Study Blogs', hi: 'प्रीमियम स्टडी ब्लॉग्स (सीमित)', icon: 'FileText' },
+  { en: 'Premium Study Blogs', hi: 'प्रीमियम स्टडी ब्लॉग्स', icon: 'FileText' },
   { en: 'Test History for Revision', hi: 'रिवीज़न के लिए टेस्ट हिस्ट्री', icon: 'History' },
 ];
 

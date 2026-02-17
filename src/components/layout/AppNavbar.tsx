@@ -1,6 +1,5 @@
 'use client';
 
-import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -122,6 +121,9 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
 
   // Sync React Query result to Zustand Store
   useEffect(() => {
+    // 🛑 Prevent infinite loop: If user is already set, stop syncing
+    if (globalUser) return;
+
     if (sessionData) {
       if (sessionData.user) {
         logger.info('Session restored successfully for:', {
@@ -140,7 +142,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
         logger.debug('No active session found during hydration.');
         setAuthCheckStatus('checked');
       }
-    } else if (!isSessionLoading && authCheckStatus === 'idle' && !initialUser && !globalUser) {
+    } else if (!isSessionLoading && authCheckStatus === 'idle' && !initialUser) {
       // Query finished but no data (error or empty)
       setAuthCheckStatus('checked');
     }
@@ -221,20 +223,6 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
 
   return (
     <header className="fixed top-0 right-0 left-0 z-50 [animation:navbar-scroll_linear_both] border-b border-slate-200 bg-white/80 shadow-sm backdrop-blur-md transition-all duration-300 [animation-range:0px_50px] [animation-timeline:scroll()]">
-      <style jsx>{`
-        @keyframes navbar-scroll {
-          from {
-            padding-top: 1rem;
-            padding-bottom: 1rem;
-            background-color: rgb(255 255 255 / 0.5);
-          }
-          to {
-            padding-top: 0.5rem;
-            padding-bottom: 0.5rem;
-            background-color: rgb(255 255 255 / 0.9);
-          }
-        }
-      `}</style>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between">
           {/* Logo — logged in users go to quiz, others go home */}
@@ -355,7 +343,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
             <div className="hidden h-6 w-px bg-slate-200 sm:block"></div>
 
             {/* LOADING STATE FIX: Don't show login button while checking auth */}
-            {authCheckStatus === 'idle' || authCheckStatus === 'loading' ? (
+            {(authCheckStatus === 'idle' || authCheckStatus === 'loading') && !user ? (
               // Show skeleton while checking auth to prevent flash
               <div className="hidden h-10 w-10 animate-pulse rounded-full bg-slate-100 md:flex" />
             ) : user ? (
@@ -427,7 +415,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                 <SheetHeader className="border-b border-slate-100 bg-slate-50/50 p-6 text-left">
                   <div className="flex items-center gap-3">
                     {/* LOADING STATE FIX: Show skeleton in mobile menu too */}
-                    {authCheckStatus === 'idle' || authCheckStatus === 'loading' ? (
+                    {(authCheckStatus === 'idle' || authCheckStatus === 'loading') && !user ? (
                       <>
                         <div className="h-10 w-10 animate-pulse rounded-full bg-slate-200" />
                         <div className="flex flex-1 flex-col gap-2">

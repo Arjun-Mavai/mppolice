@@ -18,6 +18,7 @@ export type LogCategory =
   | 'uncategorized'
   | 'email'
   | 'system'
+  | 'admin'
   | 'ui';
 
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug';

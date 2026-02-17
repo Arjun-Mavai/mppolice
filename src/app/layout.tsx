@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_IN',
     url: baseUrl,
-    title: 'MPPSC 2026 Elite Test Series | Updated as per New Pattern',
+    title: 'MPPSC 2026 Elite Test Series | नवीनतम पैटर्न पर आधारित सर्वश्रेष्ठ अभ्यास',
     description:
       'Looking for MPPSC 2026 Test Series? Get 5+ Years PYQs, Topic-wise Tests, and Mnemonics in Hindi & English. The smartest way to clear MPPSC Prelims.',
     siteName: 'Mindful MPPSC',
@@ -85,11 +85,32 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+import { verifyAuth } from '@/lib/auth';
+import { AppNavbar } from '@/components/layout/AppNavbar';
+import { MainContentWrapper } from '@/components/layout/MainContentWrapper';
+
+// ... imports ...
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // 1. Fetch User on Server (Once per request)
+  const user = await verifyAuth();
+
+  // 2. Transform for Navbar
+  const navbarUser = user
+    ? {
+        name: user.name,
+        email: user.email,
+        image: null, // Add image if in DB
+        role: user.role || undefined,
+        is_subscribed: user.isSubscribed || undefined,
+        plan_tier: user.planTier || undefined,
+      }
+    : null;
+
   // JSON-LD structured data — helps Google show rich results
   const websiteSchema = {
     '@context': 'https://schema.org',
@@ -132,7 +153,8 @@ export default function RootLayout({
         <GlobalErrorBoundary>
           <PwaRegistry />
           <Providers>
-            <div className="min-h-screen">{children}</div>
+            <AppNavbar user={navbarUser} />
+            <MainContentWrapper>{children}</MainContentWrapper>
 
             <AppFooter />
             <GlobalLockModal />

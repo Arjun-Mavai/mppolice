@@ -1,4 +1,5 @@
 import { getCachedPYQTests, getUserAttemptsByType } from '@/features/tests/actions/submission';
+import { getSubjectWisePYQStats } from '@/features/tests/actions/pyq-analytics'; // NEW
 import PYQPageClient from './PYQPageClient';
 import { verifyAuth } from '@/lib/auth';
 import { getUserTier, hasAccessToContent } from '@/lib/access-control';
@@ -30,7 +31,7 @@ function QuizListFallback() {
 
 async function PYQPageData() {
   const userPromise = verifyAuth();
-  const [user, tests, attemptLimits, attempts] = await Promise.all([
+  const [user, tests, attemptLimits, attempts, subjectStats] = await Promise.all([
     userPromise,
     getCachedPYQTests(),
     getCachedAttemptLimits(),
@@ -39,6 +40,7 @@ async function PYQPageData() {
       const userId = resolvedUser?.id;
       return userId ? getUserAttemptsByType('PYQ', userId) : ({} as Record<string, number>);
     })(),
+    getSubjectWisePYQStats(), // Fetch subject stats
   ]);
 
   const tier = getUserTier(user);
@@ -60,12 +62,15 @@ async function PYQPageData() {
 
     return {
       ...test,
+      questions: test.totalQuestions ?? 0,
+      totalQuestions: test.totalQuestions ?? 0,
       isLocked: !hasAccess && !(test.isFreeAccess ?? false),
       isFree: (test.isFreeAccess ?? false) && !user,
-      attemptsLeft: user ? attemptsLeft : null,
+      attemptsLeft: user && attemptsLeft != null ? attemptsLeft : undefined,
       maxRetries: user ? maxRetries : null,
+      year: test.year ? parseInt(test.year) : undefined,
     };
   });
 
-  return <PYQPageClient initialTests={enrichedTests} />;
+  return <PYQPageClient initialTests={enrichedTests} subjectStats={subjectStats} />;
 }

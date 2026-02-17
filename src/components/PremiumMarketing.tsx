@@ -117,7 +117,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
       {/* Header */}
       {/* Header */}
       <h2 className="font-display mb-3 text-2xl leading-tight font-black tracking-tighter text-slate-900 uppercase md:text-5xl">
-        {hi ? 'अपना MPPSC सफलता प्लान चुनें' : 'Choose Your MPPSC Success Plan'}
+        {hi ? 'अपना MPPSC सफलता प्लान' : 'Choose Your MPPSC Success Plan'}
       </h2>
       <p className="mx-auto mb-6 max-w-lg px-4 text-sm font-medium text-slate-500 md:text-lg">
         {hi ? 'छात्रों के साथ स्मार्ट तैयारी करें' : 'Join aspirants who are preparing smarter'}

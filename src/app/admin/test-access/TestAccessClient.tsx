@@ -53,6 +53,7 @@ import {
 } from './actions';
 import { toast } from 'sonner';
 import { revalidateSyllabus } from '@/actions/revalidate';
+import { syncSubjectParts } from '@/app/admin/tests/sync-actions';
 
 // Test type ka full form aur color — admin ko samajh aaye
 const TYPE_CONFIG = {
@@ -111,7 +112,15 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
   // Filter tests by type + unit sub-filter
   const filteredTests = (() => {
     let result = activeFilter === 'ALL' ? tests : tests.filter((t) => t.type === activeFilter);
-    if (unitFilter) result = result.filter((t) => t.unitId === unitFilter);
+
+    if (unitFilter) {
+      if (activeFilter === 'TOPIC') {
+        result = result.filter((t) => t.unitId === unitFilter);
+      } else if (activeFilter === 'PYQ') {
+        // Filter by subject slug part
+        result = result.filter((t) => t.slug.includes(`pyq-${unitFilter}-`));
+      }
+    }
     return result;
   })();
 
@@ -302,6 +311,32 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
           <Badge variant="outline" className="px-3 py-1 text-sm">
             {tests.length} Tests
           </Badge>
+          <form
+            action={async () => {
+              try {
+                // Use top-level import
+                const res = await syncSubjectParts();
+                if (res?.success) {
+                  toast.success(`Synced ${res.createdCount} new subject parts!`);
+                  router.refresh();
+                } else {
+                  toast.error('Sync failed');
+                }
+              } catch (err: any) {
+                console.error('Sync error:', err);
+                toast.error('Sync failed: ' + (err.message || 'Unknown error'));
+              }
+            }}
+          >
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Sync PYQ Parts
+            </Button>
+          </form>
         </div>
 
         {/* ── Filter Tabs ────────────────────────────────────── */}
@@ -365,6 +400,64 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
                 </Button>
               );
             })}
+          </div>
+        )}
+
+        {/* ── Subject Sub-Filter (PYQ filter active hone par) ──── */}
+        {activeFilter === 'PYQ' && (
+          <div className="animation-fade-in flex flex-wrap gap-1.5">
+            <Button
+              variant={unitFilter === null ? 'default' : 'outline'}
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => {
+                setUnitFilter(null);
+                setVisibleCount(PAGE_SIZE);
+              }}
+            >
+              All Subjects
+            </Button>
+            {Array.from(
+              new Set(
+                tests
+                  .filter((t) => t.type === 'PYQ' && t.slug.startsWith('pyq-'))
+                  .map((t) => {
+                    // pyq-history-part-1 -> history
+                    const parts = t.slug.split('-');
+                    // usually [pyq, subject, part, n] or [pyq, difficult, subject, part, n]
+                    // Let's assume standard pyq-{subject}-part-{n} format from sync action
+                    if (parts.length >= 4 && parts[0] === 'pyq') {
+                      return parts[1]; // subject
+                    }
+                    return null;
+                  })
+                  .filter(Boolean) as string[]
+              )
+            )
+              .sort()
+              .map((subject) => {
+                // Capitalize first letter
+                const label = subject.charAt(0).toUpperCase() + subject.slice(1);
+                // Count
+                const count = tests.filter(
+                  (t) => t.type === 'PYQ' && t.slug.includes(`pyq-${subject}-`)
+                ).length;
+
+                return (
+                  <Button
+                    key={subject}
+                    variant={unitFilter === subject ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 text-xs capitalize"
+                    onClick={() => {
+                      setUnitFilter(subject);
+                      setVisibleCount(PAGE_SIZE);
+                    }}
+                  >
+                    {label} ({count})
+                  </Button>
+                );
+              })}
           </div>
         )}
 
