@@ -60,6 +60,18 @@ export type Topic = typeof syllabusTopics.$inferSelect;
 export type PlanTier = 'free' | 'lite' | 'pro';
 
 /**
+ * Interface that satisfies both DB User and Store User
+ * Used for access control checks without strict schema dependency.
+ */
+export interface AccessControlUser {
+  role?: string | null;
+  isSubscribed?: boolean | null;
+  is_subscribed?: boolean | null; // DB variant
+  planTier?: PlanTier | string | null;
+  plan_tier?: PlanTier | string | null; // DB/Store variant
+}
+
+/**
  * Access Result
  * ─────────────────────────────────────────────────────────────────────
  * Jab bhi access check karo, yeh structure milega
@@ -99,13 +111,20 @@ export interface AccessResult {
  * }
  */
 /** Client API returns plan_tier (snake_case); server DB has planTier (camelCase). Support both. */
-function getPlanTierFromUser(user: User): PlanTier | null {
+function getPlanTierFromUser(user: AccessControlUser): PlanTier | null {
   if (!user) return null;
-  const u = user as { planTier?: PlanTier; plan_tier?: PlanTier };
-  return (u.planTier ?? u.plan_tier ?? null) as PlanTier | null;
+  // Handle string cast to allow planTier/plan_tier flexibility
+  // Cast needed because types are loosely defined as string | null but we want stricter PlanTier where possible
+  const u = user as { planTier?: string | null; plan_tier?: string | null };
+  const rawTier = u.planTier ?? u.plan_tier ?? null;
+
+  if (rawTier === 'pro') return 'pro';
+  if (rawTier === 'lite') return 'lite';
+  if (rawTier === 'free') return 'free';
+  return null;
 }
 
-export function getUserTier(user: User): PlanTier | 'guest' {
+export function getUserTier(user: AccessControlUser | null): PlanTier | 'guest' {
   // ───────────────────────────────────────────────────────────────
   // CASE 1: No user (Guest)
   // ───────────────────────────────────────────────────────────────
@@ -114,12 +133,12 @@ export function getUserTier(user: User): PlanTier | 'guest' {
   // ───────────────────────────────────────────────────────────────
   // CASE 2: Admin (Boss Mode!)
   // ───────────────────────────────────────────────────────────────
-  if ((user as any).role === 'admin') return 'pro';
+  if (user.role === 'admin') return 'pro';
 
   // ───────────────────────────────────────────────────────────────
   // CASE 3: Subscribed User (isSubscribed / is_subscribed)
   // ───────────────────────────────────────────────────────────────
-  const isSubscribed = !!((user as any).isSubscribed ?? (user as any).is_subscribed);
+  const isSubscribed = !!(user.isSubscribed ?? user.is_subscribed);
   if (isSubscribed) {
     const plan = getPlanTierFromUser(user);
     if (plan === 'free') return 'lite'; // legacy: subscribed but plan free

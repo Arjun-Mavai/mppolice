@@ -1,3 +1,4 @@
+import { User, AccessControlUser, getUserTier } from '@/lib/access-control';
 import { TopicData } from '@/app/syllabus/[unitId]/UnitContent';
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -65,7 +66,7 @@ interface UserState {
 export function isSyllabusTopicLocked(
   topic: TopicData,
   index: number,
-  user: UserState | null,
+  user: AccessControlUser | null,
   unitId: string,
   totalTopics: number
 ): boolean {
@@ -73,7 +74,7 @@ export function isSyllabusTopicLocked(
   if (topic.isFree) return false;
 
   // ── CHECK 2: User ka tier nikalo ────────────────────────────
-  const planTier = user?.isSubscribed ? user.plan_tier || 'lite' : 'free';
+  const planTier = getUserTier(user);
 
   // ── CHECK 3: Pro user — DB flag check ───────────────────────
   if (planTier === 'pro') {

@@ -118,14 +118,19 @@ export default function TopicSelectionClient({ initialDbData }: TopicSelectionCl
     // Now `isLocked` should ideally come from backend or be simple:
     // Closed if: !isFreeAccess && !hasSubscription
 
-    const effectiveTier = getUserTier(user as any);
+    const effectiveTier = getUserTier(user);
 
     // 🔒 GRANULAR ACCESS CONTROL
-    const isUnlocked =
+    // Rule 1: Admin & Pro bypass all checks
+    // Rule 2: Lite checks isLiteAccess OR isFreeAccess
+    // Rule 3: Free checks isFreeAccess
+    const hasAccess =
       isAdmin ||
-      topic.isFreeAccess ||
       effectiveTier === 'pro' ||
-      (effectiveTier === 'lite' && topic.isLiteAccess);
+      (effectiveTier === 'lite' && (topic.isLiteAccess || topic.isFreeAccess)) ||
+      topic.isFreeAccess;
+
+    const isUnlocked = hasAccess;
 
     if (!isUnlocked) {
       setPaywallOpen(true);
@@ -262,15 +267,18 @@ export default function TopicSelectionClient({ initialDbData }: TopicSelectionCl
               >
                 {filteredTopics.length > 0 ? (
                   filteredTopics.map((topic, index) => {
+                    // 🔒 GRANULAR ACCESS CONTROL
+                    // Rule 1: Admin & Pro bypass all checks
+                    // Rule 2: Lite checks isLiteAccess OR isFreeAccess
+                    // Rule 3: Free checks isFreeAccess
                     const isAdmin = (user as any)?.role === 'admin';
                     const effectiveTier = getUserTier(user as any);
 
-                    // 🔒 GRANULAR ACCESS CONTROL
                     const hasAccess =
                       isAdmin ||
-                      topic.isFreeAccess ||
                       effectiveTier === 'pro' ||
-                      (effectiveTier === 'lite' && topic.isLiteAccess);
+                      (effectiveTier === 'lite' && (topic.isLiteAccess || topic.isFreeAccess)) ||
+                      topic.isFreeAccess;
 
                     const isLocked = !hasAccess;
 
