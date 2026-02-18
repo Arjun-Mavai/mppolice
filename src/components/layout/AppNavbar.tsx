@@ -277,10 +277,11 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                 );
               })}
             {user && user.isSubscribed && user.planTier === 'pro' ? (
-              /* Pro Badge — seamless golden-red-pink conic border, no gap */
+              /* Pro Badge — Google Gemini Ultra style seamless gradient */
               <div className="relative overflow-hidden rounded-full p-[1.5px]">
-                <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#fbbf24,#f59e0b,#ef4444,#ec4899,#f59e0b,#fbbf24,#d97706,#ef4444,#ec4899,#fbbf24)]" />
-                <div className="relative flex cursor-default items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2 text-sm font-bold text-white">
+                {/* Seamless loop: Starts with #fbbf24, Ends with #fbbf24 */}
+                <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#fbbf24,#f59e0b,#ef4444,#ec4899,#8b5cf6,#3b82f6,#10b981,#fbbf24)]" />
+                <div className="relative flex cursor-default items-center gap-2 overflow-hidden rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white">
                   <div className="animate-shimmer absolute inset-0 bg-[linear-gradient(110deg,transparent,25%,rgba(255,255,255,0.1),50%,transparent)] bg-[length:250%_100%]" />
                   <Sparkles size={12} className="relative z-10 fill-yellow-400 text-yellow-400" />
                   <span className="relative z-10 text-[10px] font-black tracking-wide uppercase">
@@ -289,24 +290,26 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                 </div>
               </div>
             ) : user && user.isSubscribed && user.planTier === 'lite' ? (
-              /* Lite Badge — tag style on desktop (no button), animated border */
+              /* Lite Badge — Seamless Pink/Purple gradient */
               <div className="relative overflow-hidden rounded-full p-[1.5px]">
-                <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#ec4899,#ef4444,#f59e0b,#8b5cf6,#3b82f6,#ec4899,#ef4444,#f59e0b,#ec4899)]" />
-                <div className="relative flex cursor-default items-center gap-2 rounded-full bg-black px-4 py-2 text-sm font-bold text-white">
+                {/* Seamless loop: Starts/Ends with #ec4899 */}
+                <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#ec4899,#ef4444,#f59e0b,#8b5cf6,#ec4899)]" />
+                <div className="relative flex cursor-default items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white">
                   <Sparkles size={12} className="fill-pink-500 text-pink-500" />
                   <span className="text-[10px] font-black tracking-wide uppercase">Lite</span>
                 </div>
               </div>
             ) : user ? (
-              /* Free user — Upgrade button with animated red-pink border */
-              <div className="relative overflow-hidden rounded-full p-[1.5px]">
-                <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#ec4899,#ef4444,#f59e0b,#8b5cf6,#3b82f6,#ec4899,#ef4444,#f59e0b,#ec4899)]" />
+              /* Free user — "Upgrade" Button with Premium Seamless Rainbow Border */
+              <div className="group relative overflow-hidden rounded-full p-[1.5px]">
+                {/* Seamless Rainbow Gradient for 'Award Winning' look */}
+                <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#ec4899,#ef4444,#f59e0b,#8b5cf6,#3b82f6,#10b981,#ec4899)] transition-all duration-500 group-hover:bg-[conic-gradient(from_0deg,#ffffff,#ec4899,#ef4444,#f59e0b,#8b5cf6,#3b82f6,#10b981,#ffffff)]" />
                 <Link
                   href="/upgrade"
-                  className="relative flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white transition-all duration-200 hover:scale-105 hover:shadow-md"
+                  className="relative flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-sm font-bold text-white transition-all duration-200 hover:bg-slate-800 hover:shadow-lg hover:shadow-purple-500/20"
                 >
-                  <Sparkles size={14} className="fill-white/20" />
-                  Upgrade
+                  <Sparkles size={14} className="fill-white/20 text-yellow-400" />
+                  <span className="tracking-wide">Upgrade</span>
                 </Link>
               </div>
             ) : null}
@@ -411,7 +414,10 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                   <Menu className="h-6 w-6 text-slate-600" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="flex w-[300px] flex-col p-0 sm:w-[360px]">
+              <SheetContent
+                side="right"
+                className="z-[150] flex w-[300px] flex-col p-0 sm:w-[360px]"
+              >
                 <SheetHeader className="border-b border-slate-100 bg-slate-50/50 p-6 text-left">
                   <div className="flex items-center gap-3">
                     {/* LOADING STATE FIX: Show skeleton in mobile menu too */}

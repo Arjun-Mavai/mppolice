@@ -162,77 +162,91 @@ export function SubjectSeriesDialog({
             {/* Content */}
             <div className="max-h-[60vh] overflow-y-auto p-6">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {parts.map((item) => {
-                  const status = accessMap[item.part];
+                {loading
+                  ? // Skeleton Loading State
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <div
+                        key={`skeleton-${i}`}
+                        className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-4"
+                      >
+                        <div className="space-y-2">
+                          <div className="h-3 w-16 animate-pulse rounded bg-slate-100" />
+                          <div className="h-4 w-24 animate-pulse rounded bg-slate-100" />
+                        </div>
+                        <div className="h-10 w-10 animate-pulse rounded-full bg-slate-100" />
+                      </div>
+                    ))
+                  : parts.map((item) => {
+                      const status = accessMap[item.part];
 
-                  const hasStatus = Object.prototype.hasOwnProperty.call(accessMap, item.part);
-                  const userHasAccess = hasStatus && !status?.isLocked;
-                  const isFree = status?.isFree;
-                  // Default to LOCKED if status is missing or explicitly locked
-                  // Also wait for loading to complete
-                  const locked = !loading && (!hasStatus || !userHasAccess);
+                      const hasStatus = Object.prototype.hasOwnProperty.call(accessMap, item.part);
+                      const userHasAccess = hasStatus && !status?.isLocked;
+                      const isFree = status?.isFree;
+                      // Default to LOCKED if status is missing or explicitly locked
+                      // Also wait for loading to complete
+                      const locked = !loading && (!hasStatus || !userHasAccess);
 
-                  return (
-                    <motion.button
-                      key={item.part}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handlePartClick(item.part, item.offset, !!locked)}
-                      className={cn(
-                        'group relative flex items-center justify-between rounded-2xl border p-4 transition-all hover:shadow-lg',
-                        locked
-                          ? 'border-slate-100 bg-slate-50 opacity-80'
-                          : 'border-slate-100 bg-white hover:border-slate-200'
-                      )}
-                    >
-                      <div className="text-left">
-                        <div className="flex items-center gap-2">
-                          <span
+                      return (
+                        <motion.button
+                          key={item.part}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handlePartClick(item.part, item.offset, !!locked)}
+                          className={cn(
+                            'group relative flex items-center justify-between rounded-2xl border p-4 transition-all hover:shadow-lg',
+                            locked
+                              ? 'border-slate-100 bg-slate-50 opacity-80'
+                              : 'border-slate-100 bg-white hover:border-slate-200'
+                          )}
+                        >
+                          <div className="text-left">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={cn(
+                                  'block text-xs font-black tracking-widest uppercase',
+                                  locked ? 'text-slate-400' : style.text
+                                )}
+                              >
+                                {hi ? 'भाग' : 'Part'} {item.part}
+                              </span>
+                              {/* Badges */}
+                              {!loading && (
+                                <>
+                                  {isFree ? (
+                                    <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                                      FREE
+                                    </span>
+                                  ) : locked ? (
+                                    <Lock className="h-3 w-3 text-slate-400" />
+                                  ) : (
+                                    <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                                      OPEN
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                            </div>
+
+                            <span className="text-sm font-medium text-slate-500">
+                              Q.{item.start} - Q.{item.end}
+                            </span>
+                          </div>
+
+                          <div
                             className={cn(
-                              'block text-xs font-black tracking-widest uppercase',
-                              locked ? 'text-slate-400' : style.text
+                              'flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-transform group-hover:scale-110',
+                              locked ? 'bg-slate-200 text-slate-400' : style.button
                             )}
                           >
-                            {hi ? 'भाग' : 'Part'} {item.part}
-                          </span>
-                          {/* Badges */}
-                          {!loading && (
-                            <>
-                              {isFree ? (
-                                <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
-                                  FREE
-                                </span>
-                              ) : locked ? (
-                                <Lock className="h-3 w-3 text-slate-400" />
-                              ) : (
-                                <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
-                                  OPEN
-                                </span>
-                              )}
-                            </>
-                          )}
-                        </div>
-
-                        <span className="text-sm font-medium text-slate-500">
-                          Q.{item.start} - Q.{item.end}
-                        </span>
-                      </div>
-
-                      <div
-                        className={cn(
-                          'flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-transform group-hover:scale-110',
-                          locked ? 'bg-slate-200 text-slate-400' : style.button
-                        )}
-                      >
-                        {locked ? (
-                          <Lock className="h-4 w-4" />
-                        ) : (
-                          <Play className="ml-0.5 h-4 w-4 fill-current" />
-                        )}
-                      </div>
-                    </motion.button>
-                  );
-                })}
+                            {locked ? (
+                              <Lock className="h-4 w-4" />
+                            ) : (
+                              <Play className="ml-0.5 h-4 w-4 fill-current" />
+                            )}
+                          </div>
+                        </motion.button>
+                      );
+                    })}
               </div>
             </div>
           </motion.div>

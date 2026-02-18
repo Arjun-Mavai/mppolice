@@ -24,7 +24,9 @@ function normalizeSubject(rawSubject: string | null): string {
     lower.includes('tribes') ||
     lower.includes('folk') ||
     lower.includes('tourism') ||
-    lower.includes('dynasties')
+    lower.includes('dynasties') ||
+    lower.includes('literature') || // Covers 'Literature of MP'
+    lower.includes('personalities') // Covers 'Personalities of MP'
   ) {
     return 'MP GK';
   }
@@ -52,7 +54,11 @@ function normalizeSubject(rawSubject: string | null): string {
     lower.includes('agriculture') ||
     lower.includes('unit 4') ||
     lower.includes('disaster') ||
-    lower.includes('environment')
+    lower.includes('environment') ||
+    lower.includes('census') || // Covers 'Census 2011'
+    lower.includes('demography') || // Covers 'Demography'
+    lower.includes('population') ||
+    lower.includes('energy') // Covers 'Energy'
   ) {
     return 'Geography';
   }
@@ -94,7 +100,8 @@ function normalizeSubject(rawSubject: string | null): string {
     lower.includes('nutrition') ||
     lower.includes('health') ||
     lower.includes('disease') ||
-    lower.includes('unit 7')
+    lower.includes('unit 7') ||
+    lower.includes('institute') // Covers 'Scientific Institutes'
   ) {
     return 'Science';
   }
@@ -108,7 +115,16 @@ function normalizeSubject(rawSubject: string | null): string {
     lower.includes('robotics') ||
     lower.includes('ai') ||
     lower.includes('electronics') ||
-    lower.includes('unit 9')
+    lower.includes('unit 9') ||
+    lower.includes('information') || // Covers 'Information Technology'
+    lower.includes('technology') ||
+    lower.includes('communication') ||
+    lower.includes('e-commerce') || // Covers 'E-Commerce'
+    lower.includes('networking') || // Covers 'IT/Networking'
+    lower === 'it' || // Exact match for 'IT'
+    lower.includes(' it ') || // Word boundary match
+    lower.includes('/it') ||
+    lower.includes('it/')
   ) {
     return 'ICT';
   }
@@ -120,7 +136,15 @@ function normalizeSubject(rawSubject: string | null): string {
     lower.includes('award') ||
     lower.includes('unit 8') ||
     lower.includes('defence') ||
-    lower.includes('summit')
+    lower.includes('summit') ||
+    lower.includes('international') || // Covers 'International Relations'
+    lower.includes('relations') ||
+    lower.includes('report') || // Covers 'Reports/Indices'
+    lower.includes('index') ||
+    lower.includes('indices') ||
+    lower.includes('organization') || // Covers 'International Organizations'
+    lower.includes('awareness') || // Covers 'General Awareness'
+    lower.includes('general knowledge')
   ) {
     return 'Current Affairs';
   }

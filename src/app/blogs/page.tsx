@@ -1,3 +1,4 @@
+import { verifyAuth } from '@/lib/auth';
 import { getBlogs, getBlogCounts } from '@/services/blog-service';
 import BlogsClient from './BlogsClient';
 
@@ -42,13 +43,23 @@ export default async function BlogsPage() {
 }
 
 async function BlogsContent() {
-  // Fetch initial data (Page 1) and counts on server in parallel.
-  const [counts, blogsResult] = await Promise.all([
+  // Fetch initial data (Page 1), counts, and user on server in parallel.
+  const [counts, blogsResult, user] = await Promise.all([
     getBlogCounts(),
-    getBlogs({ page: 1, limit: 10, unitId: 'All' }),
+    // MATCH CLIENT DEFAULT: Client defaults to 'Free' tab, so we must fetch Free blogs initially.
+    // Otherwise, the 'Free' tab will show Premium (locked) blogs from the 'All' fetch.
+    getBlogs({ page: 1, limit: 10, unitId: 'All', isFreeAccess: true }),
+    verifyAuth(),
   ]);
 
   const { blogs, pagination } = blogsResult;
 
-  return <BlogsClient initialBlogs={blogs} initialPagination={pagination} initialCounts={counts} />;
+  return (
+    <BlogsClient
+      initialBlogs={blogs}
+      initialPagination={pagination}
+      initialCounts={counts}
+      user={user}
+    />
+  );
 }
