@@ -121,10 +121,7 @@ function normalizeSubject(rawSubject: string | null): string {
     lower.includes('communication') ||
     lower.includes('e-commerce') || // Covers 'E-Commerce'
     lower.includes('networking') || // Covers 'IT/Networking'
-    lower === 'it' || // Exact match for 'IT'
-    lower.includes(' it ') || // Word boundary match
-    lower.includes('/it') ||
-    lower.includes('it/')
+    /\b(it|i\.t\.|information technology)\b/i.test(lower) // Strict "IT" match (Word boundary)
   ) {
     return 'ICT';
   }

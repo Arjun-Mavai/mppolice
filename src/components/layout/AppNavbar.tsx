@@ -284,8 +284,8 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
             {user && user.isSubscribed && user.planTier === 'pro' ? (
               /* Pro Badge — Google Gemini Ultra style seamless gradient */
               <div className="relative overflow-hidden rounded-full p-[1.5px]">
-                {/* Seamless loop: Starts with #fbbf24, Ends with #fbbf24 */}
-                <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#fbbf24,#f59e0b,#ef4444,#ec4899,#8b5cf6,#3b82f6,#10b981,#fbbf24)]" />
+                {/* Static Gradient Border for Performance */}
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400" />
                 <div className="relative flex cursor-default items-center gap-2 overflow-hidden rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white">
                   <div className="animate-shimmer absolute inset-0 bg-[linear-gradient(110deg,transparent,25%,rgba(255,255,255,0.1),50%,transparent)] bg-[length:250%_100%]" />
                   <Sparkles size={12} className="relative z-10 fill-yellow-400 text-yellow-400" />
@@ -297,8 +297,8 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
             ) : user && user.isSubscribed && user.planTier === 'lite' ? (
               /* Lite Badge — Seamless Pink/Purple gradient */
               <div className="relative overflow-hidden rounded-full p-[1.5px]">
-                {/* Seamless loop: Starts/Ends with #ec4899 */}
-                <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#ec4899,#ef4444,#f59e0b,#8b5cf6,#ec4899)]" />
+                {/* Static Gradient Border for Performance */}
+                <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500" />
                 <div className="relative flex cursor-default items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white">
                   <Sparkles size={12} className="fill-pink-500 text-pink-500" />
                   <span className="text-[10px] font-black tracking-wide uppercase">Lite</span>
@@ -307,8 +307,8 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
             ) : user ? (
               /* Free user — "Upgrade" Button with Premium Seamless Rainbow Border */
               <div className="group relative overflow-hidden rounded-full p-[1.5px]">
-                {/* Seamless Rainbow Gradient for 'Award Winning' look */}
-                <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#ec4899,#ef4444,#f59e0b,#8b5cf6,#3b82f6,#10b981,#ec4899)] transition-all duration-500 group-hover:bg-[conic-gradient(from_0deg,#ffffff,#ec4899,#ef4444,#f59e0b,#8b5cf6,#3b82f6,#10b981,#ffffff)]" />
+                {/* Static Rainbow Gradient for 'Award Winning' look - Only animate opacity/scale on hover if needed */}
+                <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 opacity-80 transition-opacity duration-300 group-hover:opacity-100" />
                 <Link
                   href="/upgrade"
                   className="relative flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-sm font-bold text-white transition-all duration-200 hover:bg-slate-800 hover:shadow-lg hover:shadow-purple-500/20"

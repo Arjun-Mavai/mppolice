@@ -48,6 +48,12 @@ async function BlogsContent() {
     getBlogCounts(),
     // MATCH CLIENT DEFAULT: Client defaults to 'Free' tab, so we must fetch Free blogs initially.
     // Otherwise, the 'Free' tab will show Premium (locked) blogs from the 'All' fetch.
+    // IMPORTANT: This initial fetch is intentionally coupled to the default tab in `BlogsClient`.
+    // The client currently defaults to the "Free" tab, so we prefetch only free-access blogs here
+    // (`isFreeAccess: true`). If the default tab in `BlogsClient` is ever changed (e.g. to "All"
+    // or another filter), this query MUST be updated to match that new default; otherwise the
+    // server-rendered content will not align with the initial client state, causing a brief flash
+    // of incorrect content or an unnecessary client re-fetch.
     getBlogs({ page: 1, limit: 10, unitId: 'All', isFreeAccess: true }),
     verifyAuth(),
   ]);

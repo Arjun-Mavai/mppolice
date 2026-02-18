@@ -39,6 +39,11 @@ interface BlogsClientProps {
   user: User | null;
 }
 
+// Runtime guard to ensure a value conforms to the database User shape
+const isDatabaseUser = (value: unknown): value is User => {
+  return !!value && typeof value === 'object' && 'id' in value && 'isSubscribed' in value;
+};
+
 /**
  * BlogsClient — Main client component for the Blogs page.
  * Handles:
@@ -78,23 +83,32 @@ export default function BlogsClient({
   }, [searchQuery]);
 
   // 5. Query Hooks (Data Fetching)
+  // Derived fetch parameters to ensure Query Key matches actual fetch logic
+  const fetchUnitId = activeUnit === 'Free' || activeUnit === 'General' ? 'All' : activeUnit;
+  const fetchCategory = activeUnit === 'General' ? activeCategory : 'All';
+  // STRICT FILTERING: If tab is 'Free', explicitly request only isFreeAccess=true
+  const fetchIsFreeAccess = activeUnit === 'Free' ? true : undefined;
+
   const {
     data,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     isLoading: isBlogsLoading,
+    isError,
+    error,
+    refetch,
   } = useInfiniteQuery({
-    queryKey: ['blogs', activeUnit, activeCategory, debouncedSearch],
+    // ⚡ PERFORMANCE: Use actual fetch parameters in key to avoid duplicate caching
+    queryKey: ['blogs', fetchUnitId, fetchCategory, fetchIsFreeAccess, debouncedSearch],
     queryFn: async ({ pageParam = 1 }) => {
       return await getBlogs({
         page: pageParam as number,
         limit: 10,
-        unitId: activeUnit === 'Free' || activeUnit === 'General' ? 'All' : activeUnit,
-        category: activeUnit === 'General' ? activeCategory : 'All',
+        unitId: fetchUnitId,
+        category: fetchCategory,
         search: debouncedSearch,
-        // STRICT FILTERING: If tab is 'Free', explicitly request only isFreeAccess=true
-        isFreeAccess: activeUnit === 'Free' ? true : undefined,
+        isFreeAccess: fetchIsFreeAccess,
       });
     },
     getNextPageParam: (lastPage) => {
@@ -118,9 +132,10 @@ export default function BlogsClient({
   // ------------------------------------------------------------------
 
   // User resolution: Server prop > Store fallback
+  // User resolution: Server prop > Store fallback (only if it matches User shape)
   // Both sources use camelCase (Drizzle Schema & Zustand Store)
-  const effectiveUser = user || (storeUser as unknown as User);
-  const currentUser = effectiveUser;
+  const effectiveUser = user || (isDatabaseUser(storeUser) ? storeUser : undefined);
+  const currentUser = effectiveUser || null; // Ensure strictly User | null (no undefined)
   const isGuest = !currentUser?.isSubscribed;
 
   // Flatten infinite query pages
@@ -191,6 +206,24 @@ export default function BlogsClient({
             </div>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Error State
+  if (isError) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
+        <div className="rounded-full bg-red-50 p-4">
+          <BookOpen className="h-8 w-8 text-red-500" />
+        </div>
+        <h3 className="text-lg font-bold text-slate-800">Failed to load articles</h3>
+        <p className="max-w-md text-sm text-slate-500">
+          {error instanceof Error ? error.message : 'Something went wrong while fetching articles.'}
+        </p>
+        <Button onClick={() => refetch()} variant="outline">
+          Try Again
+        </Button>
       </div>
     );
   }
