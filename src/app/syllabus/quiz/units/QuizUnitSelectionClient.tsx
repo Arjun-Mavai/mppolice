@@ -11,6 +11,7 @@ import { QuizListItem } from '@/components/QuizListItem';
 import { QuizSubNav } from '@/features/syllabus/components/QuizSubNav';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
+import { getUserTier } from '@/lib/access-control';
 
 interface QuizUnitSelectionClientProps {
   availableTests: {
@@ -30,9 +31,12 @@ interface QuizUnitSelectionClientProps {
 
 export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSelectionClientProps) {
   const router = useRouter();
-  const { language, user } = useSettingsStore();
+  const { language, user, authCheckStatus } = useSettingsStore(); // ✅ Fix: Read auth status
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  // 🔄 Wait for Auth Check to complete before determining access
+  const isAuthLoading = authCheckStatus === 'idle' || authCheckStatus === 'loading';
 
   // ⚡ LIGHT SPEED PREFETCH: First 6 units on mount
   useEffect(() => {
@@ -43,17 +47,10 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
     });
   }, [availableTests, router, user]);
 
-  const isAdmin = (user as any)?.role === 'admin';
-  const isSubscribed = user?.isSubscribed || false;
-  const userTier = user?.planTier || 'free';
-  const effectiveTier = !user
-    ? 'guest'
-    : isSubscribed
-      ? userTier === 'free'
-        ? 'lite'
-        : userTier
-      : 'free';
-  // 🔒 ACCESS CONTROL: Only PRO users get full access to Unit Tests
+  const isAdmin = user?.role === 'admin';
+  const effectiveTier = getUserTier(user as any);
+
+  // 🔒 ACCESS CONTROL: Only PRO  users get full access to Unit Tests
   // REVERT: Lite users SHOULD see Unit tests (based on user request)
   const hasActivePlan = effectiveTier === 'lite' || effectiveTier === 'pro';
 
@@ -66,6 +63,25 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
   };
 
   const hi = language === 'hi';
+
+  console.log('isAuthloading', isAuthLoading);
+
+  // 🔄 Wait for Auth Check
+  if (isAuthLoading) {
+    return (
+      <div className="mx-auto max-w-5xl px-6 pt-10 pb-20">
+        <div className="mb-12 space-y-4 text-center">
+          <div className="mx-auto h-12 w-48 animate-pulse rounded-lg bg-slate-200" />
+          <div className="mx-auto h-4 w-64 animate-pulse rounded bg-slate-100" />
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-24 w-full animate-pulse rounded-2xl bg-slate-100" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#fafbfc] pb-20 font-sans">
@@ -110,12 +126,14 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
                   'Unknown Unit';
 
               // 🔒 GRANULAR ACCESS CONTROL
-              // True if: Admin OR Free Access OR Pro User OR (Lite User + Lite Access)
+              // Rule 1: Admin & Pro bypass all checks
+              // Rule 2: Lite checks isLiteAccess OR isFreeAccess
+              // Rule 3: Free checks isFreeAccess
               const hasAccess =
                 isAdmin ||
-                test.isFreeAccess ||
-                userTier === 'pro' ||
-                (userTier === 'lite' && test.isLiteAccess);
+                effectiveTier === 'pro' ||
+                (effectiveTier === 'lite' && (test.isLiteAccess || test.isFreeAccess)) ||
+                test.isFreeAccess;
 
               const isLocked = !hasAccess;
 
