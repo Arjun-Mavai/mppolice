@@ -357,9 +357,15 @@ export default function BlogsClient({
                   <BookOpen size={24} className="text-white" />
                 </div>
                 {/* Pro Badge */}
-                {currentUser?.isSubscribed && (
+                {currentUser?.planTier === 'pro' && (
                   <span className="flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[10px] font-bold tracking-wider text-amber-300 uppercase">
                     <Crown size={10} className="fill-amber-300" /> Pro Active
+                  </span>
+                )}
+                {/* Lite Badge */}
+                {currentUser?.planTier === 'lite' && (
+                  <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[10px] font-bold tracking-wider text-emerald-300 uppercase">
+                    <Crown size={10} className="fill-emerald-300" /> Lite Active
                   </span>
                 )}
               </div>
@@ -368,7 +374,7 @@ export default function BlogsClient({
                 Ace MPPSC 2026
               </h3>
 
-              {currentUser?.isSubscribed ? (
+              {currentUser?.planTier === 'pro' ? (
                 <>
                   <p className="relative z-10 mb-6 text-sm leading-relaxed text-slate-300">
                     Premium access active! Master your preparation with full mock tests & exclusive
@@ -389,14 +395,14 @@ export default function BlogsClient({
               ) : currentUser?.planTier === 'lite' ? (
                 <>
                   <p className="relative z-10 mb-6 text-sm leading-relaxed text-slate-300">
-                    Upgrade to <span className="font-bold text-white">Pro</span> for unlimited Full
-                    Mock Tests & Analytics.
+                    Lite Plan Active. Upgrade to <span className="font-bold text-white">Pro</span>{' '}
+                    for unlimited Full Mock Tests & Analytics.
                   </p>
                   {/* Premium Button */}
                   <div className="relative overflow-hidden rounded-xl p-[1.5px] shadow-lg shadow-purple-500/20 transition-all hover:scale-[1.02] hover:shadow-purple-500/40">
                     <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#d946ef,#f43f5e,#fbbf24,#8b5cf6,#3b82f6,#d946ef)]" />
                     <Link
-                      href="/upgrade"
+                      href="/pricing"
                       className="relative flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white transition-all hover:bg-slate-900/90"
                     >
                       <Sparkles size={16} className="text-purple-400" />
@@ -413,7 +419,7 @@ export default function BlogsClient({
                   <div className="relative overflow-hidden rounded-xl p-[1.5px] shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40">
                     <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#d946ef,#f43f5e,#fbbf24,#8b5cf6,#3b82f6,#d946ef)]" />
                     <Link
-                      href="/upgrade"
+                      href="/pricing"
                       className="relative flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white transition-all hover:bg-slate-900/90"
                     >
                       <Sparkles size={16} className="fill-white/20 text-yellow-400" />

@@ -8,6 +8,7 @@ import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockMo
 import { useRouter } from 'next/navigation';
 import { QuizListItem } from '@/components/QuizListItem';
 import { QuizSubNav } from '@/features/syllabus/components/QuizSubNav';
+import { QUIZ_CONSTANTS } from '@/config/quiz';
 
 interface Test {
   id: string;
@@ -105,7 +106,7 @@ export default function CSATPageClient({ initialTests }: CSATPageClientProps) {
                 title={hi ? test.title : test.titleEn || test.title}
                 questions={test.totalQuestions || undefined}
                 itemLabel={hi ? 'प्रश्न' : 'Questions'}
-                marks={(test.totalQuestions || 0) * 2} // CSAT usually 2 marks/question
+                marks={(test.totalQuestions || 0) * QUIZ_CONSTANTS.MARKS_PER_QUESTION}
                 duration={test.durationMinutes}
                 isLocked={test.isLocked}
                 isFree={test.isFree}

@@ -89,13 +89,11 @@ export function QuizSubNav() {
               >
                 <span className="relative z-10">{hi ? item.label.hi : item.label.en}</span>
                 {isActive && (
-                  <motion.div
-                    layoutId="quiz-subnav-active-desktop"
+                  <div
                     className={cn(
-                      'absolute inset-0 rounded-full shadow-lg shadow-black/5',
-                      item.color
+                      'absolute inset-0 rounded-full shadow-md',
+                      item.color // This applies the bg-color
                     )}
-                    transition={springConfig}
                   />
                 )}
               </button>

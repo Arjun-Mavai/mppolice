@@ -59,9 +59,6 @@ export function ExitSurveyModal({
     } catch (error) {
       logger.error('Failed to submit survey:', error);
       onConfirmExit(); // Let them go anyway
-    } finally {
-      setLoading(false);
-      onOpenChange(false);
     }
   };
 

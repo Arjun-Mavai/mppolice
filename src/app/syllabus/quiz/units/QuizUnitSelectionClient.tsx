@@ -24,6 +24,7 @@ interface QuizUnitSelectionClientProps {
     totalQuestions: number | null;
     isFree: boolean;
     isFreeAccess: boolean;
+    isLiteAccess?: boolean; // Added access flag
   }[];
 }
 
@@ -52,6 +53,8 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
         ? 'lite'
         : userTier
       : 'free';
+  // 🔒 ACCESS CONTROL: Only PRO users get full access to Unit Tests
+  // REVERT: Lite users SHOULD see Unit tests (based on user request)
   const hasActivePlan = effectiveTier === 'lite' || effectiveTier === 'pro';
 
   const handleUnitClick = (testId: string, isLocked: boolean) => {
@@ -106,8 +109,15 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
                   unitData?.title ||
                   'Unknown Unit';
 
-              // Backend-only: lock if NOT free access AND no active plan AND not admin
-              const isLocked = !test.isFreeAccess && !hasActivePlan && !isAdmin;
+              // 🔒 GRANULAR ACCESS CONTROL
+              // True if: Admin OR Free Access OR Pro User OR (Lite User + Lite Access)
+              const hasAccess =
+                isAdmin ||
+                test.isFreeAccess ||
+                userTier === 'pro' ||
+                (userTier === 'lite' && test.isLiteAccess);
+
+              const isLocked = !hasAccess;
 
               const totalQuestions = test.totalQuestions || unitData?.topics?.length || 0;
               const totalMarks = totalQuestions * QUIZ_CONSTANTS.MARKS_PER_QUESTION;

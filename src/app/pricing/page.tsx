@@ -31,14 +31,13 @@ import {
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { PRICING_DEFAULTS, LITE_FEATURES, PRO_FEATURES } from '@/config/pricing';
 import { PaymentModal } from '@/components/payment/PaymentModal';
 import { PricingCard } from '@/components/PricingCard';
 import { getPricingData } from '@/actions/pricing-actions';
 import { useQuery } from '@tanstack/react-query';
-
-import { ExitSurveyModal } from '@/components/ExitSurveyModal';
 
 // ── FAQ data — bilingual ────────────────────────────────────
 const faqData = [
@@ -131,18 +130,16 @@ export default function PricingPage() {
     planType: 'pro' as 'lite' | 'pro' | 'upgrade',
     name: '',
   });
-  // ── Exit Survey Logic ─────────────────────────────────────
-  const [showExitSurvey, setShowExitSurvey] = useState(false);
+
   const { language, user } = useSettingsStore();
   const hi = language === 'hi';
   const router = useRouter();
   const planTier = user?.planTier ?? 'free';
   const isProUser = planTier === 'pro';
   const isLiteUser = planTier === 'lite';
-  // const isLoggedIn = !!user;
 
   // 🔒 Fetch pricing with React Query + Server Action
-  const { data: pricingData } = useQuery({
+  const { data: pricingData, isLoading } = useQuery({
     queryKey: ['pricing'],
     queryFn: async () => await getPricingData(),
     staleTime: 5 * 60 * 1000, // 5 minutes cache
@@ -168,40 +165,24 @@ export default function PricingPage() {
     setShowPaymentModal(true);
   };
 
-  // Calculated values
-  // const liteDiscount = calcDiscount(p.litePrice, p.liteOriginalPrice);
-  // const proDiscount = calcDiscount(p.proPrice, p.proOriginalPrice);
-  // const liteMonthly = calcMonthly(p.litePrice, p.liteMonths);
-  // const proMonthly = calcMonthly(p.proPrice, p.proMonths);
-
-  // Intercept back button
-  useEffect(() => {
-    // Only intercept if user is NOT a pro member already
-    if (isProUser) return;
-
-    // Check if survey already completed
-    const surveyDone = localStorage.getItem('payment_exit_survey_completed');
-    if (surveyDone) return;
-
-    // Push state to intercept
-    window.history.pushState({ pricingActive: true }, '');
-
-    const handlePopState = () => {
-      setShowExitSurvey(true);
-      // Don't push state again immediately, let them go back if they confirm in modal
-      // But for now, we want to show modal FIRST.
-      // If they close modal without submitting, we let them go?
-      // The modal logic handles "Let them go anyway".
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [isProUser]);
-
-  const handleConfirmExit = () => {
-    setShowExitSurvey(false);
-    router.back(); // Actually go back now
-  };
+  // 🦴 SKELETON LOADING STATE (Correct Placement)
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white pt-24 pb-20">
+        <div className="mx-auto max-w-5xl px-4">
+          <div className="mb-12 space-y-4 text-center">
+            <Skeleton className="mx-auto h-8 w-48 rounded-full" />
+            <Skeleton className="mx-auto h-12 w-3/4 max-w-lg rounded-xl" />
+            <Skeleton className="mx-auto h-6 w-1/2 max-w-md rounded-lg" />
+          </div>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            <div className="h-[600px] w-full animate-pulse rounded-3xl bg-slate-100" />
+            <div className="h-[600px] w-full animate-pulse rounded-3xl bg-slate-100" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-slate-100 selection:text-slate-900">
@@ -385,12 +366,6 @@ export default function PricingPage() {
         onOpenChange={setShowPaymentModal}
         planType={selectedPlan.planType}
         planName={selectedPlan.name}
-      />
-
-      <ExitSurveyModal
-        open={showExitSurvey}
-        onOpenChange={setShowExitSurvey}
-        onConfirmExit={handleConfirmExit}
       />
     </div>
   );

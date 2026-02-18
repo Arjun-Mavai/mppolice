@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSettingsStore, User as StoreUser } from '@/store/useSettingsStore';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { logger } from '@/lib/logger';
 import { toast } from 'sonner';
 import { usePwa } from '@/hooks/usePwa';
@@ -65,6 +65,11 @@ type UnifiedUser = StoreUser & PropUser;
 export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Use Global Store
   const {
@@ -346,8 +351,9 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
             <div className="hidden h-6 w-px bg-slate-200 sm:block"></div>
 
             {/* LOADING STATE FIX: Don't show login button while checking auth */}
-            {(authCheckStatus === 'idle' || authCheckStatus === 'loading') && !user ? (
-              // Show skeleton while checking auth to prevent flash
+            {!isMounted ||
+            ((authCheckStatus === 'idle' || authCheckStatus === 'loading') && !user) ? (
+              // Show skeleton while checking auth or hydrating to prevent flash/mismatch
               <div className="hidden h-10 w-10 animate-pulse rounded-full bg-slate-100 md:flex" />
             ) : user ? (
               <DropdownMenu modal={false}>
@@ -408,247 +414,258 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
             )}
 
             {/* Mobile Menu */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full md:hidden">
-                  <Menu className="h-6 w-6 text-slate-600" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent
-                side="right"
-                className="z-[150] flex w-[300px] flex-col p-0 sm:w-[360px]"
-              >
-                <SheetHeader className="border-b border-slate-100 bg-slate-50/50 p-6 text-left">
-                  <div className="flex items-center gap-3">
-                    {/* LOADING STATE FIX: Show skeleton in mobile menu too */}
-                    {(authCheckStatus === 'idle' || authCheckStatus === 'loading') && !user ? (
-                      <>
-                        <div className="h-10 w-10 animate-pulse rounded-full bg-slate-200" />
-                        <div className="flex flex-1 flex-col gap-2">
-                          <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
-                          <div className="h-3 w-32 animate-pulse rounded bg-slate-200" />
-                        </div>
-                        <SheetTitle className="sr-only">Loading...</SheetTitle>
-                      </>
-                    ) : user ? (
-                      <>
-                        <div className="relative">
-                          <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
-                            <AvatarImage src={user.image || ''} />
-                            <AvatarFallback className="bg-slate-900 font-bold text-white">
-                              {user.name?.charAt(0).toUpperCase() || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                          {user.isPro && (
-                            <div
-                              className="absolute -right-1 -bottom-1 rounded-full border-2 border-white bg-amber-400 p-0.5 text-white"
-                              title="Premium"
-                            >
-                              <Sparkles size={10} className="fill-white" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm leading-none font-bold text-slate-900">
-                              {user.name}
-                            </span>
+            {isMounted ? (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full md:hidden">
+                    <Menu className="h-6 w-6 text-slate-600" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent
+                  side="right"
+                  className="z-[150] flex w-[300px] flex-col p-0 sm:w-[360px]"
+                >
+                  <SheetHeader className="border-b border-slate-100 bg-slate-50/50 p-6 text-left">
+                    <div className="flex items-center gap-3">
+                      {/* LOADING STATE FIX: Show skeleton in mobile menu too */}
+                      {(authCheckStatus === 'idle' || authCheckStatus === 'loading') && !user ? (
+                        <>
+                          <div className="h-10 w-10 animate-pulse rounded-full bg-slate-200" />
+                          <div className="flex flex-1 flex-col gap-2">
+                            <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
+                            <div className="h-3 w-32 animate-pulse rounded bg-slate-200" />
+                          </div>
+                          <SheetTitle className="sr-only">Loading...</SheetTitle>
+                        </>
+                      ) : user ? (
+                        <>
+                          <div className="relative">
+                            <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
+                              <AvatarImage src={user.image || ''} />
+                              <AvatarFallback className="bg-slate-900 font-bold text-white">
+                                {user.name?.charAt(0).toUpperCase() || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
                             {user.isPro && (
-                              <span className="rounded border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-amber-700 uppercase">
-                                Pro
+                              <div
+                                className="absolute -right-1 -bottom-1 rounded-full border-2 border-white bg-amber-400 p-0.5 text-white"
+                                title="Premium"
+                              >
+                                <Sparkles size={10} className="fill-white" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm leading-none font-bold text-slate-900">
+                                {user.name}
                               </span>
-                            )}
+                              {user.isPro && (
+                                <span className="rounded border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-amber-700 uppercase">
+                                  Pro
+                                </span>
+                              )}
+                            </div>
+                            <span className="mt-1 max-w-[180px] truncate text-xs text-slate-500">
+                              {user.email}
+                            </span>
                           </div>
-                          <span className="mt-1 max-w-[180px] truncate text-xs text-slate-500">
-                            {user.email}
-                          </span>
-                        </div>
-                        <SheetTitle className="sr-only">Menu</SheetTitle>
-                      </>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white">
-                          <span className="text-xs font-bold">MP</span>
-                        </div>
-                        <SheetTitle className="font-display text-lg font-bold">Menu</SheetTitle>
-                      </div>
-                    )}
-                  </div>
-                </SheetHeader>
-
-                <div className="flex-1 space-y-1 overflow-y-auto px-4 py-5">
-                  {navItems
-                    .filter((item) => {
-                      // Dashboard & Test History — logged-in users only
-                      if (item.name === 'Dashboard' || item.name === 'Test History') return !!user;
-                      // About Us — logged-in users only (they see home as about page)
-                      if (item.name === 'About Us') return !!user;
-                      return true;
-                    })
-                    .map((item) => {
-                      const isActive = pathname === item.href;
-                      const Icon = item.icon;
-                      return (
-                        <SheetClose asChild key={item.href}>
-                          <Link
-                            href={item.href}
-                            className={cn(
-                              'flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-200',
-                              isActive
-                                ? 'bg-slate-900 text-white shadow-sm'
-                                : 'text-slate-700 hover:bg-slate-100 active:bg-slate-200'
-                            )}
-                          >
-                            <Icon size={18} className={cn(isActive ? 'text-white' : item.color)} />
-                            {item.name}
-                          </Link>
-                        </SheetClose>
-                      );
-                    })}
-
-                  <SheetClose asChild>
-                    <a
-                      href="https://t.me/MPPSC2026_Mission"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-sky-50 hover:text-sky-600"
-                    >
-                      <Send size={18} />
-                      Join Telegram
-                    </a>
-                  </SheetClose>
-
-                  <div className="pt-3">
-                    {user?.isSubscribed && user.planTier === 'pro' ? (
-                      <div className="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900 p-4 shadow-sm">
-                        <div className="relative z-10 flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
-                            <Crown size={14} className="fill-yellow-400 text-yellow-400" />
+                          <SheetTitle className="sr-only">Menu</SheetTitle>
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white">
+                            <span className="text-xs font-bold">MP</span>
                           </div>
-                          <div>
-                            <h4 className="text-sm leading-tight font-bold text-white">
-                              Pro Active
-                            </h4>
-                            <p className="text-[10px] font-medium text-slate-400">
-                              All Features Unlocked
-                            </p>
-                          </div>
+                          <SheetTitle className="font-display text-lg font-bold">Menu</SheetTitle>
                         </div>
-                      </div>
-                    ) : user?.isSubscribed && user.planTier === 'lite' ? (
-                      <>
-                        {/* Lite tag in mobile menu */}
-                        <div className="rounded-xl border border-slate-200 bg-slate-100 p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-200">
-                              <Crown size={14} className="text-pink-500" />
+                      )}
+                    </div>
+                  </SheetHeader>
+
+                  <div className="flex-1 space-y-1 overflow-y-auto px-4 py-5">
+                    {navItems
+                      .filter((item) => {
+                        // Dashboard & Test History — logged-in users only
+                        if (item.name === 'Dashboard' || item.name === 'Test History')
+                          return !!user;
+                        // About Us — logged-in users only (they see home as about page)
+                        if (item.name === 'About Us') return !!user;
+                        return true;
+                      })
+                      .map((item) => {
+                        const isActive = pathname === item.href;
+                        const Icon = item.icon;
+                        return (
+                          <SheetClose asChild key={item.href}>
+                            <Link
+                              href={item.href}
+                              className={cn(
+                                'flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-200',
+                                isActive
+                                  ? 'bg-slate-900 text-white shadow-sm'
+                                  : 'text-slate-700 hover:bg-slate-100 active:bg-slate-200'
+                              )}
+                            >
+                              <Icon
+                                size={18}
+                                className={cn(isActive ? 'text-white' : item.color)}
+                              />
+                              {item.name}
+                            </Link>
+                          </SheetClose>
+                        );
+                      })}
+
+                    <SheetClose asChild>
+                      <a
+                        href="https://t.me/MPPSC2026_Mission"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-sky-50 hover:text-sky-600"
+                      >
+                        <Send size={18} />
+                        Join Telegram
+                      </a>
+                    </SheetClose>
+
+                    <div className="pt-3">
+                      {user?.isSubscribed && user.planTier === 'pro' ? (
+                        <div className="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900 p-4 shadow-sm">
+                          <div className="relative z-10 flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
+                              <Crown size={14} className="fill-yellow-400 text-yellow-400" />
                             </div>
                             <div>
-                              <h4 className="text-sm font-bold text-slate-900">Lite Member</h4>
-                              <p className="text-[10px] text-slate-500">Limited Access</p>
+                              <h4 className="text-sm leading-tight font-bold text-white">
+                                Pro Active
+                              </h4>
+                              <p className="text-[10px] font-medium text-slate-400">
+                                All Features Unlocked
+                              </p>
                             </div>
                           </div>
                         </div>
-                        {/* Animated Upgrade button — red/pink spinning border */}
-                        <SheetClose asChild>
-                          <Link href="/upgrade" className="mt-2 block">
-                            <div className="relative overflow-hidden rounded-xl p-[1.5px]">
-                              <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#ec4899,#ef4444,#f59e0b,#8b5cf6,#3b82f6,#ec4899,#ef4444,#f59e0b,#ec4899)]" />
-                              <div className="relative flex items-center gap-3 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white">
-                                <Sparkles size={18} className="text-pink-400" />
-                                Upgrade to Pro
+                      ) : user?.isSubscribed && user.planTier === 'lite' ? (
+                        <>
+                          {/* Lite tag in mobile menu */}
+                          <div className="rounded-xl border border-slate-200 bg-slate-100 p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-200">
+                                <Crown size={14} className="text-pink-500" />
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-bold text-slate-900">Lite Member</h4>
+                                <p className="text-[10px] text-slate-500">Limited Access</p>
                               </div>
                             </div>
-                          </Link>
-                        </SheetClose>
-                      </>
-                    ) : (
-                      <>
+                          </div>
+                          {/* Animated Upgrade button — red/pink spinning border */}
+                          <SheetClose asChild>
+                            <Link href="/pricing" className="mt-2 block">
+                              <div className="relative overflow-hidden rounded-xl p-[1.5px]">
+                                <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#ec4899,#ef4444,#f59e0b,#8b5cf6,#3b82f6,#ec4899,#ef4444,#f59e0b,#ec4899)]" />
+                                <div className="relative flex items-center gap-3 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white">
+                                  <Sparkles size={18} className="text-pink-400" />
+                                  Upgrade to Pro
+                                </div>
+                              </div>
+                            </Link>
+                          </SheetClose>
+                        </>
+                      ) : (
+                        <>
+                          <SheetClose asChild>
+                            <Link
+                              href="/pricing"
+                              className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-amber-50 active:bg-amber-100"
+                            >
+                              <Sparkles size={18} className="text-amber-500" />
+                              Pricing
+                            </Link>
+                          </SheetClose>
+                          <SheetClose asChild>
+                            <Link
+                              href="/upgrade"
+                              className="flex items-center gap-3 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-slate-900/20 transition-all duration-200 active:scale-[0.98]"
+                            >
+                              <Crown size={18} className="text-yellow-400" />
+                              Become Premium Member
+                            </Link>
+                          </SheetClose>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Admin Controls — single link to admin panel (sidebar handles rest) */}
+                    {user?.role === 'admin' && (
+                      <div className="mt-4 border-t border-slate-100 pt-4">
+                        <p className="mb-2 px-4 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                          Admin
+                        </p>
+                        <div className="space-y-1">
+                          <SheetClose asChild>
+                            <Link
+                              href="/admin/dashboard"
+                              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 transition-all hover:bg-slate-100"
+                            >
+                              <LayoutDashboard size={18} /> Admin Dashboard
+                            </Link>
+                          </SheetClose>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Install App Button */}
+                    {isInstallable && (
+                      <div className="mt-4 border-t border-slate-100 pt-4">
                         <SheetClose asChild>
-                          <Link
-                            href="/pricing"
-                            className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-amber-50 active:bg-amber-100"
+                          <button
+                            onClick={installPwa}
+                            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-600"
                           >
-                            <Sparkles size={18} className="text-amber-500" />
-                            Pricing
-                          </Link>
+                            <Download size={18} />
+                            Install App
+                          </button>
                         </SheetClose>
-                        <SheetClose asChild>
-                          <Link
-                            href="/upgrade"
-                            className="flex items-center gap-3 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-slate-900/20 transition-all duration-200 active:scale-[0.98]"
-                          >
-                            <Crown size={18} className="text-yellow-400" />
-                            Become Premium Member
-                          </Link>
-                        </SheetClose>
-                      </>
+                      </div>
                     )}
                   </div>
 
-                  {/* Admin Controls — single link to admin panel (sidebar handles rest) */}
-                  {user?.role === 'admin' && (
-                    <div className="mt-4 border-t border-slate-100 pt-4">
-                      <p className="mb-2 px-4 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                        Admin
-                      </p>
-                      <div className="space-y-1">
-                        <SheetClose asChild>
-                          <Link
-                            href="/admin/dashboard"
-                            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 transition-all hover:bg-slate-100"
-                          >
-                            <LayoutDashboard size={18} /> Admin Dashboard
-                          </Link>
-                        </SheetClose>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Install App Button */}
-                  {isInstallable && (
-                    <div className="mt-4 border-t border-slate-100 pt-4">
+                  <div className="border-t border-slate-100 bg-slate-50/50 p-4">
+                    {user ? (
                       <SheetClose asChild>
-                        <button
-                          onClick={installPwa}
-                          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-600"
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
+                          onClick={handleLogout}
                         >
-                          <Download size={18} />
-                          Install App
-                        </button>
+                          <LogOut size={16} className="mr-2" />
+                          Logout
+                        </Button>
                       </SheetClose>
-                    </div>
-                  )}
-                </div>
-
-                <div className="border-t border-slate-100 bg-slate-50/50 p-4">
-                  {user ? (
-                    <SheetClose asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
-                        onClick={handleLogout}
-                      >
-                        <LogOut size={16} className="mr-2" />
-                        Logout
-                      </Button>
-                    </SheetClose>
-                  ) : (
-                    <SheetClose asChild>
-                      <Button
-                        asChild
-                        className="w-full rounded-xl bg-slate-900 font-bold text-white hover:bg-slate-800"
-                      >
-                        <Link href="/login" prefetch={false}>
-                          Log in
-                        </Link>
-                      </Button>
-                    </SheetClose>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
+                    ) : (
+                      <SheetClose asChild>
+                        <Button
+                          asChild
+                          className="w-full rounded-xl bg-slate-900 font-bold text-white hover:bg-slate-800"
+                        >
+                          <Link href="/login" prefetch={false}>
+                            Log in
+                          </Link>
+                        </Button>
+                      </SheetClose>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            ) : (
+              // Placeholder for mobile menu until mounted
+              <Button variant="ghost" size="icon" className="rounded-full md:hidden">
+                <Menu className="h-6 w-6 text-slate-600" />
+              </Button>
+            )}
           </div>
         </div>
       </div>

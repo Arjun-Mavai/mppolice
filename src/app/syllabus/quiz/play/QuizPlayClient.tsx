@@ -20,6 +20,7 @@ const QuizInterface = dynamic(
   }
 );
 import { Question } from '@/types/quiz';
+import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
@@ -168,7 +169,7 @@ export function QuizPlayClient({
       testId={testId}
       title={title}
       userId={userId}
-      timeLimitInMinutes={mode === 'full' ? 120 : 20} // 2 hours for FLT, 20 mins for Unit
+      timeLimitInMinutes={Math.ceil(questions.length * QUIZ_CONSTANTS.TIME_PER_QUESTION_MINUTES)}
       onExit={() => router.push('/syllabus/quiz')}
       onRetry={() => {
         // Optimistic update, server should re-validate
