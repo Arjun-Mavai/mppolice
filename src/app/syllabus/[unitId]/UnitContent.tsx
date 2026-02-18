@@ -123,12 +123,12 @@ export default function UnitContent({
     if (type === 'unit') {
       // Unit Test: Free users can only access first 5 topics in Unit 1, logged users get full access
       if (user || isSubscribed) {
-        router.push(`/syllabus/quiz/play?mode=topic&unit=${unitId}`);
+        router.push(`/syllabus/quiz/units`);
         return;
       }
       // Free non-logged users: Only Unit 1 allowed
       if (unitId === 'unit_1') {
-        router.push(`/syllabus/quiz/play?mode=topic&unit=${unitId}`);
+        router.push(`/syllabus/quiz/topic`);
         return;
       }
       setIsUnlockModalOpen(true);
@@ -138,7 +138,7 @@ export default function UnitContent({
     if (type === 'topic' && topicId) {
       const index = currentTopics.findIndex((t) => t.id === topicId);
       if (!isTopicLocked(currentTopics[index], index)) {
-        router.push(`/syllabus/quiz/play?mode=topic&unit=${unitId}&topic=${topicId}`);
+        router.push(`/syllabus/quiz/topic`);
       } else {
         setIsUnlockModalOpen(true);
       }

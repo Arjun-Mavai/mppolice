@@ -1,20 +1,31 @@
 'use client';
-import { useState, useTransition, useEffect } from 'react';
+
+// 1. External Imports
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { Loader2, ArrowLeft, Search, BookOpen, Sparkles, Crown } from 'lucide-react';
+
+// 2. Internal Imports (Components)
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Search, BookOpen, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
-import { logger } from '@/lib/logger';
+import { Skeleton } from '@/components/ui/skeleton';
+import { BlogSkeleton } from '@/components/skeletons/BlogSkeleton';
 import { BlogCard } from '@/components/blog/BlogCard';
 import { SearchInput } from '@/components/blog/SearchInput';
+
+// 3. Internal Imports (Utils/Stores/Actions)
+import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { canAccessBlog } from '@/lib/access-control';
 import { getBlogs } from '@/actions/blog-actions';
-import { redirect } from 'next/navigation';
+import type { mppscUsers, contentBlogs } from '@/db/schema';
+
+// Type Definitions derived from Drizzle Schema
+type User = typeof mppscUsers.$inferSelect;
+type Blog = typeof contentBlogs.$inferSelect;
 
 interface BlogsClientProps {
-  initialBlogs: any[];
+  initialBlogs: Blog[];
   initialPagination: {
     page: number;
     limit: number;
@@ -25,37 +36,123 @@ interface BlogsClientProps {
     units: Record<string, number>;
     categories: Record<string, number>;
   };
+  user: User | null;
 }
 
+// Runtime guard to ensure a value conforms to the database User shape
+const isDatabaseUser = (value: unknown): value is User => {
+  return !!value && typeof value === 'object' && 'id' in value && 'isSubscribed' in value;
+};
+
+/**
+ * BlogsClient — Main client component for the Blogs page.
+ * Handles:
+ * - Infinite scrolling (Load More)
+ * - Filtering by Unit/Category/Free
+ * - Search with debouncing
+ * - Access control & locking UI
+ */
 export default function BlogsClient({
   initialBlogs,
   initialPagination,
   initialCounts,
+  user,
 }: BlogsClientProps) {
-  const { user: currentUser } = useSettingsStore();
-  const router = useRouter();
+  // ------------------------------------------------------------------
+  // 🪝 HOOKS (Strict Order: Store -> Router -> State -> Effects -> Query)
+  // ------------------------------------------------------------------
 
-  // State
-  const [blogs, setBlogs] = useState<any[]>(initialBlogs);
-  const [pagination, setPagination] = useState(initialPagination);
+  // 1. Store Hooks
+  const { user: storeUser, authCheckStatus } = useSettingsStore();
+
+  // 2. Router Hooks
+  // const router = useRouter();
+
+  // 3. State Hooks
   const [activeUnit, setActiveUnit] = useState<string>('Free');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
 
-  const [isPending, startTransition] = useTransition();
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  // 4. Effect Hooks (Debounce Search)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
+  // 5. Query Hooks (Data Fetching)
+  // Derived fetch parameters to ensure Query Key matches actual fetch logic
+  const fetchUnitId = activeUnit === 'Free' || activeUnit === 'General' ? 'All' : activeUnit;
+  const fetchCategory = activeUnit === 'General' ? activeCategory : 'All';
+  // STRICT FILTERING: If tab is 'Free', explicitly request only isFreeAccess=true
+  const fetchIsFreeAccess = activeUnit === 'Free' ? true : undefined;
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isBlogsLoading,
+    isError,
+    error,
+    refetch,
+  } = useInfiniteQuery({
+    // ⚡ PERFORMANCE: Use actual fetch parameters in key to avoid duplicate caching
+    queryKey: ['blogs', fetchUnitId, fetchCategory, fetchIsFreeAccess, debouncedSearch],
+    queryFn: async ({ pageParam = 1 }) => {
+      return await getBlogs({
+        page: pageParam as number,
+        limit: 10,
+        unitId: fetchUnitId,
+        category: fetchCategory,
+        search: debouncedSearch,
+        isFreeAccess: fetchIsFreeAccess,
+      });
+    },
+    getNextPageParam: (lastPage) => {
+      return lastPage.pagination.hasMore ? lastPage.pagination.page + 1 : undefined;
+    },
+    initialPageParam: 1,
+    // Hydrate initial data ONLY if it matches the default 'Free' tab state
+    initialData:
+      activeUnit === 'Free' && activeCategory === 'All' && !debouncedSearch
+        ? {
+            pages: [{ blogs: initialBlogs, pagination: initialPagination }],
+            pageParams: [1],
+          }
+        : undefined,
+    // ⚡ PERFORMANCE: Cache for 5 minutes prevents "White Screen" on back navigation
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // ------------------------------------------------------------------
+  // 🧠 DERIVED STATE & CONSTANTS
+  // ------------------------------------------------------------------
+
+  // User resolution: Server prop > Store fallback
+  // User resolution: Server prop > Store fallback (only if it matches User shape)
+  // Both sources use camelCase (Drizzle Schema & Zustand Store)
+  const effectiveUser = user || (isDatabaseUser(storeUser) ? storeUser : undefined);
+  const currentUser = effectiveUser || null; // Ensure strictly User | null (no undefined)
   const isGuest = !currentUser?.isSubscribed;
 
-  // Tabs: Free first, then General (Subjects), then Unit 1-10
+  // Flatten infinite query pages
+  const blogs = data?.pages.flatMap((page) => page.blogs) || [];
+  const hasMore = hasNextPage;
+
+  // Strict Loading Sync: Wait for auth check if no server user is present
+  const isAuthLoading = !user && (authCheckStatus === 'idle' || authCheckStatus === 'loading');
+
+  // Tab Definitions
   const tabs = isGuest
     ? ['Free', 'General', 'All', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)]
     : ['General', 'All', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)];
 
-  // Subject options (categories) - mapping database categories to readable names
   const subjects = [
     { id: 'All', label: 'All Subjects' },
-    { id: 'general', label: 'General / Exam Info' }, // (Syllabus, Result, Notifications)
+    { id: 'general', label: 'General / Exam Info' },
     { id: 'history', label: 'History' },
     { id: 'geography', label: 'Geography' },
     { id: 'polity', label: 'Polity' },
@@ -66,84 +163,81 @@ export default function BlogsClient({
     { id: 'current_affairs', label: 'Current Affairs' },
   ];
 
-  // Mount prefetching for initial blogs to ensure "light speed"
-  useEffect(() => {
-    initialBlogs.slice(0, 5).forEach((blog) => {
-      router.prefetch(`/blogs/${blog.slug}`);
-    });
-  }, []);
+  // ------------------------------------------------------------------
+  // 🧨 EVENT HANDLERS
+  // ------------------------------------------------------------------
+  const handleUnitChange = (unit: string) => setActiveUnit(unit);
+  const handleLoadMore = () => fetchNextPage();
 
-  // Initial Fetch / Filter Change
-  const fetchBlogs = async (reset = false) => {
-    startTransition(async () => {
-      try {
-        const result = await getBlogs({
-          page: 1,
-          limit: 10,
-          unitId: activeUnit === 'Free' || activeUnit === 'General' ? 'All' : activeUnit,
-          category: activeUnit === 'General' ? activeCategory : 'All',
-          search: searchQuery,
-          isFreeAccess: activeUnit === 'Free' ? true : undefined,
-        });
+  // ------------------------------------------------------------------
+  // 💀 SKELETON / LOADING UI
+  // ------------------------------------------------------------------
+  if (isAuthLoading || (isBlogsLoading && !data)) {
+    return (
+      <div className="min-h-screen bg-white">
+        {/* Header Skeleton */}
+        <div className="sticky top-16 z-30 border-b border-slate-200 bg-white shadow-sm">
+          <div className="mx-auto max-w-7xl px-4 py-4 md:px-8">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-48 rounded-lg" />
+                <Skeleton className="h-4 w-32 rounded-lg" />
+              </div>
+              <Skeleton className="h-10 w-full rounded-lg md:w-96" />
+            </div>
+            <div className="mt-6 flex gap-2 overflow-hidden">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Skeleton key={i} className="h-9 w-24 rounded-full" />
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-8 md:px-8 lg:grid-cols-4">
+          <div className="hidden lg:col-span-1 lg:block">
+            <div className="sticky top-44">
+              <Skeleton className="h-64 w-full rounded-2xl" />
+            </div>
+          </div>
+          <div className="space-y-6 lg:col-span-3">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {[1, 2, 3, 4].map((i) => (
+                <BlogSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-        setBlogs(result.blogs);
-        setPagination(result.pagination);
-      } catch (error) {
-        logger.error('Failed to fetch blogs', error, {
-          category: 'content',
-          metadata: { unit: activeUnit, search: searchQuery },
-        });
-      }
-    });
-  };
+  // Error State
+  if (isError) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
+        <div className="rounded-full bg-red-50 p-4">
+          <BookOpen className="h-8 w-8 text-red-500" />
+        </div>
+        <h3 className="text-lg font-bold text-slate-800">Failed to load articles</h3>
+        <p className="max-w-md text-sm text-slate-500">
+          {error instanceof Error ? error.message : 'Something went wrong while fetching articles.'}
+        </p>
+        <Button onClick={() => refetch()} variant="outline">
+          Try Again
+        </Button>
+      </div>
+    );
+  }
 
-  // Load More Action
-  const handleLoadMore = async () => {
-    if (!pagination.hasMore || isLoadingMore) return;
-    setIsLoadingMore(true);
-
-    try {
-      const nextPage = pagination.page + 1;
-      const result = await getBlogs({
-        page: nextPage,
-        limit: 10,
-        unitId: activeUnit === 'Free' || activeUnit === 'General' ? 'All' : activeUnit,
-        category: activeUnit === 'General' ? activeCategory : 'All',
-        search: searchQuery,
-        isFreeAccess: activeUnit === 'Free' ? true : undefined,
-      });
-
-      setBlogs((prev) => [...prev, ...result.blogs]);
-      setPagination(result.pagination);
-    } catch (error) {
-      logger.error('Failed to load more blogs', error, {
-        category: 'content',
-        metadata: { page: pagination.page + 1, unit: activeUnit },
-      });
-    } finally {
-      setIsLoadingMore(false);
-    }
-  };
-
-  // Debounce Search & Filter Effect
-  useEffect(() => {
-    // Debounce search to prevent rapid server calls
-    const timer = setTimeout(() => {
-      fetchBlogs(true);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [activeUnit, activeCategory, searchQuery]); // Re-fetch when unit, category or search changes
-
-  const handleUnitChange = (unit: string) => {
-    setActiveUnit(unit);
-  };
-
+  // ------------------------------------------------------------------
+  // 🎨 MAIN RENDER
+  // ------------------------------------------------------------------
   return (
     <div className="min-h-screen bg-white">
       {/* Header Section */}
       <div className="sticky top-16 z-30 border-b border-slate-200 bg-white shadow-sm">
         <div className="mx-auto max-w-7xl px-4 py-4 md:px-8">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+            {/* Logo/Back + Mobile Nav */}
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
@@ -175,25 +269,30 @@ export default function BlogsClient({
             </div>
           </div>
 
+          {/* Tab Navigation */}
           <div className="no-scrollbar -mx-4 mt-4 flex snap-x gap-2 overflow-x-auto px-4 pt-2 pb-2 md:mx-0 md:px-0">
             {tabs.map((tab) => {
               const count =
                 tab === 'General'
                   ? initialCounts.categories['general'] || 0
                   : initialCounts.units[tab] || 0;
+              const isActive = activeUnit === tab;
+              const isFreeTab = tab === 'Free';
+
               return (
                 <button
                   key={tab}
                   onClick={() => handleUnitChange(tab)}
-                  className={`group flex snap-start items-center gap-2 rounded-full border px-5 py-2.5 text-xs font-bold whitespace-nowrap transition-all ${
-                    tab === 'Free' && activeUnit === 'Free'
+                  className={cn(
+                    'group flex snap-start items-center gap-2 rounded-full border px-5 py-2.5 text-xs font-bold whitespace-nowrap transition-all',
+                    isFreeTab && isActive
                       ? 'scale-105 border-emerald-600 bg-emerald-600 text-white shadow-lg shadow-emerald-200'
-                      : tab === 'Free' && activeUnit !== 'Free'
+                      : isFreeTab && !isActive
                         ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                        : activeUnit === tab
+                        : isActive
                           ? 'scale-105 border-slate-900 bg-slate-900 text-white shadow-lg shadow-slate-300'
                           : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                  } `}
+                  )}
                 >
                   <span>
                     {tab === 'All'
@@ -206,7 +305,12 @@ export default function BlogsClient({
                   </span>
                   {count > 0 && (
                     <span
-                      className={`flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[10px] font-black transition-colors ${activeUnit === tab ? 'bg-white text-slate-900' : 'bg-emerald-500 text-white group-hover:bg-emerald-600'} `}
+                      className={cn(
+                        'flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[10px] font-black transition-colors',
+                        isActive
+                          ? 'bg-white text-slate-900'
+                          : 'bg-emerald-500 text-white group-hover:bg-emerald-600'
+                      )}
                     >
                       {count}
                     </span>
@@ -216,7 +320,7 @@ export default function BlogsClient({
             })}
           </div>
 
-          {/* Subject Tabs (Visible only when General is active) */}
+          {/* Sub-Category Tabs (Only for General) */}
           {activeUnit === 'General' && (
             <div className="animate-in fade-in slide-in-from-top-2 no-scrollbar -mx-4 mt-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
               {subjects.map((subject) => {
@@ -232,11 +336,12 @@ export default function BlogsClient({
                   <button
                     key={subject.id}
                     onClick={() => setActiveCategory(subject.id)}
-                    className={`group flex snap-start items-center gap-2 rounded-lg border px-4 py-2 text-[11px] font-black tracking-tight whitespace-nowrap transition-all ${
+                    className={cn(
+                      'group flex snap-start items-center gap-2 rounded-lg border px-4 py-2 text-[11px] font-black tracking-tight whitespace-nowrap transition-all',
                       isActive
                         ? 'border-slate-900 bg-slate-100 text-slate-900'
                         : 'border-slate-100 bg-slate-50 text-slate-500 hover:bg-slate-100'
-                    }`}
+                    )}
                   >
                     <span>{subject.label}</span>
                     {count > 0 && (
@@ -255,7 +360,7 @@ export default function BlogsClient({
             </div>
           )}
 
-          {/* Active Unit Breadcrumb */}
+          {/* Breadcrumbs */}
           {activeUnit !== 'All' && activeUnit !== 'General' && activeUnit !== 'Free' && (
             <div className="animate-in fade-in slide-in-from-top-1 mt-3 flex items-center gap-2 text-sm text-slate-600">
               <span className="font-bold text-slate-800">Unit {activeUnit.split('_')[1]}</span>
@@ -275,147 +380,186 @@ export default function BlogsClient({
         {/* Sidebar (Desktop Only) — clean dark style */}
         <div className="hidden space-y-6 lg:col-span-1 lg:block">
           <div className="sticky top-44 space-y-6">
-            <div className="group relative overflow-hidden rounded-2xl bg-slate-900 p-6 text-white shadow-xl">
-              <div className="absolute top-0 right-0 p-4 opacity-10 transition-opacity group-hover:opacity-20">
-                <BookOpen size={80} />
+            <div className="group relative overflow-hidden rounded-2xl bg-slate-900 p-6 text-white shadow-2xl shadow-indigo-500/10">
+              {/* Background Glow */}
+              <div className="absolute top-0 right-0 -mt-10 -mr-10 h-40 w-40 rounded-full bg-indigo-500/20 blur-3xl transition-all duration-700 group-hover:bg-indigo-500/30" />
+              <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-40 w-40 rounded-full bg-pink-500/20 blur-3xl transition-all duration-700 group-hover:bg-pink-500/30" />
+
+              <div className="relative z-10 mb-6 flex items-center justify-between">
+                <div className="rounded-xl bg-white/10 p-3 backdrop-blur-md">
+                  <BookOpen size={24} className="text-white" />
+                </div>
+                {/* Pro Badge */}
+                {currentUser?.planTier === 'pro' && (
+                  <span className="flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[10px] font-bold tracking-wider text-amber-300 uppercase">
+                    <Crown size={10} className="fill-amber-300" /> Pro Active
+                  </span>
+                )}
+                {/* Lite Badge */}
+                {currentUser?.planTier === 'lite' && (
+                  <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[10px] font-bold tracking-wider text-emerald-300 uppercase">
+                    <Crown size={10} className="fill-emerald-300" /> Lite Active
+                  </span>
+                )}
               </div>
-              <h3 className="relative z-10 mb-2 text-lg font-bold">Ace MPPSC 2026</h3>
-              {(currentUser as any)?.is_subscribed ? (
+
+              <h3 className="font-display relative z-10 mb-2 text-xl font-bold tracking-tight">
+                Ace MPPSC 2026
+              </h3>
+
+              {currentUser?.planTier === 'pro' ? (
                 <>
-                  <p className="relative z-10 mb-4 text-sm text-slate-300">
-                    Premium access active! Master your preparation with full mock tests.
+                  <p className="relative z-10 mb-6 text-sm leading-relaxed text-slate-300">
+                    Premium access active! Master your preparation with full mock tests & exclusive
+                    content.
                   </p>
-                  <Button
-                    variant="secondary"
-                    className="w-full font-bold text-slate-900 shadow-lg hover:bg-white"
-                    asChild
-                  >
-                    <Link href="/syllabus/quiz/pyq">Start Practicing</Link>
-                  </Button>
+                  {/* Premium Button */}
+                  <div className="relative overflow-hidden rounded-xl p-[1.5px]">
+                    <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#10b981,#34d399,#059669,#10b981)]" />
+                    <Link
+                      href="/syllabus/quiz/pyq"
+                      className="relative flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white transition-all hover:bg-slate-800"
+                    >
+                      <Sparkles size={16} className="text-emerald-400" />
+                      Start Practicing
+                    </Link>
+                  </div>
                 </>
-              ) : (currentUser as any)?.plan_tier === 'lite' ? (
+              ) : currentUser?.planTier === 'lite' ? (
                 <>
-                  <p className="relative z-10 mb-4 text-sm text-slate-300">
-                    Upgrade to Pro for full Mock Tests.
+                  <p className="relative z-10 mb-6 text-sm leading-relaxed text-slate-300">
+                    Lite Plan Active. Upgrade to <span className="font-bold text-white">Pro</span>{' '}
+                    for unlimited Full Mock Tests & Analytics.
                   </p>
-                  <Button
-                    variant="secondary"
-                    className="w-full font-bold text-slate-900 shadow-lg hover:bg-white"
-                    asChild
-                  >
-                    <Link href="/upgrade">Upgrade to Pro</Link>
-                  </Button>
+                  {/* Premium Button */}
+                  <div className="relative overflow-hidden rounded-xl p-[1.5px] shadow-lg shadow-purple-500/20 transition-all hover:scale-[1.02] hover:shadow-purple-500/40">
+                    <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#d946ef,#f43f5e,#fbbf24,#8b5cf6,#3b82f6,#d946ef)]" />
+                    <Link
+                      href="/pricing"
+                      className="relative flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white transition-all hover:bg-slate-900/90"
+                    >
+                      <Sparkles size={16} className="text-purple-400" />
+                      Upgrade to Pro
+                    </Link>
+                  </div>
                 </>
               ) : (
                 <>
-                  <p className="relative z-10 mb-4 text-sm text-slate-300">
-                    Unlock premium mock tests, analytics, and exclusive content.
+                  <p className="relative z-10 mb-6 text-sm leading-relaxed text-slate-300">
+                    Unlock premium mock tests, detailed analytics, and exclusive content.
                   </p>
-                  <Button
-                    variant="secondary"
-                    className="w-full font-bold text-slate-900 shadow-lg hover:bg-white"
-                    asChild
-                  >
-                    <Link href="/upgrade">Get Premium</Link>
-                  </Button>
+                  {/* Premium Button */}
+                  <div className="relative overflow-hidden rounded-xl p-[1.5px] shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40">
+                    <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#d946ef,#f43f5e,#fbbf24,#8b5cf6,#3b82f6,#d946ef)]" />
+                    <Link
+                      href="/pricing"
+                      className="relative flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white transition-all hover:bg-slate-900/90"
+                    >
+                      <Sparkles size={16} className="fill-white/20 text-yellow-400" />
+                      Get Premium Access
+                    </Link>
+                  </div>
                 </>
               )}
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
+        {/* Main Content Area */}
         <div className="space-y-6 lg:col-span-3">
-          <>
-            {/* BLOG LIST VIEW */}
-            {isPending && blogs.length === 0 ? (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-[300px] animate-pulse rounded-xl bg-slate-100" />
-                ))}
-              </div>
-            ) : (
-              <div className="animate-in fade-in grid grid-cols-1 gap-6 md:grid-cols-2">
-                {(() => {
-                  const displayBlogs = blogs;
+          {/* Blog Grid */}
+          <div className="animate-in fade-in grid grid-cols-1 gap-6 md:grid-cols-2">
+            {(() => {
+              // 1. Loading State (and no pre-fetched data)
+              if (isBlogsLoading && !data) {
+                return (
+                  <>
+                    {[1, 2, 3, 4].map((i) => (
+                      <BlogSkeleton key={i} />
+                    ))}
+                  </>
+                );
+              }
 
-                  if (displayBlogs.length === 0)
-                    return (
-                      <div className="col-span-2 flex flex-col items-center gap-4 py-20 text-center text-slate-400">
-                        <div className="mb-2 flex h-20 w-20 items-center justify-center rounded-full bg-slate-50">
-                          <Search className="h-8 w-8 text-slate-300" />
-                        </div>
-                        <h3 className="text-lg font-bold text-slate-600">
-                          {activeUnit === 'Free' ? 'No free articles yet' : 'No content found'}
-                        </h3>
-                        <p className="mx-auto max-w-xs">
-                          {activeUnit === 'Free' ? (
-                            'Free articles will appear here soon.'
-                          ) : (
-                            <>
-                              No articles found for{' '}
-                              <span className="font-bold text-slate-800">
-                                {activeUnit === 'All'
-                                  ? 'any unit'
-                                  : `Unit ${activeUnit.split('_')[1]}`}
-                              </span>
-                              {searchQuery && <span> matching &quot;{searchQuery}&quot;</span>}.
-                            </>
-                          )}
-                        </p>
-                        {(activeUnit !== 'All' || searchQuery) && (
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setActiveUnit('All');
-                              setSearchQuery('');
-                            }}
-                          >
-                            Clear Filters
-                          </Button>
-                        )}
-                      </div>
-                    );
+              // 2. Empty State
+              if (blogs.length === 0) {
+                return (
+                  <div className="col-span-2 flex flex-col items-center gap-4 py-20 text-center text-slate-400">
+                    <div className="mb-2 flex h-20 w-20 items-center justify-center rounded-full bg-slate-50">
+                      <Search className="h-8 w-8 text-slate-300" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-600">
+                      {activeUnit === 'Free' ? 'No free articles yet' : 'No content found'}
+                    </h3>
+                    <p className="mx-auto max-w-xs">
+                      {activeUnit === 'Free' ? (
+                        'Free articles will appear here soon.'
+                      ) : (
+                        <>
+                          No articles found for{' '}
+                          <span className="font-bold text-slate-800">
+                            {activeUnit === 'All' ? 'any unit' : `Unit ${activeUnit.split('_')[1]}`}
+                          </span>
+                          {searchQuery && <span> matching &quot;{searchQuery}&quot;</span>}.
+                        </>
+                      )}
+                    </p>
+                    {(activeUnit !== 'All' || searchQuery) && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setActiveUnit('All');
+                          setSearchQuery('');
+                        }}
+                      >
+                        Clear Filters
+                      </Button>
+                    )}
+                  </div>
+                );
+              }
 
-                  return displayBlogs.map((blog, i) => {
-                    const hasAccess = canAccessBlog(
-                      {
-                        isFreeAccess: blog.isFreeAccess,
-                        isLiteAccess: blog.isLiteAccess,
-                        isProAccess: blog.isProAccess,
-                      },
-                      currentUser as Parameters<typeof canAccessBlog>[1]
-                    );
-                    const isLocked = !hasAccess;
+              // 3. Render Blogs
+              return blogs.map((blog: Blog, i: number) => {
+                const hasAccess = canAccessBlog(
+                  {
+                    isFreeAccess: blog.isFreeAccess,
+                    isLiteAccess: blog.isLiteAccess,
+                    isProAccess: blog.isProAccess,
+                  },
+                  currentUser
+                );
 
-                    return <BlogCard key={blog.id} blog={blog} index={i} isLocked={isLocked} />;
-                  });
-                })()}
-              </div>
-            )}
+                // Note: If a blog is in the 'Free' tab, logic dictates it must be free.
+                // We enforce this access=true visually for free blogs.
+                const isLocked = blog.isFreeAccess ? false : !hasAccess;
 
-            {/* Load More Button */}
-            {pagination.hasMore && (
-              <div className="flex justify-center pt-8 pb-4">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={handleLoadMore}
-                  disabled={isLoadingMore}
-                  className="min-w-[160px] rounded-full font-bold text-slate-600 hover:border-slate-400 hover:text-slate-900"
-                >
-                  {isLoadingMore ? (
-                    <>
-                      <Loader2 size={16} className="mr-2 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    'Load More Articles'
-                  )}
-                </Button>
-              </div>
-            )}
-          </>
+                return <BlogCard key={blog.id} blog={blog} index={i} isLocked={isLocked} />;
+              });
+            })()}
+          </div>
+
+          {/* Load More Button */}
+          {hasMore && (
+            <div className="flex justify-center pt-8 pb-4">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleLoadMore}
+                disabled={isFetchingNextPage}
+                className="min-w-[160px] rounded-full font-bold text-slate-600 hover:border-slate-400 hover:text-slate-900"
+              >
+                {isFetchingNextPage ? (
+                  <>
+                    <Loader2 size={16} className="mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  'Load More Articles'
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -50,8 +50,8 @@ export function HeroSection() {
 
           <p className="mx-auto max-w-4xl px-2 text-lg leading-relaxed font-medium text-slate-600 md:text-3xl">
             {language === 'hi'
-              ? '100+ टॉपिक टेस्ट, PYQs और Mnemonics — अब सफलता आपकी मुट्ठी में।'
-              : 'Level up with 100+ topic-wise tests, expert explanations, and mnemonics that stick.'}
+              ? 'MPPSC के नए पैटर्न पर विजय पाएं! 200+ टेस्ट्स + Mnemonics + PYQs। आज ही अपनी तैयारी को लेवल-अप करें।'
+              : 'New Pattern Ready? We Are. Unlock 200+ Topic Tests, PYQs, and Mnemonics instantly. Level up your prep today.'}
           </p>
         </div>
 

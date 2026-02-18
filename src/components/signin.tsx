@@ -37,7 +37,7 @@ export default function LoginPage() {
         // Wait a bit for store to sync then redirect
         setTimeout(() => {
           if (data.user?.isSubscribed) {
-            window.location.href = '/syllabus/quiz';
+            window.location.href = '/syllabus/quiz/pyq';
           } else {
             window.location.href = '/';
           }

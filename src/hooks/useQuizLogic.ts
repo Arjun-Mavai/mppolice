@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { Question } from '@/types/quiz';
 import { logger } from '@/lib/logger';
+import { QUIZ_CONSTANTS } from '@/config/quiz';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🎯 QUIZ LOGIC HOOK (useQuizLogic)

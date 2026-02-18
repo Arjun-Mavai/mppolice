@@ -1,6 +1,8 @@
+import { QUIZ_CONSTANTS } from '@/config/quiz';
+
 export const SCORING_CONFIG = {
-  MARKS_PER_QUESTION: 3,
-  NEGATIVE_MARKING: 1, // 1 mark deduction
+  MARKS_PER_QUESTION: QUIZ_CONSTANTS.MARKS_PER_QUESTION,
+  NEGATIVE_MARKING: QUIZ_CONSTANTS.NEGATIVE_MARKING,
 } as const;
 
 export function calculateScore(

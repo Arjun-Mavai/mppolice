@@ -16,6 +16,7 @@ import { QuizPaletteMobile, QuizPaletteDesktop } from './quiz/QuizPalette';
 import { QuizExitDialog } from './quiz/QuizExitDialog';
 import { GuestEntryDialog } from './quiz/GuestEntryDialog';
 import { QuizExplanation } from './quiz/QuizExplanation';
+import { QUIZ_CONSTANTS } from '@/config/quiz';
 
 interface QuizInterfaceProps {
   questions: Question[];
@@ -239,8 +240,10 @@ export function QuizInterface(props: QuizInterfaceProps) {
     Object.entries(answers).forEach(([qId, ansIdx]) => {
       const q = questions.find((q) => q.id === qId);
       if (q) {
-        if (q.correctAnswer === ansIdx) earnedScore += q.marks || 3;
-        else earnedScore -= q.negativeMarks !== undefined ? q.negativeMarks : 1;
+        if (q.correctAnswer === ansIdx) earnedScore += q.marks || QUIZ_CONSTANTS.MARKS_PER_QUESTION;
+        else
+          earnedScore -=
+            q.negativeMarks !== undefined ? q.negativeMarks : QUIZ_CONSTANTS.NEGATIVE_MARKING;
       }
     });
     return (

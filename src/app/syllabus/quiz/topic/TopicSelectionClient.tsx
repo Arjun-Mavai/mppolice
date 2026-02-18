@@ -28,6 +28,7 @@ interface Topic {
   testId?: string;
   isFree: boolean;
   isFreeAccess: boolean;
+  isLiteAccess?: boolean; // Added for Lite support
   attemptsLeft: number | null;
   maxRetries: number | null;
 }
@@ -93,6 +94,7 @@ export default function TopicSelectionClient({ initialDbData }: TopicSelectionCl
                 testId: t.testId,
                 isFree: t.isFree,
                 isFreeAccess: t.isFreeAccess,
+                isLiteAccess: t.isLiteAccess, // Map it!
                 attemptsLeft: t.attemptsLeft,
                 maxRetries: t.maxRetries,
               })),
@@ -117,10 +119,13 @@ export default function TopicSelectionClient({ initialDbData }: TopicSelectionCl
     // Closed if: !isFreeAccess && !hasSubscription
 
     const effectiveTier = getUserTier(user as any);
-    // FIX: 'guest' is not 'free', so strict check for paid tiers needed.
-    const hasActivePlan = effectiveTier === 'lite' || effectiveTier === 'pro';
 
-    const isUnlocked = topic.isFreeAccess || hasActivePlan || isAdmin;
+    // 🔒 GRANULAR ACCESS CONTROL
+    const isUnlocked =
+      isAdmin ||
+      topic.isFreeAccess ||
+      effectiveTier === 'pro' ||
+      (effectiveTier === 'lite' && topic.isLiteAccess);
 
     if (!isUnlocked) {
       setPaywallOpen(true);
@@ -259,12 +264,15 @@ export default function TopicSelectionClient({ initialDbData }: TopicSelectionCl
                   filteredTopics.map((topic, index) => {
                     const isAdmin = (user as any)?.role === 'admin';
                     const effectiveTier = getUserTier(user as any);
-                    // FIX: 'guest' is not 'free', so strict check for paid tiers needed.
-                    const hasActivePlan = effectiveTier === 'lite' || effectiveTier === 'pro';
 
-                    // Lock if NOT free access AND NOT (active plan or admin)
-                    // This ensures guests only see what is explicitly marked free.
-                    const isLocked = !topic.isFreeAccess && !hasActivePlan && !isAdmin;
+                    // 🔒 GRANULAR ACCESS CONTROL
+                    const hasAccess =
+                      isAdmin ||
+                      topic.isFreeAccess ||
+                      effectiveTier === 'pro' ||
+                      (effectiveTier === 'lite' && topic.isLiteAccess);
+
+                    const isLocked = !hasAccess;
 
                     return (
                       <QuizListItem
