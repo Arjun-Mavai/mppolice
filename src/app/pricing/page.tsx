@@ -257,8 +257,8 @@ export default function PricingPage() {
               {[
                 {
                   icon: Target,
-                  label: hi ? '1000+ प्रश्न' : '1000+ Questions',
-                  sub: hi ? 'टॉपिक वाइज़' : 'Topic-wise',
+                  label: hi ? '5000+ प्रश्न' : '5000+ Questions',
+                  sub: hi ? 'सभी विषयों में' : 'Across all topics',
                 },
                 {
                   icon: FileText,
