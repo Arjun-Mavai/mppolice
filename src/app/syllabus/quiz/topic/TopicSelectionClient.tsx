@@ -118,7 +118,7 @@ export default function TopicSelectionClient({ initialDbData }: TopicSelectionCl
     // Now `isLocked` should ideally come from backend or be simple:
     // Closed if: !isFreeAccess && !hasSubscription
 
-    const effectiveTier = getUserTier(user as any);
+    const effectiveTier = getUserTier(user);
 
     // 🔒 GRANULAR ACCESS CONTROL
     // Rule 1: Admin & Pro bypass all checks
