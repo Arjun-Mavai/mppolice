@@ -191,7 +191,14 @@ export default function AdminDashboardPage() {
                         </div>
                       </div>
                       <span className="ml-2 text-[10px] whitespace-nowrap text-slate-400">
-                        {new Date(g.createdAt!).toLocaleDateString()}
+                        {new Date(g.createdAt!).toLocaleString('en-IN', {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'short',
+                          hour: 'numeric',
+                          minute: 'numeric',
+                          hour12: true,
+                        })}
                       </span>
                     </div>
                   ))
