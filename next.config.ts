@@ -64,6 +64,7 @@ const nextConfig: NextConfig = {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin',
           },
+          /*
           {
             key: 'Content-Security-Policy',
             value: `
@@ -81,6 +82,7 @@ const nextConfig: NextConfig = {
               .replace(/\s{2,}/g, ' ')
               .trim(),
           },
+          */
         ],
       },
       // Auth-related pages must never be browser-cached
