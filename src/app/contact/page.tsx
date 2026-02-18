@@ -58,7 +58,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="font-bold text-slate-900">{t.email}</p>
-                      <p className="text-sm text-slate-500">mppscsyllabus@gmail.com</p>
+                      <p className="text-sm text-slate-500">{contactEmail}</p>
                     </div>
                   </div>
 
