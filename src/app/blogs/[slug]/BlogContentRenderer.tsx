@@ -223,9 +223,14 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
 
   const { language, setLanguage } = useSettingsStore();
 
-  const content = Array.isArray(blog.content)
+  const rawContent = Array.isArray(blog.content)
     ? blog.content
     : blog.content[language] || blog.content['hi'] || [];
+
+  // Handle both array format and structured object format { introduction, blocks, conclusion }
+  const blocks = Array.isArray(rawContent) ? rawContent : rawContent.blocks || [];
+  const introduction = !Array.isArray(rawContent) ? rawContent.introduction : '';
+  const conclusion = !Array.isArray(rawContent) ? rawContent.conclusion : '';
 
   const renderContent = (blocks: any[]) => {
     if (!blocks || !Array.isArray(blocks)) return null;
@@ -621,14 +626,32 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
         </div>
 
         {/* Description — larger with more space */}
-        {blog.description && (
+        {/* If we have a structured introduction, show that. If not, fallback to blog.description if it's not already shown in hero (usually description is distinct) */}
+        {(blog.description || introduction) && (
           <div className="mb-8 border-b border-slate-100 pb-6">
-            <p className="text-lg leading-relaxed font-medium text-slate-600">{blog.description}</p>
+            {blog.description && !introduction && (
+              <p className="mb-4 text-lg leading-relaxed font-medium text-slate-600">
+                {blog.description}
+              </p>
+            )}
+            {introduction && (
+              <div className="text-lg leading-relaxed text-slate-700">
+                {formatText(introduction)}
+              </div>
+            )}
           </div>
         )}
 
         {/* Render JSON Content */}
-        <div className="max-w-none">{renderContent(content)}</div>
+        <div className="max-w-none">{renderContent(blocks)}</div>
+
+        {/* Conclusion */}
+        {conclusion && (
+          <div className="mt-8 mb-6 rounded-xl border border-slate-100 bg-slate-50 p-6">
+            <h3 className="mb-3 text-lg font-bold text-slate-900">Conclusion</h3>
+            <p className="text-base leading-relaxed text-slate-700">{formatText(conclusion)}</p>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="mt-12 flex items-center justify-between border-t border-slate-100 pt-6">
