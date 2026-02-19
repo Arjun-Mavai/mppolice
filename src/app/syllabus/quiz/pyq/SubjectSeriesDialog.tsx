@@ -2,7 +2,17 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Play, BookOpen, Calendar, LayoutGrid, Layers, LucideIcon, Lock } from 'lucide-react';
+import {
+  X,
+  Play,
+  BookOpen,
+  Calendar,
+  LayoutGrid,
+  Layers,
+  LucideIcon,
+  Lock,
+  Loader2,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -71,6 +81,9 @@ export function SubjectSeriesDialog({
   const hi = language === 'hi';
   const CHUNK_SIZE = 30;
 
+  // Local state to track which part is currently being "opened" (loading)
+  const [loadingPart, setLoadingPart] = React.useState<number | null>(null);
+
   // Use React Query for caching
   const { data: accessMap = {}, isLoading: loading } = useQuery({
     queryKey: ['subject-access', subject],
@@ -93,18 +106,11 @@ export function SubjectSeriesDialog({
 
   const handlePartClick = (part: number, offset: number, isLocked: boolean) => {
     if (isLocked) {
-      // Trigger paywall or generic lock alert
-      // Ideally, pass a callback to parent to open SyllabusLockModal
-      // For now, we can just alert or do nothing (UI shows lock)
-      // Or better: The parent component should handle this if we pass a special flag?
-      // Since `onSelectSeries` navigates, we can't easily show modal here without prop.
-      // Let's assume parent handles it if we pass -1 or similar?
-      // No, let's just use window.alert or toast for now, OR better:
-      // We can use a local state to show a "Premium Required" toast?
-      // Actually, let's just pass the click and let the logic flow.
-      // Wait, if locked, we shouldn't call onSelectSeries.
       return;
     }
+    // Set loading state for this specific part
+    setLoadingPart(part);
+    // Trigger navigation
     onSelectSeries(CHUNK_SIZE, offset);
   };
 
@@ -186,17 +192,22 @@ export function SubjectSeriesDialog({
                       // Also wait for loading to complete
                       const locked = !loading && (!hasStatus || !userHasAccess);
 
+                      const isItemLoading = loadingPart === item.part;
+
                       return (
                         <motion.button
                           key={item.part}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           onClick={() => handlePartClick(item.part, item.offset, !!locked)}
+                          disabled={!!locked || isItemLoading || loadingPart !== null}
                           className={cn(
                             'group relative flex items-center justify-between rounded-2xl border p-4 transition-all hover:shadow-lg',
                             locked
                               ? 'border-slate-100 bg-slate-50 opacity-80'
-                              : 'border-slate-100 bg-white hover:border-slate-200'
+                              : 'border-slate-100 bg-white hover:border-slate-200',
+                            (isItemLoading || (loadingPart !== null && !isItemLoading)) &&
+                              'cursor-not-allowed opacity-70'
                           )}
                         >
                           <div className="text-left">
@@ -234,11 +245,14 @@ export function SubjectSeriesDialog({
 
                           <div
                             className={cn(
-                              'flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-transform group-hover:scale-110',
+                              'flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-transform',
+                              !isItemLoading && 'group-hover:scale-110',
                               locked ? 'bg-slate-200 text-slate-400' : style.button
                             )}
                           >
-                            {locked ? (
+                            {isItemLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin text-white" />
+                            ) : locked ? (
                               <Lock className="h-4 w-4" />
                             ) : (
                               <Play className="ml-0.5 h-4 w-4 fill-current" />

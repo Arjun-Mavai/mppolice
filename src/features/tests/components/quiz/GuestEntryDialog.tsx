@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Loader2 } from 'lucide-react';
 
 interface GuestEntryDialogProps {
   open: boolean;
@@ -45,12 +46,12 @@ export function GuestEntryDialog({
         onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader className="relative">
-          <DialogTitle className="text-center text-2xl font-bold text-slate-900">
+          <DialogTitle className="text-center text-2xl font-black text-slate-900">
             Welcome to MPPSC 2026! 🚀
           </DialogTitle>
           <button
             onClick={onExit}
-            className="absolute -top-2 -right-2 rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            className="absolute -top-3 -right-3 z-10 rounded-full bg-slate-100 p-2.5 text-slate-500 shadow-sm transition-colors hover:bg-slate-200 hover:text-slate-700 active:scale-90"
           >
             <span className="sr-only">Close</span>
             <svg
@@ -60,7 +61,7 @@ export function GuestEntryDialog({
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
               className="h-5 w-5"
@@ -69,10 +70,11 @@ export function GuestEntryDialog({
               <path d="m6 6 12 12" />
             </svg>
           </button>
-          <DialogDescription className="pt-2 text-center text-slate-600">
-            We value your time and just need your name to get started!
-            <br />
-            <span className="mt-1 inline-block text-sm text-slate-500">
+          <DialogDescription className="px-4 pt-3 text-center text-slate-600">
+            <span className="block leading-relaxed text-balance">
+              We value your time and just need your name to get started!
+            </span>
+            <span className="mt-2 block text-xs font-medium text-balance text-slate-400">
               Email and mobile are optional but help us serve you better.
             </span>
           </DialogDescription>
@@ -80,41 +82,44 @@ export function GuestEntryDialog({
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <label className="flex items-center gap-1 text-sm font-semibold text-slate-700">
+            <label className="flex items-center gap-1 text-sm font-bold text-slate-900">
               Name <span className="text-red-500">*</span>
             </label>
             <Input
-              placeholder="e.g. MPPSC Aspirant"
+              placeholder="Enter your name"
               value={guestName}
               onChange={(e) => onNameChange(e.target.value)}
-              className="focus:border-electric-blue focus:ring-electric-blue h-11 border-slate-200"
+              className="h-12 border-slate-300 bg-white text-lg font-medium shadow-sm transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              autoFocus
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-600">
-              Email <span className="text-xs text-slate-400">(Optional)</span>
-            </label>
-            <Input
-              type="email"
-              placeholder="email"
-              value={guestEmail}
-              onChange={(e) => onEmailChange(e.target.value)}
-              className="focus:border-electric-blue focus:ring-electric-blue h-11 border-slate-200"
-            />
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-medium tracking-wider text-slate-500 uppercase">
+                Email
+              </label>
+              <Input
+                type="email"
+                placeholder="Optional - skip"
+                value={guestEmail}
+                onChange={(e) => onEmailChange(e.target.value)}
+                className="h-10 border-slate-200 bg-slate-50 text-sm text-slate-600 placeholder:text-slate-400 focus:bg-white focus:ring-1 focus:ring-slate-300"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-600">
-              Mobile <span className="text-xs text-slate-400">(Optional)</span>
-            </label>
-            <Input
-              type="tel"
-              placeholder="phone number"
-              value={guestMobile}
-              onChange={(e) => onMobileChange(e.target.value)}
-              className="focus:border-electric-blue focus:ring-electric-blue h-11 border-slate-200"
-            />
+            <div className="space-y-2">
+              <label className="text-xs font-medium tracking-wider text-slate-500 uppercase">
+                Mobile
+              </label>
+              <Input
+                type="tel"
+                placeholder="Optional - skip"
+                value={guestMobile}
+                onChange={(e) => onMobileChange(e.target.value)}
+                className="h-10 border-slate-200 bg-slate-50 text-sm text-slate-600 placeholder:text-slate-400 focus:bg-white focus:ring-1 focus:ring-slate-300"
+              />
+            </div>
           </div>
         </div>
 
@@ -122,9 +127,15 @@ export function GuestEntryDialog({
           <Button
             onClick={onSubmit}
             disabled={!guestName.trim() || isSubmitting}
-            className="h-12 w-full rounded-xl bg-[#00F0FF] font-bold text-black shadow-lg transition-all hover:bg-[#00D1E0]"
+            className="h-12 w-full rounded-xl bg-slate-900 font-bold text-white shadow-lg shadow-slate-900/20 transition-all hover:bg-slate-800 hover:shadow-xl hover:shadow-slate-900/30 active:scale-[0.98]"
           >
-            {isSubmitting ? 'Starting...' : 'Start Test →'}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Starting...
+              </>
+            ) : (
+              'Start Test 🚀'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

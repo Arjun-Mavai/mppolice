@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BlogSkeleton } from '@/components/skeletons/BlogSkeleton';
 import { BlogCard } from '@/components/blog/BlogCard';
+import { PromoCard } from '@/components/blog/PromoCard';
 import { SearchInput } from '@/components/blog/SearchInput';
 
 // 3. Internal Imports (Utils/Stores/Actions)
@@ -73,6 +74,8 @@ export default function BlogsClient({
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+  // Track which specific blog is being navigated to (for inline loading)
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
 
   // 4. Effect Hooks (Debounce Search)
   useEffect(() => {
@@ -168,6 +171,11 @@ export default function BlogsClient({
   // ------------------------------------------------------------------
   const handleUnitChange = (unit: string) => setActiveUnit(unit);
   const handleLoadMore = () => fetchNextPage();
+
+  // ✅ OPTIMIZED: Stable callback to enable React.memo optimization in BlogCard
+  // This prevents all cards from re-rendering when one is clicked or other state changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleNavigate = useState(() => (id: string) => setNavigatingId(id))[0];
 
   // ------------------------------------------------------------------
   // 💀 SKELETON / LOADING UI
@@ -380,93 +388,17 @@ export default function BlogsClient({
         {/* Sidebar (Desktop Only) — clean dark style */}
         <div className="hidden space-y-6 lg:col-span-1 lg:block">
           <div className="sticky top-44 space-y-6">
-            <div className="group relative overflow-hidden rounded-2xl bg-slate-900 p-6 text-white shadow-2xl shadow-indigo-500/10">
-              {/* Background Glow */}
-              <div className="absolute top-0 right-0 -mt-10 -mr-10 h-40 w-40 rounded-full bg-indigo-500/20 blur-3xl transition-all duration-700 group-hover:bg-indigo-500/30" />
-              <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-40 w-40 rounded-full bg-pink-500/20 blur-3xl transition-all duration-700 group-hover:bg-pink-500/30" />
-
-              <div className="relative z-10 mb-6 flex items-center justify-between">
-                <div className="rounded-xl bg-white/10 p-3 backdrop-blur-md">
-                  <BookOpen size={24} className="text-white" />
-                </div>
-                {/* Pro Badge */}
-                {currentUser?.planTier === 'pro' && (
-                  <span className="flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[10px] font-bold tracking-wider text-amber-300 uppercase">
-                    <Crown size={10} className="fill-amber-300" /> Pro Active
-                  </span>
-                )}
-                {/* Lite Badge */}
-                {currentUser?.planTier === 'lite' && (
-                  <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[10px] font-bold tracking-wider text-emerald-300 uppercase">
-                    <Crown size={10} className="fill-emerald-300" /> Lite Active
-                  </span>
-                )}
-              </div>
-
-              <h3 className="font-display relative z-10 mb-2 text-xl font-bold tracking-tight">
-                Ace MPPSC 2026
-              </h3>
-
-              {currentUser?.planTier === 'pro' ? (
-                <>
-                  <p className="relative z-10 mb-6 text-sm leading-relaxed text-slate-300">
-                    Premium access active! Master your preparation with full mock tests & exclusive
-                    content.
-                  </p>
-                  {/* Premium Button */}
-                  <div className="relative overflow-hidden rounded-xl p-[1.5px]">
-                    <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#10b981,#34d399,#059669,#10b981)]" />
-                    <Link
-                      href="/syllabus/quiz/pyq"
-                      className="relative flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white transition-all hover:bg-slate-800"
-                    >
-                      <Sparkles size={16} className="text-emerald-400" />
-                      Start Practicing
-                    </Link>
-                  </div>
-                </>
-              ) : currentUser?.planTier === 'lite' ? (
-                <>
-                  <p className="relative z-10 mb-6 text-sm leading-relaxed text-slate-300">
-                    Lite Plan Active. Upgrade to <span className="font-bold text-white">Pro</span>{' '}
-                    for unlimited Full Mock Tests & Analytics.
-                  </p>
-                  {/* Premium Button */}
-                  <div className="relative overflow-hidden rounded-xl p-[1.5px] shadow-lg shadow-purple-500/20 transition-all hover:scale-[1.02] hover:shadow-purple-500/40">
-                    <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#d946ef,#f43f5e,#fbbf24,#8b5cf6,#3b82f6,#d946ef)]" />
-                    <Link
-                      href="/pricing"
-                      className="relative flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white transition-all hover:bg-slate-900/90"
-                    >
-                      <Sparkles size={16} className="text-purple-400" />
-                      Upgrade to Pro
-                    </Link>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p className="relative z-10 mb-6 text-sm leading-relaxed text-slate-300">
-                    Unlock premium mock tests, detailed analytics, and exclusive content.
-                  </p>
-                  {/* Premium Button */}
-                  <div className="relative overflow-hidden rounded-xl p-[1.5px] shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40">
-                    <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#d946ef,#f43f5e,#fbbf24,#8b5cf6,#3b82f6,#d946ef)]" />
-                    <Link
-                      href="/pricing"
-                      className="relative flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white transition-all hover:bg-slate-900/90"
-                    >
-                      <Sparkles size={16} className="fill-white/20 text-yellow-400" />
-                      Get Premium Access
-                    </Link>
-                  </div>
-                </>
-              )}
-            </div>
+            <PromoCard user={currentUser} variant="vertical" />
           </div>
         </div>
 
         {/* Main Content Area */}
         <div className="space-y-6 lg:col-span-3">
+          {/* Mobile Promo Card (Visible only on mobile/tablet) */}
+          <div className="lg:hidden">
+            <PromoCard user={currentUser} variant="horizontal" />
+          </div>
+
           {/* Blog Grid */}
           <div className="animate-in fade-in grid grid-cols-1 gap-6 md:grid-cols-2">
             {(() => {
@@ -534,7 +466,16 @@ export default function BlogsClient({
                 // We enforce this access=true visually for free blogs.
                 const isLocked = blog.isFreeAccess ? false : !hasAccess;
 
-                return <BlogCard key={blog.id} blog={blog} index={i} isLocked={isLocked} />;
+                return (
+                  <BlogCard
+                    key={blog.id}
+                    blog={blog}
+                    index={i}
+                    isLocked={isLocked}
+                    isNavigating={navigatingId === blog.id}
+                    onNavigate={handleNavigate}
+                  />
+                );
               });
             })()}
           </div>
