@@ -1,7 +1,7 @@
 import { defineConfig } from 'drizzle-kit';
 import path from 'path';
 
-const localDbPath = `file:${path.resolve(process.cwd(), 'mppsc_local.db')}`;
+const localDbPath = `file:${path.resolve(process.cwd(), 'mppsc_local_dev.db')}`;
 const isDev = process.env.NODE_ENV === 'development';
 // src/db/index.ts (ya jahan client banate ho)
 if (process.env.NODE_ENV === 'development') {

@@ -4,7 +4,6 @@ import { Metadata } from 'next';
 import BlogContentRenderer from './BlogContentRenderer';
 import { verifyAuth } from '@/lib/auth';
 import { canAccessBlog } from '@/lib/access-control';
-import { BlogAccessDenied } from '@/components/blog/BlogAccessDenied';
 
 // ISR: Revalidate every 7 days
 export const revalidate = 604800;
@@ -41,8 +40,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
   }
 
   // 🔒 ACCESS CONTROL Logic
-  // If it's a FREE blog, we can skip auth check and keep ISR/SSG active!
-  // For premium blogs, we call verifyAuth which makes only those specific pages dynamic.
+  // Server-Side check using cookies (No client spinner)
   let hasAccess = blog.isFreeAccess === true;
 
   if (!hasAccess) {
@@ -50,9 +48,15 @@ export default async function BlogDetailPage({ params }: PageProps) {
     hasAccess = canAccessBlog(blog, user);
   }
 
-  if (!hasAccess) {
-    return <BlogAccessDenied />;
-  }
+  // If locked, strip sensitive content to prevent inspection hacks
+  const isLocked = !hasAccess;
+  const safeBlog = isLocked
+    ? {
+        ...blog,
+        content: [], // Remove actual content
+        // Ensure we keeping metadata for Hero/SEO
+      }
+    : blog;
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppsc.zenscroll.app';
 
@@ -82,7 +86,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
       />
-      <BlogContentRenderer blog={blog} />
+      <BlogContentRenderer blog={safeBlog} isLocked={isLocked} />
     </>
   );
 }

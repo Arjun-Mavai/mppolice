@@ -199,6 +199,7 @@ export const contentBlogs = sqliteTable('content_blogs', {
   slug: text('slug').unique().notNull(),
   title: text('title').notNull(),
   description: text('description'),
+  excerpt: text('excerpt'), // Auto-generated plain text summary (200-300 chars) that is SEO friendly
   content: text('content', { mode: 'json' }).notNull(), // Mixed content: text, images, etc.
   category: text('category').notNull(), // e.g., 'history', 'geography', 'current_affairs_mp'
   imageUrl: text('image_url'),

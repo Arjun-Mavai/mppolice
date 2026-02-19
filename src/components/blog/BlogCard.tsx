@@ -47,7 +47,7 @@ const variants = {
 const bgEmojis = ['📖', '📝', '💡', '🧠', '🎯', '📊', '⚖️', '📜', '🔍', '🎓'];
 
 export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
-  const { setLockModalOpen, language } = useSettingsStore();
+  const { language } = useSettingsStore();
   const router = useRouter();
 
   const colorVariant = (['blue', 'pink', 'emerald', 'amber'] as const)[index % 4];
@@ -70,13 +70,6 @@ export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
   //   : blog.description;
 
   const displayReadTime = index % 2 === 0 ? 5 : 6;
-
-  const handleClick = (e: React.MouseEvent) => {
-    if (isLocked) {
-      e.preventDefault();
-      setLockModalOpen(true);
-    }
-  };
 
   const CardContent = (
     <motion.div
@@ -176,14 +169,6 @@ export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
       <div className="absolute -right-12 -bottom-12 h-48 w-48 rounded-full bg-white/30 blur-3xl transition-colors duration-500 group-hover:bg-white/50" />
     </motion.div>
   );
-
-  if (isLocked) {
-    return (
-      <div onClick={handleClick} className="group block h-full">
-        {CardContent}
-      </div>
-    );
-  }
 
   return (
     <Link

@@ -2,12 +2,13 @@
 
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Calendar, ArrowLeft } from 'lucide-react';
+import { Clock, Calendar, ArrowLeft, Lock, Crown } from 'lucide-react';
 import Link from 'next/link';
 import NextImage from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 // Format inline text: bold quoted text, bold **text**, handle Key: Value
 function formatText(text: string, highlightClassName: string = 'text-slate-900'): React.ReactNode {
@@ -213,7 +214,13 @@ function renderParagraphOrList(
   );
 }
 
-export default function BlogContentRenderer({ blog }: { blog: any }) {
+export default function BlogContentRenderer({
+  blog,
+  isLocked = false,
+}: {
+  blog: any;
+  isLocked?: boolean;
+}) {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -222,6 +229,7 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
   });
 
   const { language, setLanguage } = useSettingsStore();
+  const router = useRouter();
 
   const rawContent = Array.isArray(blog.content)
     ? blog.content
@@ -600,14 +608,12 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
             variant="ghost"
             size="sm"
             className="-ml-3 text-sm text-slate-500 hover:text-slate-900"
-            asChild
+            onClick={() => (window.history.length > 1 ? router.back() : router.push('/blogs'))}
           >
-            <Link href="/blogs">
-              <ArrowLeft size={14} className="mr-1.5" /> Back
-            </Link>
+            <ArrowLeft size={14} className="mr-1.5" /> Back
           </Button>
 
-          {!Array.isArray(blog.content) && (
+          {!isLocked && !Array.isArray(blog.content) && (
             <div className="flex rounded-lg bg-slate-100 p-0.5">
               <button
                 onClick={() => setLanguage('hi')}
@@ -625,41 +631,97 @@ export default function BlogContentRenderer({ blog }: { blog: any }) {
           )}
         </div>
 
-        {/* Description — larger with more space */}
-        {/* If we have a structured introduction, show that. If not, fallback to blog.description if it's not already shown in hero (usually description is distinct) */}
-        {(blog.description || introduction) && (
-          <div className="mb-8 border-b border-slate-100 pb-6">
-            {blog.description && !introduction && (
-              <p className="mb-4 text-lg leading-relaxed font-medium text-slate-600">
-                {blog.description}
-              </p>
-            )}
-            {introduction && (
-              <div className="text-lg leading-relaxed text-slate-700">
-                {formatText(introduction)}
+        {/* LOCKED VIEW: Excerpt + Paywall */}
+        {isLocked ? (
+          <div className="relative">
+            {/* Excerpt / Intro */}
+            <div className="mb-6">
+              {(blog.description || blog.excerpt) && (
+                <p className="text-xl leading-relaxed font-medium text-slate-700">
+                  {formatText(blog.description || blog.excerpt || '')}
+                </p>
+              )}
+            </div>
+
+            {/* Faded Content Preview (Fake Lines) */}
+            <div className="space-y-4 opacity-30 blur-[2px] select-none">
+              <div className="h-4 w-full rounded bg-slate-800"></div>
+              <div className="h-4 w-5/6 rounded bg-slate-800"></div>
+              <div className="h-4 w-4/6 rounded bg-slate-800"></div>
+              <div className="h-32 w-full rounded-xl bg-slate-200"></div>
+              <div className="h-4 w-full rounded bg-slate-800"></div>
+            </div>
+
+            {/* Paywall Overlay */}
+            <div className="absolute inset-x-0 top-20 bottom-0 flex flex-col items-center justify-end bg-gradient-to-b from-white/0 via-white/80 to-white pb-10">
+              <div className="animate-in fade-in zoom-in-95 mt-10 max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-2xl duration-700">
+                <div className="mb-4 flex justify-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-900 shadow-lg">
+                    <Lock className="h-8 w-8 text-yellow-400" />
+                  </div>
+                </div>
+                <h3 className="mb-2 text-2xl font-black text-slate-900">Read the Full Strategy</h3>
+                <p className="mb-6 text-slate-600">
+                  Unlock this premium article and get full access to MPPSC blogs, expert test
+                  series, and detailed performance analytics.
+                </p>
+                <Button
+                  size="lg"
+                  className="w-full rounded-xl bg-emerald-600 font-bold hover:bg-emerald-700"
+                  asChild
+                >
+                  <Link href="/pricing">
+                    Unlock Now <Crown className="ml-2 h-4 w-4 fill-emerald-200 text-emerald-200" />
+                  </Link>
+                </Button>
+                <p className="mt-4 text-xs font-semibold text-slate-400">
+                  Already a member?{' '}
+                  <Link href="/login" className="text-emerald-600 hover:underline">
+                    Login here
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Description — larger with more space */}
+            {/* If we have a structured introduction, show that. If not, fallback to blog.description if it's not already shown in hero (usually description is distinct) */}
+            {(blog.description || introduction) && (
+              <div className="mb-8 border-b border-slate-100 pb-6">
+                {blog.description && !introduction && (
+                  <p className="mb-4 text-lg leading-relaxed font-medium text-slate-600">
+                    {blog.description}
+                  </p>
+                )}
+                {introduction && (
+                  <div className="text-lg leading-relaxed text-slate-700">
+                    {formatText(introduction)}
+                  </div>
+                )}
               </div>
             )}
-          </div>
+
+            {/* Render JSON Content */}
+            <div className="max-w-none">{renderContent(blocks)}</div>
+
+            {/* Conclusion */}
+            {conclusion && (
+              <div className="mt-8 mb-6 rounded-xl border border-slate-100 bg-slate-50 p-6">
+                <h3 className="mb-3 text-lg font-bold text-slate-900">Conclusion</h3>
+                <p className="text-base leading-relaxed text-slate-700">{formatText(conclusion)}</p>
+              </div>
+            )}
+
+            {/* Footer */}
+            <div className="mt-12 flex items-center justify-between border-t border-slate-100 pt-6">
+              <div>
+                <p className="text-xs font-medium text-slate-400">Published by</p>
+                <p className="text-sm font-bold text-slate-800">MPPSC 2026</p>
+              </div>
+            </div>
+          </>
         )}
-
-        {/* Render JSON Content */}
-        <div className="max-w-none">{renderContent(blocks)}</div>
-
-        {/* Conclusion */}
-        {conclusion && (
-          <div className="mt-8 mb-6 rounded-xl border border-slate-100 bg-slate-50 p-6">
-            <h3 className="mb-3 text-lg font-bold text-slate-900">Conclusion</h3>
-            <p className="text-base leading-relaxed text-slate-700">{formatText(conclusion)}</p>
-          </div>
-        )}
-
-        {/* Footer */}
-        <div className="mt-12 flex items-center justify-between border-t border-slate-100 pt-6">
-          <div>
-            <p className="text-xs font-medium text-slate-400">Published by</p>
-            <p className="text-sm font-bold text-slate-800">MPPSC 2026</p>
-          </div>
-        </div>
       </article>
     </div>
   );
