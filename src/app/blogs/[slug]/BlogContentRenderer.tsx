@@ -662,8 +662,8 @@ export default function BlogContentRenderer({
                 </div>
                 <h3 className="mb-2 text-2xl font-black text-slate-900">Read the Full Strategy</h3>
                 <p className="mb-6 text-slate-600">
-                  Unlock this premium article and get access to complete MPPSC blogs, test series,
-                  and personalized guidance.
+                  Unlock this premium article and get full access to MPPSC blogs, expert test
+                  series, and detailed performance analytics.
                 </p>
                 <Button
                   size="lg"
