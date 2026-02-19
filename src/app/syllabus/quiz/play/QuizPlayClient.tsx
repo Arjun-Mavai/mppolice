@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Loader2 } from 'lucide-react';
@@ -18,6 +18,11 @@ const QuizInterface = dynamic(
     ),
     ssr: false,
   }
+);
+const GuestQuizInterface = dynamic(
+  () =>
+    import('@/features/tests/components/GuestQuizInterface').then((mod) => mod.GuestQuizInterface),
+  { ssr: false }
 );
 import { Question } from '@/types/quiz';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
@@ -158,6 +163,20 @@ export function QuizPlayClient({
           </div>
         </div>
       </div>
+    );
+  }
+
+  if (!userId) {
+    return (
+      <GuestQuizInterface
+        key={retryCount}
+        questions={questions}
+        mode={mode}
+        testId={testId}
+        title={title}
+        timeLimitInMinutes={Math.ceil(questions.length * QUIZ_CONSTANTS.TIME_PER_QUESTION_MINUTES)}
+        onExit={() => router.push('/syllabus/quiz')}
+      />
     );
   }
 
