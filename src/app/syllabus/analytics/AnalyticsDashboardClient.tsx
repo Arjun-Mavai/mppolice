@@ -18,9 +18,46 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
-interface AnalyticsDashboardClientProps {
-  analytics: any;
+// --- Type Definitions (Strict Type Safety) ---
+// AnalyticsActivity: Ek single test attempt ka data (id, score, totalMarks, unitName, etc).
+
+export interface AnalyticsActivity {
+  id: string;
+  type: 'UNIT' | 'TOPIC' | 'CSAT' | 'PYQ' | (string & {}); // e.g., 'UNIT', 'TOPIC', 'CSAT', 'PYQ'
+  createdAt: string | Date;
+  testTitle: string;
+  timeTaken?: string;
+  totalDuration?: string;
+  score: number;
+  totalMarks?: number;
+  unitId?: string;
+  unitName?: string;
 }
+// AnalyticsMastery: Subject wise performance (percentage, status, color).
+
+export interface AnalyticsMastery {
+  id: string;
+  name: string;
+  percentage: number;
+  count: number;
+  status: string;
+  color: string;
+}
+// AnalyticsData: Pura dashboard data structure.
+
+export interface AnalyticsData {
+  overallScore: number;
+  totalTests: number;
+  mastery: AnalyticsMastery[];
+  recentActivity: AnalyticsActivity[];
+  aiSuggestion: string;
+}
+
+interface AnalyticsDashboardClientProps {
+  analytics: AnalyticsData | null; // Allow null for loading states or initial renders
+}
+
+// ... existing helper functions ...
 
 function accuracyStyle(accuracy: number) {
   if (accuracy >= 80) return 'bg-emerald-50 text-emerald-600 border-emerald-100';
@@ -48,12 +85,11 @@ function TestRow({
   onClick,
   showType,
 }: {
-  activity: any;
+  activity: AnalyticsActivity;
   onClick: () => void;
   showType?: boolean;
 }) {
-  const accuracy = Math.round((activity.score / (activity.totalMarks || 1)) * 100);
-
+  const accuracy = Math.min(100, Math.round((activity.score / (activity.totalMarks || 1)) * 100));
   return (
     <motion.div
       initial={{ opacity: 0, x: -10 }}
@@ -154,13 +190,13 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
   const { overallScore, totalTests, mastery, recentActivity, aiSuggestion } = analytics;
   const syllabusCoverage = Math.min(totalTests * 5, 100);
 
-  const filteredHistory = recentActivity.filter((item: any) => {
+  const filteredHistory = recentActivity.filter((item: AnalyticsActivity) => {
     if (activeTab === 'ALL') return true;
     return item.type === activeTab;
   });
 
-  const weakAreas = mastery.filter((m: any) => m.percentage < 50);
-  const strongAreas = mastery.filter((m: any) => m.percentage >= 50);
+  const weakAreas = mastery.filter((m: AnalyticsMastery) => m.percentage < 50);
+  const strongAreas = mastery.filter((m: AnalyticsMastery) => m.percentage >= 50);
   const displayedMastery = masteryTab === 'weak' ? weakAreas : strongAreas;
 
   const overviewStats = [
@@ -329,7 +365,7 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
             <CardContent className="flex-1 overflow-hidden p-0">
               <ScrollArea className="h-[400px]">
                 <div className="space-y-10 p-10">
-                  {displayedMastery.map((m: any, i: number) => (
+                  {displayedMastery.map((m: AnalyticsMastery, i: number) => (
                     <div key={i} className="space-y-4">
                       <div className="flex items-end justify-between">
                         <div className="space-y-1">
@@ -503,11 +539,11 @@ function TopicGroupedList({
   history,
   onNavigate,
 }: {
-  history: any[];
+  history: AnalyticsActivity[];
   onNavigate: (id: string) => void;
 }) {
-  const grouped: Record<string, any[]> = {};
-  history.forEach((item: any) => {
+  const grouped: Record<string, AnalyticsActivity[]> = {};
+  history.forEach((item) => {
     const unitKey = item.unitId || 'unknown';
     if (!grouped[unitKey]) grouped[unitKey] = [];
     grouped[unitKey].push(item);
@@ -536,7 +572,7 @@ function TopicGroupedList({
               {unitName}
             </div>
             <div className="divide-y divide-slate-50">
-              {groupItems.map((activity: any, idx: number) => (
+              {groupItems.map((activity, idx) => (
                 <TestRow key={idx} activity={activity} onClick={() => onNavigate(activity.id)} />
               ))}
             </div>
@@ -551,7 +587,7 @@ function FlatTestList({
   history,
   onNavigate,
 }: {
-  history: any[];
+  history: AnalyticsActivity[];
   onNavigate: (id: string) => void;
 }) {
   if (history.length === 0) {
@@ -560,7 +596,7 @@ function FlatTestList({
 
   return (
     <div className="divide-y divide-slate-50">
-      {history.map((activity: any, idx: number) => (
+      {history.map((activity, idx) => (
         <TestRow key={idx} activity={activity} onClick={() => onNavigate(activity.id)} showType />
       ))}
     </div>

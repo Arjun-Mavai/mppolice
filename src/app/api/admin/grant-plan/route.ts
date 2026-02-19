@@ -20,7 +20,10 @@ const PLAN_MONTHS: Record<string, number> = { lite: 4, pro: 7 };
 const grantSchema = z.object({
   email: z.string().email(),
   name: z.string().min(2).max(100),
-  phone: z.string().min(10).max(15).optional(),
+  phone: z
+    .union([z.string().min(10).max(15), z.literal('')])
+    .optional()
+    .transform((v) => (v === '' ? undefined : v)),
   planTier: z.enum(['lite', 'pro']),
   password: z
     .string()
