@@ -29,8 +29,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const description =
     blog.description || 'MPPSC Study Material, Test Series, and Analytics - Mindful MPPSC';
   const url = `/blogs/${slug}`;
-  // Use specific blog image if available, otherwise it falls back to opengraph-image.tsx
-  const images = blog.imageUrl ? [{ url: blog.imageUrl }] : [];
+  // Use specific blog image if available, otherwise use the new generic OG image
+  const images = blog.imageUrl
+    ? [{ url: blog.imageUrl }]
+    : [
+        {
+          url: '/images/mppsc-blog-og.png',
+          width: 1200,
+          height: 630,
+          alt: 'MPPSC Blogs - Exam Date 26 April 2026',
+        },
+      ];
 
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://mppsc.zenscroll.app'),
@@ -167,7 +176,8 @@ export default async function BlogDetailPage({ params }: PageProps) {
     : blog;
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppsc.zenscroll.app';
-  const finalImageUrl = blog.imageUrl || `${baseUrl}/blogs/${slug}/opengraph-image`;
+  // Use specific blog image if available, otherwise use the new generic OG image
+  const finalImageUrl = blog.imageUrl || `${baseUrl}/images/mppsc-blog-og.png`;
 
   // JSON-LD Article schema — helps Google show rich results for blog posts
   const articleSchema = {
