@@ -1,4 +1,3 @@
-import { verifyAuth } from '@/lib/auth';
 import { getBlogs, getBlogCounts } from '@/services/blog-service';
 import BlogsClient from './BlogsClient';
 
@@ -8,10 +7,10 @@ export const metadata = {
     'Read high-quality articles, strategies, and notes for MPPSC preparation. Covering History, Geography, Polity, and MP Special topics.',
 };
 
-// Removed 'force-dynamic' to allow caching/ISR.
-// The `getBlogs` action uses `unstable_cache` with revalidation tags.
-// When an admin uploads a blog, `revalidateTag` is called, ensuring fresh content.
-export const dynamic = 'auto';
+// Force Static Generation
+export const dynamic = 'force-static';
+// Revalidate every hour (optional, since we use on-demand revalidation, but good safety net)
+export const revalidate = 3600;
 
 import { Suspense } from 'react';
 
@@ -43,19 +42,11 @@ export default async function BlogsPage() {
 }
 
 async function BlogsContent() {
-  // Fetch initial data (Page 1), counts, and user on server in parallel.
-  const [counts, blogsResult, user] = await Promise.all([
+  // Fetch initial data (Page 1) and counts in parallel.
+  // User is explicitly NOT fetched here to allow SSG.
+  const [counts, blogsResult] = await Promise.all([
     getBlogCounts(),
-    // MATCH CLIENT DEFAULT: Client defaults to 'Free' tab, so we must fetch Free blogs initially.
-    // Otherwise, the 'Free' tab will show Premium (locked) blogs from the 'All' fetch.
-    // IMPORTANT: This initial fetch is intentionally coupled to the default tab in `BlogsClient`.
-    // The client currently defaults to the "Free" tab, so we prefetch only free-access blogs here
-    // (`isFreeAccess: true`). If the default tab in `BlogsClient` is ever changed (e.g. to "All"
-    // or another filter), this query MUST be updated to match that new default; otherwise the
-    // server-rendered content will not align with the initial client state, causing a brief flash
-    // of incorrect content or an unnecessary client re-fetch.
     getBlogs({ page: 1, limit: 10, unitId: 'All', isFreeAccess: true }),
-    verifyAuth(),
   ]);
 
   const { blogs, pagination } = blogsResult;
@@ -65,7 +56,7 @@ async function BlogsContent() {
       initialBlogs={blogs}
       initialPagination={pagination}
       initialCounts={counts}
-      user={user}
+      user={null} // Client will hydrate user from store
     />
   );
 }

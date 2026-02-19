@@ -44,11 +44,54 @@ export async function uploadBlog(data: any) {
       return { success: false, error: "Content must have both 'hi' and 'en' keys" };
     }
 
+    // Helper to extract text from complex block structures
+    const extractTextIteratively = (content: any): string => {
+      if (!content) return '';
+      if (typeof content === 'string') return content;
+      if (Array.isArray(content)) {
+        return content.map((item) => extractTextIteratively(item)).join(' ');
+      }
+      if (typeof content === 'object') {
+        if (content.type === 'h2' || content.type === 'h3' || content.type === 'p')
+          return content.text || '';
+        if (content.type === 'ul' || content.type === 'ol')
+          return Array.isArray(content.items) ? content.items.join(' ') : '';
+        if (content.type === 'table')
+          return Array.isArray(content.body)
+            ? content.body.map((row: any[]) => row.join(' ')).join(' ')
+            : '';
+        if (content.type === 'fact_card') return content.facts ? content.facts.join(' ') : '';
+        return content.text || content.title || content.description || '';
+      }
+      return '';
+    };
+
+    // Auto-generate excerpt from Hindi content (preferred) or English
+    const blocksToProcess = content.hi && content.hi.length > 0 ? content.hi : content.en || [];
+    let textContent = extractTextIteratively(blocksToProcess);
+    textContent = textContent.replace(/\s+/g, ' ').trim();
+
+    // Generate Description (Ideal: ~150-300 chars)
+    let description = metadata.description;
+    if (!description || description.trim().length < 10) {
+      // Try to find first paragraph
+      let introText = textContent;
+      const firstPara = blocksToProcess.find((b: any) => b.type === 'p');
+      if (firstPara && firstPara.text) introText = firstPara.text;
+      description = introText.substring(0, 300) + (introText.length > 300 ? '...' : '');
+    }
+
+    // Generate Excerpt (~160 chars)
+    const excerpt =
+      (description || textContent).substring(0, 160) +
+      ((description || textContent).length > 160 ? '...' : '');
+
     await db.insert(contentBlogs).values({
       id: crypto.randomUUID(),
       title: metadata.title,
       slug: metadata.slug,
-      description: metadata.description || '',
+      description: description || '',
+      excerpt, // Robustly generated excerpt
       category: metadata.category,
       imageUrl: imageUrl || null,
       readingTime: parseInt(metadata.readingTime) || 5,
