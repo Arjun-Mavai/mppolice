@@ -959,3 +959,28 @@ Agar chaho bhai:
 👉 ya **prod → staging → local pipeline**
 
 bol de, bana dete hain 🔥
+
+## revalidation guide
+
+Bhai, Next.js Cache Revalidation seekhne ke liye ye lo poora guide.
+
+Kaise kaam karta hai: Next.js pages ko "Static" bana ke cache kar leta hai taaki website fast chale. Jab database me kuch change hota hai (jaise new blog), to purana cache hatana padta hai. Isko bolte hain Revalidation.
+
+Humare paas ek Magic API Route hai: src/app/api/revalidate/route.ts
+
+Manual Revalidate Karne Ka Tareeka (Script): Terminal me ye command run karo to poora Blog Cache clear ho jayega:
+
+bash
+curl -X POST https://mppsc.zenscroll.app/api/revalidate \
+ -H "Content-Type: application/json" \
+ -d '{"secret": "YOUR_ADMIN_SECRET", "tag": "blogs-list"}'
+(Note: YOUR_ADMIN_SECRET wo hai jo .env me ADMIN_SECRET ke naam se hai)
+
+Code me kaise hota hai? Agar future me khud code me karna ho (jaise Admin Panel me "Save" button dabane par), to ye function use karte hain:
+
+typescript
+import { revalidateTag } from 'next/cache';
+// Jab bhi naya blog save ho, ye call kar do
+revalidateTag('blogs-list');
+revalidateTag('blog-my-slug');
+Example Script (clear-cache.ts) bana doon taaki bas command run karke clear ho jaye?

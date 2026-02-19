@@ -73,6 +73,8 @@ export default function BlogsClient({
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+  // Track which specific blog is being navigated to (for inline loading)
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
 
   // 4. Effect Hooks (Debounce Search)
   useEffect(() => {
@@ -168,6 +170,11 @@ export default function BlogsClient({
   // ------------------------------------------------------------------
   const handleUnitChange = (unit: string) => setActiveUnit(unit);
   const handleLoadMore = () => fetchNextPage();
+
+  // ✅ OPTIMIZED: Stable callback to enable React.memo optimization in BlogCard
+  // This prevents all cards from re-rendering when one is clicked or other state changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleNavigate = useState(() => (id: string) => setNavigatingId(id))[0];
 
   // ------------------------------------------------------------------
   // 💀 SKELETON / LOADING UI
@@ -534,7 +541,16 @@ export default function BlogsClient({
                 // We enforce this access=true visually for free blogs.
                 const isLocked = blog.isFreeAccess ? false : !hasAccess;
 
-                return <BlogCard key={blog.id} blog={blog} index={i} isLocked={isLocked} />;
+                return (
+                  <BlogCard
+                    key={blog.id}
+                    blog={blog}
+                    index={i}
+                    isLocked={isLocked}
+                    isNavigating={navigatingId === blog.id}
+                    onNavigate={handleNavigate}
+                  />
+                );
               });
             })()}
           </div>

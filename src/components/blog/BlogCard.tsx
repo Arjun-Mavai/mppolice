@@ -2,7 +2,7 @@
 import type React from 'react';
 import Link from 'next/link';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { Clock, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { Clock, Lock, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -11,7 +11,11 @@ interface BlogCardProps {
   blog: any;
   index?: number;
   isLocked?: boolean;
+  onNavigate?: (id: string) => void;
+  isNavigating?: boolean;
 }
+
+// ... existing variants object ...
 
 const variants = {
   blue: {
@@ -46,7 +50,7 @@ const variants = {
 
 const bgEmojis = ['📖', '📝', '💡', '🧠', '🎯', '📊', '⚖️', '📜', '🔍', '🎓'];
 
-export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
+export function BlogCard({ blog, index = 0, isLocked, onNavigate, isNavigating }: BlogCardProps) {
   const { language } = useSettingsStore();
   const router = useRouter();
 
@@ -62,12 +66,6 @@ export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
         ? splitTitle[1].trim()
         : splitTitle[0].trim()
       : blog.title;
-
-  // Optional: Apply same split to description if it exists
-  // const splitDesc = (blog.description || '').split('|');
-  // const displayDesc = splitDesc.length > 1
-  //   ? (language === 'hi' ? splitDesc[1].trim() : splitDesc[0].trim())
-  //   : blog.description;
 
   const displayReadTime = index % 2 === 0 ? 5 : 6;
 
@@ -156,6 +154,11 @@ export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
             </div>
             {isLocked ? (
               <span className="text-amber-500">Premium Content</span>
+            ) : isNavigating ? (
+              <div className="flex items-center gap-1 text-emerald-600">
+                <Loader2 size={12} className="animate-spin" />
+                <span>Reading...</span>
+              </div>
             ) : (
               <div className="flex items-center gap-1 text-slate-900 transition-transform group-hover:translate-x-1">
                 Read Now <ArrowRight size={10} className="ml-1" />
@@ -172,8 +175,17 @@ export function BlogCard({ blog, index = 0, isLocked }: BlogCardProps) {
 
   return (
     <Link
-      href={`/blogs/${blog.slug}`}
-      className="group block h-full"
+      href={!isLocked ? `/blogs/${blog.slug}` : '#'}
+      className={cn(
+        'group block h-full transition-transform outline-none active:scale-[0.98]', // Added active:scale
+        isNavigating && 'pointer-events-none opacity-80'
+      )}
+      onClick={(e) => {
+        if (!isLocked && onNavigate) {
+          // Allow default link behavior but trigger state update
+          onNavigate(blog.id);
+        }
+      }}
       onMouseEnter={() => router.prefetch(`/blogs/${blog.slug}`)}
       onTouchStart={() => router.prefetch(`/blogs/${blog.slug}`)}
     >
