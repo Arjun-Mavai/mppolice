@@ -1,8 +1,4 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { db } from '@/db';
-import { mppscUsers } from '@/db/schema';
-import { DashboardView } from '@/features/analytics/components/DashboardView';
 
 // Dashboard is user-specific — must NEVER serve cached/stale page
 export const dynamic = 'force-dynamic';
@@ -25,7 +21,6 @@ export default async function DashboardPage() {
   // Fetch Analytics
   const analyticsData = await getUserAnalytics(user.id);
   const syllabusProgress = await getUserSyllabusProgress();
-
   // Calculate Total Topics from Syllabus Data
   const totalTopics = Object.values(syllabusData.units).reduce((acc: number, unit: any) => {
     return acc + (unit.topics?.length || 0);

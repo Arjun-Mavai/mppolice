@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { useSettingsStore } from '@/store/useSettingsStore';
 
 // --- Type Definitions (Strict Type Safety) ---
 // AnalyticsActivity: Ek single test attempt ka data (id, score, totalMarks, unitName, etc).
@@ -38,6 +39,7 @@ export interface AnalyticsActivity {
 export interface AnalyticsMastery {
   id: string;
   name: string;
+  nameEn?: string;
   percentage: number;
   count: number;
   status: string;
@@ -50,7 +52,10 @@ export interface AnalyticsData {
   totalTests: number;
   mastery: AnalyticsMastery[];
   recentActivity: AnalyticsActivity[];
-  aiSuggestion: string;
+  aiSuggestion: {
+    en: string;
+    hi: string;
+  };
 }
 
 interface AnalyticsDashboardClientProps {
@@ -168,6 +173,8 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
   const router = useRouter();
   const [activeTab, setActiveTab] = React.useState('ALL');
   const [masteryTab, setMasteryTab] = React.useState<'strong' | 'weak'>('strong');
+  const { language } = useSettingsStore();
+  const hi = language === 'hi';
 
   if (!analytics) {
     return (
@@ -370,7 +377,7 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
                       <div className="flex items-end justify-between">
                         <div className="space-y-1">
                           <span className="text-lg leading-none font-black text-slate-200">
-                            {m.name}
+                            {hi ? m.name : m.nameEn || m.name}
                           </span>
                           <div className="text-[10px] font-black tracking-widest text-slate-500 uppercase">
                             Mastery Level
@@ -411,8 +418,12 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
                       <p className="mb-3 text-2xl">{masteryTab === 'strong' ? '🎯' : '🎉'}</p>
                       <p className="text-xs font-black tracking-widest text-slate-400 uppercase">
                         {masteryTab === 'strong'
-                          ? 'Keep practicing to build strong areas!'
-                          : 'No weak areas — great job!'}
+                          ? hi
+                            ? 'मजबूत क्षेत्रों को बनाने के लिए अभ्यास करते रहें!'
+                            : 'Keep practicing to build strong areas!'
+                          : hi
+                            ? 'कोई कमजोर क्षेत्र नहीं — बहुत बढ़िया!'
+                            : 'No weak areas — great job!'}
                       </p>
                     </div>
                   )}
@@ -503,14 +514,14 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
                 </h3>
               </div>
               <p className="max-w-4xl text-lg leading-relaxed font-medium text-slate-400 italic md:text-xl">
-                &quot;{aiSuggestion}&quot;
+                &quot;{hi ? aiSuggestion.hi : aiSuggestion.en}&quot;
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-4 md:justify-start">
                 <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2">
                   <AlertCircle className="h-4 w-4 text-rose-500" />
                   <span className="text-xs font-black tracking-widest text-white uppercase">
-                    {weakAreas.length} Weak Areas Identified
+                    {weakAreas.length} {hi ? 'कमज़ोर क्षेत्र' : 'Weak Areas Identified'}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2">
@@ -564,7 +575,6 @@ function TopicGroupedList({
       {sortedKeys.map((unitKey) => {
         const groupItems = grouped[unitKey];
         const unitName = groupItems[0]?.unitName || unitKey;
-
         return (
           <div key={unitKey} className="group/unit">
             <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-slate-100 bg-slate-50/80 px-10 py-4 text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase backdrop-blur-md">

@@ -56,7 +56,7 @@ export async function proxy(request: NextRequest) {
   }
   // Agar testId free wali list mein hai, toh jaane do (Allow)
   if (testId && FREE_TEST_IDS.includes(testId)) {
-    console.log('hello i am here', testId, FREE_TEST_IDS.includes(testId));
+    // console.log('hello i am here', testId, FREE_TEST_IDS.includes(testId));
     //https://share.google/aimode/zo09763VrWQotzvQU
 
     //https://share.google/aimode/JdmtXf6WUqWCKInbN
