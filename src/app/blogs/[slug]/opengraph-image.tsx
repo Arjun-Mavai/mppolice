@@ -1,0 +1,160 @@
+import { ImageResponse } from 'next/og';
+import { getBlogBySlug } from '@/services/blog-service';
+
+export const runtime = 'edge';
+
+export const alt = 'Mindful MPPSC Blog';
+export const size = {
+  width: 1200,
+  height: 630,
+};
+
+export const contentType = 'image/png';
+
+export default async function Image({ params }: { params: { slug: string } }) {
+  const { slug } = await params;
+  const blog = await getBlogBySlug(slug);
+
+  // Fallback title if blog not found (shouldn't happen in valid flows)
+  const title = blog?.title || 'Mindful MPPSC Blog';
+
+  // If blog has an uploaded image, use it as the background with an overlay
+  if (blog?.imageUrl) {
+    return new ImageResponse(
+      <div
+        style={{
+          display: 'flex',
+          height: '100%',
+          width: '100%',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundImage: `url(${blog.imageUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {/* Dark Overlay for readability */}
+        <div
+          style={{
+            display: 'flex',
+            height: '100%',
+            width: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              fontSize: 60,
+              fontWeight: 900,
+              color: 'white',
+              textAlign: 'center',
+              textShadow: '0 4px 8px rgba(0,0,0,0.5)',
+              marginBottom: 20,
+            }}
+          >
+            {title}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              fontSize: 30,
+              fontWeight: 600,
+              color: '#ddd',
+              marginTop: 20,
+              backgroundColor: 'rgba(0,0,0,0.6)',
+              padding: '10px 20px',
+              borderRadius: '12px',
+            }}
+          >
+            Mindful MPPSC 🎯
+          </div>
+        </div>
+      </div>,
+      { ...size }
+    );
+  }
+
+  // Fallback Design: Premium Gradient
+  return new ImageResponse(
+    <div
+      style={{
+        height: '100%',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', // Deep Blue to Blue
+        color: 'white',
+        padding: '40px',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          position: 'absolute',
+          top: 40,
+          left: 40,
+          fontSize: 30,
+          fontWeight: 'bold',
+          color: 'rgba(255,255,255,0.8)',
+        }}
+      >
+        Mindful MPPSC 🌿
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          maxWidth: '1000px',
+        }}
+      >
+        <div
+          style={{
+            fontSize: 80,
+            fontWeight: 900,
+            marginBottom: 40,
+            lineHeight: 1.2,
+            textShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          }}
+        >
+          {title}
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            fontSize: 40,
+            opacity: 0.9,
+          }}
+        >
+          📚 Study | ✍️ Tests | 🎯 Success
+        </div>
+      </div>
+
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 40,
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          fontSize: 24,
+          opacity: 0.7,
+        }}
+      >
+        mppsc.zenscroll.app
+      </div>
+    </div>,
+    { ...size }
+  );
+}
