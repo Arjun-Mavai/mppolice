@@ -175,14 +175,13 @@ export function BlogCard({ blog, index = 0, isLocked, onNavigate, isNavigating }
 
   return (
     <Link
-      href={!isLocked ? `/blogs/${blog.slug}` : '#'}
+      href={`/blogs/${blog.slug}`}
       className={cn(
-        'group block h-full transition-transform outline-none active:scale-[0.98]', // Added active:scale
+        'group block h-full transition-transform outline-none active:scale-[0.98]',
         isNavigating && 'pointer-events-none opacity-80'
       )}
-      onClick={(e) => {
-        if (!isLocked && onNavigate) {
-          // Allow default link behavior but trigger state update
+      onClick={() => {
+        if (onNavigate) {
           onNavigate(blog.id);
         }
       }}
