@@ -84,10 +84,10 @@ async function AttemptContent({ attemptId }: { attemptId: string }) {
         <div className="relative z-10 mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
           <div className="mb-4 flex items-center justify-between sm:mb-6">
             <Link
-              href="/syllabus/analytics"
+              href="/dashboard"
               className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition-colors hover:text-white"
             >
-              <ArrowLeft className="h-4 w-4" /> Back to Analytics
+              <ArrowLeft className="h-4 w-4" /> Back to Dashboard
             </Link>
           </div>
 

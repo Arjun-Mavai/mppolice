@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/db';
-import { userAttempts, tests, questions, attemptAnswers } from '@/db/schema';
+import { userAttempts, tests, questions, attemptAnswers, syllabusTopics } from '@/db/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { unstable_cache, revalidateTag } from 'next/cache';
 import { verifyAuth } from '@/lib/auth';
@@ -72,16 +72,16 @@ async function fetchAnalyticsInternal(userId: string) {
     let validAttemptsCount = 0;
 
     // 2.5: Resolve Topics EARLY (Moved up from below for Mastery Calculation)
-    const { getSyllabusTopics } = await import('@/actions/getSyllabusTopics');
-    const syllabusRes = await getSyllabusTopics();
     const topicMap = new Map<string, any>();
-
-    if (syllabusRes.success && syllabusRes.data) {
-      Object.values(syllabusRes.data)
-        .flat()
-        .forEach((t: any) => {
+    try {
+      const allTopics = await db.query.syllabusTopics.findMany(); // Direct DB query
+      if (allTopics) {
+        allTopics.forEach((t) => {
           topicMap.set(t.id, t);
         });
+      }
+    } catch (e) {
+      logger.error('Failed to fetch syllabus topics for analytics:', e);
     }
 
     // 3. Granular Analysis by Subject (Question Level)
@@ -89,7 +89,7 @@ async function fetchAnalyticsInternal(userId: string) {
 
     let subjectStats: Record<
       string,
-      { totalScore: number; totalMax: number; count: number; name: string }
+      { totalScore: number; totalMax: number; count: number; name: string; nameEn: string }
     > = {};
 
     if (attemptIds.length > 0) {
@@ -113,6 +113,7 @@ async function fetchAnalyticsInternal(userId: string) {
         // Only process if marks are valid numbers
         if (typeof marks === 'number') {
           let subject = ans.subject;
+          let subjectEn = ans.subject; // Default to same as subject (Hindi/Default)
 
           // Fallback: If subject is missing (e.g. 'General'), try to infer from Test Topic
           if (!subject || subject === 'General') {
@@ -123,6 +124,7 @@ async function fetchAnalyticsInternal(userId: string) {
                 // Check if it's a specific Unit/Topic test to use its name?
                 // Generally, if it's a Topic Test, the whole test is about that topic.
                 subject = topic.title || topic.titleEn || attempt.testTitle || 'General';
+                subjectEn = topic.titleEn || topic.title || attempt.testTitle || 'General';
               } else {
                 // Use test title as fallback if no topic
                 // But test title might be "Full Length Test 1" -> Keep General?
@@ -130,14 +132,22 @@ async function fetchAnalyticsInternal(userId: string) {
                 // Let's use testTitle if it seems specific, or just fallback to 'General' for FLTs.
                 // For now, if topicId is present, use it.
                 subject = attempt.testTitle || 'General';
+                subjectEn = attempt.testTitle || 'General';
               }
             }
           }
 
           subject = subject || 'General';
+          subjectEn = subjectEn || subject;
 
           if (!subjectStats[subject]) {
-            subjectStats[subject] = { totalScore: 0, totalMax: 0, count: 0, name: subject };
+            subjectStats[subject] = {
+              totalScore: 0,
+              totalMax: 0,
+              count: 0,
+              name: subject,
+              nameEn: subjectEn,
+            };
           }
 
           subjectStats[subject].totalMax += marks;
@@ -176,6 +186,7 @@ async function fetchAnalyticsInternal(userId: string) {
         return {
           id,
           name: data.name,
+          nameEn: data.nameEn,
           percentage,
           count: data.count,
           status:
@@ -196,21 +207,38 @@ async function fetchAnalyticsInternal(userId: string) {
     const weakest = sortedMastery[0];
     const strongest = sortedMastery[sortedMastery.length - 1];
 
-    let aiSuggestion = '';
+    let aiSuggestion = {
+      en: '',
+      hi: '',
+    };
 
     if (!weakest) {
-      aiSuggestion =
-        "Great start! Take more tests to build your mastery profile. We'll analyze your performance to give specific tips.";
+      aiSuggestion = {
+        en: "Great start! Take more tests to build your mastery profile. We'll analyze your performance to give specific tips.",
+        hi: 'शुरुआत शानदार है! अपनी तैयारी की प्रोफाइल बनाने के लिए और टेस्ट दें। हम आपके प्रदर्शन का विश्लेषण करके आपको खास सुझाव देंगे।',
+      };
     } else if (weakest.percentage < 40) {
-      aiSuggestion = `Urgent: You need to focus on "${weakest.name}". Your accuracy is currently at a critical level (${weakest.percentage}%). Re-read the revision cards for this unit before taking another test.`;
+      aiSuggestion = {
+        en: `Urgent: You need to focus on "${weakest.nameEn}". Your accuracy is currently at a critical level (${weakest.percentage}%). Re-read the revision cards for this unit before taking another test.`,
+        hi: `महत्वपूर्ण: आपको "${weakest.name}" पर ध्यान देने की आवश्यकता है। आपकी सटीकता वर्तमान में गंभीर स्तर (${weakest.percentage}%) पर है। अगला टेस्ट देने से पहले इस यूनिट के रिवीजन कार्ड्स दोबारा पढ़ें।`,
+      };
     } else if (weakest.percentage < 60) {
-      aiSuggestion = `Focus Area: Your performance in "${weakest.name}" is below average. Try practicing topic-specific quizzes to bridge the gap. You're doing great in ${strongest?.name || 'others'} though!`;
+      aiSuggestion = {
+        en: `Focus Area: Your performance in "${weakest.nameEn}" is below average. Try practicing topic-specific quizzes to bridge the gap. You're doing great in ${strongest?.nameEn || 'others'} though!`,
+        hi: `फोकस क्षेत्र: "${weakest.name}" में आपका प्रदर्शन औसत से नीचे है। सुधार के लिए टॉपिक-विशिष्ट क्विज़ का अभ्यास करें। हालांकि आप ${strongest?.name || 'अन्य'} में अच्छा कर रहे हैं!`,
+      };
     } else if (overallAvg < 80) {
       // Changed condition to Overall Average instead of Weakest
-      aiSuggestion = `Optimization: You're doing well, but "${weakest.name}" could use some polish to reach excellence. Aim for 80%+ mastery across all topics.`;
+      aiSuggestion = {
+        en: `Optimization: You're doing well, but "${weakest.nameEn}" could use some polish to reach excellence. Aim for 80%+ mastery across all topics.`,
+        hi: `सुधार: आप अच्छा कर रहे हैं, लेकिन को उत्कृष्ट बनाने के लिए "${weakest.name}" में थोड़ा और सुधार किया जा सकता है। सभी विषयों में 80%+ महारत का लक्ष्य रखें।`,
+      };
     } else {
       // Dynamic message based on actual score
-      aiSuggestion = `Expert Level: You've mastered all current topics with ${overallAvg}%+ accuracy! Keep the momentum going by taking Full Length Tests (FLTs) to simulate the real exam pressure.`;
+      aiSuggestion = {
+        en: `Expert Level: You've mastered all current topics with ${overallAvg}%+ accuracy! Keep the momentum going by taking Full Length Tests (FLTs) to simulate the real exam pressure.`,
+        hi: `विशेषज्ञ स्तर: आपने ${overallAvg}%+ सटीकता के साथ सभी वर्तमान विषयों में महारत हासिल कर ली है! वास्तविक परीक्षा के दबाव का अनुभव करने के लिए फुल लेंथ टेस्ट (FLTs) देकर इस गति को बनाए रखें।`,
+      };
     }
 
     // Deduplicate attempts - Keep only the LATEST attempt for each testId
@@ -321,19 +349,18 @@ export const getAttemptDetails = cachedData(
       // Resolve Dynamic Topic Name
       try {
         if (attempt[0].topicId) {
-          const { getSyllabusTopics } = await import('@/actions/getSyllabusTopics');
-          const syllabusRes = await getSyllabusTopics();
+          // Direct DB query to avoid calling action that uses cookies()
+          const foundTopic = await db.query.syllabusTopics.findFirst({
+            where: eq(syllabusTopics.id, attempt[0].topicId),
+            columns: {
+              title: true,
+              titleEn: true,
+            },
+          });
 
-          if (syllabusRes.success && syllabusRes.data) {
-            let foundTopic: any = null;
-            // Syllabus data is Record<string, Topic[]>
-            const allTopics = Object.values(syllabusRes.data).flat();
-            foundTopic = allTopics.find((t: any) => t.id === attempt[0].topicId);
-
-            if (foundTopic) {
-              // Prefer English title, fallback to Hindi/Default
-              attempt[0].testTitle = foundTopic.titleEn || foundTopic.title || attempt[0].testTitle;
-            }
+          if (foundTopic) {
+            // Prefer English title, fallback to Hindi/Default
+            attempt[0].testTitle = foundTopic.titleEn || foundTopic.title || attempt[0].testTitle;
           }
         }
       } catch (e) {

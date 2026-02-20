@@ -26,6 +26,7 @@ interface DashboardViewProps {
     mastery: {
       id: string;
       name: string;
+      nameEn?: string;
       percentage: number;
       status: string;
       color: string;
@@ -44,10 +45,10 @@ export function DashboardView({ data, userName }: DashboardViewProps) {
   if (!data) {
     return <div className="p-8 text-center text-slate-500">Loading analytics...</div>;
   }
-
+  console.log('data', data);
   const { overallScore, totalTests, mastery, aiSuggestion, recentActivity } = data;
   const weakAreas = mastery.filter((m) => m.percentage < 50).slice(0, 3);
-
+  console.log('mastery', mastery);
   return (
     <div className="animate-in fade-in space-y-8 duration-700">
       {/* Header Stats */}
@@ -77,7 +78,7 @@ export function DashboardView({ data, userName }: DashboardViewProps) {
           <div>
             <div className="text-sm font-medium text-slate-500">Strongest Unit</div>
             <div className="max-w-[150px] truncate text-xl font-bold text-slate-900">
-              {mastery[0]?.name || 'N/A'}
+              {mastery[0] ? (hi ? mastery[0].name : mastery[0].nameEn || mastery[0].name) : 'N/A'}
             </div>
           </div>
         </Card>
@@ -123,7 +124,7 @@ export function DashboardView({ data, userName }: DashboardViewProps) {
                   <div key={item.id} className="group space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="font-bold text-slate-300 transition-colors group-hover:text-white">
-                        {item.name}
+                        {hi ? item.name : item.nameEn || item.name}
                       </span>
                       <span
                         className={`font-bold ${
@@ -260,7 +261,9 @@ export function DashboardView({ data, userName }: DashboardViewProps) {
                   weakAreas.map((area, idx) => (
                     <div key={idx}>
                       <div className="mb-1.5 flex justify-between text-sm font-medium">
-                        <span className="text-slate-700">{area.name}</span>
+                        <span className="text-slate-700">
+                          {hi ? area.name : area.nameEn || area.name}
+                        </span>
                         <span className="text-red-600">{area.percentage}% Acc.</span>
                       </div>
                       <Progress
