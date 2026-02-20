@@ -130,7 +130,7 @@ export function GuestResultClient() {
                 </div>
                 <div className="text-sm font-bold text-white">
                   <button
-                    onClick={() => router.push('/sign-in')}
+                    onClick={() => router.push('/login')}
                     className="underline hover:text-yellow-400"
                   >
                     Sign in
