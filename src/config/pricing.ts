@@ -49,7 +49,11 @@ export interface PlanFeatureWithIcon extends PlanFeature {
 
 // ── Lite Plan Features ────────────────────────────────────
 export const LITE_FEATURES: PlanFeatureWithIcon[] = [
-  { en: 'PYQ Papers ×3 with analysis', hi: 'PYQ पेपर ×3 analysis के साथ', icon: 'BookOpen' },
+  {
+    en: '6 Years PYQs with Detailed Analysis',
+    hi: '6 वर्षों के PYQ पेपर्स (सटीक Analysis के साथ)',
+    icon: 'BookOpen',
+  },
   { en: 'CSAT Mock Papers ×2', hi: 'CSAT मॉक पेपर ×2', icon: 'BookOpen' },
   { en: 'Full Length Tests ×2', hi: 'फुल लेंथ टेस्ट ×2', icon: 'FileText' },
   // { en: '2 Topic Tests per Unit', hi: '2 टॉपिक टेस्ट प्रति यूनिट', icon: 'Target' },
