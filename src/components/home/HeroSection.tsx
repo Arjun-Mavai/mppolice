@@ -73,8 +73,8 @@ export function HeroSection() {
                     <Zap className="h-4 w-4 fill-indigo-400 text-indigo-400 md:h-8 md:w-8" />
                   </div>
 
-                  <span className="truncate text-base font-black tracking-[0.1em] text-white uppercase drop-shadow-sm md:text-2xl md:tracking-[0.2em]">
-                    {language === 'hi' ? 'फ्री प्रैक्टिस' : 'Try Free Tests'}
+                  <span className="text-xs font-black tracking-widest whitespace-nowrap text-white uppercase drop-shadow-sm sm:text-sm md:text-xl md:tracking-[0.15em] lg:text-2xl">
+                    {language === 'hi' ? 'फ्री मॉक टेस्ट शुरू करें' : 'Start Free Mock Test'}
                   </span>
 
                   <ChevronRight
