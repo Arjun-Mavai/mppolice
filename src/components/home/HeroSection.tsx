@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
 
 export function HeroSection() {
   const router = useRouter();
@@ -63,6 +64,12 @@ export function HeroSection() {
               className="group relative w-full"
               onMouseEnter={() => router.prefetch('/syllabus/quiz/pyq')}
               onTouchStart={() => router.prefetch('/syllabus/quiz/pyq')}
+              onClick={() => {
+                trackFbCustomEvent('hero_free_test_clicked', {
+                  location: 'home_page_hero_section',
+                  user_status: 'guest',
+                });
+              }}
             >
               <div className="relative flex h-14 w-full transform items-center justify-center overflow-hidden rounded-full shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-all duration-500 group-hover:-translate-y-0.5 group-hover:scale-[1.02] group-hover:shadow-[0_30px_60px_rgba(79,70,229,0.25)] group-active:scale-[0.96] md:h-24">
                 {/* 🌈 PREMIUM MOVING GRADIENT (ID: 75) */}

@@ -8,6 +8,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { createGuestEntry as createGuestUser } from '@/actions/guest-actions';
 import { GuestResultTeaser } from '@/app/syllabus/quiz/play/GuestResultTeaser';
 import { logger } from '@/lib/logger';
+import { trackFbStandardEvent } from '@/lib/analytics/facebook-pixel';
 
 import { QuizHeader } from './quiz/QuizHeader';
 import { QuizQuestion } from './quiz/QuizQuestion';
@@ -158,6 +159,13 @@ export function QuizInterface(props: QuizInterfaceProps) {
     try {
       localStorage.setItem('mppsc_guest_name', guestName.trim());
       await createGuestUser({ name: guestName, email: guestEmail, mobile: guestMobile });
+
+      // 🎯 Track Lead generated when Guest gives contact info
+      trackFbStandardEvent('Lead', {
+        content_name: 'Guest Quiz Access',
+        content_category: testId,
+      });
+
       setShowGuestEntryDialog(false);
     } catch (error) {
       logger.error('Guest entry creation failed', error, {

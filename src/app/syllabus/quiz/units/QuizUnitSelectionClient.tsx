@@ -12,6 +12,7 @@ import { QuizSubNav } from '@/features/syllabus/components/QuizSubNav';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { getUserTier } from '@/lib/access-control';
+import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
 
 interface QuizUnitSelectionClientProps {
   availableTests: {
@@ -54,10 +55,15 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
   // REVERT: Lite users SHOULD see Unit tests (based on user request)
   const hasActivePlan = effectiveTier === 'lite' || effectiveTier === 'pro';
 
-  const handleUnitClick = (testId: string, isLocked: boolean) => {
+  const handleUnitClick = (testId: string, isLocked: boolean, title: string) => {
     if (isLocked) {
       setUnlockModalOpen(true);
     } else {
+      trackFbCustomEvent('test_started', {
+        test_type: 'unit',
+        test_name: title,
+        test_id: testId,
+      });
       router.push(`/syllabus/quiz/play?mode=topic&testId=${testId}`);
     }
   };
@@ -156,7 +162,7 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
                   isLoading={loadingId === test.id}
                   onClick={() => {
                     if (!isLocked) setLoadingId(test.id);
-                    handleUnitClick(test.id, isLocked);
+                    handleUnitClick(test.id, isLocked, title);
                   }}
                   onMouseEnter={() => {
                     if (!isLocked)

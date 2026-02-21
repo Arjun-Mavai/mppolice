@@ -27,6 +27,7 @@ import { useRouter } from 'next/navigation';
 import { verifyPayment, startPayment } from '@/actions/payment-actions';
 import { checkEmailExists } from '@/actions/email-actions';
 import { getCurrentUser } from '@/actions/auth-actions';
+import { trackFbStandardEvent } from '@/lib/analytics/facebook-pixel';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -290,6 +291,12 @@ export function PaymentModal({
               setUser(u, true);
             }
             router.refresh();
+
+            // 🎯 Track Purchase Facebook Event
+            trackFbStandardEvent('Purchase', {
+              value: Number(orderData.amount) / 100,
+              currency: orderData.currency,
+            });
 
             toast.success('Payment successful! 🎉');
 

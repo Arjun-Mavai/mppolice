@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { QuizListItem } from '@/components/QuizListItem';
 import { QuizSubNav } from '@/features/syllabus/components/QuizSubNav';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
+import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
 
 interface Test {
   id: string;
@@ -52,6 +53,11 @@ export default function CSATPageClient({ initialTests }: CSATPageClientProps) {
       return;
     }
     setLoadingTestId(test.id);
+    trackFbCustomEvent('test_started', {
+      test_type: 'csat',
+      test_name: test.titleEn || test.title,
+      test_id: test.id,
+    });
     router.push(`/syllabus/quiz/play?mode=full&testId=${test.id}`);
   };
 

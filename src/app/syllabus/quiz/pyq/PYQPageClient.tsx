@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { QuizListItem } from '@/components/QuizListItem';
 import { QuizSubNav } from '@/features/syllabus/components/QuizSubNav';
+import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
 
 // --- Types ---
 interface Test {
@@ -113,6 +114,11 @@ export default function PYQPageClient({ initialTests, subjectStats }: PYQPageCli
       setPaywallOpen(true);
     } else {
       setLoadingTestId(test.id);
+      trackFbCustomEvent('test_started', {
+        test_type: 'pyq_year',
+        test_name: test.titleEn || test.title,
+        test_id: test.id,
+      });
       router.push(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);
     }
   };
@@ -123,6 +129,11 @@ export default function PYQPageClient({ initialTests, subjectStats }: PYQPageCli
 
   const handleSeriesSelect = (limit: number, offset: number) => {
     if (!selectedSubject) return;
+    trackFbCustomEvent('test_started', {
+      test_type: 'pyq_subject',
+      test_name: `${selectedSubject} (Part ${offset / limit + 1})`,
+      subject: selectedSubject,
+    });
     router.push(
       `/syllabus/quiz/play?mode=pyq-subject&subject=${selectedSubject}&limit=${limit}&offset=${offset}`
     );
