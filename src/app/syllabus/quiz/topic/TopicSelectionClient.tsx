@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 
 import { getUserTier } from '@/lib/access-control';
+import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
 
 import { QuizSubNav } from '@/features/syllabus/components/QuizSubNav';
 import { QuizListItem } from '@/components/QuizListItem';
@@ -138,6 +139,12 @@ export default function TopicSelectionClient({ initialDbData }: TopicSelectionCl
     }
 
     if (topic.testId) {
+      trackFbCustomEvent('test_started', {
+        test_type: 'topic',
+        test_name: topic.titleEn || topic.title,
+        unit_id: unitId,
+        test_id: topic.testId,
+      });
       router.push(`/syllabus/quiz/play?unitId=${unitId}&testId=${topic.testId}`);
     } else {
       toast.error('Test coming soon!');
