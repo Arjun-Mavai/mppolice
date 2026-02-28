@@ -38,7 +38,8 @@ export async function POST(request: Request) {
     const to = body.to || adminUser.email;
 
     const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
-    const fromAddress = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
+    const fromAddress =
+      process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
     const { data, error } = await resend.emails.send({

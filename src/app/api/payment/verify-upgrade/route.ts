@@ -157,10 +157,11 @@ export async function POST(req: Request) {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
-    const fromAddress = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
+    const fromAddress =
+      process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
-    await resend.emails.send({
+    const { error: emailError } = await resend.emails.send({
       from: fromEmail,
       to: [user.email],
       subject: '🚀 Upgrade Successful — MPPSC ZEN',
@@ -180,6 +181,14 @@ export async function POST(req: Request) {
             </div>
         `,
     });
+
+    if (emailError) {
+      logger.error('Failed to send upgrade email via Resend', emailError, {
+        category: 'email',
+        userId,
+        metadata: { to: user.email },
+      });
+    }
 
     // ── Log Activity ──────────────────────────────────────────────
     try {
