@@ -26,7 +26,7 @@ export const PRICING_DEFAULTS: PricingData = {
   liteOriginalPrice: 299,
   liteValidityText: 'Valid till MPPSC 2026 Prelims',
   liteMonths: 8,
-  proPrice: 299,
+  proPrice: 199,
   proOriginalPrice: 999,
   proValidityText: 'Valid till MPPSC 2026 Mains',
   proMonths: 12,
@@ -69,7 +69,6 @@ export const LITE_FEATURES: PlanFeatureWithIcon[] = [
 
 // ── Pro Plan Features ─────────────────────────────────────
 export const PRO_FEATURES: PlanFeatureWithIcon[] = [
-  { en: 'Everything in Lite +', hi: 'लाइट की सभी सुविधाएँ +', icon: 'Zap' },
   { en: 'Unlimited Topic & Unit Tests', hi: 'अनलिमिटेड टॉपिक और यूनिट टेस्ट', icon: 'Target' },
   { en: 'Full Length Mock Tests (100Q)', hi: 'फुल लेंथ मॉक टेस्ट (100 प्रश्न)', icon: 'FileText' },
   { en: 'CSAT Mock Papers', hi: 'CSAT मॉक पेपर', icon: 'BookOpen' },
