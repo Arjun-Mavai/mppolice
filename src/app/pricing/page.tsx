@@ -208,7 +208,7 @@ export default function PricingPage() {
             <PricingCard
               planType="upgrade"
               pricing={p}
-              features={proFeatures.slice(1)}
+              features={proFeatures}
               language={language}
               onBuy={() => handleBuy('upgrade')}
             />
@@ -289,14 +289,7 @@ export default function PricingPage() {
           </div>
 
           {/* ── Pricing Cards ────────────────────────────── */}
-          <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-5 md:grid-cols-2 md:gap-8">
-            <PricingCard
-              planType="lite"
-              pricing={p}
-              features={LITE_FEATURES}
-              language={language}
-              onBuy={() => handleBuy('lite')}
-            />
+          <div className="mx-auto grid w-full max-w-md grid-cols-1 gap-5">
             <PricingCard
               planType="pro"
               pricing={p}
@@ -305,29 +298,6 @@ export default function PricingPage() {
               onBuy={() => handleBuy('pro')}
               isPopular
             />
-          </div>
-
-          {/* ── Comparison note ───────────────────────────── */}
-          <div className="mx-auto mt-6 max-w-4xl">
-            <div className="rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 p-4 md:p-6">
-              <div className="flex flex-col items-center gap-3 text-center md:flex-row md:gap-6 md:text-left">
-                <div className="flex-1">
-                  <p className="mb-1 text-sm font-bold text-slate-800">
-                    {hi ? '💡 Pro में क्या extra मिलता है?' : '💡 What extra do you get in Pro?'}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {hi
-                      ? 'Unlimited tests, FLTs, CSAT, PYQ papers + Mains तक validity. Serious aspirants के लिए Pro best value है।'
-                      : 'Unlimited tests, FLTs, CSAT, PYQ papers + validity till Mains. Best value for serious aspirants.'}
-                  </p>
-                </div>
-                <div className="text-sm font-bold whitespace-nowrap text-slate-600">
-                  {hi
-                    ? `सिर्फ ₹${p.proPrice - p.litePrice} ज़्यादा`
-                    : `Just ₹${p.proPrice - p.litePrice} more`}
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Trust signals */}

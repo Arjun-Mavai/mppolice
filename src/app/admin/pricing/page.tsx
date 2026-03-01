@@ -86,62 +86,6 @@ export default function AdminPricingPage() {
         </Button>
       </div>
 
-      {/* ── Lite Plan Card ─────────────────────────────────── */}
-      <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
-        <h2 className="flex items-center gap-2 font-bold text-slate-800">⚡ Lite Plan</h2>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label className={labelClass}>Current Price (₹)</label>
-            <input
-              type="number"
-              value={data.litePrice}
-              onChange={(e) => updateField('litePrice', Number(e.target.value))}
-              className={inputClass}
-            />
-          </div>
-          <div className="space-y-1">
-            <label className={labelClass}>Original / Strike (₹)</label>
-            <input
-              type="number"
-              value={data.liteOriginalPrice}
-              onChange={(e) => updateField('liteOriginalPrice', Number(e.target.value))}
-              className={inputClass}
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label className={labelClass}>Validity Text</label>
-            <input
-              type="text"
-              value={data.liteValidityText}
-              onChange={(e) => updateField('liteValidityText', e.target.value)}
-              className={inputClass}
-            />
-          </div>
-          <div className="space-y-1">
-            <label className={labelClass}>Duration (months)</label>
-            <input
-              type="number"
-              value={data.liteMonths}
-              onChange={(e) => updateField('liteMonths', Number(e.target.value))}
-              className={inputClass}
-            />
-          </div>
-        </div>
-        {/* Live preview */}
-        <div className="rounded-lg bg-slate-50 p-3 text-sm">
-          <span className="text-slate-400 line-through">₹{data.liteOriginalPrice}</span>
-          <span className="ml-2 text-xl font-black text-slate-900">₹{data.litePrice}</span>
-          <span className="ml-2 text-xs font-bold text-emerald-600">
-            {Math.round((1 - data.litePrice / data.liteOriginalPrice) * 100)}% OFF
-          </span>
-          <span className="ml-2 text-xs text-slate-400">
-            ~ ₹{Math.round(data.litePrice / data.liteMonths)}/mo • {data.liteMonths} months
-          </span>
-        </div>
-      </div>
-
       {/* ── Pro Plan Card ──────────────────────────────────── */}
       <div className="space-y-3 rounded-xl border-2 border-slate-800 bg-white p-4 shadow-sm md:p-6">
         <h2 className="flex items-center gap-2 font-bold text-slate-800">👑 Pro Plan</h2>

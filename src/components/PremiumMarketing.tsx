@@ -97,7 +97,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
           <PricingCard
             planType="upgrade"
             pricing={p}
-            features={PRO_FEATURES.slice(1)}
+            features={PRO_FEATURES}
             language={language}
             onBuy={() => onUnlock(p.upgradePrice)}
             href="/pricing"
@@ -137,15 +137,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
         </div>
       </div>
 
-      <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-6 px-0 md:grid-cols-2 md:gap-8 md:px-4">
-        <PricingCard
-          planType="lite"
-          pricing={p}
-          features={LITE_FEATURES}
-          language={language}
-          onBuy={() => onUnlock(p.litePrice)}
-          href="/pricing"
-        />
+      <div className="mx-auto grid w-full max-w-md grid-cols-1 gap-6 px-0 md:gap-8 md:px-4">
         <PricingCard
           planType="pro"
           pricing={p}

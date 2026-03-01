@@ -65,15 +65,7 @@ export function PricingSection() {
         </div>
 
         {/* Pricing Cards — same as /pricing page */}
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-8">
-          <PricingCard
-            planType="lite"
-            pricing={p}
-            features={LITE_FEATURES}
-            language={language}
-            onBuy={() => router.push('/pricing')}
-            href="/pricing"
-          />
+        <div className="mx-auto grid max-w-md grid-cols-1 gap-5">
           <PricingCard
             planType="pro"
             pricing={p}
