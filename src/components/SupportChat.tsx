@@ -8,28 +8,35 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { submitSupportTicket } from '@/actions/support-actions';
+import Link from 'next/link';
 
 type QA = {
   question: { en: string; hi: string };
-  answer: { en: string; hi: string };
+  answer: { en: React.ReactNode; hi: React.ReactNode };
 };
 
 const FAQS: QA[] = [
   {
-    question: { en: 'How do I get Lite or Pro access?', hi: 'Lite या Pro एक्सेस कैसे मिलेगा?' },
+    question: { en: 'How do I get Pro access?', hi: 'Pro एक्सेस कैसे मिलेगा?' },
     answer: {
-      en: 'Contact us on WhatsApp to get your plan activated instantly. Lite is for Prelims prep, Pro covers till Mains with unlimited tests.',
-      hi: 'WhatsApp पर संपर्क करें, आपका प्लान तुरंत एक्टिव हो जाएगा। Lite प्रीलिम्स तक, Pro मेन्स तक अनलिमिटेड टेस्ट के साथ।',
-    },
-  },
-  {
-    question: {
-      en: 'Can I upgrade from Lite to Pro?',
-      hi: 'क्या Lite से Pro में अपग्रेड कर सकते हैं?',
-    },
-    answer: {
-      en: 'Yes! Just pay the difference amount. Your old account gets linked to the new Pro account automatically.',
-      hi: 'हाँ! सिर्फ़ अंतर राशि भरें। आपका पुराना अकाउंट नए Pro अकाउंट से ऑटोमैटिक जुड़ जाएगा।',
+      en: (
+        <span>
+          You can get instant Pro access by completing your payment directly from our{' '}
+          <Link href="/pricing" className="font-semibold text-indigo-600 hover:underline">
+            Pricing page
+          </Link>
+          . If you face any issues, our support team is always here to help!
+        </span>
+      ),
+      hi: (
+        <span>
+          आप हमारे{' '}
+          <Link href="/pricing" className="font-semibold text-indigo-600 hover:underline">
+            प्राइसिंग पेज
+          </Link>{' '}
+          से सीधा पेमेंट करके प्रो एक्सेस ले सकते हैं। आपका प्लान तुरंत एक्टिव हो जाएगा।
+        </span>
+      ),
     },
   },
   {
