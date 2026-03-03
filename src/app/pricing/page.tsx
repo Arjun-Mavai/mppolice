@@ -42,31 +42,10 @@ import { useQuery } from '@tanstack/react-query';
 // ── FAQ data — bilingual ────────────────────────────────────
 const faqData = [
   {
-    q: { en: 'What happens after I pay?', hi: 'पेमेंट के बाद क्या होगा?' },
-    a: {
-      en: 'Send payment screenshot on WhatsApp and your plan gets activated within minutes. Simple and quick!',
-      hi: 'WhatsApp पर पेमेंट स्क्रीनशॉट भेजें और आपका प्लान मिनटों में एक्टिव हो जाएगा। सरल और तेज़!',
-    },
-  },
-  {
-    q: { en: 'Is there a refund policy?', hi: 'क्या रिफंड मिलेगा?' },
-    a: {
-      en: 'Since this is digital content with instant access, refunds are not available once access is granted.',
-      hi: 'यह डिजिटल कंटेंट है और एक्सेस तुरंत मिलता है, इसलिए एक्सेस मिलने के बाद रिफंड उपलब्ध नहीं है।',
-    },
-  },
-  {
-    q: { en: 'Can I upgrade from Lite to Pro?', hi: 'क्या लाइट से प्रो में अपग्रेड कर सकते हैं?' },
-    a: {
-      en: 'Yes! Pay just the difference to upgrade from Lite to Pro anytime.',
-      hi: 'हाँ! सिर्फ़ अंतर भरें और कभी भी लाइट से प्रो में अपग्रेड करें।',
-    },
-  },
-  {
     q: { en: 'How long is my access valid?', hi: 'मेरा एक्सेस कब तक वैध रहेगा?' },
     a: {
-      en: 'Lite is valid till MPPSC 2026 Prelims. Pro is valid till MPPSC 2026 Mains.',
-      hi: 'लाइट MPPSC 2026 प्रीलिम्स तक और प्रो MPPSC 2026 मेन्स तक वैध है।',
+      en: 'Pro access is valid till MPPSC 2026 Mains.',
+      hi: 'प्रो एक्सेस MPPSC 2026 मेन्स तक वैध है।',
     },
   },
   {
