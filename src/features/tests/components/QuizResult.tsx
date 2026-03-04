@@ -28,6 +28,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import {
   FormattedQuestionText,
   RenderTableQuestion,
+  cleanMatchingQuestionText,
 } from '@/features/tests/utils/questionFormatter';
 import { logger } from '@/lib/logger';
 
@@ -436,19 +437,7 @@ export function QuizResult({
                     <div className="text-sm leading-snug font-bold text-slate-900 md:text-base">
                       <span className="mr-2 text-slate-400">Q{idx + 1}.</span>
                       <FormattedQuestionText
-                        text={
-                          q.type === 'matching' && q.matchPairs && q.matchPairs.length > 0
-                            ? q.question
-                                .substring(
-                                  0,
-                                  q.question.search(/List-?\s*I\b|सूची-?\s*I\b|सूची-?\s*[12]/i) !==
-                                    -1
-                                    ? q.question.search(/List-?\s*I\b|सूची-?\s*I\b|सूची-?\s*[12]/i)
-                                    : q.question.length
-                                )
-                                .trim()
-                            : q.question
-                        }
+                        text={cleanMatchingQuestionText(q.question, q)}
                         className="inline"
                       />
 
@@ -465,24 +454,7 @@ export function QuizResult({
                     {/* English Question Text */}
                     {q.questionEn && (
                       <div className="mt-2 text-sm text-slate-500">
-                        <FormattedQuestionText
-                          text={
-                            q.type === 'matching' && q.matchPairs && q.matchPairs.length > 0
-                              ? q.questionEn
-                                  .substring(
-                                    0,
-                                    q.questionEn.search(
-                                      /List-?\s*I\b|सूची-?\s*I\b|सूची-?\s*[12]/i
-                                    ) !== -1
-                                      ? q.questionEn.search(
-                                          /List-?\s*I\b|सूची-?\s*I\b|सूची-?\s*[12]/i
-                                        )
-                                      : q.questionEn.length
-                                  )
-                                  .trim()
-                              : q.questionEn
-                          }
-                        />
+                        <FormattedQuestionText text={cleanMatchingQuestionText(q.questionEn, q)} />
 
                         {q.type === 'matching' && (
                           <RenderTableQuestion
