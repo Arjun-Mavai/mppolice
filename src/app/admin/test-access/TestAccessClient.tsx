@@ -23,6 +23,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import {
   ArrowLeft,
   Shield,
@@ -40,6 +49,9 @@ import {
   RotateCcw,
   Copy,
   Trash2,
+  FileText,
+  Upload,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
@@ -52,6 +64,8 @@ import {
   updateAttemptLimit,
   bulkUpdateMaxRetries,
   deleteTest,
+  getTestWithQuestions,
+  updateTestContent,
 } from './actions';
 import { toast } from 'sonner';
 import { revalidateSyllabus } from '@/actions/revalidate';
@@ -204,6 +218,82 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
         }
       } catch {
         toast.error('Delete fail ho gaya');
+      }
+    });
+  };
+
+  // ── Edit Content state — blog-access jaisa pattern ──────────
+  const [editOpen, setEditOpen] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editTestId, setEditTestId] = useState<string | null>(null);
+  const [editTestTitle, setEditTestTitle] = useState('');
+  const [editQuestionsJson, setEditQuestionsJson] = useState('');
+
+  // Edit click — test ka questions JSON fetch karke dialog kholo
+  const handleEditContentClick = async (testId: string, title: string) => {
+    setEditLoading(true);
+    setEditTestId(testId);
+    setEditTestTitle(title);
+    setEditQuestionsJson(''); // Clear stale data
+    setEditOpen(true);
+
+    try {
+      const result = await getTestWithQuestions(testId);
+      if (!result.success || !result.questionsJson) {
+        toast.error(result.error || 'Test fetch fail');
+        setEditOpen(false);
+        return;
+      }
+      setEditQuestionsJson(JSON.stringify(result.questionsJson, null, 2));
+    } catch {
+      toast.error('Test fetch fail ho gaya');
+      setEditOpen(false);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  // Edit submit — updated questions server pe bhejo
+  const handleEditContentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTestId) return;
+
+    // Validate JSON pehle
+    try {
+      const parsed = JSON.parse(editQuestionsJson);
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        toast.error('Non-empty JSON array chahiye bhai');
+        return;
+      }
+    } catch {
+      toast.error('JSON format galat h — check karo');
+      return;
+    }
+
+    setEditLoading(true);
+    startTransition(async () => {
+      try {
+        const result = await updateTestContent(editTestId, { questionsJson: editQuestionsJson });
+        if (!result.success) {
+          toast.error(result.error || 'Update fail');
+        } else {
+          toast.success('Test content updated! 🎉');
+          setEditOpen(false);
+
+          // Local state me question count update karo
+          try {
+            const parsed = JSON.parse(editQuestionsJson);
+            setTests((prev) =>
+              prev.map((t) =>
+                t.id === editTestId ? { ...t, totalQuestions: parsed.length } : t
+              )
+            );
+          } catch { /* page refresh pe sahi aa jayega */ }
+        }
+      } catch {
+        toast.error('Unexpected error');
+      } finally {
+        setEditLoading(false);
       }
     });
   };
@@ -907,6 +997,16 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
 
                         <div className="h-8 w-px bg-slate-200" />
 
+                        {/* Edit Content Button */}
+                        <button
+                          onClick={() => handleEditContentClick(test.id, test.title)}
+                          disabled={isPending}
+                          className="rounded-md p-1.5 text-slate-300 transition-colors hover:bg-indigo-50 hover:text-indigo-500 disabled:opacity-50"
+                          title="Edit test questions"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </button>
+
                         {/* Delete Button */}
                         <button
                           onClick={() => handleDeleteTest(test.id, test.title)}
@@ -936,6 +1036,58 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
           </div>
         )}
       </div>
+
+      {/* ── Edit Content Dialog — blog-access jaisa pattern ──── */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-emerald-900">
+              <FileText className="h-5 w-5 text-emerald-600" />
+              Edit Test Questions
+            </DialogTitle>
+            <DialogDescription>
+              "{editTestTitle}" — Questions JSON edit karo, same format jaise upload karte ho
+            </DialogDescription>
+          </DialogHeader>
+
+          {editLoading && !editQuestionsJson ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+            </div>
+          ) : (
+            <form onSubmit={handleEditContentSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label className="flex justify-between">
+                  <span>Questions JSON Array</span>
+                  <span className="text-xs font-normal text-slate-400">
+                    Format: <code>[{`{ "questionText": "...", "correctAnswer": 0 }`}]</code>
+                  </span>
+                </Label>
+                <Textarea
+                  value={editQuestionsJson}
+                  onChange={(e) => setEditQuestionsJson(e.target.value)}
+                  className="h-[400px] bg-slate-50 font-mono text-xs"
+                  placeholder='[{ "questionText": "...", "options": [...], "correctAnswer": 0 }]'
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                disabled={editLoading}
+              >
+                {editLoading ? (
+                  <Loader2 className="mr-2 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
+                Save Questions
+              </Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
