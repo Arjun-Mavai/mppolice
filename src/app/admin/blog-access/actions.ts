@@ -207,7 +207,7 @@ export async function updateBlog(
       return { success: false, error: "Invalid JSON: 'metadata' aur 'content' dono chahiye bhai" };
     }
 
-    const { metadata, content } = parsed;
+    const { metadata } = parsed;
 
     if (!metadata.title || !metadata.slug || !metadata.category) {
       return { success: false, error: 'Title, slug, ya category missing h bhai' };
