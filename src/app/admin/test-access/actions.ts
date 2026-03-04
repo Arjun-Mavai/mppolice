@@ -325,3 +325,139 @@ export async function deleteTest(testId: string) {
     return { success: false, error: error.message || 'Test delete fail ho gaya' };
   }
 }
+
+/**
+ * getTestWithQuestions — Edit ke liye test + questions fetch karo
+ * Questions ko JSON array me convert karke bhejta h — same format jaise upload karte ho
+ */
+export async function getTestWithQuestions(testId: string) {
+  await requireAdmin();
+
+  const test = await db
+    .select({
+      id: tests.id,
+      title: tests.title,
+      titleEn: tests.titleEn,
+      type: tests.type,
+      unitId: tests.unitId,
+      topicId: tests.topicId,
+      description: tests.description,
+      tags: tests.tags,
+    })
+    .from(tests)
+    .where(eq(tests.id, testId))
+    .get();
+
+  if (!test) return { success: false as const, error: 'Test not found' };
+
+  const qs = await db
+    .select()
+    .from(questions)
+    .where(eq(questions.testId, testId))
+    .orderBy(questions.order);
+
+  // Questions ko upload-compatible JSON format me convert karo
+  const questionsJson = qs.map((q) => ({
+    questionText: q.questionText,
+    questionTextEn: q.questionTextEn || undefined,
+    options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
+    correctAnswer: q.correctAnswer,
+    explanation: q.explanation || undefined,
+    explanationEn: q.explanationEn || undefined,
+    marks: q.marks,
+    negativeMarks: q.negativeMarks,
+    idealTime: q.idealTime,
+    subject: q.subject || undefined,
+    type: q.type || 'standard',
+    matchPairs: q.matchPairs || undefined,
+    order: q.order,
+  }));
+
+  return { success: true as const, test, questionsJson };
+}
+
+/**
+ * updateTestContent — Test ke questions replace karo (full overwrite)
+ * Purane sab questions delete → naye insert — simple aur safe
+ */
+export async function updateTestContent(
+  testId: string,
+  data: { questionsJson: string }
+) {
+  await requireAdmin();
+
+  try {
+    const test = await db
+      .select({ id: tests.id, title: tests.title })
+      .from(tests)
+      .where(eq(tests.id, testId))
+      .get();
+
+    if (!test) return { success: false, error: 'Test not found' };
+
+    let parsed;
+    try {
+      parsed = JSON.parse(data.questionsJson);
+    } catch {
+      return { success: false, error: 'Invalid JSON format bhai' };
+    }
+
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return { success: false, error: 'JSON array of questions chahiye (non-empty)' };
+    }
+
+    // Validate ki har question me questionText h
+    for (const q of parsed) {
+      if (!q.questionText || typeof q.questionText !== 'string' || !q.questionText.trim()) {
+        return { success: false, error: "Ek question me 'questionText' missing h" };
+      }
+    }
+
+    // Step 1: Purane questions delete karo
+    await db.delete(questions).where(eq(questions.testId, testId));
+
+    // Step 2: Naye questions insert karo
+    const { nanoid } = await import('nanoid');
+    const newQuestions = parsed.map((q: any, idx: number) => ({
+      id: nanoid(),
+      testId,
+      questionText: q.questionText,
+      questionTextEn: q.questionTextEn || null,
+      options: JSON.stringify(q.options),
+      correctAnswer: q.correctAnswer,
+      explanation: q.explanation || null,
+      explanationEn: q.explanationEn || null,
+      marks: q.marks || 2,
+      negativeMarks: q.negativeMarks || 0,
+      idealTime: q.idealTime || 60,
+      order: q.order || idx + 1,
+      subject: q.subject || 'General',
+      type: q.type || 'standard',
+      matchPairs: q.matchPairs || null,
+    }));
+
+    await db.insert(questions).values(newQuestions);
+
+    // Step 3: Test metadata update (marks + count)
+    const totalMarks = newQuestions.reduce((sum: number, q: any) => sum + (q.marks || 0), 0);
+    await db
+      .update(tests)
+      .set({
+        totalQuestions: newQuestions.length,
+        totalMarks,
+        updatedAt: new Date(),
+      })
+      .where(eq(tests.id, testId));
+
+    // Cache bust
+    revalidateTag('tests', { expire: 0 });
+    revalidateTag('tests-list', { expire: 0 });
+    revalidateTag('syllabus-topics', { expire: 0 });
+
+    logger.info(`Test content updated: ${testId} → ${newQuestions.length} questions`);
+    return { success: true };
+  } catch (error: any) {
+    logger.error('Update Test Content Error:', error);
+    return { success: false, error: error.message || 'Update fail ho gaya' };
+  }
+}
