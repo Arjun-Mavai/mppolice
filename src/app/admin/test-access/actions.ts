@@ -47,6 +47,7 @@ export async function getAllTestsForAdmin() {
       isProAccess: tests.isProAccess,
       isHidden: tests.isHidden,
       displayOrder: tests.displayOrder,
+      tags: tests.tags,
       createdAt: tests.createdAt,
     })
     .from(tests)
@@ -459,5 +460,58 @@ export async function updateTestContent(
   } catch (error: any) {
     logger.error('Update Test Content Error:', error);
     return { success: false, error: error.message || 'Update fail ho gaya' };
+  }
+}
+
+/**
+ * toggleInstantMode — Test ke tags me 'no-instant-mode' add/remove karo
+ *
+ * Tags JSON array h tests table me (e.g. ["MISC", "2026", "History"])
+ * 'no-instant-mode' tag present → instant mode disabled for that test
+ * Tag absent → instant mode allowed (default behavior)
+ *
+ * No migration needed — tags column already exist karta h!
+ */
+export async function toggleInstantMode(testId: string, disable: boolean) {
+  await requireAdmin();
+
+  try {
+    const test = await db
+      .select({ tags: tests.tags })
+      .from(tests)
+      .where(eq(tests.id, testId))
+      .get();
+
+    if (!test) return { success: false, error: 'Test not found' };
+
+    // Tags ko array me convert karo (null/invalid handle)
+    let currentTags: string[] = [];
+    if (Array.isArray(test.tags)) {
+      currentTags = test.tags as string[];
+    }
+
+    if (disable) {
+      // Tag add karo (agar pehle se nahi h)
+      if (!currentTags.includes('no-instant-mode')) {
+        currentTags.push('no-instant-mode');
+      }
+    } else {
+      // Tag remove karo
+      currentTags = currentTags.filter((t) => t !== 'no-instant-mode');
+    }
+
+    await db
+      .update(tests)
+      .set({ tags: currentTags, updatedAt: new Date() })
+      .where(eq(tests.id, testId));
+
+    revalidateTag('tests', { expire: 0 });
+    revalidateTag('tests-list', { expire: 0 });
+
+    logger.info(`Instant mode ${disable ? 'disabled' : 'enabled'}: ${testId}`);
+    return { success: true };
+  } catch (error: any) {
+    logger.error('Toggle Instant Mode Error:', error);
+    return { success: false, error: error.message };
   }
 }

@@ -9,6 +9,7 @@ import { createGuestEntry as createGuestUser } from '@/actions/guest-actions';
 import { logger } from '@/lib/logger';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useGuestResultStore } from '../store/guestResultStore';
 
 import { QuizHeader } from './quiz/QuizHeader';
@@ -27,6 +28,7 @@ interface GuestQuizInterfaceProps {
   title?: string;
   onExit: () => void;
   disablePalette?: boolean;
+  disableInstantMode?: boolean; // Pro feature — free quiz me OFF rahega
 }
 
 export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
@@ -37,6 +39,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     title,
     onExit,
     disablePalette = false,
+    disableInstantMode = false,
     testId,
   } = props;
 
@@ -308,10 +311,20 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
         title={title}
         mode={mode}
         timeLeft={timeLeft}
-        instantModeEnabled={instantModeEnabled}
+        instantModeEnabled={disableInstantMode ? false : instantModeEnabled}
         isSubmitted={isSubmitted}
         language={language}
-        onInstantModeToggle={() => setInstantModeEnabled(!instantModeEnabled)}
+        onInstantModeToggle={() => {
+          if (disableInstantMode) {
+            toast('🔒 Pro Feature', {
+              description: language === 'hi'
+                ? 'Instant Mode सिर्फ Pro users के लिए है। Upgrade करें!'
+                : 'Instant Mode is a Pro feature. Upgrade to unlock!',
+            });
+            return;
+          }
+          setInstantModeEnabled(!instantModeEnabled);
+        }}
         onLanguageToggle={() => setLanguage(language === 'hi' ? 'en' : 'hi')}
         onExit={showExitModal}
         translations={{
