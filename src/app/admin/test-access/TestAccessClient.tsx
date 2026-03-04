@@ -39,6 +39,7 @@ import {
   Calendar,
   RotateCcw,
   Copy,
+  Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
@@ -50,6 +51,7 @@ import {
   updateTestDisplayOrder,
   updateAttemptLimit,
   bulkUpdateMaxRetries,
+  deleteTest,
 } from './actions';
 import { toast } from 'sonner';
 import { revalidateSyllabus } from '@/actions/revalidate';
@@ -182,6 +184,26 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
           prev.map((t) => (t.id === testId ? { ...t, isHidden: currentValue } : t))
         );
         toast.error('Update failed');
+      }
+    });
+  };
+
+  // Delete test — confirm popup → server delete → list se hatao
+  const handleDeleteTest = (testId: string, title: string) => {
+    if (!window.confirm(`"${title}" permanently delete ho jayega.\nQuestions, attempts sab ud jayega. Sure ho?`)) {
+      return;
+    }
+    startTransition(async () => {
+      try {
+        const result = await deleteTest(testId);
+        if (result.success) {
+          setTests((prev) => prev.filter((t) => t.id !== testId));
+          toast.success('Test deleted!');
+        } else {
+          toast.error(result.error || 'Delete fail');
+        }
+      } catch {
+        toast.error('Delete fail ho gaya');
       }
     });
   };
@@ -882,6 +904,18 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
                             className="data-[state=checked]:bg-amber-500"
                           />
                         </div>
+
+                        <div className="h-8 w-px bg-slate-200" />
+
+                        {/* Delete Button */}
+                        <button
+                          onClick={() => handleDeleteTest(test.id, test.title)}
+                          disabled={isPending}
+                          className="rounded-md p-1.5 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+                          title="Delete test permanently"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
                     </div>
                   </CardContent>

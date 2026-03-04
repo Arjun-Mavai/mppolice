@@ -14,7 +14,7 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import { db } from '@/db';
-import { tests, syllabusTopics, testAttemptLimits } from '@/db/schema';
+import { tests, questions, syllabusTopics, testAttemptLimits, userAttempts, attemptAnswers, testLeaderboard } from '@/db/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 import { requireAdmin } from '@/lib/auth-admin';
@@ -277,4 +277,51 @@ export async function bulkUpdateMaxRetries(
 
   logger.info(`Bulk maxRetries updated: ${testType} → ${maxRetries ?? 'unlimited'}`);
   return { success: true };
+}
+
+/**
+ * deleteTest — Test ko permanently delete karo (cascade se questions bhi ud jayenge)
+ *
+ * Deletion order (FK constraints handle karte h):
+ * 1. attempt_answers → userAttempts pe cascade h
+ * 2. user_attempts → tests pe cascade h
+ * 3. questions → tests pe cascade h
+ * 4. leaderboard entries manually delete (no FK)
+ * 5. test row itself
+ *
+ * SQLite me ON DELETE CASCADE enabled h, so questions + userAttempts + attemptAnswers
+ * automatically delete ho jayenge. Leaderboard manually karna padta h.
+ */
+export async function deleteTest(testId: string) {
+  await requireAdmin();
+
+  try {
+    // Pehle check karo test exist karta h ya nahi
+    const test = await db
+      .select({ id: tests.id, title: tests.title, type: tests.type })
+      .from(tests)
+      .where(eq(tests.id, testId))
+      .get();
+
+    if (!test) {
+      return { success: false, error: 'Test not found bhai' };
+    }
+
+    // Leaderboard entries manually delete (no FK constraint on testId)
+    await db.delete(testLeaderboard).where(eq(testLeaderboard.testId, testId));
+
+    // Test delete — CASCADE se questions, userAttempts, attemptAnswers sab ud jayenge
+    await db.delete(tests).where(eq(tests.id, testId));
+
+    // Cache bust — sab test lists fresh ho jayenge
+    revalidateTag('tests', { expire: 0 });
+    revalidateTag('tests-list', { expire: 0 });
+    revalidateTag('syllabus-topics', { expire: 0 });
+
+    logger.info(`Test deleted: ${testId} → "${test.title}" (${test.type})`);
+    return { success: true };
+  } catch (error: any) {
+    logger.error('Delete Test Error:', error);
+    return { success: false, error: error.message || 'Test delete fail ho gaya' };
+  }
 }
