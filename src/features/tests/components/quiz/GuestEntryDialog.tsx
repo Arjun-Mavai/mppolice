@@ -101,7 +101,7 @@ export function GuestEntryDialog({
               </label>
               <Input
                 type="email"
-                placeholder="Optional - skip"
+                placeholder="Optional"
                 value={guestEmail}
                 onChange={(e) => onEmailChange(e.target.value)}
                 className="h-10 border-slate-200 bg-slate-50 text-sm text-slate-600 placeholder:text-slate-400 focus:bg-white focus:ring-1 focus:ring-slate-300"
@@ -114,7 +114,7 @@ export function GuestEntryDialog({
               </label>
               <Input
                 type="tel"
-                placeholder="Optional - skip"
+                placeholder="Optional"
                 value={guestMobile}
                 onChange={(e) => onMobileChange(e.target.value)}
                 className="h-10 border-slate-200 bg-slate-50 text-sm text-slate-600 placeholder:text-slate-400 focus:bg-white focus:ring-1 focus:ring-slate-300"
