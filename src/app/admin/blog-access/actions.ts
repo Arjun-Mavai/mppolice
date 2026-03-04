@@ -157,6 +157,154 @@ export async function toggleBlogHidden(blogId: string, isHidden: boolean) {
 }
 
 /**
+ * getBlogById — Edit ke liye poora blog data fetch karo
+ * ID se blog dhundho → imageUrl + content JSON return karo
+ */
+export async function getBlogById(blogId: string) {
+  await requireAdmin();
+
+  const blog = await db
+    .select({
+      id: contentBlogs.id,
+      slug: contentBlogs.slug,
+      title: contentBlogs.title,
+      description: contentBlogs.description,
+      excerpt: contentBlogs.excerpt,
+      content: contentBlogs.content,
+      category: contentBlogs.category,
+      imageUrl: contentBlogs.imageUrl,
+      readingTime: contentBlogs.readingTime,
+      contentType: contentBlogs.contentType,
+      unitId: contentBlogs.unitId,
+      topicId: contentBlogs.topicId,
+    })
+    .from(contentBlogs)
+    .where(eq(contentBlogs.id, blogId))
+    .get();
+
+  if (!blog) return { success: false as const, error: 'Blog nahi mila bhai' };
+
+  return { success: true as const, blog };
+}
+
+/**
+ * updateBlog — Blog ko edit/update karo (image + content sab)
+ * Pehle validate → phir DB update → cache bust
+ * Content-manager jaisa hi flow — bas update h insert ki jagah
+ */
+export async function updateBlog(
+  blogId: string,
+  data: { imageUrl: string; contentJson: string }
+) {
+  await requireAdmin();
+
+  try {
+    const { imageUrl, contentJson } = data;
+    const parsed = JSON.parse(contentJson);
+
+    // Validate — metadata aur content dono chahiye
+    if (!parsed.metadata || !parsed.content) {
+      return { success: false, error: "Invalid JSON: 'metadata' aur 'content' dono chahiye bhai" };
+    }
+
+    const { metadata, content } = parsed;
+
+    if (!metadata.title || !metadata.slug || !metadata.category) {
+      return { success: false, error: 'Title, slug, ya category missing h bhai' };
+    }
+
+    if (!content.hi || !content.en) {
+      return { success: false, error: "Content me 'hi' aur 'en' dono keys chahiye" };
+    }
+
+    // Text extract karo excerpt/description generate karne ke liye
+    const extractTextIteratively = (content: any): string => {
+      if (!content) return '';
+      if (typeof content === 'string') return content;
+      if (Array.isArray(content)) {
+        return content.map((item) => extractTextIteratively(item)).join(' ');
+      }
+      if (typeof content === 'object') {
+        if (content.type === 'h2' || content.type === 'h3' || content.type === 'p')
+          return content.text || '';
+        if (content.type === 'ul' || content.type === 'ol')
+          return Array.isArray(content.items) ? content.items.join(' ') : '';
+        if (content.type === 'table')
+          return Array.isArray(content.body)
+            ? content.body.map((row: any[]) => row.join(' ')).join(' ')
+            : '';
+        if (content.type === 'fact_card') return content.facts ? content.facts.join(' ') : '';
+        return content.text || content.title || content.description || '';
+      }
+      return '';
+    };
+
+    // Auto-generate excerpt — Hindi preferred, English fallback
+    const blocksToProcess = content.hi && content.hi.length > 0 ? content.hi : content.en || [];
+    let textContent = extractTextIteratively(blocksToProcess);
+    textContent = textContent.replace(/\s+/g, ' ').trim();
+
+    let description = metadata.description;
+    if (!description || description.trim().length < 10) {
+      let introText = textContent;
+      const firstPara = blocksToProcess.find((b: any) => b.type === 'p');
+      if (firstPara && firstPara.text) introText = firstPara.text;
+      description = introText.substring(0, 300) + (introText.length > 300 ? '...' : '');
+    }
+
+    const excerpt =
+      (description || textContent).substring(0, 160) +
+      ((description || textContent).length > 160 ? '...' : '');
+
+    // Pehle purana slug lo — cache bust ke liye
+    const oldBlog = await db
+      .select({ slug: contentBlogs.slug })
+      .from(contentBlogs)
+      .where(eq(contentBlogs.id, blogId))
+      .get();
+
+    // DB update — full blog data overwrite
+    await db
+      .update(contentBlogs)
+      .set({
+        title: metadata.title,
+        slug: metadata.slug,
+        description: description || '',
+        excerpt,
+        category: metadata.category,
+        imageUrl: imageUrl || null,
+        readingTime: parseInt(metadata.readingTime) || 5,
+        content,
+        contentType: metadata.type || 'blog',
+        unitId: metadata.unit || null,
+        topicId: metadata.topic || null,
+        updatedAt: new Date(),
+      })
+      .where(eq(contentBlogs.id, blogId));
+
+    // Cache bust — purana slug + naya slug dono bust karo
+    revalidateTag(CACHE.BLOGS.TAGS.ALL, { expire: 0 });
+    revalidatePath('/blogs');
+    if (oldBlog) {
+      revalidateTag(CACHE.BLOGS.TAGS.DETAIL(oldBlog.slug), { expire: 0 });
+    }
+    if (metadata.slug !== oldBlog?.slug) {
+      revalidateTag(CACHE.BLOGS.TAGS.DETAIL(metadata.slug), { expire: 0 });
+    }
+
+    logger.info(`Blog updated: ${blogId} → ${metadata.title}`);
+
+    return { success: true };
+  } catch (error: any) {
+    logger.error('Update Blog Error:', error);
+    if (error.code === 'SQLITE_CONSTRAINT') {
+      return { success: false, error: 'Ye slug already kisi aur blog ka h bhai' };
+    }
+    return { success: false, error: error.message || 'Blog update fail ho gaya' };
+  }
+}
+
+/**
  * deleteBlog — Blog ko permanent delete karo
  */
 export async function deleteBlog(blogId: string) {

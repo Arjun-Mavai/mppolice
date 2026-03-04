@@ -631,6 +631,23 @@ export default function BlogContentRenderer({
           )}
         </div>
 
+        {/* BRAND NEW PROMINENT FEATURED IMAGE */}
+        {blog.imageUrl && (
+          <div className="group relative mb-10 w-full overflow-hidden rounded-3xl shadow-xl ring-1 ring-slate-900/5">
+            <div className="relative w-full">
+              <NextImage
+                src={blog.imageUrl}
+                alt={blog.title}
+                width={1200}
+                height={800}
+                priority
+                className="h-auto w-full object-contain transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+                sizes="(max-width: 1024px) 100vw, 1024px"
+              />
+            </div>
+          </div>
+        )}
+
         {/* LOCKED VIEW: Excerpt + Paywall */}
         {isLocked ? (
           <div className="relative">
