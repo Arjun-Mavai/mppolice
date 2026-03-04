@@ -53,7 +53,7 @@ export async function getFreeQuizWithQuestions(testId: string) {
     const test = await db
       .select()
       .from(tests)
-      .where(and(eq(tests.id, testId), eq(tests.type, 'MISC'), eq(tests.isFreeAccess, true)))
+      .where(and(eq(tests.id, testId), eq(tests.type, 'MISC'), eq(tests.isFreeAccess, true), eq(tests.isHidden, false)))
       .get();
 
     if (!test) return null;

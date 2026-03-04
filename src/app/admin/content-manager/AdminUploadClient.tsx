@@ -530,7 +530,7 @@ export default function AdminUploadPage() {
                         <span className="text-xs font-normal text-slate-400">
                           Format:{' '}
                           <code>
-                            [{`{ "questionText": "...", "options": ["A","B"], "correctAnswer": "A" }`}
+                            [{`{ "questionText": "...", "options": ["A","B"], "correctAnswer": 0 }`}
                             ]
                           </code>
                         </span>

@@ -54,6 +54,10 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       return { success: false, message: 'Missing Title or Type for New Test' };
     }
 
+    if (mode === 'new' && type === 'MISC' && !subjectTag) {
+      return { success: false, message: 'Missing Subject Tag for Free Quiz (MISC)' };
+    }
+
     if (mode === 'existing' && !existingTestId) {
       return { success: false, message: 'Select an existing test to add questions to.' };
     }
