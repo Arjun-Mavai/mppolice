@@ -48,6 +48,17 @@ export function QuizQuestion({
       : question.options;
   const parsedOptions = getParsedOptions(rawOptions);
 
+  let questionText =
+    language === 'en' && question.questionEn ? question.questionEn : question.question;
+
+  // Clean redundant List-I / List-II text if we already have structured matchPairs
+  if (question.type === 'matching' && question.matchPairs && question.matchPairs.length > 0) {
+    const listIndex = questionText.search(/List-?\s*I\b|सूची-?\s*I\b|सूची-?\s*[12]/i);
+    if (listIndex !== -1) {
+      questionText = questionText.substring(0, listIndex).trim();
+    }
+  }
+
   return (
     <div className="mx-auto max-w-3xl space-y-4 sm:space-y-5">
       {/* Question Header */}
@@ -79,7 +90,7 @@ export function QuizQuestion({
 
       {/* Question Text - Smart Formatted */}
       <FormattedQuestionText
-        text={language === 'en' && question.questionEn ? question.questionEn : question.question}
+        text={questionText}
         className="text-lg leading-relaxed font-semibold text-slate-900 sm:text-xl md:text-2xl"
       />
 
