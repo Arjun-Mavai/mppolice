@@ -125,6 +125,7 @@ export default function AdminDashboardPage() {
           <StatCard icon={<CheckCircle2 />} title="FLTs" value={typeCount?.FLT || 0} color="rose" />
           <StatCard icon={<ListChecks />} title="CSAT" value={typeCount?.CSAT || 0} color="cyan" />
           <StatCard icon={<ListChecks />} title="PYQs" value={typeCount?.PYQ || 0} color="slate" />
+          <StatCard icon={<CheckCircle2 />} title="Free Quiz" value={typeCount?.MISC || 0} color="teal" />
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:gap-8 lg:grid-cols-3">
@@ -247,6 +248,7 @@ function StatCard({ icon, title, value, color }: any) {
     cyan: 'bg-cyan-50 text-cyan-600',
     slate: 'bg-slate-50 text-slate-600',
     violet: 'bg-violet-50 text-violet-600',
+    teal: 'bg-teal-50 text-teal-600',
   };
   return (
     <Card className="border-slate-100 shadow-sm">
