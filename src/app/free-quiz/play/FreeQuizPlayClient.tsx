@@ -36,12 +36,14 @@ interface FreeQuizPlayClientProps {
   questions: Question[];
   testId: string;
   title: string;
+  disableInstantMode?: boolean; // Tags se control — Pro feature lock
 }
 
 export function FreeQuizPlayClient({
   questions,
   testId,
   title,
+  disableInstantMode,
 }: FreeQuizPlayClientProps) {
   const router = useRouter();
 
@@ -54,6 +56,7 @@ export function FreeQuizPlayClient({
       timeLimitInMinutes={Math.ceil(
         questions.length * QUIZ_CONSTANTS.TIME_PER_QUESTION_MINUTES
       )}
+      disableInstantMode={disableInstantMode}
       onExit={() => router.push('/free-quiz')}
     />
   );

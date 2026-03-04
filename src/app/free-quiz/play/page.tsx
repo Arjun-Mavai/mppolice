@@ -84,11 +84,16 @@ export default async function FreeQuizPlayPage({ searchParams }: PageProps) {
     );
   }
 
+  // Tags se check karo ki instant mode disabled h ya nahi
+  const tags = Array.isArray(testData.tags) ? (testData.tags as string[]) : [];
+  const disableInstantMode = tags.includes('no-instant-mode');
+
   return (
     <FreeQuizPlayClient
       questions={questions}
       testId={testId}
       title={testData.title}
+      disableInstantMode={disableInstantMode}
     />
   );
 }

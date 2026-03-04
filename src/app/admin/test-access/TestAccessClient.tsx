@@ -66,6 +66,7 @@ import {
   deleteTest,
   getTestWithQuestions,
   updateTestContent,
+  toggleInstantMode,
 } from './actions';
 import { toast } from 'sonner';
 import { revalidateSyllabus } from '@/actions/revalidate';
@@ -99,6 +100,7 @@ interface AdminTest {
   isHidden: boolean | null;
   maxRetries: number | null;
   displayOrder: number | null;
+  tags: string[] | null; // JSON array — ['MISC', '2026', 'no-instant-mode'] etc.
   createdAt: Date | null;
   topicName: string | null;
   topicNameEn: string | null;
@@ -198,6 +200,42 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
           prev.map((t) => (t.id === testId ? { ...t, isHidden: currentValue } : t))
         );
         toast.error('Update failed');
+      }
+    });
+  };
+
+  // Instant Mode toggle — tags me 'no-instant-mode' add/remove karo
+  const handleToggleInstantMode = (testId: string, currentlyDisabled: boolean) => {
+    const newDisabled = !currentlyDisabled;
+    // Optimistic update — tags array me 'no-instant-mode' add/remove
+    setTests((prev) =>
+      prev.map((t) => {
+        if (t.id !== testId) return t;
+        const currentTags = t.tags ?? [];
+        const newTags = newDisabled
+          ? [...new Set([...currentTags, 'no-instant-mode'])]
+          : currentTags.filter((tag) => tag !== 'no-instant-mode');
+        return { ...t, tags: newTags };
+      })
+    );
+    startTransition(async () => {
+      try {
+        const result = await toggleInstantMode(testId, newDisabled);
+        if (!result.success) throw new Error(result.error);
+        toast.success(newDisabled ? 'Instant Mode disabled!' : 'Instant Mode enabled!');
+      } catch {
+        // Revert on failure
+        setTests((prev) =>
+          prev.map((t) => {
+            if (t.id !== testId) return t;
+            const currentTags = t.tags ?? [];
+            const revertTags = currentlyDisabled
+              ? [...new Set([...currentTags, 'no-instant-mode'])]
+              : currentTags.filter((tag) => tag !== 'no-instant-mode');
+            return { ...t, tags: revertTags };
+          })
+        );
+        toast.error('Toggle fail');
       }
     });
   };
@@ -995,9 +1033,24 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
                           />
                         </div>
 
-                        <div className="h-8 w-px bg-slate-200" />
+                        {/* Instant Mode — 'no-instant-mode' tag toggle */}
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-[10px] font-bold tracking-wider text-purple-600 uppercase">
+                            Instant
+                          </span>
+                          <Switch
+                            checked={
+                              !(test.tags?.includes('no-instant-mode'))
+                            }
+                            onCheckedChange={() => {
+                              const isDisabled = test.tags?.includes('no-instant-mode') ?? false;
+                              handleToggleInstantMode(test.id, isDisabled);
+                            }}
+                            className="data-[state=checked]:bg-purple-500"
+                          />
+                        </div>
 
-                        {/* Edit Content Button */}
+                        <div className="h-8 w-px bg-slate-200" />
                         <button
                           onClick={() => handleEditContentClick(test.id, test.title)}
                           disabled={isPending}

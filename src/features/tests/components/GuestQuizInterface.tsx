@@ -9,6 +9,7 @@ import { createGuestEntry as createGuestUser } from '@/actions/guest-actions';
 import { logger } from '@/lib/logger';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useGuestResultStore } from '../store/guestResultStore';
 
 import { QuizHeader } from './quiz/QuizHeader';
@@ -27,6 +28,7 @@ interface GuestQuizInterfaceProps {
   title?: string;
   onExit: () => void;
   disablePalette?: boolean;
+  disableInstantMode?: boolean; // Pro feature — free quiz me OFF rahega
 }
 
 export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
@@ -37,6 +39,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     title,
     onExit,
     disablePalette = false,
+    disableInstantMode = false,
     testId,
   } = props;
 
@@ -66,6 +69,9 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     // setIsSubmitted is likely returned by useQuizLogic but not exposed in destructuring in QuizInterface?
     // Let's check logic. useQuizLogic handles 'isSubmitted' state.
   } = useQuizLogic({ ...props, userId: null }); // Force userId null
+
+  // Effective instant mode — disableInstantMode true h to force OFF
+  const effectiveInstantMode = !disableInstantMode && instantModeEnabled;
 
   const { setLanguage } = useSettingsStore();
 
@@ -308,10 +314,20 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
         title={title}
         mode={mode}
         timeLeft={timeLeft}
-        instantModeEnabled={instantModeEnabled}
+        instantModeEnabled={effectiveInstantMode}
         isSubmitted={isSubmitted}
         language={language}
-        onInstantModeToggle={() => setInstantModeEnabled(!instantModeEnabled)}
+        onInstantModeToggle={() => {
+          if (disableInstantMode) {
+            toast('🔒 Pro Feature', {
+              description: language === 'hi'
+                ? 'Instant Mode सिर्फ Pro users के लिए है। Upgrade करें!'
+                : 'Instant Mode is a Pro feature. Upgrade to unlock!',
+            });
+            return;
+          }
+          setInstantModeEnabled(!instantModeEnabled);
+        }}
         onLanguageToggle={() => setLanguage(language === 'hi' ? 'en' : 'hi')}
         onExit={showExitModal}
         translations={{
@@ -332,8 +348,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
               totalQuestions={totalQuestions}
               selectedAnswer={answers[currentQuestion.id]}
               isAnswered={isAnswered}
-              instantModeEnabled={instantModeEnabled}
-              isMarkedForReview={markedforReview.includes(currentQuestion.id)}
+              instantModeEnabled={effectiveInstantMode}              isMarkedForReview={markedforReview.includes(currentQuestion.id)}
               language={language}
               onOptionSelect={handleOptionSelect}
               onToggleReview={toggleMarkForReview}
@@ -341,7 +356,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
               translations={{ question: t.question, markReview: t.markReview, unmark: t.unmark }}
             />
 
-            {instantModeEnabled && isAnswered && (
+            {effectiveInstantMode && isAnswered && (
               <div className="mx-auto mt-4 max-w-3xl">
                 <QuizExplanation
                   question={currentQuestion}
