@@ -13,6 +13,7 @@ const hostnames = [
   'chrysalishigh.com',
   'i.pravatar.cc',
   'images.unsplash.com',
+  'npnjzfmywierjpxbnehw.supabase.co',
   // 'example.com',
 ];
 

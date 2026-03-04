@@ -7,9 +7,11 @@ import { revalidatePath } from 'next/cache';
 import { eq, sql, desc } from 'drizzle-orm';
 import { AdminDashboardResponse } from '@/types/admin';
 import { logger } from '@/lib/logger';
+import { requireAdmin } from '@/lib/auth-admin';
 
 // Helper to fetch tests for the dropdown
 export async function getExistingTests() {
+  await requireAdmin();
   try {
     const result = await db
       .select({
@@ -31,14 +33,16 @@ export async function getExistingTests() {
 }
 
 export async function uploadTestFromJSON(prevState: any, formData: FormData) {
+  await requireAdmin();
   try {
     const mode = formData.get('mode') as 'new' | 'existing'; // 'new' or 'existing'
     const existingTestId = formData.get('existingTestId') as string;
 
     const title = formData.get('title') as string;
-    const type = formData.get('type') as 'FLT' | 'UNIT' | 'PYQ' | 'CSAT' | 'TOPIC';
+    const type = formData.get('type') as 'FLT' | 'UNIT' | 'PYQ' | 'CSAT' | 'TOPIC' | 'MISC';
     const unitId = formData.get('unitId') as string;
     const topicId = formData.get('topicId') as string; // Changed from null/undefined
+    const subjectTag = formData.get('subjectTag') as string; // MISC ke liye subject tag
     const jsonInput = formData.get('jsonData') as string;
 
     // Basic Validation
@@ -48,6 +52,10 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
 
     if (mode === 'new' && (!title || !type)) {
       return { success: false, message: 'Missing Title or Type for New Test' };
+    }
+
+    if (mode === 'new' && type === 'MISC' && !subjectTag) {
+      return { success: false, message: 'Missing Subject Tag for Free Quiz (MISC)' };
     }
 
     if (mode === 'existing' && !existingTestId) {
@@ -83,14 +91,17 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         id: testId,
         title: title,
         slug: slug,
-        type: type, // FLT, UNIT, etc.
-        unitId: type === 'UNIT' || type === 'TOPIC' ? unitId : null,
+        type: type, // FLT, UNIT, MISC, etc.
+        unitId: type === 'UNIT' || type === 'TOPIC' || type === 'MISC' ? unitId : null,
         topicId: type === 'TOPIC' ? topicId : null,
         description: `Imported test: ${title}`,
         totalMarks: parsedQuestions.length * 2, // Initial marks
         totalQuestions: parsedQuestions.length,
         durationMinutes: 120,
-        tags: [type, '2026'],
+        // MISC type = free quiz → isFreeAccess ON by default
+        isFreeAccess: type === 'MISC' ? true : false,
+        // Tags — subject tag bhi store karo (filter me kaam aayega)
+        tags: subjectTag ? [type, '2026', subjectTag] : [type, '2026'],
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -223,6 +234,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
 // --- DASHBOARD STATS ---
 // --- DASHBOARD STATS ---
 export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> {
+  await requireAdmin();
   try {
     const testsData = await db
       .select({
@@ -268,6 +280,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
       TOPIC: 0,
       CSAT: 0,
       PYQ: 0,
+      MISC: 0,
     };
 
     // Blog category count
@@ -327,6 +340,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
 }
 // --- PAYMENT EXIT STATS ---
 export async function getPaymentExitStats() {
+  await requireAdmin();
   try {
     const reasons = await db
       .select()

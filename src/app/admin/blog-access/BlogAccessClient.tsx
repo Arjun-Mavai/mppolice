@@ -16,11 +16,27 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { Loader2, FileText, Zap, Search, EyeOff, Calendar, Trash2 } from 'lucide-react';
+import { Loader2, FileText, Zap, Search, EyeOff, Calendar, Trash2, Pencil, Upload } from 'lucide-react';
 import { toast } from 'sonner';
-import { toggleBlogAccess, bulkUpdateBlogAccess, toggleBlogHidden, deleteBlog } from './actions';
+import {
+  toggleBlogAccess,
+  bulkUpdateBlogAccess,
+  toggleBlogHidden,
+  deleteBlog,
+  getBlogById,
+  updateBlog,
+} from './actions';
 
 interface BlogItem {
   id: string;
@@ -115,6 +131,113 @@ export default function BlogAccessClient({ blogs: initialBlogs }: { blogs: BlogI
       } else {
         setBlogs((prev) => prev.filter((b) => b.id !== blogId));
         toast.success('Blog deleted successfully');
+      }
+    });
+  };
+
+  // ── Edit state — dialog open/close + form data ──────────────
+  const [editOpen, setEditOpen] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editBlogId, setEditBlogId] = useState<string | null>(null);
+  const [editData, setEditData] = useState({ imageUrl: '', contentJson: '' });
+
+  // ── Edit click — blog ka poora data fetch karke dialog kholo ──
+  const handleEditClick = async (blogId: string) => {
+    setEditLoading(true);
+    setEditBlogId(blogId);
+    setEditOpen(true);
+    setEditData({ imageUrl: '', contentJson: '' }); // Clear stale data
+
+    try {
+      const result = await getBlogById(blogId);
+      if (!result.success || !result.blog) {
+        toast.error(result.error || 'Blog fetch fail bhai');
+        setEditOpen(false);
+        return;
+      }
+
+      // Blog data → JSON format me convert (same structure as upload)
+      const blog = result.blog;
+      const jsonStructure = {
+        metadata: {
+          title: blog.title,
+          slug: blog.slug,
+          description: blog.description || '',
+          category: blog.category,
+          readingTime: blog.readingTime || 5,
+          type: blog.contentType || 'blog',
+          unit: blog.unitId || undefined,
+          topic: blog.topicId || undefined,
+        },
+        content: blog.content,
+      };
+
+      setEditData({
+        imageUrl: blog.imageUrl || '',
+        contentJson: JSON.stringify(jsonStructure, null, 2),
+      });
+    } catch {
+      toast.error('Blog fetch fail bhai');
+      setEditOpen(false);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  // ── Edit submit — updated data server pe bhejo ─────────────
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editBlogId) return;
+
+    // Pehle JSON validate karo — galat JSON pe error dikhao
+    try {
+      const parsed = JSON.parse(editData.contentJson);
+      if (!parsed.metadata || !parsed.content) {
+        toast.error("JSON me 'metadata' aur 'content' dono chahiye bhai");
+        return;
+      }
+      if (!parsed.metadata.title || !parsed.metadata.slug || !parsed.metadata.category) {
+        toast.error('Title, slug, ya category missing h');
+        return;
+      }
+    } catch {
+      toast.error('JSON format galat h bhai — check karo');
+      return;
+    }
+
+    setEditLoading(true);
+    startTransition(async () => {
+      try {
+        const result = await updateBlog(editBlogId, editData);
+        if (!result.success) {
+          toast.error(result.error || 'Update fail ho gaya');
+        } else {
+          toast.success('Blog update ho gaya! 🎉');
+          setEditOpen(false);
+
+          // Local state me bhi title update karo — taki list me dikhne lage
+          try {
+            const parsed = JSON.parse(editData.contentJson);
+            setBlogs((prev) =>
+              prev.map((b) =>
+                b.id === editBlogId
+                  ? {
+                      ...b,
+                      title: parsed.metadata.title,
+                      slug: parsed.metadata.slug,
+                      category: parsed.metadata.category,
+                    }
+                  : b
+              )
+            );
+          } catch {
+            // JSON parse fail? koi nahi, page refresh pe sahi aa jayega
+          }
+        }
+      } catch (error) {
+        toast.error('Unexpected error while updating blog');
+      } finally {
+        setEditLoading(false);
       }
     });
   };
@@ -362,6 +485,17 @@ export default function BlogAccessClient({ blogs: initialBlogs }: { blogs: BlogI
                         </Badge>
                       )}
 
+                      {/* Edit Button — pencil icon, click pe dialog khulega */}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 shrink-0 text-slate-300 hover:bg-indigo-50 hover:text-indigo-500"
+                        onClick={() => handleEditClick(blog.id)}
+                        disabled={isPending}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+
                       {/* Delete Button */}
                       <Button
                         size="icon"
@@ -437,6 +571,88 @@ export default function BlogAccessClient({ blogs: initialBlogs }: { blogs: BlogI
           </ScrollArea>
         </CardContent>
       </Card>
+      {/* ── Edit Dialog — content-manager jaisa form ────────── */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-indigo-900">
+              <Pencil className="h-5 w-5 text-indigo-600" />
+              Blog Edit Karo
+            </DialogTitle>
+            <DialogDescription>
+              Image URL aur JSON content edit karo — same format jaise upload karte ho
+            </DialogDescription>
+          </DialogHeader>
+
+          {editLoading && !editData.contentJson ? (
+            // Loading state — jab tak data fetch ho raha h
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+            </div>
+          ) : (
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              {/* Image URL — optional cover image */}
+              <div className="space-y-2">
+                <Label>Image URL (Optional)</Label>
+                <Input
+                  value={editData.imageUrl}
+                  onChange={(e) => setEditData((p) => ({ ...p, imageUrl: e.target.value }))}
+                  placeholder="https://example.com/image.jpg"
+                />
+                {/* Preview dikhao agar URL h */}
+                {editData.imageUrl && (
+                  // Use next/image if configured, else fallback to img for preview
+                  // Admin panel me strict remotePatterns validation zaruri nahi h preview ke liye
+                  // But we use NextImage where possible to catch config errors early
+                  <div className="relative h-32 w-full overflow-hidden rounded-lg border">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={editData.imageUrl}
+                      alt="Preview"
+                      className="h-full w-full object-cover"
+                      onError={(e) => (e.currentTarget.style.display = 'none')}
+                    />
+                    <p className="absolute bottom-1 left-1 bg-black/50 px-1 text-[10px] text-white">
+                      If this shows but site fails, check remotePatterns
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* JSON Content — poora blog ka data yaha edit hoga */}
+              <div className="space-y-2">
+                <Label className="flex justify-between">
+                  <span>Blog JSON (Metadata + Content)</span>
+                  <span className="text-xs font-normal text-slate-400">
+                    Format: <code>{`{ "metadata": {...}, "content": {...} }`}</code>
+                  </span>
+                </Label>
+                <Textarea
+                  value={editData.contentJson}
+                  onChange={(e) => setEditData((p) => ({ ...p, contentJson: e.target.value }))}
+                  className="h-[400px] bg-slate-50 font-mono text-xs"
+                  placeholder='{ "metadata": { "title": "...", "slug": "..." }, "content": { "hi": [...], "en": [...] } }'
+                  required
+                />
+              </div>
+
+              {/* Submit button — save karo */}
+              <Button
+                type="submit"
+                className="w-full bg-indigo-600 hover:bg-indigo-700"
+                disabled={editLoading}
+              >
+                {editLoading ? (
+                  <Loader2 className="mr-2 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
+                Save Changes
+              </Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

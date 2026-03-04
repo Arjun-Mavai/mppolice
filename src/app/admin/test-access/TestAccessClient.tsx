@@ -62,6 +62,7 @@ const TYPE_CONFIG = {
   CSAT: { label: 'CSAT', color: 'bg-amber-100 text-amber-700', emoji: '🧠' },
   PYQ: { label: 'Previous Year', color: 'bg-emerald-100 text-emerald-700', emoji: '📜' },
   TOPIC: { label: 'Topic Test', color: 'bg-rose-100 text-rose-700', emoji: '🎯' },
+  MISC: { label: 'Free Quiz', color: 'bg-teal-100 text-teal-700', emoji: '🆓' },
 } as const;
 
 type TestType = keyof typeof TYPE_CONFIG;

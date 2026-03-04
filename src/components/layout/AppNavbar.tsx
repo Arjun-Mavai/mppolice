@@ -18,6 +18,7 @@ import {
   Info,
   History,
   Download,
+  Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -213,6 +214,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
       icon: GraduationCap,
       color: 'text-amber-600',
     },
+    { name: 'Free Daily Quiz', href: '/free-quiz', icon: Zap, color: 'text-orange-500' },
     { name: 'Blogs', href: '/blogs', icon: BookOpen, color: 'text-sky-600' },
     {
       name: 'Test History',
@@ -223,8 +225,8 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     { name: 'About Us', href: '/', icon: Info, color: 'text-slate-500' },
   ];
 
-  // Only hide on the actual quiz play interface
-  if (pathname.includes('/quiz/play')) return null;
+  // Quiz play pe navbar nahi dikhana — full immersive experience
+  if (pathname.includes('/quiz/play') || pathname.includes('/free-quiz/play')) return null;
 
   return (
     <header className="fixed top-0 right-0 left-0 z-50 [animation:navbar-scroll_linear_both] border-b border-slate-200 bg-white/80 shadow-sm backdrop-blur-md transition-all duration-300 [animation-range:0px_50px] [animation-timeline:scroll()]">
