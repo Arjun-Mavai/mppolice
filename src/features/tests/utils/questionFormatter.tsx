@@ -1,5 +1,31 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { Question } from '@/types/quiz';
+
+/**
+ * Removes the raw "List-I ... List-II" text from the question description
+ * if we already have structured matchPairs to render a beautiful table.
+ */
+export function cleanMatchingQuestionText(questionText: string, question: Question): string {
+  if (
+    !questionText ||
+    question.type !== 'matching' ||
+    !question.matchPairs ||
+    question.matchPairs.length === 0
+  ) {
+    return questionText;
+  }
+
+  // Broad regex matching List-I, List-II, List-1, List-2, and Hindi variants
+  const listRegex = /List-?\s*I{1,2}\b|सूची-?\s*I{1,2}\b|सूची-?\s*[12]/i;
+  const listIndex = questionText.search(listRegex);
+
+  if (listIndex !== -1) {
+    return questionText.substring(0, listIndex).trim();
+  }
+
+  return questionText;
+}
 
 interface FormattedQuestionTextProps {
   text: string;

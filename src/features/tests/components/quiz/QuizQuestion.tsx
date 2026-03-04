@@ -5,7 +5,7 @@ import { CheckCircle2, X, Flag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Question } from '@/types/quiz';
-import { FormattedQuestionText } from '../../utils/questionFormatter';
+import { FormattedQuestionText, cleanMatchingQuestionText } from '../../utils/questionFormatter';
 
 interface QuizQuestionProps {
   question: Question;
@@ -48,16 +48,9 @@ export function QuizQuestion({
       : question.options;
   const parsedOptions = getParsedOptions(rawOptions);
 
-  let questionText =
+  const rawQuestionText =
     language === 'en' && question.questionEn ? question.questionEn : question.question;
-
-  // Clean redundant List-I / List-II text if we already have structured matchPairs
-  if (question.type === 'matching' && question.matchPairs && question.matchPairs.length > 0) {
-    const listIndex = questionText.search(/List-?\s*I\b|सूची-?\s*I\b|सूची-?\s*[12]/i);
-    if (listIndex !== -1) {
-      questionText = questionText.substring(0, listIndex).trim();
-    }
-  }
+  const questionText = cleanMatchingQuestionText(rawQuestionText, question);
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 sm:space-y-5">
