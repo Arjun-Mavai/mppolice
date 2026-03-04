@@ -146,36 +146,42 @@ export default function BlogAccessClient({ blogs: initialBlogs }: { blogs: BlogI
     setEditLoading(true);
     setEditBlogId(blogId);
     setEditOpen(true);
+    setEditData({ imageUrl: '', contentJson: '' }); // Clear stale data
 
-    const result = await getBlogById(blogId);
-    if (!result.success || !result.blog) {
-      toast.error(result.error || 'Blog fetch fail bhai');
+    try {
+      const result = await getBlogById(blogId);
+      if (!result.success || !result.blog) {
+        toast.error(result.error || 'Blog fetch fail bhai');
+        setEditOpen(false);
+        return;
+      }
+
+      // Blog data → JSON format me convert (same structure as upload)
+      const blog = result.blog;
+      const jsonStructure = {
+        metadata: {
+          title: blog.title,
+          slug: blog.slug,
+          description: blog.description || '',
+          category: blog.category,
+          readingTime: blog.readingTime || 5,
+          type: blog.contentType || 'blog',
+          unit: blog.unitId || undefined,
+          topic: blog.topicId || undefined,
+        },
+        content: blog.content,
+      };
+
+      setEditData({
+        imageUrl: blog.imageUrl || '',
+        contentJson: JSON.stringify(jsonStructure, null, 2),
+      });
+    } catch {
+      toast.error('Blog fetch fail bhai');
       setEditOpen(false);
+    } finally {
       setEditLoading(false);
-      return;
     }
-
-    // Blog data → JSON format me convert (same structure as upload)
-    const blog = result.blog;
-    const jsonStructure = {
-      metadata: {
-        title: blog.title,
-        slug: blog.slug,
-        description: blog.description || '',
-        category: blog.category,
-        readingTime: blog.readingTime || 5,
-        type: blog.contentType || 'blog',
-        unit: blog.unitId || undefined,
-        topic: blog.topicId || undefined,
-      },
-      content: blog.content,
-    };
-
-    setEditData({
-      imageUrl: blog.imageUrl || '',
-      contentJson: JSON.stringify(jsonStructure, null, 2),
-    });
-    setEditLoading(false);
   };
 
   // ── Edit submit — updated data server pe bhejo ─────────────
@@ -201,28 +207,37 @@ export default function BlogAccessClient({ blogs: initialBlogs }: { blogs: BlogI
 
     setEditLoading(true);
     startTransition(async () => {
-      const result = await updateBlog(editBlogId, editData);
-      if (!result.success) {
-        toast.error(result.error || 'Update fail ho gaya');
-        setEditLoading(false);
-      } else {
-        toast.success('Blog update ho gaya! 🎉');
-        setEditOpen(false);
-        setEditLoading(false);
+      try {
+        const result = await updateBlog(editBlogId, editData);
+        if (!result.success) {
+          toast.error(result.error || 'Update fail ho gaya');
+        } else {
+          toast.success('Blog update ho gaya! 🎉');
+          setEditOpen(false);
 
-        // Local state me bhi title update karo — taki list me dikhne lage
-        try {
-          const parsed = JSON.parse(editData.contentJson);
-          setBlogs((prev) =>
-            prev.map((b) =>
-              b.id === editBlogId
-                ? { ...b, title: parsed.metadata.title, slug: parsed.metadata.slug, category: parsed.metadata.category }
-                : b
-            )
-          );
-        } catch {
-          // JSON parse fail? koi nahi, page refresh pe sahi aa jayega
+          // Local state me bhi title update karo — taki list me dikhne lage
+          try {
+            const parsed = JSON.parse(editData.contentJson);
+            setBlogs((prev) =>
+              prev.map((b) =>
+                b.id === editBlogId
+                  ? {
+                      ...b,
+                      title: parsed.metadata.title,
+                      slug: parsed.metadata.slug,
+                      category: parsed.metadata.category,
+                    }
+                  : b
+              )
+            );
+          } catch {
+            // JSON parse fail? koi nahi, page refresh pe sahi aa jayega
+          }
         }
+      } catch (error) {
+        toast.error('Unexpected error while updating blog');
+      } finally {
+        setEditLoading(false);
       }
     });
   };
@@ -586,12 +601,21 @@ export default function BlogAccessClient({ blogs: initialBlogs }: { blogs: BlogI
                 />
                 {/* Preview dikhao agar URL h */}
                 {editData.imageUrl && (
-                  <img
-                    src={editData.imageUrl}
-                    alt="Preview"
-                    className="h-32 w-full rounded-lg border object-cover"
-                    onError={(e) => (e.currentTarget.style.display = 'none')}
-                  />
+                  // Use next/image if configured, else fallback to img for preview
+                  // Admin panel me strict remotePatterns validation zaruri nahi h preview ke liye
+                  // But we use NextImage where possible to catch config errors early
+                  <div className="relative h-32 w-full overflow-hidden rounded-lg border">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={editData.imageUrl}
+                      alt="Preview"
+                      className="h-full w-full object-cover"
+                      onError={(e) => (e.currentTarget.style.display = 'none')}
+                    />
+                    <p className="absolute bottom-1 left-1 bg-black/50 px-1 text-[10px] text-white">
+                      If this shows but site fails, check remotePatterns
+                    </p>
+                  </div>
                 )}
               </div>
 

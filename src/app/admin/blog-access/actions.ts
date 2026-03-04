@@ -182,7 +182,7 @@ export async function getBlogById(blogId: string) {
     .where(eq(contentBlogs.id, blogId))
     .get();
 
-  if (!blog) return { success: false as const, error: 'Blog nahi mila bhai' };
+  if (!blog) return { success: false as const, error: `Blog not found for id ${blogId}` };
 
   return { success: true as const, blog };
 }
@@ -213,28 +213,37 @@ export async function updateBlog(
       return { success: false, error: 'Title, slug, ya category missing h bhai' };
     }
 
-    if (!content.hi || !content.en) {
+    // Legacy support: agar content array ya string hai, to usko single-language
+    // blog maan kar hi/en dono me same assign kar do.
+    let content: any = parsed.content;
+
+    if (Array.isArray(parsed.content) || typeof parsed.content === 'string') {
+      content = { hi: parsed.content, en: parsed.content };
+    }
+
+    if (!content || !content.hi || !content.en) {
       return { success: false, error: "Content me 'hi' aur 'en' dono keys chahiye" };
     }
 
     // Text extract karo excerpt/description generate karne ke liye
-    const extractTextIteratively = (content: any): string => {
-      if (!content) return '';
-      if (typeof content === 'string') return content;
-      if (Array.isArray(content)) {
-        return content.map((item) => extractTextIteratively(item)).join(' ');
+    // NOTE: 'content' variable ab local let hai, isliye 'extractTextIteratively'
+    // ko move kiya ya update kiya taaki wo sahi scope se 'content' use kare
+    const extractTextIteratively = (node: any): string => {
+      if (!node) return '';
+      if (typeof node === 'string') return node;
+      if (Array.isArray(node)) {
+        return node.map((item) => extractTextIteratively(item)).join(' ');
       }
-      if (typeof content === 'object') {
-        if (content.type === 'h2' || content.type === 'h3' || content.type === 'p')
-          return content.text || '';
-        if (content.type === 'ul' || content.type === 'ol')
-          return Array.isArray(content.items) ? content.items.join(' ') : '';
-        if (content.type === 'table')
-          return Array.isArray(content.body)
-            ? content.body.map((row: any[]) => row.join(' ')).join(' ')
+      if (typeof node === 'object') {
+        if (node.type === 'h2' || node.type === 'h3' || node.type === 'p') return node.text || '';
+        if (node.type === 'ul' || node.type === 'ol')
+          return Array.isArray(node.items) ? node.items.join(' ') : '';
+        if (node.type === 'table')
+          return Array.isArray(node.body)
+            ? node.body.map((row: any[]) => row.join(' ')).join(' ')
             : '';
-        if (content.type === 'fact_card') return content.facts ? content.facts.join(' ') : '';
-        return content.text || content.title || content.description || '';
+        if (node.type === 'fact_card') return node.facts ? node.facts.join(' ') : '';
+        return node.text || node.title || node.description || '';
       }
       return '';
     };
@@ -263,6 +272,10 @@ export async function updateBlog(
       .where(eq(contentBlogs.id, blogId))
       .get();
 
+    if (!oldBlog) {
+      return { success: false, error: `Blog not found for id ${blogId}` };
+    }
+
     // DB update — full blog data overwrite
     await db
       .update(contentBlogs)
@@ -273,7 +286,10 @@ export async function updateBlog(
         excerpt,
         category: metadata.category,
         imageUrl: imageUrl || null,
-        readingTime: parseInt(metadata.readingTime) || 5,
+        readingTime:
+          Number.isFinite(Number(metadata.readingTime)) && Number(metadata.readingTime) >= 0
+            ? Number(metadata.readingTime)
+            : 5,
         content,
         contentType: metadata.type || 'blog',
         unitId: metadata.unit || null,

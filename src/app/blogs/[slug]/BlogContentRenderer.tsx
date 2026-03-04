@@ -562,11 +562,16 @@ export default function BlogContentRenderer({
       <div className="relative flex min-h-[280px] w-full items-end overflow-hidden bg-slate-900 sm:min-h-[360px]">
         <div className="absolute inset-0 z-0 opacity-40">
           {blog.imageUrl ? (
+            /* We use the same image as below but without 'priority' here to let the main content image load first if needed.
+               Actually, for LCP, the main image below is more important if it's visible. 
+               But this background is also above fold. 
+               Let's keep this one as priority=false (lazy is default) or use a smaller version if possible.
+               Since we don't have variants, we just rely on NextImage optimization.
+            */
             <NextImage
               src={blog.imageUrl}
               alt={blog.title}
               fill
-              priority
               className="object-cover"
               sizes="100vw"
             />
