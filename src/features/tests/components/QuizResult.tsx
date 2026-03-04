@@ -435,7 +435,22 @@ export function QuizResult({
                   <div className="flex-1">
                     <div className="text-sm leading-snug font-bold text-slate-900 md:text-base">
                       <span className="mr-2 text-slate-400">Q{idx + 1}.</span>
-                      <FormattedQuestionText text={q.question} className="inline" />
+                      <FormattedQuestionText
+                        text={
+                          q.type === 'matching' && q.matchPairs && q.matchPairs.length > 0
+                            ? q.question
+                                .substring(
+                                  0,
+                                  q.question.search(/List-?\s*I\b|सूची-?\s*I\b|सूची-?\s*[12]/i) !==
+                                    -1
+                                    ? q.question.search(/List-?\s*I\b|सूची-?\s*I\b|सूची-?\s*[12]/i)
+                                    : q.question.length
+                                )
+                                .trim()
+                            : q.question
+                        }
+                        className="inline"
+                      />
 
                       {q.type === 'matching' && (
                         <RenderTableQuestion
@@ -450,7 +465,24 @@ export function QuizResult({
                     {/* English Question Text */}
                     {q.questionEn && (
                       <div className="mt-2 text-sm text-slate-500">
-                        <FormattedQuestionText text={q.questionEn} />
+                        <FormattedQuestionText
+                          text={
+                            q.type === 'matching' && q.matchPairs && q.matchPairs.length > 0
+                              ? q.questionEn
+                                  .substring(
+                                    0,
+                                    q.questionEn.search(
+                                      /List-?\s*I\b|सूची-?\s*I\b|सूची-?\s*[12]/i
+                                    ) !== -1
+                                      ? q.questionEn.search(
+                                          /List-?\s*I\b|सूची-?\s*I\b|सूची-?\s*[12]/i
+                                        )
+                                      : q.questionEn.length
+                                  )
+                                  .trim()
+                              : q.questionEn
+                          }
+                        />
 
                         {q.type === 'matching' && (
                           <RenderTableQuestion
