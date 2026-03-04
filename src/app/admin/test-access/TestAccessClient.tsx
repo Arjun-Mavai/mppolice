@@ -100,7 +100,7 @@ interface AdminTest {
   isHidden: boolean | null;
   maxRetries: number | null;
   displayOrder: number | null;
-  tags: unknown; // JSON array — ['MISC', '2026', 'no-instant-mode'] etc.
+  tags: string[] | null; // JSON array — ['MISC', '2026', 'no-instant-mode'] etc.
   createdAt: Date | null;
   topicName: string | null;
   topicNameEn: string | null;
@@ -211,9 +211,9 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
     setTests((prev) =>
       prev.map((t) => {
         if (t.id !== testId) return t;
-        const currentTags = Array.isArray(t.tags) ? (t.tags as string[]) : [];
+        const currentTags = t.tags ?? [];
         const newTags = newDisabled
-          ? [...currentTags, 'no-instant-mode']
+          ? [...new Set([...currentTags, 'no-instant-mode'])]
           : currentTags.filter((tag) => tag !== 'no-instant-mode');
         return { ...t, tags: newTags };
       })
@@ -228,9 +228,9 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
         setTests((prev) =>
           prev.map((t) => {
             if (t.id !== testId) return t;
-            const currentTags = Array.isArray(t.tags) ? (t.tags as string[]) : [];
+            const currentTags = t.tags ?? [];
             const revertTags = currentlyDisabled
-              ? [...currentTags, 'no-instant-mode']
+              ? [...new Set([...currentTags, 'no-instant-mode'])]
               : currentTags.filter((tag) => tag !== 'no-instant-mode');
             return { ...t, tags: revertTags };
           })
@@ -1040,11 +1040,10 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
                           </span>
                           <Switch
                             checked={
-                              !(Array.isArray(test.tags) && (test.tags as string[]).includes('no-instant-mode'))
+                              !(test.tags?.includes('no-instant-mode'))
                             }
                             onCheckedChange={() => {
-                              const isDisabled =
-                                Array.isArray(test.tags) && (test.tags as string[]).includes('no-instant-mode');
+                              const isDisabled = test.tags?.includes('no-instant-mode') ?? false;
                               handleToggleInstantMode(test.id, isDisabled);
                             }}
                             className="data-[state=checked]:bg-purple-500"

@@ -80,6 +80,7 @@ export async function getAllTestsForAdmin() {
 
   return allTests.map((t) => ({
     ...t,
+    tags: (t.tags as string[] | null), // JSON → typed array at boundary
     topicName: t.topicId ? (topicNameMap[t.topicId]?.title ?? null) : null,
     topicNameEn: t.topicId ? (topicNameMap[t.topicId]?.titleEn ?? null) : null,
   }));
@@ -512,6 +513,10 @@ export async function toggleInstantMode(testId: string, disable: boolean) {
     return { success: true };
   } catch (error: any) {
     logger.error('Toggle Instant Mode Error:', error);
-    return { success: false, error: error.message };
+    const errorMessage =
+      error && typeof error.message === 'string' && error.message.trim()
+        ? error.message
+        : String(error || 'Unknown error while toggling instant mode');
+    return { success: false, error: errorMessage };
   }
 }

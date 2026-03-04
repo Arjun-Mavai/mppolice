@@ -70,6 +70,9 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     // Let's check logic. useQuizLogic handles 'isSubmitted' state.
   } = useQuizLogic({ ...props, userId: null }); // Force userId null
 
+  // Effective instant mode — disableInstantMode true h to force OFF
+  const effectiveInstantMode = !disableInstantMode && instantModeEnabled;
+
   const { setLanguage } = useSettingsStore();
 
   // UI state
@@ -311,7 +314,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
         title={title}
         mode={mode}
         timeLeft={timeLeft}
-        instantModeEnabled={disableInstantMode ? false : instantModeEnabled}
+        instantModeEnabled={effectiveInstantMode}
         isSubmitted={isSubmitted}
         language={language}
         onInstantModeToggle={() => {
@@ -345,8 +348,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
               totalQuestions={totalQuestions}
               selectedAnswer={answers[currentQuestion.id]}
               isAnswered={isAnswered}
-              instantModeEnabled={instantModeEnabled}
-              isMarkedForReview={markedforReview.includes(currentQuestion.id)}
+              instantModeEnabled={effectiveInstantMode}              isMarkedForReview={markedforReview.includes(currentQuestion.id)}
               language={language}
               onOptionSelect={handleOptionSelect}
               onToggleReview={toggleMarkForReview}
@@ -354,7 +356,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
               translations={{ question: t.question, markReview: t.markReview, unmark: t.unmark }}
             />
 
-            {instantModeEnabled && isAnswered && (
+            {effectiveInstantMode && isAnswered && (
               <div className="mx-auto mt-4 max-w-3xl">
                 <QuizExplanation
                   question={currentQuestion}
