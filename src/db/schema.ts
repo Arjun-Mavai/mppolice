@@ -44,7 +44,7 @@ export const tests = sqliteTable(
     durationMinutes: integer('duration_minutes').notNull(),
     totalQuestions: integer('total_questions').default(0),
     totalMarks: integer('total_marks').notNull(),
-    type: text('type', { enum: ['FLT', 'UNIT', 'CSAT', 'PYQ', 'TOPIC'] }).notNull(),
+    type: text('type', { enum: ['FLT', 'UNIT', 'CSAT', 'PYQ', 'TOPIC', 'MISC'] }).notNull(),
     unitId: text('unit_id'), // To link directly to a syllabus unit e.g., 'unit_1'
     topicId: text('topic_id'), // To link to specific topic ID from syllabusData
     tags: text('tags', { mode: 'json' }), // JSON array of related tags e.g., ['history', 'ancient']
@@ -189,7 +189,7 @@ export const syllabusTopics = sqliteTable(
 // Test Attempt Limits — category wise max attempts (source of truth)
 // null maxAttempts = unlimited
 export const testAttemptLimits = sqliteTable('test_attempt_limits', {
-  testType: text('test_type', { enum: ['FLT', 'UNIT', 'CSAT', 'PYQ', 'TOPIC'] }).primaryKey(),
+  testType: text('test_type', { enum: ['FLT', 'UNIT', 'CSAT', 'PYQ', 'TOPIC', 'MISC'] }).primaryKey(),
   maxAttempts: integer('max_attempts'), // null = unlimited
 });
 
@@ -452,3 +452,5 @@ export const pricingConfig = sqliteTable('pricing_config', {
   // Last updated
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
 });
+
+

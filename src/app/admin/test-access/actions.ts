@@ -123,7 +123,7 @@ export async function toggleTestAccess(
  * Example: "Sab FLT tests ko Lite access de do"
  */
 export async function bulkUpdateTestAccess(
-  testType: 'FLT' | 'UNIT' | 'CSAT' | 'PYQ' | 'TOPIC',
+  testType: 'FLT' | 'UNIT' | 'CSAT' | 'PYQ' | 'TOPIC' | 'MISC',
   field: 'isFreeAccess' | 'isLiteAccess' | 'isProAccess',
   value: boolean
 ) {
@@ -242,7 +242,7 @@ export async function getAttemptLimits() {
  * null = unlimited
  */
 export async function updateAttemptLimit(
-  testType: 'FLT' | 'UNIT' | 'CSAT' | 'PYQ' | 'TOPIC',
+  testType: 'FLT' | 'UNIT' | 'CSAT' | 'PYQ' | 'TOPIC' | 'MISC',
   maxAttempts: number | null
 ) {
   await requireAdmin();
@@ -265,7 +265,7 @@ export async function updateAttemptLimit(
  * null = unlimited
  */
 export async function bulkUpdateMaxRetries(
-  testType: 'FLT' | 'UNIT' | 'CSAT' | 'PYQ' | 'TOPIC',
+  testType: 'FLT' | 'UNIT' | 'CSAT' | 'PYQ' | 'TOPIC' | 'MISC',
   maxRetries: number | null
 ) {
   await requireAdmin();

@@ -67,10 +67,11 @@ export default function AdminUploadPage() {
   const [topicLang, setTopicLang] = useState<'hi' | 'en'>('hi'); // Language toggle for topics
 
   const [testData, setTestData] = useState({
-    type: 'TOPIC', // FLT | UNIT | TOPIC | CSAT
+    type: 'TOPIC', // FLT | UNIT | TOPIC | CSAT | MISC
     title: '',
     unitId: 'unit_1',
     topicId: '', // For Topic Tests
+    subjectTag: '', // MISC type ke liye subject tag
     description: '',
     existingTestId: '',
     questionsJson: '',
@@ -193,6 +194,10 @@ export default function AdminUploadPage() {
         formData.append('type', testData.type);
         formData.append('unitId', testData.unitId);
         formData.append('topicId', testData.topicId); // Pass topicId
+        // MISC type ke liye subject tag bhi bhejo
+        if (testData.type === 'MISC' && testData.subjectTag) {
+          formData.append('subjectTag', testData.subjectTag);
+        }
       } else {
         formData.append('existingTestId', testData.existingTestId);
       }
@@ -368,7 +373,7 @@ export default function AdminUploadPage() {
                       <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 p-4">
                         <Label className="mb-2 block text-emerald-800">Test Type</Label>
                         <div className="flex flex-wrap gap-2">
-                          {['TOPIC', 'UNIT', 'FLT', 'CSAT', 'PYQ'].map((type) => (
+                          {['TOPIC', 'UNIT', 'FLT', 'CSAT', 'PYQ', 'MISC'].map((type) => (
                             <div
                               key={type}
                               onClick={() => setTestData((p) => ({ ...p, type }))}
@@ -378,7 +383,7 @@ export default function AdminUploadPage() {
                                   : 'border-emerald-200 bg-white text-emerald-900 hover:border-emerald-400'
                               } `}
                             >
-                              {type === 'TOPIC' ? 'Topic Check' : type}
+                              {type === 'TOPIC' ? 'Topic Check' : type === 'MISC' ? 'Free Quiz' : type}
                             </div>
                           ))}
                         </div>
@@ -386,7 +391,7 @@ export default function AdminUploadPage() {
 
                       <div className="grid gap-6 md:grid-cols-2">
                         {/* Dynamic Fields based on Type */}
-                        {(testData.type === 'TOPIC' || testData.type === 'UNIT') && (
+                        {(testData.type === 'TOPIC' || testData.type === 'UNIT' || testData.type === 'MISC') && (
                           <div className="space-y-2">
                             <Label>Select Unit</Label>
                             <Select
@@ -450,6 +455,29 @@ export default function AdminUploadPage() {
                           </div>
                         )}
 
+                        {testData.type === 'MISC' && (
+                          <div className="space-y-2">
+                            <Label>Subject Tag (Filter me dikhega)</Label>
+                            <Select
+                              value={testData.subjectTag}
+                              onValueChange={(v) => setTestData((p) => ({ ...p, subjectTag: v }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Subject choose karo..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {[
+                                  'History', 'MP Culture', 'Geography', 'MP Geography',
+                                  'Polity', 'Economy', 'Science', 'Current Affairs',
+                                  'ICT', 'MP Tribes',
+                                ].map((s) => (
+                                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+
                         <div className="space-y-2">
                           <Label>Title</Label>
                           <Input
@@ -498,13 +526,25 @@ export default function AdminUploadPage() {
                   <div className="space-y-2">
                     <Label className="flex justify-between">
                       <span>Questions JSON Array</span>
-                      <span className="text-xs font-normal text-slate-400">
-                        Format:{' '}
-                        <code>
-                          [{`{ "questionText": "...", "options": ["A","B"], "correctAnswer": "A" }`}
-                          ]
-                        </code>
-                      </span>
+                      <div className="flex gap-2">
+                        <span className="text-xs font-normal text-slate-400">
+                          Format:{' '}
+                          <code>
+                            [{`{ "questionText": "...", "options": ["A","B"], "correctAnswer": "A" }`}
+                            ]
+                          </code>
+                        </span>
+                        {testData.type === 'MISC' && (
+                          <a
+                            href="/prompts/free_quiz_generation.md"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-bold text-emerald-500 hover:underline"
+                          >
+                            View Prompt
+                          </a>
+                        )}
+                      </div>
                     </Label>
                     <Textarea
                       name="questionsJson"
