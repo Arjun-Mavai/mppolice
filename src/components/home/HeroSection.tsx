@@ -60,10 +60,10 @@ export function HeroSection() {
           {/* GOOGLE-STYLE HERO BUTTON (ID: 74) */}
           {!globalUser ? (
             <Link
-              href="/syllabus/quiz/pyq"
+              href="/free-quiz"
               className="group relative w-full"
-              onMouseEnter={() => router.prefetch('/syllabus/quiz/pyq')}
-              onTouchStart={() => router.prefetch('/syllabus/quiz/pyq')}
+              onMouseEnter={() => router.prefetch('/free-quiz')}
+              onTouchStart={() => router.prefetch('/free-quiz')}
               onClick={() => {
                 trackFbCustomEvent('hero_free_test_clicked', {
                   location: 'home_page_hero_section',
