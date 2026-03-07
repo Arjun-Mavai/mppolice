@@ -53,31 +53,11 @@ export default async function FreeQuizPlayPage({ searchParams }: PageProps) {
         return null;
       }
 
-      // correctAnswer DB me teen formats me aa sakta h:
-      // 1. Numeric: "0", "1", "2.0" → Number() se seedha convert
-      // 2. Letter: "A", "B", "C", "D" → A=0, B=1, C=2, D=3
-      // 3. Full text: "जिब्राल्टर जलसंधि..." → options me dhundh ke index nikalo
-      let correctIdx = Number(q.correctAnswer);
-      if (isNaN(correctIdx) || !Number.isFinite(correctIdx)) {
-        const raw = String(q.correctAnswer).trim();
-        if (/^[A-Da-d]$/.test(raw)) {
-          correctIdx = raw.toUpperCase().charCodeAt(0) - 65;
-        } else {
-          const matchIdx = parsedOptions.findIndex((opt: any) => {
-            const optText = typeof opt === 'string' ? opt : (opt?.text || opt?.textEn || '');
-            return String(optText).trim() === raw;
-          });
-          correctIdx = matchIdx !== -1 ? matchIdx : 0;
-        }
-      } else {
-        correctIdx = Math.round(correctIdx);
-      }
-
       return {
         id: q.id,
         question: q.questionText,
         questionEn: q.questionTextEn || undefined,
-        correctAnswer: correctIdx,
+        correctAnswer: Number(q.correctAnswer),
         options: parsedOptions,
         explanation: q.explanation || undefined,
         explanationEn: q.explanationEn || undefined,
