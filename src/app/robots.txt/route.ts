@@ -2,12 +2,9 @@ export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppsc.zenscroll.app';
 
   // 🤖 CUSTOM ROBOTS.TXT
-  // We are using a Route Handler because Next.js's default robots.ts
-  // doesn't support the non-standard 'Content-Signal' field.
 
   const content = [
     'User-agent: *',
-    'Content-Signal: search=yes,ai-train=no',
     'Allow: /',
     'Disallow: /api/',
     'Disallow: /admin/',
