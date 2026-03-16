@@ -171,10 +171,10 @@ export default function AdminDashboardPage() {
             <Card className="h-fit border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg">
-                  Recent Guest Users ({recentGuests.length ?? 0})
+                  Guest Users ({recentGuests.length ?? 0})
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
                 {recentGuests.length === 0 ? (
                   <p className="text-sm text-slate-400">No guests yet.</p>
                 ) : (
