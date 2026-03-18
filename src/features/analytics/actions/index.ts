@@ -336,6 +336,7 @@ export const getAttemptDetails = cachedData(
           testTitle: tests.title,
           topicId: tests.topicId, // Added for title resolution
           totalMarks: tests.totalMarks,
+          type: tests.type,
           endTime: userAttempts.endTime,
           startTime: userAttempts.startTime,
         })
