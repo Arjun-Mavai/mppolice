@@ -81,9 +81,9 @@ async function AttemptContent({ attemptId }: { attemptId: string }) {
         answers={answersRecord}
         mode={mode}
         timeTaken={timeTaken}
-        title={meta.testTitle}
-        testId={meta.testId}
-        userId={meta.userId}
+        title={meta.testTitle ?? undefined}
+        testId={meta.testId ?? undefined}
+        userId={meta.userId ?? undefined}
         disableRetry={true}
       />
     </div>
