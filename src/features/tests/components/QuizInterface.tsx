@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Question } from '@/types/quiz';
 import { QuizResult } from './QuizResult';
+import { SmartQuizResult } from './SmartQuizResult';
 import { useQuizLogic } from '@/hooks/useQuizLogic';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { createGuestEntry as createGuestUser } from '@/actions/guest-actions';
@@ -50,6 +51,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
     answers,
     markedforReview,
     isSubmitted,
+    isSubmitting,
     timeLeft,
     instantModeEnabled,
     language,
@@ -239,6 +241,15 @@ export function QuizInterface(props: QuizInterfaceProps) {
           })
           .catch(() => {});
       }
+      
+      // Update URL to include completed=true so that page refresh redirects back to test list
+      if (isSubmitted) {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('completed') !== 'true') {
+          url.searchParams.set('completed', 'true');
+          window.history.replaceState({ ...window.history.state, quizActive: false }, '', url.toString());
+        }
+      }
     }
   }, [showGuestTeaser, isSubmitted]);
 
@@ -266,6 +277,19 @@ export function QuizInterface(props: QuizInterfaceProps) {
   }
 
   if (isSubmitted && userId) {
+    // 🎯 Reverted Smart Result for now, back to standard ranking view
+    /* if (mode === 'pyq') {
+      return (
+        <SmartQuizResult
+          testId={testId}
+          userId={userId}
+          title={title}
+          onRetry={handleRetry}
+          onExit={onExit}
+        />
+      );
+    } */
+
     return (
       <QuizResult
         questions={questions}
@@ -399,6 +423,16 @@ export function QuizInterface(props: QuizInterfaceProps) {
         onSubmit={handleGuestEntrySubmit}
         onExit={showExitModal}
       />
+
+      {/* Loading Overlay during submission */}
+      {isSubmitting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 rounded-xl bg-white p-8 shadow-xl">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+            <p className="font-medium text-slate-800">Submitting Test...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

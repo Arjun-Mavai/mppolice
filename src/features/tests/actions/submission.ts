@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/db';
-import { tests, userAttempts, questions, attemptAnswers } from '@/db/schema';
+import { tests, userAttempts, questions, attemptAnswers, syllabusTopics } from '@/db/schema';
 import { eq, asc, desc, and, inArray, sql } from 'drizzle-orm';
 import { unstable_cache, revalidateTag } from 'next/cache';
 import { verifyAuth } from '@/lib/auth';
@@ -143,6 +143,7 @@ export async function getTestWithQuestions(testId: string) {
   try {
     const validatedId = testIdSchema.parse(testId);
 
+    // Fetch Test
     const test = await db.query.tests.findFirst({
       where: eq(tests.id, validatedId),
       with: {
@@ -152,7 +153,31 @@ export async function getTestWithQuestions(testId: string) {
       },
     });
 
-    return test || null;
+    if (!test) return null;
+
+    // Enriched Logic: If it's a Topic Test, fetch the topic title
+    // This fixes the "Topic 21bb3b57..." ugly title issue
+    if (test.topicId) {
+      const topic = await db.query.syllabusTopics.findFirst({
+        where: eq(syllabusTopics.id, test.topicId),
+        columns: {
+          title: true,
+          titleEn: true,
+        },
+      });
+
+      if (topic) {
+        // Prefer English title for consistency or use what's available
+        // We override the test title with the proper topic name
+        // E.g., "MP History Practice Test" instead of "Topic <UUID> Practice Test"
+        const cleanTitle = topic.titleEn || topic.title;
+        if (cleanTitle) {
+          test.title = `${cleanTitle} Practice Test`;
+        }
+      }
+    }
+
+    return test;
   } catch (error) {
     logger.error('Invalid Test ID or DB Error:', error);
     return null;
@@ -250,12 +275,14 @@ export async function submitTestAttempt(
 
         if (isCorrect) {
           // Strict Scoring as per User Request ("Global Standard")
-          const marks = SCORING_CONFIG.MARKS_PER_QUESTION;
+          // Use per-question marks if available, fallback to global config
+          const marks = q.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION;
           totalScore += marks;
           correctCount++;
         } else {
           // Strict Negative Marking
-          const deduction = SCORING_CONFIG.NEGATIVE_MARKING;
+          // Use per-question negative marks if available
+          const deduction = q.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING;
           totalScore -= deduction;
           incorrectCount++;
         }

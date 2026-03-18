@@ -91,6 +91,12 @@ const ADMIN_ROUTES = [
     description: 'Enrich topics with AI',
   },
   {
+    href: '/admin/pyq-insights',
+    label: 'PYQ Insights',
+    icon: Brain,
+    description: 'Import/publish PYQ facts & trends',
+  },
+  {
     href: '/admin/bulk-question-upload',
     label: 'Bulk Questions',
     icon: HelpCircle,

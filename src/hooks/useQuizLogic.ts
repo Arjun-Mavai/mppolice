@@ -73,6 +73,7 @@ export function useQuizLogic({
   // 🎯 SUBMISSION STATE (Test submit ho gaya ya nahi)
   // ───────────────────────────────────────────────────────────────
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ───────────────────────────────────────────────────────────────
   // 💡 INSTANT MODE (Turant feedback on/off)
@@ -181,10 +182,14 @@ export function useQuizLogic({
    * - Bas local results dikhate hain
    */
   const handleSubmit = useCallback(async () => {
-    setIsSubmitted(true);
+    if (isSubmitting || isSubmitted) return;
+
+    setIsSubmitting(true);
 
     // Guest user? No DB save, just show results
     if (!userId) {
+      setIsSubmitted(true);
+      setIsSubmitting(false);
       return;
     }
 
@@ -206,10 +211,12 @@ export function useQuizLogic({
       // ───────────────────────────────────────────────────────
       const now = Date.now();
       const duration = (now - questionStartTimeRef.current) / 1000;
-      const currentQId = questions[currentQuestionIndex].id;
+      const currentQId = questions[currentQuestionIndex]?.id;
 
       const finalTimes = { ...questionTimes };
-      finalTimes[currentQId] = (finalTimes[currentQId] || 0) + duration;
+      if (currentQId) {
+        finalTimes[currentQId] = (finalTimes[currentQId] || 0) + duration;
+      }
 
       // ───────────────────────────────────────────────────────
       // 💾 SAVE TO DATABASE
@@ -227,6 +234,9 @@ export function useQuizLogic({
         metadata: { testId, userId, questionsCount: questions.length },
       });
       // Note: We don't revert isSubmitted=false because partial save might have happened
+    } finally {
+      setIsSubmitting(false);
+      setIsSubmitted(true);
     }
   }, [
     answers,
@@ -237,6 +247,8 @@ export function useQuizLogic({
     userId,
     timeLimitInMinutes,
     timeLeft,
+    isSubmitting,
+    isSubmitted
   ]);
 
   /**
@@ -502,6 +514,7 @@ export function useQuizLogic({
     answers, // User's selected answers { questionId: optionIndex }
     markedforReview, // Question IDs marked for review
     isSubmitted, // Has test been submitted?
+    isSubmitting, // Is test currently submitting?
     timeLeft, // Seconds remaining
     instantModeEnabled, // Is instant feedback ON?
     language, // Current language (hi/en)

@@ -1,0 +1,66 @@
+{
+  "topics": [
+    {
+      "id": "topic_mp_tribes",
+      "name": "Tribes of Madhya Pradesh",
+      "subject": "MP Geography",
+      "importance": "High",
+      "description": "Covering major tribes (Bhil, Gond, Baiga), their culture, dance, and demographics.",
+      "questions": [
+        "ap-0jyohaWZ1yvm3929-R",
+        "tCCCPxfc9-fnBZBHhm-eS",
+        "NciIOrCrqj-6tJNYR7xTW"
+      ],
+      "facts": [
+        {
+          "type": "Exam Fact",
+          "content": "Baiga tribe practices 'Bewar' or 'Dahiya' shifting cultivation.",
+          "tags": ["Culture", "Agriculture"]
+        },
+        {
+          "type": "Exam Fact",
+          "content": "Korku tribe is primarily found in Southern MP (Betul, Hoshangabad, Chhindwara).",
+          "tags": ["Demography", "Location"]
+        },
+        {
+          "type": "Memory Tip",
+          "content": "Korku -> K-B-H (Korku lives in Betul & Hoshangabad).",
+          "tags": ["Trick"]
+        },
+        {
+          "type": "Scam Alert",
+          "content": "Bhil is the largest individual TRIBE in MP, but Gond is the largest tribal GROUP.",
+          "tags": ["Confusion Point"]
+        }
+      ]
+    },
+    {
+      "id": "topic_ind_rivers",
+      "name": "Rivers of India",
+      "subject": "Indian Geography",
+      "importance": "Very High",
+      "description": "Origin, tributaries, dams, and river islands of major Indian rivers.",
+      "questions": [
+        "MM_RHhuQDkzV_cFzz38Es",
+        "JR4ZTtH1AAlKdVndbzT2u"
+      ],
+      "facts": [
+        {
+          "type": "Exam Fact",
+          "content": "Majuli (Assam) is the world's largest river island, located on the Brahmaputra River.",
+          "tags": ["World Record", "Brahmaputra"]
+        },
+        {
+          "type": "Exam Fact",
+          "content": "Kolkata Port (Syama Prasad Mookerjee Port) is the only major riverine port in India (on Hooghly River).",
+          "tags": ["Ports", "Unique"]
+        },
+        {
+          "type": "Memory Tip",
+          "content": "M-A-B: Majuli - Assam - Brahmaputra.",
+          "tags": ["Trick"]
+        }
+      ]
+    }
+  ]
+}

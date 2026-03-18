@@ -1,5 +1,5 @@
-import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core';
-import { sql } from 'drizzle-orm';
+import { sqliteTable, text, integer, real, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { sql, relations } from 'drizzle-orm';
 
 // MPPSC Users Table
 export const mppscUsers = sqliteTable(
@@ -23,6 +23,8 @@ export const mppscUsers = sqliteTable(
     accessExpiresAt: integer('access_expires_at', { mode: 'timestamp' }),
     // Phone number — optional, for contact
     phone: text('phone'),
+    category: text('category', { enum: ['UR', 'OBC', 'SC', 'ST', 'EWS', 'PH'] }).default('UR'),
+    gender: text('gender', { enum: ['M', 'F', 'OTHER'] }).default('M'),
     // Metadata — JSON field for location, notes, any extra info admin wants to store
     metadata: text('metadata', { mode: 'json' }),
     // Previous user ID — when lite→pro upgrade happens via soft-delete+recreate
@@ -64,6 +66,9 @@ export const tests = sqliteTable(
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
     updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
     deletedAt: integer('deleted_at', { mode: 'timestamp' }), // Soft delete support
+    // Category cutoffs JSON for result analysis
+    // e.g. { "GEN_M": 154, "GEN_F": 150, "OBC_M": 148, ... }
+    cutoffs: text('cutoffs', { mode: 'json' }).$type<Record<string, number>>(),
   },
   (table) => [
     index('idx_tests_slug').on(table.slug),
@@ -98,6 +103,126 @@ export const questions = sqliteTable(
   (table) => [index('idx_questions_subject').on(table.testId, table.subject)]
 );
 
+// PYQ Canonical Topics
+export const pyqTopics = sqliteTable(
+  'pyq_topics',
+  {
+    id: text('id').primaryKey(),
+    subject: text('subject').notNull(),
+    topicSlug: text('topic_slug').notNull(),
+    topicTitle: text('topic_title').notNull(),
+    topicTitleEn: text('topic_title_en'),
+    description: text('description'),
+    aiContent: text('ai_content', { mode: 'json' }), // New field for deep_learning
+    isActive: integer('is_active', { mode: 'boolean' }).default(true),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => [
+    uniqueIndex('pyq_topics_topic_slug_unique').on(table.topicSlug),
+    index('idx_pyq_topics_subject').on(table.subject, table.isActive),
+  ]
+);
+
+// PYQ Question <> Topic Mapping
+export const pyqQuestionTopics = sqliteTable(
+  'pyq_question_topics',
+  {
+    id: text('id').primaryKey(),
+    questionId: text('question_id')
+      .references(() => questions.id, { onDelete: 'cascade' })
+      .notNull(),
+    topicId: text('topic_id')
+      .references(() => pyqTopics.id, { onDelete: 'cascade' })
+      .notNull(),
+    confidence: real('confidence').default(1),
+    isPrimary: integer('is_primary', { mode: 'boolean' }).default(false),
+    source: text('source', { enum: ['manual', 'ai', 'rule'] }).default('manual'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => [
+    uniqueIndex('pyq_qt_question_topic_unique').on(table.questionId, table.topicId),
+    index('idx_pyq_qt_topic').on(table.topicId),
+    index('idx_pyq_qt_question').on(table.questionId),
+    index('idx_pyq_qt_primary').on(table.topicId, table.isPrimary),
+  ]
+);
+
+// PYQ Facts Bank (Student Revision)
+export const pyqFactBank = sqliteTable(
+  'pyq_fact_bank',
+  {
+    id: text('id').primaryKey(),
+    topicId: text('topic_id')
+      .references(() => pyqTopics.id, { onDelete: 'cascade' })
+      .notNull(),
+    subject: text('subject').notNull(),
+    factText: text('fact_text').notNull(),
+    factTextEn: text('fact_text_en'),
+    memoryTip: text('memory_tip'),
+    memoryTipEn: text('memory_tip_en'),
+    scamAlert: text('scam_alert'),
+    scamAlertEn: text('scam_alert_en'),
+    difficulty: text('difficulty', { enum: ['easy', 'medium', 'hard'] }).default('medium'),
+    frequencyScore: real('frequency_score').default(0),
+    importanceScore: real('importance_score').default(0),
+    pyqRefs: text('pyq_refs', { mode: 'json' })
+      .$type<{ testId?: string; questionId?: string; year?: number }[]>()
+      .default(sql`'[]'`)
+      .notNull(),
+    tags: text('tags', { mode: 'json' }).$type<string[]>().default(sql`'[]'`),
+    status: text('status', { enum: ['draft', 'published', 'archived'] }).default('draft'),
+    source: text('source', { enum: ['manual', 'ai'] }).default('manual'),
+    createdBy: text('created_by'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => [
+    index('idx_fact_topic_status').on(table.topicId, table.status),
+    index('idx_fact_subject_status').on(table.subject, table.status),
+    index('idx_fact_importance').on(table.status, table.importanceScore),
+  ]
+);
+
+// PYQ Topic Trends Snapshot
+export const pyqTopicTrends = sqliteTable(
+  'pyq_topic_trends',
+  {
+    id: text('id').primaryKey(),
+    topicId: text('topic_id')
+      .references(() => pyqTopics.id, { onDelete: 'cascade' })
+      .notNull(),
+    subject: text('subject').notNull(),
+    year: integer('year').notNull(),
+    questionCount: integer('question_count').default(0).notNull(),
+    weightPercent: real('weight_percent').default(0).notNull(),
+    trendDelta: real('trend_delta').default(0),
+    computedAt: integer('computed_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => [
+    uniqueIndex('pyq_trends_topic_year_unique').on(table.topicId, table.year),
+    index('idx_trends_subject_year').on(table.subject, table.year),
+    index('idx_trends_topic_year').on(table.topicId, table.year),
+  ]
+);
+
+// PYQ Import Jobs (Admin Audit)
+export const pyqContentImportJobs = sqliteTable(
+  'pyq_content_import_jobs',
+  {
+    id: text('id').primaryKey(),
+    uploadedBy: text('uploaded_by'),
+    inputHash: text('input_hash').notNull(),
+    totalRecords: integer('total_records'),
+    successCount: integer('success_count'),
+    failureCount: integer('failure_count'),
+    status: text('status', { enum: ['pending', 'processed', 'failed'] }).default('pending'),
+    errorReport: text('error_report', { mode: 'json' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => [index('idx_pyq_jobs_status_created').on(table.status, table.createdAt)]
+);
+
 // User Attempts Table
 export const userAttempts = sqliteTable(
   'user_attempts',
@@ -113,6 +238,7 @@ export const userAttempts = sqliteTable(
     endTime: integer('end_time', { mode: 'timestamp' }),
     score: real('score'),
     isCompleted: integer('is_completed', { mode: 'boolean' }).default(false),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
     deletedAt: integer('deleted_at', { mode: 'timestamp' }), // Soft delete support
   },
   (table) => [
@@ -222,8 +348,6 @@ export const contentBlogs = sqliteTable('content_blogs', {
 });
 
 // Relations
-import { relations } from 'drizzle-orm';
-
 export const testsRelations = relations(tests, ({ many }) => ({
   questions: many(questions),
   userAttempts: many(userAttempts),
@@ -313,6 +437,27 @@ export const testLeaderboard = sqliteTable(
     index('test_score_idx').on(table.testId, table.score),
     // Ranking index: Score DESC, Time ASC
     index('idx_leaderboard_ranking').on(table.testId, table.score, table.timeTakenSeconds),
+  ]
+);
+
+// Free Quiz Attempts (Guest score tracking)
+export const freeQuizAttempts = sqliteTable(
+  'free_quiz_attempts',
+  {
+    id: text('id').primaryKey(),
+    testId: text('test_id')
+      .references(() => tests.id, { onDelete: 'cascade' })
+      .notNull(),
+    guestId: text('guest_id'),
+    score: real('score'),
+    totalQuestions: integer('total_questions'),
+    percentage: real('percentage'),
+    timeTakenSeconds: integer('time_taken_seconds'),
+    completedAt: integer('completed_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => [
+    index('idx_free_attempts_test').on(table.testId),
+    index('idx_free_attempts_guest').on(table.guestId),
   ]
 );
 
@@ -452,5 +597,3 @@ export const pricingConfig = sqliteTable('pricing_config', {
   // Last updated
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
 });
-
-
