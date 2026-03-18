@@ -180,6 +180,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
   }
 
   const userId = user?.id;
+  const isTestingUser = user?.role === 'admin';
 
   // Map Questions
   const questions: Question[] = testData.questions.map((q) => {
