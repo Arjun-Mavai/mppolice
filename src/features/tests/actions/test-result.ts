@@ -53,6 +53,7 @@ export interface SmartResultResponse {
 
   pyq_facts: any[]; // Enriched facts related to mistakes
   missed_questions: any[]; // Detailed breakdown of errors
+  detailed_analysis: any[]; // Full list of questions with status
 }
 
 // ------------------------------------------------------------------
@@ -243,6 +244,9 @@ export async function calculateMPPSCResult(
       pyq_facts: facts,
       missed_questions: scoring.filter(s => s.status === 'wrong').map(q => ({
         ...q,
+      })),
+      detailed_analysis: scoring.map(q => ({
+        ...q
       })),
       qualification: qualification as any
     };

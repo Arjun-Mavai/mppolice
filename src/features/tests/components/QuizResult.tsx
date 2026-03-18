@@ -22,7 +22,8 @@ import {
   BookOpen,
   ArrowRight,
   Target,
-  Trophy
+  Trophy,
+  Lock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Question } from '@/types/quiz';
@@ -56,6 +57,7 @@ interface QuizResultProps {
   testId?: string;
   userId?: string;
   disableRetry?: boolean;
+  isGuest?: boolean;
 }
 
 export function QuizResult({
@@ -69,10 +71,25 @@ export function QuizResult({
   testId,
   userId,
   disableRetry = false,
+  isGuest = false,
 }: QuizResultProps) {
   const router = useRouter();
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
+
+  const PremiumLock = ({ label, className }: { label: string; className?: string }) => (
+    <div className={cn("absolute inset-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[2px] z-20 rounded-lg border border-slate-100", className)}>
+      <div className="bg-white p-4 rounded-2xl shadow-xl border border-slate-100 text-center max-w-[200px]">
+        <div className="mx-auto bg-amber-100 w-10 h-10 rounded-full flex items-center justify-center mb-2">
+          <Lock className="w-5 h-5 text-amber-600" />
+        </div>
+        <p className="text-sm font-bold text-slate-800 mb-2">{label}</p>
+        <Button size="sm" className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold" onClick={() => router.push('/pricing')}>
+          Unlock Now
+        </Button>
+      </div>
+    </div>
+  );
 
   const [leaderboard, setLeaderboard] = useState<any>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
@@ -192,12 +209,13 @@ export function QuizResult({
       const isCorrect = userAnswer === q.correctAnswer;
       const isSkipped = userAnswer === undefined;
       const isExpanded = expandedQuestion === q.id;
+      const isLocked = isGuest && !isCorrect;
 
       return (
         <Card
           key={q.id}
           className={cn(
-            'overflow-hidden border-l-4 mb-4',
+            'overflow-hidden border-l-4 mb-4 relative',
             isCorrect
               ? 'border-l-emerald-500'
               : isSkipped
@@ -206,8 +224,14 @@ export function QuizResult({
           )}
         >
           <div
-            onClick={() => setExpandedQuestion(isExpanded ? null : q.id)}
-            className="cursor-pointer p-4 transition-colors hover:bg-slate-50"
+            onClick={() => {
+              if (isLocked) {
+                // router.push('/pricing'); // Optional: redirect on click
+                return;
+              }
+              setExpandedQuestion(isExpanded ? null : q.id)
+            }}
+            className={cn("cursor-pointer p-4 transition-colors hover:bg-slate-50", isLocked && "cursor-not-allowed")}
           >
             <div className="flex gap-4">
               <div className="mt-1">
@@ -253,7 +277,9 @@ export function QuizResult({
                 )}
               </div>
               <div className="text-slate-400">
-                {isExpanded ? (
+                {isLocked ? (
+                  <Lock className="h-5 w-5 text-amber-500" />
+                ) : isExpanded ? (
                   <ChevronUp className="h-5 w-5" />
                 ) : (
                   <ChevronDown className="h-5 w-5" />
@@ -1010,12 +1036,18 @@ export function QuizResult({
         <TabsContent value="result" className="m-0 focus-visible:outline-none">
           {renderResultContent()}
         </TabsContent>
-        <TabsContent value="strategy" className="m-0 focus-visible:outline-none">
-          {renderStrategyContent()}
+        <TabsContent value="strategy" className="m-0 focus-visible:outline-none relative min-h-[400px]">
+          {isGuest && <PremiumLock label="Strategy Analysis Locked" className="backdrop-blur-sm bg-white/80" />}
+          <div className={isGuest ? "blur-sm pointer-events-none select-none" : ""}>
+            {renderStrategyContent()}
+          </div>
         </TabsContent>
         {mode === 'pyq' && (
-          <TabsContent value="pyq-analysis" className="m-0 focus-visible:outline-none">
-            {renderPYQAnalysisContent()}
+          <TabsContent value="pyq-analysis" className="m-0 focus-visible:outline-none relative min-h-[400px]">
+            {isGuest && <PremiumLock label="PYQ Intelligence Locked" className="backdrop-blur-sm bg-white/80" />}
+            <div className={isGuest ? "blur-sm pointer-events-none select-none" : ""}>
+              {renderPYQAnalysisContent()}
+            </div>
           </TabsContent>
         )}
       </Tabs>
