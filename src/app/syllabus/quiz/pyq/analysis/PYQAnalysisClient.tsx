@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { BarChart3, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
+import { BarChart3, TrendingUp, ChevronDown, ChevronUp, BookOpenText, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -105,97 +105,137 @@ export default function PYQAnalysisClient({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      <div className="mx-auto max-w-[1400px] space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-black text-slate-900">
+    <div className="min-h-screen bg-[#F8FAFC] pb-20">
+      <div className="mx-auto max-w-[1400px] space-y-8 px-4 pt-10 sm:px-6 lg:px-8">
+        
+        {/* Info Banner */}
+        <div className="rounded-[1.5rem] bg-slate-50/50 border border-slate-200 p-4 shadow-sm">
+          <p className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-900">
+            <ShieldAlert className="h-4 w-4" />
+            {isHindi ? 'परीक्षा इंटेलिजेंस मोड' : 'Exam Intelligence Mode'}
+          </p>
+          <p className="mt-1 text-sm text-slate-600">
+            {isHindi
+              ? 'परीक्षा के पैटर्न और टॉपिक के वेटेज को समझें — स्मार्ट तैयारी के लिए विश्लेषण का उपयोग करें।'
+              : 'Understand exam patterns and topic weightage — use analysis for smart preparation.'}
+          </p>
+        </div>
+
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-1.5 flex-1">
+              <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
                 {isHindi ? 'PYQ टॉपिक विश्लेषण' : 'PYQ Topic Analysis'}
               </h1>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="max-w-xl text-sm font-medium text-slate-500 leading-relaxed">
                 {isHindi
                   ? 'High-weight topics और yearly pattern shifts पहचानें, ताकि revision तेज़ हो।'
                   : 'Identify high-weight topics and yearly pattern shifts for faster revision.'}
               </p>
             </div>
-            <Button variant="outline" onClick={() => router.push('/syllabus/quiz/pyq/facts')}>
+            <Button 
+              variant="outline" 
+              onClick={() => router.push('/syllabus/quiz/pyq/facts')}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 h-auto w-full sm:w-auto"
+            >
+              <BookOpenText className="mr-2 h-4 w-4" />
               {isHindi ? 'फैक्ट लाइब्रेरी खोलें' : 'Open Facts Library'}
             </Button>
           </div>
 
-          <div className="mt-6 space-y-4">
-            {/* Subject Select */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-[11px] font-black tracking-widest text-slate-400 uppercase">
-                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
-                {isHindi ? 'विषय चुनें' : 'Select Subject'}
-              </label>
-              <Select
-                value={selectedSubject}
-                onValueChange={(val) => applyFilters(val, selectedYears)}
-              >
-                <SelectTrigger className="h-12 w-full rounded-xl border-slate-200 bg-white font-bold text-slate-700 shadow-sm transition-colors hover:bg-slate-50">
-                  <SelectValue placeholder={isHindi ? 'विषय चुनें' : 'Select Subject'} />
-                </SelectTrigger>
-                <SelectContent className="max-h-[350px] overflow-y-auto rounded-xl [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent">
-                  {subjects.map((subject) => (
-                    <SelectItem
-                      key={subject.subject}
-                      value={subject.subject}
-                      className="cursor-pointer font-semibold text-slate-700"
-                    >
-                      {subject.subject} ({subject.topicCount} {isHindi ? 'टॉपिक्स' : 'Topics'})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="mt-10 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Subject Select */}
+              <div className="space-y-2.5">
+                <label className="text-[11px] font-black tracking-widest text-slate-400 uppercase flex items-center gap-2 px-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+                  {isHindi ? 'विषय चुनें' : 'Select Subject'}
+                </label>
+                <Select
+                  value={selectedSubject}
+                  onValueChange={(val) => applyFilters(val, selectedYears)}
+                >
+                  <SelectTrigger className="w-full bg-white border-slate-200 shadow-sm rounded-2xl h-14 font-bold text-slate-700 hover:border-indigo-200 transition-all">
+                    <SelectValue placeholder={isHindi ? 'विषय चुनें' : 'Select Subject'} />
+                  </SelectTrigger>
+                  <SelectContent 
+                    position="popper" 
+                    sideOffset={4}
+                    className="z-[100] rounded-2xl max-h-[350px] overflow-y-auto bg-white border border-slate-200 shadow-xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-track]:bg-transparent"
+                  >
+                    {subjects.map((subject) => (
+                      <SelectItem
+                        key={subject.subject}
+                        value={subject.subject}
+                        className="cursor-pointer font-semibold py-3 text-slate-700"
+                      >
+                        {subject.subject} ({subject.topicCount} {isHindi ? 'टॉपिक्स' : 'Topics'})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Year Select */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-[11px] font-black tracking-widest text-slate-400 uppercase">
-                <span className="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
-                {isHindi ? 'वर्ष चुनें' : 'Select Years'}
-              </label>
-              <Select
-                value={selectedYears.toString()}
-                onValueChange={(val) => applyFilters(selectedSubject, Number(val))}
-              >
-                <SelectTrigger className="h-12 w-full rounded-xl border-slate-200 bg-white font-bold text-slate-700 shadow-sm transition-colors hover:bg-slate-50">
-                  <SelectValue placeholder={isHindi ? 'वर्ष चुनें' : 'Select Years'} />
-                </SelectTrigger>
-                <SelectContent className="max-h-[350px] overflow-y-auto rounded-xl [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent">
-                  {YEAR_OPTIONS.map((years) => (
-                    <SelectItem
-                      key={years}
-                      value={years.toString()}
-                      className="cursor-pointer font-semibold text-slate-700"
-                    >
-                      {isHindi ? `पिछले ${years} वर्ष` : `Last ${years} Years`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {/* Year Select */}
+              <div className="space-y-2.5">
+                <label className="text-[11px] font-black tracking-widest text-slate-400 uppercase flex items-center gap-2 px-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+                  {isHindi ? 'वर्ष चुनें' : 'Select Years'}
+                </label>
+                <Select
+                  value={selectedYears.toString()}
+                  onValueChange={(val) => applyFilters(selectedSubject, Number(val))}
+                >
+                  <SelectTrigger className="w-full bg-white border-slate-200 shadow-sm rounded-2xl h-14 font-bold text-slate-700 hover:bg-slate-50 transition-all">
+                    <SelectValue placeholder={isHindi ? 'वर्ष चुनें' : 'Select Years'} />
+                  </SelectTrigger>
+                  <SelectContent 
+                    position="popper" 
+                    sideOffset={4}
+                    className="z-[100] rounded-2xl max-h-[350px] overflow-y-auto bg-white border border-slate-200 shadow-xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-track]:bg-transparent"
+                  >
+                    {YEAR_OPTIONS.map((years) => (
+                      <SelectItem
+                        key={years}
+                        value={years.toString()}
+                        className="cursor-pointer font-semibold py-3 text-slate-700"
+                      >
+                        {isHindi ? `पिछले ${years} वर्ष` : `Last ${years} Years`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Badge variant="secondary">
-              {isHindi
-                ? `डेटासेट: ${coverage.fromYear}-${coverage.toYear}`
-                : `Dataset: ${coverage.fromYear}-${coverage.toYear}`}
-            </Badge>
-            <Badge variant="secondary">
-              {isHindi
-                ? `कुल PYQ प्रश्न: ${coverage.pyqQuestionCount}`
-                : `Total PYQ Questions: ${coverage.pyqQuestionCount}`}
-            </Badge>
-            <Badge variant="secondary">
-              {isHindi
-                ? `Analysis mapped: ${coverage.mappedQuestionCount} (${coverage.mappingCoveragePercent}%)`
-                : `Analysis mapped: ${coverage.mappedQuestionCount} (${coverage.mappingCoveragePercent}%)`}
-            </Badge>
+          <div className="mt-8 flex flex-col gap-4 border-t border-slate-100/80 pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-2">
+              <Badge
+                variant="outline"
+                className="border-emerald-100 bg-emerald-50/50 px-2.5 py-1 font-semibold text-emerald-700"
+              >
+                {isHindi
+                  ? `डेटासेट: ${coverage.fromYear}-${coverage.toYear}`
+                  : `Dataset: ${coverage.fromYear}-${coverage.toYear}`}
+              </Badge>
+              <Badge
+                variant="outline"
+                className="border-amber-100 bg-amber-50/50 px-2.5 py-1 font-semibold text-amber-700"
+              >
+                {isHindi
+                  ? `कुल PYQ: ${coverage.pyqQuestionCount}`
+                  : `Total PYQ: ${coverage.pyqQuestionCount}`}
+              </Badge>
+              <Badge
+                variant="outline"
+                className="border-blue-100 bg-blue-50/50 px-2.5 py-1 font-semibold text-blue-700"
+              >
+                {isHindi
+                  ? `Analyzed: ${coverage.mappedQuestionCount}`
+                  : `Analyzed: ${coverage.mappedQuestionCount}`}
+              </Badge>
+            </div>
           </div>
         </div>
 
@@ -535,7 +575,8 @@ export default function PYQAnalysisClient({
                       >
                         <div
                           className={cn(
-                            'h-full rounded-full bg-green-700 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-1000 ease-out'
+                            'h-full rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-1000 ease-out',
+                            barColor
                           )}
                           style={{
                             width: `${Math.max(

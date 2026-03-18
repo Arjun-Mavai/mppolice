@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/db';
 import { pyqContentImportJobs, pyqFactBank, pyqTopics, pyqQuestionTopics, questions, tests } from '@/db/schema';
@@ -235,7 +235,7 @@ export async function POST(request: Request) {
                      topicId: topicId!,
                      confidence: 1.0,
                      isPrimary: true,
-                     source: 'ai',
+                     source: 'ai' as const,
                    }))
                  )
                  .onConflictDoNothing();
@@ -285,7 +285,7 @@ export async function POST(request: Request) {
                 })) ?? [],
               tags: fact.tags ?? [],
               status: parsedBody.publish ? 'published' : 'draft', // Make it visible if requested
-              source: 'ai',
+              source: 'ai' as const,
               createdBy: adminUser.id,
             });
             factsStaged++;
