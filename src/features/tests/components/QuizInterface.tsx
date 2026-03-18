@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Question } from '@/types/quiz';
 import { QuizResult } from './QuizResult';
-import { SmartQuizResult } from './SmartQuizResult';
 import { useQuizLogic } from '@/hooks/useQuizLogic';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { createGuestEntry as createGuestUser } from '@/actions/guest-actions';

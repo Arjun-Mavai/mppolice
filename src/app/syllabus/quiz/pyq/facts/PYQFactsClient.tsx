@@ -212,9 +212,13 @@ export default function PYQFactsClient({
                   <SelectTrigger className="w-full bg-white border-slate-200 shadow-sm rounded-2xl h-14 font-bold text-slate-700 hover:border-indigo-200 transition-all">
                     <SelectValue placeholder={isHindi ? 'विषय चुनें' : 'Select Subject'} />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl">
+                  <SelectContent 
+                    position="popper" 
+                    sideOffset={4}
+                    className="z-[100] rounded-2xl max-h-[350px] overflow-y-auto bg-white border border-slate-200 shadow-xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-track]:bg-transparent"
+                  >
                     {subjects.map((s) => (
-                      <SelectItem key={s.subject} value={s.subject} className="font-semibold py-3 text-slate-700">
+                      <SelectItem key={s.subject} value={s.subject} className="font-semibold py-3 text-slate-700 cursor-pointer">
                         {s.subject} ({s.factCount} PYQ)
                       </SelectItem>
                     ))}
@@ -232,10 +236,14 @@ export default function PYQFactsClient({
                   <SelectTrigger className="w-full bg-white border-slate-200 shadow-sm rounded-2xl h-14 font-bold text-slate-700 hover:border-emerald-200 transition-all">
                     <SelectValue placeholder={isHindi ? 'सभी टॉपिक' : 'All Topics'} />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl max-h-[400px]">
-                    <SelectItem value="all" className="font-semibold py-3">{isHindi ? 'सभी टॉपिक' : 'All Topics'}</SelectItem>
+                  <SelectContent 
+                    position="popper" 
+                    sideOffset={4}
+                    className="z-[100] rounded-2xl max-h-[350px] overflow-y-auto bg-white border border-slate-200 shadow-xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-track]:bg-transparent"
+                  >
+                    <SelectItem value="all" className="font-semibold py-3 cursor-pointer">{isHindi ? 'सभी टॉपिक' : 'All Topics'}</SelectItem>
                     {topics.map((t) => (
-                      <SelectItem key={t.topicSlug} value={t.topicSlug} className="font-semibold py-3">
+                      <SelectItem key={t.topicSlug} value={t.topicSlug} className="font-semibold py-3 cursor-pointer">
                         {isHindi ? t.topicTitle : t.topicTitleEn || t.topicTitle}
                       </SelectItem>
                     ))}
@@ -253,10 +261,14 @@ export default function PYQFactsClient({
                   <SelectTrigger className="w-full bg-white border-slate-200 shadow-sm rounded-2xl h-14 font-bold text-slate-700 hover:border-pink-200 transition-all">
                     <SelectValue placeholder={isHindi ? 'सभी वर्ष' : 'All Years'} />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl">
-                    <SelectItem value="all" className="font-semibold py-3">{isHindi ? 'सभी वर्ष' : 'All Years'}</SelectItem>
+                  <SelectContent 
+                    position="popper" 
+                    sideOffset={4}
+                    className="z-[100] rounded-2xl max-h-[350px] overflow-y-auto bg-white border border-slate-200 shadow-xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-track]:bg-transparent"
+                  >
+                    <SelectItem value="all" className="font-semibold py-3 cursor-pointer">{isHindi ? 'सभी वर्ष' : 'All Years'}</SelectItem>
                     {yearOptions.map((y) => (
-                      <SelectItem key={y} value={String(y)} className="font-semibold py-3">
+                      <SelectItem key={y} value={String(y)} className="font-semibold py-3 cursor-pointer">
                         {y} Exam
                       </SelectItem>
                     ))}

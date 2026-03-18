@@ -309,7 +309,7 @@ export default function PYQAnalysisClient({
                                   : 'border-pink-200 bg-pink-50 text-pink-700'
                               )}
                             >
-                              {item.trendDelta > 0 ? `+${item.trendDelta}%` : `${item.trendDelta}%`}
+                              {item.trendDelta > 0 ? `+${item.trendDelta}` : `${item.trendDelta}`}
                             </Badge>
                           </div>
                           <div className="flex items-center justify-between text-[10px] font-black tracking-widest text-slate-400 uppercase">

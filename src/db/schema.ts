@@ -67,7 +67,7 @@ export const tests = sqliteTable(
     updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
     deletedAt: integer('deleted_at', { mode: 'timestamp' }), // Soft delete support
     // Category cutoffs JSON for result analysis
-    // e.g. { "GEN_M": 154, "GEN_F": 150, "OBC_M": 148, ... }
+    // e.g. { "UR_OPEN": 154, "UR_FEMALE": 150, "OBC_OPEN": 148, ... }
     cutoffs: text('cutoffs', { mode: 'json' }).$type<Record<string, number>>(),
   },
   (table) => [

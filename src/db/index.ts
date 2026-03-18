@@ -3,10 +3,6 @@ import { drizzle } from 'drizzle-orm/libsql';
 import * as schema from './schema';
 import { env } from '@/lib/env';
 
-// "Ab constant variable nahi, verified maal use kar rahe"
-const url = env.TURSO_DATABASE_URL;
-const authToken = env.TURSO_AUTH_TOKEN;
-
 // Singleton pattern to prevent connection exhaustion in serverless/dev
 const globalForDb = globalThis as unknown as {
   client: ReturnType<typeof createClient> | undefined;
@@ -22,7 +18,9 @@ const connectionAuthToken = isDev
   ? undefined
   : env.TURSO_AUTH_TOKEN;
 
-console.log(`🔌 Initializing DB Connection: ${isDev ? 'LOCAL (mppsc_local_dev.db)' : 'REMOTE (Turso)'}`);
+if (process.env.NODE_ENV !== 'test') {
+  console.log(`🔌 Initializing DB Connection: ${isDev ? 'LOCAL (mppsc_local_dev.db)' : 'REMOTE (Turso)'}`);
+}
 
 export const client =
   globalForDb.client ??

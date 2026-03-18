@@ -505,7 +505,7 @@ export const getPyqTopicAnalysis = unstable_cache(
     return {
       subject: effectiveSubject,
       fromYear,
-      toYear: CURRENT_YEAR,
+      toYear,
       topicDistribution,
       yearMatrix,
       risingTopics,

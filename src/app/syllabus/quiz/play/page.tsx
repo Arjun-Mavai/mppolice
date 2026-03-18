@@ -172,12 +172,8 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     );
   }
 
-  // 🛡️ Access Control
-  // Special bypass for specific testing user
-  const isTestingUser = user?.email === 'arjun@gmail.com';
-  
   const guestDenied = !user && !testData.isFreeAccess;
-  const loggedInDenied = user && !canAccessTest(testData, user) && !isTestingUser;
+  const loggedInDenied = user && !canAccessTest(testData, user);
   
   if (guestDenied || loggedInDenied) {
     redirect('/pricing');

@@ -12,7 +12,7 @@ export default async function PYQIntelligencePage() {
   }
   
   const tier = getUserTier(user);
-  if (tier === 'free' && user.email !== 'arjun@gmail.com') {
+  if (tier === 'free') {
     redirect('/pricing');
   }
 

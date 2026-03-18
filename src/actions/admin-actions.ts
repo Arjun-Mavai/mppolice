@@ -267,7 +267,8 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
         createdAt: guests.createdAt,
       })
       .from(guests)
-      .orderBy(desc(guests.createdAt));
+      .orderBy(desc(guests.createdAt))
+      .limit(10);
 
     const totalTests = testsData.length;
     const totalQuestions = testsData.reduce((acc, t) => acc + (t.totalQuestions || 0), 0);
