@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen, Calendar, Layers, LayoutGrid } from 'lucide-react';
+import { ArrowLeft, BookOpen, Calendar, Layers, LayoutGrid, Sparkles } from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { PYQCard } from './PYQCard';
@@ -35,6 +35,7 @@ interface Test {
 interface PYQPageClientProps {
   initialTests: Test[];
   subjectStats: Record<string, number>;
+  isLoggedIn?: boolean;
 }
 
 // --- Constants ---
@@ -96,7 +97,7 @@ const SUBJECTS = [
   },
 ];
 
-export default function PYQPageClient({ initialTests, subjectStats }: PYQPageClientProps) {
+export default function PYQPageClient({ initialTests, subjectStats, isLoggedIn }: PYQPageClientProps) {
   const router = useRouter();
   const { language } = useSettingsStore();
 
@@ -196,6 +197,21 @@ export default function PYQPageClient({ initialTests, subjectStats }: PYQPageCli
                 </button>
               </div>
             </div>
+
+            {/* Insights Shortcuts */}
+            {!isLoggedIn ? null : (
+              <div className="flex justify-center mt-4">
+                <div className="rounded-xl bg-gradient-to-r from-pink-500 via-red-500 via-yellow-500 to-green-500 p-[1.5px] shadow-sm transition-transform hover:scale-[1.02]">
+                  <Button
+                    onClick={() => router.push('/syllabus/quiz/pyq/intelligence')}
+                    className="inline-flex h-full w-full items-center gap-2 rounded-[10px] bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                  >
+                    <Sparkles className="h-4 w-4 text-amber-500" />
+                    {language === 'hi' ? 'प्रीमियम इंटेलिजेंस' : 'Premium Intelligence'}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

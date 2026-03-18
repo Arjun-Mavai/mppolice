@@ -2,157 +2,9 @@
 
 import { db } from '@/db';
 import { questions, tests } from '@/db/schema';
-import { and, eq, like, or } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
-import { logger } from '@/lib/logger';
-
-// ------------------------------------------------------------------
-// 🏷️ Subject Normalization Logic
-// Matches 300+ variations in DB to 8-10 Canonical Categories
-// ------------------------------------------------------------------
-function normalizeSubject(rawSubject: string | null): string {
-  if (!rawSubject) return 'Misc';
-  const lower = rawSubject.toLowerCase().trim();
-
-  // 1. MP GK (Most critical for MPPSC)
-  if (
-    lower.includes('mp ') ||
-    lower.includes('madhya pradesh') ||
-    lower.includes('unit 1') ||
-    lower.includes('unit 3') ||
-    lower.includes('unit 5') ||
-    lower.includes('tribes') ||
-    lower.includes('folk') ||
-    lower.includes('tourism') ||
-    lower.includes('dynasties') ||
-    lower.includes('literature') || // Covers 'Literature of MP'
-    lower.includes('personalities') // Covers 'Personalities of MP'
-  ) {
-    return 'MP GK';
-  }
-
-  // 2. History
-  if (
-    lower.includes('history') ||
-    lower.includes('freedom') ||
-    lower.includes('ancient') ||
-    lower.includes('medieval') ||
-    lower.includes('modern') ||
-    lower.includes('unit 2') ||
-    lower.includes('culture') ||
-    lower.includes('archaeology')
-  ) {
-    return 'History';
-  }
-
-  // 3. Geography
-  if (
-    lower.includes('geography') ||
-    lower.includes('climate') ||
-    lower.includes('monsoon') ||
-    lower.includes('resource') ||
-    lower.includes('agriculture') ||
-    lower.includes('unit 4') ||
-    lower.includes('disaster') ||
-    lower.includes('environment') ||
-    lower.includes('census') || // Covers 'Census 2011'
-    lower.includes('demography') || // Covers 'Demography'
-    lower.includes('population') ||
-    lower.includes('energy') // Covers 'Energy'
-  ) {
-    return 'Geography';
-  }
-
-  // 4. Polity & Commission
-  if (
-    lower.includes('polity') ||
-    lower.includes('constitution') ||
-    lower.includes('commission') ||
-    lower.includes('act') ||
-    lower.includes('governance') ||
-    lower.includes('panchat') ||
-    lower.includes('unit 10') ||
-    lower.includes('unit 6') // Part of Unit 6 is Polity
-  ) {
-    return 'Polity';
-  }
-
-  // 5. Economy
-  if (
-    lower.includes('economy') ||
-    lower.includes('economic') ||
-    lower.includes('budget') ||
-    lower.includes('financial') ||
-    lower.includes('trade') ||
-    lower.includes('bank') ||
-    lower.includes('sebi') ||
-    lower.includes('rbi')
-  ) {
-    return 'Economy';
-  }
-
-  // 6. Science
-  if (
-    lower.includes('science') ||
-    lower.includes('bio') ||
-    lower.includes('physics') ||
-    lower.includes('chem') ||
-    lower.includes('nutrition') ||
-    lower.includes('health') ||
-    lower.includes('disease') ||
-    lower.includes('unit 7') ||
-    lower.includes('institute') // Covers 'Scientific Institutes'
-  ) {
-    return 'Science';
-  }
-
-  // 7. ICT & Computer
-  if (
-    lower.includes('computer') ||
-    lower.includes('ict') ||
-    lower.includes('internet') ||
-    lower.includes('cyber') ||
-    lower.includes('robotics') ||
-    lower.includes('ai') ||
-    lower.includes('electronics') ||
-    lower.includes('unit 9') ||
-    lower.includes('information') || // Covers 'Information Technology'
-    lower.includes('technology') ||
-    lower.includes('communication') ||
-    lower.includes('e-commerce') || // Covers 'E-Commerce'
-    lower.includes('networking') || // Covers 'IT/Networking'
-    /\b(it|i\.t\.|information technology)\b/i.test(lower) // Strict "IT" match (Word boundary)
-  ) {
-    return 'ICT';
-  }
-
-  // 8. Current Affairs & Sports
-  if (
-    lower.includes('current') ||
-    lower.includes('sports') ||
-    lower.includes('award') ||
-    lower.includes('unit 8') ||
-    lower.includes('defence') ||
-    lower.includes('summit') ||
-    lower.includes('international') || // Covers 'International Relations'
-    lower.includes('relations') ||
-    lower.includes('report') || // Covers 'Reports/Indices'
-    lower.includes('index') ||
-    lower.includes('indices') ||
-    lower.includes('organization') || // Covers 'International Organizations'
-    lower.includes('awareness') || // Covers 'General Awareness'
-    lower.includes('general knowledge')
-  ) {
-    return 'Current Affairs';
-  }
-
-  // Fallback
-  logger.warn(`normalizeSubject: Unmatched subject category for '${rawSubject}'`, {
-    rawSubject,
-    category: 'system',
-  });
-  return 'Misc';
-}
+import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
 
 // ------------------------------------------------------------------
 // 📊 Aggregation Action
@@ -209,7 +61,7 @@ export interface MixedQuestion {
   id: string;
   questionText: string;
   questionTextEn: string | null;
-  options: any;
+  options: unknown;
   correctAnswer: string;
   explanation: string | null;
   explanationEn: string | null;
@@ -219,7 +71,7 @@ export interface MixedQuestion {
   order: number;
   subject: string | null;
   type: 'standard' | 'matching' | null;
-  matchPairs: any; // JSON
+  matchPairs: unknown; // JSON
   // Extra fields for context
   testId: string;
   year: string;

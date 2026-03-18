@@ -17,13 +17,18 @@ interface PageProps {
     subject?: string;
     limit?: string;
     offset?: string;
+    completed?: string;
   }>;
 }
 
 export default async function QuizPlayPage({ searchParams }: PageProps) {
   const params = await searchParams;
   logger.debug('params', { params, category: 'system' });
-  const { testId, mode, subject } = params;
+  const { testId, mode, subject, completed } = params;
+
+  if (completed === 'true') {
+    redirect('/syllabus/quiz/pyq');
+  }
 
   // 📝 0. Validate Subject Whiteslist for Security
   const ALLOWED_SUBJECTS = [
@@ -167,14 +172,15 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     );
   }
 
-  // 🛡️ Access Control
   const guestDenied = !user && !testData.isFreeAccess;
   const loggedInDenied = user && !canAccessTest(testData, user);
+  
   if (guestDenied || loggedInDenied) {
     redirect('/pricing');
   }
 
   const userId = user?.id;
+  const isTestingUser = user?.role === 'admin';
 
   // Map Questions
   const questions: Question[] = testData.questions.map((q) => {
@@ -182,7 +188,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
 
     return {
-      ...q,
+      id: q.id,
       question: q.questionText,
       questionEn:
         testData.type === 'CSAT' &&
@@ -203,10 +209,15 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     };
   });
 
-  const userAttemptsCount = (attemptsMap as Record<string, number>)[testId] || 0;
-  const maxRetries = attemptLimits[testData.type] ?? null;
+  const userAttemptsCount = user ? ((attemptsMap as any)[testId] || 0) : 0;
+  
+  // Override maxRetries for testing user
+  let maxRetries = attemptLimits[testData.type] ?? null;
+  if (isTestingUser) {
+    maxRetries = null; // Unlimited attempts for testing user
+  }
 
-  const tier = getUserTier(user);
+  const tier = user ? getUserTier(user) : 'free';
   const hasPaidPlan = tier === 'pro' || tier === 'lite';
   const shouldShowPaywall = false;
 

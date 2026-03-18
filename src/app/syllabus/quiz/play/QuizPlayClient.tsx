@@ -110,11 +110,12 @@ export function QuizPlayClient({
   // - Pro users: Can take up to maxRetries.
 
   // Implementation:
-  // If !isPro and userAttempts > 0 -> Block
-  // If isPro and userAttempts >= maxRetries -> Block
+  // If !isPro and userAttempts > 0 -> Block (Free users get 1 attempt)
+  // If isPro and userAttempts >= maxRetries -> Block (unless maxRetries is null/unlimited)
 
-  const isBlocked =
-    !isPro && userAttempts > 0 ? true : maxRetries !== null && effectiveAttempts >= maxRetries;
+  const isBlocked = !isPro && userAttempts > 0 
+    ? true 
+    : maxRetries !== null && effectiveAttempts >= maxRetries;
 
   if (!questions || questions.length === 0) {
     return (

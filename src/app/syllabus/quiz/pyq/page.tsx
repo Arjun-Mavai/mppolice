@@ -72,5 +72,5 @@ async function PYQPageData() {
     };
   });
 
-  return <PYQPageClient initialTests={enrichedTests} subjectStats={subjectStats} />;
+  return <PYQPageClient initialTests={enrichedTests} subjectStats={subjectStats} isLoggedIn={!!user} />;
 }
