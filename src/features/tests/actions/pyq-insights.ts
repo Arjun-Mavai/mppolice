@@ -119,6 +119,7 @@ export interface PyqTopicAnalysisItem {
   topicTitle: string;
   topicTitleEn: string | null;
   totalQuestions: number;
+  overallWeightPercent: number;
   latestYearCount: number;
   latestWeightPercent: number;
   trendDelta: number;
@@ -127,6 +128,47 @@ export interface PyqTopicAnalysisItem {
 export interface PyqYearMatrixItem {
   year: number;
   questionCount: number;
+}
+
+export interface TopicTrendProof {
+  topicTitle: string;
+  topicTitleEn: string | null;
+  currentYear: number;
+  prevYear: number;
+  currentQuestions: { 
+    id: string; 
+    questionText: string; 
+    questionTextEn: string | null; 
+    testTitle: string; 
+    questionOrder: number;
+    explanation: string | null;
+    explanationEn: string | null;
+  }[];
+  prevQuestions: { 
+    id: string; 
+    questionText: string; 
+    questionTextEn: string | null; 
+    testTitle: string; 
+    questionOrder: number;
+    explanation: string | null;
+    explanationEn: string | null;
+  }[];
+}
+
+export interface YearlySubjectQuestions {
+  subject: string;
+  year: number;
+  questions: { 
+    id: string; 
+    questionText: string; 
+    questionTextEn: string | null; 
+    topicTitle: string; 
+    topicTitleEn: string | null; 
+    questionOrder: number; 
+    testTitle: string;
+    explanation: string | null;
+    explanationEn: string | null;
+  }[];
 }
 
 export interface PyqAnalysisResult {
@@ -457,6 +499,7 @@ export const getPyqTopicAnalysis = unstable_cache(
           topicTitle: row.topicTitle,
           topicTitleEn: row.topicTitleEn,
           totalQuestions: row.questionCount,
+          overallWeightPercent: 0,
           latestYearCount: row.questionCount,
           latestWeightPercent: row.weightPercent,
           trendDelta: row.trendDelta ?? 0,
@@ -474,6 +517,8 @@ export const getPyqTopicAnalysis = unstable_cache(
       }
     }
 
+    const grandTotalQuestions = [...yearMap.values()].reduce((a, b) => a + b, 0);
+
     const topicDistribution = [...topicMap.values()]
       .map((item) => ({
         topicId: item.topicId,
@@ -481,13 +526,42 @@ export const getPyqTopicAnalysis = unstable_cache(
         topicTitle: item.topicTitle,
         topicTitleEn: item.topicTitleEn,
         totalQuestions: item.totalQuestions,
+        overallWeightPercent: grandTotalQuestions > 0 
+          ? Number(((item.totalQuestions / grandTotalQuestions) * 100).toFixed(2)) 
+          : 0,
         latestYearCount: item.latestYearCount,
         latestWeightPercent: item.latestWeightPercent,
         trendDelta: item.trendDelta,
       }))
       .sort((a, b) => b.totalQuestions - a.totalQuestions);
-    const yearMatrix = [...yearMap.entries()]
-      .map(([year, questionCount]) => ({ year, questionCount }))
+    // Calculate UNIQUE Year-wise Matrix for the subject (Deduplicated)
+    const subjectQuestions = await db
+      .select({
+        questionId: pyqQuestionTopics.questionId,
+        testId: questions.testId,
+      })
+      .from(pyqQuestionTopics)
+      .innerJoin(pyqTopics, eq(pyqQuestionTopics.topicId, pyqTopics.id))
+      .innerJoin(questions, eq(pyqQuestionTopics.questionId, questions.id))
+      .innerJoin(tests, eq(questions.testId, tests.id))
+      .where(and(eq(pyqTopics.subject, effectiveSubject), eq(tests.type, 'PYQ')));
+
+    const testYearMapForMatrix = new Map<string, number>();
+    const scopedTestsForMatrix = await getScopedPyqTests();
+    scopedTestsForMatrix.forEach(t => testYearMapForMatrix.set(t.testId, t.year));
+
+    const uniqueYearlyQs = new Map<number, Set<string>>();
+    subjectQuestions.forEach(q => {
+      const year = testYearMapForMatrix.get(q.testId);
+      if (year && year >= fromYear) {
+        const set = uniqueYearlyQs.get(year) ?? new Set<string>();
+        set.add(q.questionId);
+        uniqueYearlyQs.set(year, set);
+      }
+    });
+
+    const yearMatrix = Array.from(uniqueYearlyQs.entries())
+      .map(([year, qs]) => ({ year, questionCount: qs.size }))
       .sort((a, b) => a.year - b.year);
     const risingTopics = [...topicDistribution]
       .filter((item) => item.trendDelta > 0)
@@ -893,6 +967,7 @@ export async function recomputePyqTopicTrends(years?: number[]) {
         .select({
           topicId: pyqQuestionTopics.topicId,
           questionId: questions.id,
+          testId: questions.testId,
           subject: pyqTopics.subject,
           testTitle: tests.title,
           testCreatedAt: tests.createdAt,
@@ -907,14 +982,17 @@ export async function recomputePyqTopicTrends(years?: number[]) {
   // We don't filter mappedRows by year here because we need previous years to calculate deltas.
   // We will filter the final output (insertRows) instead.
 
+  const testYearMap = new Map<string, number>();
+  scopedTests.forEach(t => testYearMap.set(t.testId, t.year));
+
   const topicYearCount = new Map<string, number>();
   const subjectYearTotals = new Map<string, number>();
   const topicSubject = new Map<string, string>();
 
   for (const row of mappedRows) {
-    const year = getTestYear(row.testTitle, row.testCreatedAt);
-    // REMOVED yearFilter check here to allow calculating full history
-    
+    const year = testYearMap.get(row.testId);
+    if (!year) continue;
+
     topicSubject.set(row.topicId, row.subject);
 
     const topicKey = `${row.topicId}::${year}`;
@@ -977,3 +1055,143 @@ export async function recomputePyqTopicTrends(years?: number[]) {
     rowsWritten: insertRows.length,
   };
 }
+
+export const getTopicTrendProof = unstable_cache(
+  async (topicSlug: string): Promise<TopicTrendProof | null> => {
+    // 1. Get Topic
+    const topic = await db.query.pyqTopics.findFirst({
+      where: eq(pyqTopics.topicSlug, topicSlug),
+    });
+    if (!topic) return null;
+
+    // 2. Get the latest trend data for this topic to align years
+    const trendRow = await db.query.pyqTopicTrends.findFirst({
+      where: eq(pyqTopicTrends.topicId, topic.id),
+      orderBy: desc(pyqTopicTrends.year),
+    });
+
+    if (!trendRow) return null;
+
+    const currentYear = trendRow.year;
+    const prevYear = currentYear - 1;
+
+    // 3. Query questions for this topic
+    const topicQuestions = await db
+      .select({
+        id: questions.id,
+        testId: questions.testId,
+        questionText: questions.questionText,
+        questionTextEn: questions.questionTextEn,
+        explanation: questions.explanation,
+        explanationEn: questions.explanationEn,
+        questionOrder: questions.order,
+        testTitle: tests.title,
+        testCreatedAt: tests.createdAt,
+      })
+      .from(questions)
+      .innerJoin(pyqQuestionTopics, eq(questions.id, pyqQuestionTopics.questionId))
+      .innerJoin(tests, eq(questions.testId, tests.id))
+      .where(and(eq(pyqQuestionTopics.topicId, topic.id), eq(tests.type, 'PYQ')));
+
+    const currentQs: any[] = [];
+    const prevQs: any[] = [];
+
+    const testYearMap = new Map<string, number>();
+    const scopedTestsForProof = await getScopedPyqTests();
+    scopedTestsForProof.forEach(t => testYearMap.set(t.testId, t.year));
+
+    topicQuestions.forEach(q => {
+      const year = testYearMap.get(q.testId);
+      if (year === currentYear) {
+        currentQs.push({
+          id: q.id,
+          questionText: q.questionText,
+          questionTextEn: q.questionTextEn,
+          explanation: q.explanation,
+          explanationEn: q.explanationEn,
+          questionOrder: q.questionOrder,
+          testTitle: q.testTitle
+        });
+      } else if (year === prevYear) {
+        prevQs.push({
+          id: q.id,
+          questionText: q.questionText,
+          questionTextEn: q.questionTextEn,
+          explanation: q.explanation,
+          explanationEn: q.explanationEn,
+          questionOrder: q.questionOrder,
+          testTitle: q.testTitle
+        });
+      }
+    });
+
+    return {
+      topicTitle: topic.topicTitle,
+      topicTitleEn: topic.topicTitleEn,
+      currentYear,
+      prevYear,
+      currentQuestions: currentQs.sort((a, b) => a.questionOrder - b.questionOrder),
+      prevQuestions: prevQs.sort((a, b) => a.questionOrder - b.questionOrder),
+    };
+  },
+  ['pyq-topic-proof'],
+  { revalidate: 3600, tags: ['pyq-insights', 'pyq-trends'] }
+);
+
+export const getYearlySubjectQuestions = unstable_cache(
+  async (subject: string, year: number): Promise<YearlySubjectQuestions> => {
+    const effectiveSubject = normalizeSubject(subject);
+    const rows = await db
+      .select({
+        id: questions.id,
+        testId: questions.testId,
+        questionText: questions.questionText,
+        questionTextEn: questions.questionTextEn,
+        explanation: questions.explanation,
+        explanationEn: questions.explanationEn,
+        questionOrder: questions.order,
+        topicTitle: pyqTopics.topicTitle,
+        topicTitleEn: pyqTopics.topicTitleEn,
+        testTitle: tests.title,
+      })
+      .from(questions)
+      .innerJoin(tests, eq(questions.testId, tests.id))
+      .innerJoin(pyqQuestionTopics, eq(questions.id, pyqQuestionTopics.questionId))
+      .innerJoin(pyqTopics, eq(pyqQuestionTopics.topicId, pyqTopics.id))
+      .where(and(eq(tests.type, 'PYQ'), eq(pyqTopics.subject, effectiveSubject)));
+
+    // 1. Get scoped tests to ensure year consistency
+    const scopedTests = await getScopedPyqTests();
+    const testYearMap = new Map<string, number>();
+    scopedTests.forEach(t => testYearMap.set(t.testId, t.year));
+
+    // 2. Filter by year correctly
+    const yearlyRows = rows.filter(r => testYearMap.get(r.testId) === year);
+
+    // 2. Deduplicate unique questions (a question may have multiple topics in the same subject)
+    const uniqueMap = new Map<string, typeof yearlyRows[0]>();
+    yearlyRows.forEach(r => {
+      if (!uniqueMap.has(r.id)) {
+        uniqueMap.set(r.id, r);
+      }
+    });
+
+    return {
+      subject,
+      year,
+      questions: Array.from(uniqueMap.values()).map(r => ({
+        id: r.id,
+        questionText: r.questionText,
+        questionTextEn: r.questionTextEn,
+        explanation: r.explanation,
+        explanationEn: r.explanationEn,
+        topicTitle: r.topicTitle,
+        topicTitleEn: r.topicTitleEn,
+        questionOrder: r.questionOrder,
+        testTitle: r.testTitle,
+      })).sort((a, b) => a.questionOrder - b.questionOrder),
+    };
+  },
+  ['pyq-year-proof'],
+  { revalidate: 3600, tags: ['pyq-insights'] }
+);

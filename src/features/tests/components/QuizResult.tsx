@@ -77,6 +77,8 @@ export function QuizResult({
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
 
+  const isGuestLocked = isGuest && !userId;
+
   const PremiumLock = ({ label, className }: { label: string; className?: string }) => (
     <div className={cn("absolute inset-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[2px] z-20 rounded-lg border border-slate-100", className)}>
       <div className="bg-white p-4 rounded-2xl shadow-xl border border-slate-100 text-center max-w-[200px]">
@@ -209,7 +211,7 @@ export function QuizResult({
       const isCorrect = userAnswer === q.correctAnswer;
       const isSkipped = userAnswer === undefined;
       const isExpanded = expandedQuestion === q.id;
-      const isLocked = isGuest && !isCorrect;
+      const isLocked = isGuestLocked && !isCorrect;
 
       return (
         <Card
@@ -1037,15 +1039,15 @@ export function QuizResult({
           {renderResultContent()}
         </TabsContent>
         <TabsContent value="strategy" className="m-0 focus-visible:outline-none relative min-h-[400px]">
-          {isGuest && <PremiumLock label="Strategy Analysis Locked" className="backdrop-blur-sm bg-white/80" />}
-          <div className={isGuest ? "blur-sm pointer-events-none select-none" : ""}>
+          {isGuestLocked && <PremiumLock label="Strategy Analysis Locked" className="backdrop-blur-sm bg-white/80" />}
+          <div className={isGuestLocked ? "blur-sm pointer-events-none select-none" : ""}>
             {renderStrategyContent()}
           </div>
         </TabsContent>
         {mode === 'pyq' && (
           <TabsContent value="pyq-analysis" className="m-0 focus-visible:outline-none relative min-h-[400px]">
-            {isGuest && <PremiumLock label="PYQ Intelligence Locked" className="backdrop-blur-sm bg-white/80" />}
-            <div className={isGuest ? "blur-sm pointer-events-none select-none" : ""}>
+            {isGuestLocked && <PremiumLock label="PYQ Intelligence Locked" className="backdrop-blur-sm bg-white/80" />}
+            <div className={isGuestLocked ? "blur-sm pointer-events-none select-none" : ""}>
               {renderPYQAnalysisContent()}
             </div>
           </TabsContent>

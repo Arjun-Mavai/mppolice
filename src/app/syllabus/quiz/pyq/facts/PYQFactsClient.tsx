@@ -138,87 +138,119 @@ export default function PYQFactsClient({
   const searchParams = useSearchParams();
   const applyFilters = (subject: string, topic?: string, year?: number, nextLimit = limit) => {
     const params = new URLSearchParams(searchParams.toString());
-    
+
     // Always reset page on filter change
     params.delete('page');
 
     if (subject) params.set('subject', subject);
-    
+
     if (topic && topic !== 'all') {
       params.set('topic', topic);
     } else {
       params.delete('topic');
     }
-    
+
     if (year !== undefined && year !== 0) {
       params.set('year', String(year));
     } else {
       params.delete('year');
     }
-    
+
     params.set('limit', String(nextLimit));
-    
+
     // Optimize: Use replace instead of push for filter updates to avoid history pollution
     router.replace(`${pathname}?${params.toString()}`);
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-20">
-      <div className="mx-auto max-w-[1400px] px-4 pt-10 sm:px-6 lg:px-8">
-        
-        {/* Info Banner */}
-        <div className="mb-8 rounded-[1.5rem] bg-slate-50/50 border border-slate-200 p-4 shadow-sm">
-          <p className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-900">
-            <ShieldAlert className="h-4 w-4" />
-            {isHindi ? 'परीक्षा इंटेलिजेंस मोड' : 'Exam Intelligence Mode'}
-          </p>
-          <p className="mt-1 text-sm text-slate-600">
-            {isHindi
-              ? 'यह curated PYQ data high-yield revision के लिए optimized है — पहले इन्हें याद करें, फिर practice करें।'
-              : 'This curated PYQ data is optimized for high-yield revision — memorize first, then practice.'}
-          </p>
-        </div>
+    <div className="relative min-h-screen overflow-hidden bg-[#F8FAFC]/50 pb-20">
+      {/* Apple-style background glows */}
+      <div className="pointer-events-none absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-100/20 blur-[130px]" />
+      <div className="pointer-events-none absolute right-[-5%] bottom-[10%] h-[500px] w-[500px] rounded-full bg-indigo-100/20 blur-[110px]" />
+      <div className="pointer-events-none absolute top-[30%] right-[10%] h-[300px] w-[300px] rounded-full bg-pink-50/10 blur-[90px]" />
 
-        {/* Header Section */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-1.5 flex-1">
-              <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">PYQ Facts Library</h1>
-              <p className="max-w-xl text-sm font-medium text-slate-500 leading-relaxed">
+      <div className="relative z-10 mx-auto max-w-[1400px] px-4 pt-10 sm:px-6 lg:px-8">
+        {/* ✨ Info Banner - Light Glassmorphic */}
+        {/* <div className="mb-8 rounded-[1.5rem] bg-white/80 border border-slate-200 p-6 shadow-xl backdrop-blur-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-1 space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">📚</span>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">
+                  {isHindi ? 'फैक्ट लाइब्रेरी · High-Yield Mode' : 'Facts Library · High-Yield Mode'}
+                </p>
+              </div>
+              <p className="text-sm text-slate-600 font-bold leading-relaxed">
+                {isHindi
+                  ? 'Curated PYQ data high-yield revision के लिए optimized — पहले इन्हें याद करें, फिर practice करें। ✌️'
+                  : 'Curated PYQ data optimized for high-yield revision — memorize first, then practice. ✌️'}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-slate-50 border border-slate-200 px-5 py-3 text-center shrink-0">
+              <p className="text-2xl font-black text-emerald-600 leading-none">{facts.length}</p>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{isHindi ? 'फैक्ट्स' : 'Facts'}</p>
+            </div>
+          </div>
+        </div> */}
+
+        {/* Header Section - Light Apple Widget Style with Colorful Text */}
+        <div className="relative overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white p-8 shadow-xl sm:p-10">
+          {/* grid texture */}
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px] opacity-[0.4]" />
+          {/* glow spots */}
+          <div className="pointer-events-none absolute -top-12 -right-12 h-56 w-56 rounded-full bg-emerald-100/50 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-teal-100/50 blur-3xl" />
+
+          <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-3">
+                <span className="text-[2.2rem] leading-none">📖</span>
+                <h1 className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-3xl font-black tracking-tight text-slate-900 text-transparent sm:text-4xl">
+                  PYQ Facts Library
+                </h1>
+              </div>
+              <p className="max-w-xl pl-14 text-sm leading-relaxed font-medium text-slate-500">
                 {isHindi
                   ? 'MPPSC पैटर्न को high-yield facts, memory tricks और trap alerts के साथ master करें।'
                   : 'Master MPPSC patterns with high-yield facts, mnemonics, and trap alerts.'}
               </p>
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => router.push('/syllabus/quiz/pyq/analysis')}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 h-auto w-full sm:w-auto"
+              className="inline-flex h-auto w-full shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-emerald-600 sm:w-auto"
             >
               <BarChart3 className="mr-2 h-4 w-4" />
-              {isHindi ? 'टॉपिक विश्लेषण देखें' : 'View Topic Analysis'}
+              {isHindi ? '📊 टॉपिक विश्लेषण' : '📊 Topic Analysis'}
             </Button>
           </div>
 
-          <div className="mt-10 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="relative z-10 mt-10 space-y-8">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               {/* Subject Select */}
               <div className="space-y-2.5">
-                <label className="text-[11px] font-black tracking-widest text-slate-400 uppercase flex items-center gap-2 px-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+                <label className="flex items-center gap-2 px-1 text-[11px] font-black tracking-widest text-emerald-700 uppercase">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                   {isHindi ? 'विषय' : 'Subject'}
                 </label>
-                <Select value={selectedSubject} onValueChange={(val) => applyFilters(val, undefined, selectedYear)}>
-                  <SelectTrigger className="w-full bg-white border-slate-200 shadow-sm rounded-2xl h-14 font-bold text-slate-700 hover:border-indigo-200 transition-all">
+                <Select
+                  value={selectedSubject}
+                  onValueChange={(val) => applyFilters(val, undefined, selectedYear)}
+                >
+                  <SelectTrigger className="h-14 w-full rounded-2xl border-emerald-200 bg-emerald-50/50 font-bold text-emerald-900 shadow-sm transition-all hover:border-emerald-400 hover:bg-emerald-50 focus:ring-emerald-500/30">
                     <SelectValue placeholder={isHindi ? 'विषय चुनें' : 'Select Subject'} />
                   </SelectTrigger>
-                  <SelectContent 
-                    position="popper" 
+                  <SelectContent
+                    position="popper"
                     sideOffset={4}
-                    className="z-[100] rounded-2xl max-h-[350px] overflow-y-auto bg-white border border-slate-200 shadow-xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-track]:bg-transparent"
+                    className="z-[100] max-h-[350px] overflow-y-auto rounded-2xl border border-emerald-100 bg-white text-emerald-900 shadow-xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-emerald-200 [&::-webkit-scrollbar-track]:bg-transparent"
                   >
                     {subjects.map((s) => (
-                      <SelectItem key={s.subject} value={s.subject} className="font-semibold py-3 text-slate-700 cursor-pointer">
+                      <SelectItem
+                        key={s.subject}
+                        value={s.subject}
+                        className="cursor-pointer py-3 font-semibold text-emerald-900 focus:bg-emerald-50 focus:text-emerald-700"
+                      >
                         {s.subject} ({s.factCount} PYQ)
                       </SelectItem>
                     ))}
@@ -228,22 +260,36 @@ export default function PYQFactsClient({
 
               {/* Topic Select */}
               <div className="space-y-2.5">
-                <label className="text-[11px] font-black tracking-widest text-slate-400 uppercase flex items-center gap-2 px-1">
+                <label className="flex items-center gap-2 px-1 text-[11px] font-black tracking-widest text-emerald-700 uppercase">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                   {isHindi ? 'टॉपिक' : 'Topic'}
                 </label>
-                <Select value={selectedTopic || 'all'} onValueChange={(val) => applyFilters(selectedSubject, val === 'all' ? undefined : val, selectedYear)}>
-                  <SelectTrigger className="w-full bg-white border-slate-200 shadow-sm rounded-2xl h-14 font-bold text-slate-700 hover:border-emerald-200 transition-all">
+                <Select
+                  value={selectedTopic || 'all'}
+                  onValueChange={(val) =>
+                    applyFilters(selectedSubject, val === 'all' ? undefined : val, selectedYear)
+                  }
+                >
+                  <SelectTrigger className="h-14 w-full rounded-2xl border-emerald-200 bg-emerald-50/50 font-bold text-emerald-900 shadow-sm transition-all hover:border-emerald-400 hover:bg-emerald-50 focus:ring-emerald-500/30">
                     <SelectValue placeholder={isHindi ? 'सभी टॉपिक' : 'All Topics'} />
                   </SelectTrigger>
-                  <SelectContent 
-                    position="popper" 
+                  <SelectContent
+                    position="popper"
                     sideOffset={4}
-                    className="z-[100] rounded-2xl max-h-[350px] overflow-y-auto bg-white border border-slate-200 shadow-xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-track]:bg-transparent"
+                    className="z-[100] max-h-[350px] overflow-y-auto rounded-2xl border border-emerald-100 bg-white text-emerald-900 shadow-xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-emerald-200 [&::-webkit-scrollbar-track]:bg-transparent"
                   >
-                    <SelectItem value="all" className="font-semibold py-3 cursor-pointer">{isHindi ? 'सभी टॉपिक' : 'All Topics'}</SelectItem>
+                    <SelectItem
+                      value="all"
+                      className="cursor-pointer py-3 font-semibold text-emerald-900 focus:bg-emerald-50 focus:text-emerald-700"
+                    >
+                      {isHindi ? 'सभी टॉपिक' : 'All Topics'}
+                    </SelectItem>
                     {topics.map((t) => (
-                      <SelectItem key={t.topicSlug} value={t.topicSlug} className="font-semibold py-3 cursor-pointer">
+                      <SelectItem
+                        key={t.topicSlug}
+                        value={t.topicSlug}
+                        className="cursor-pointer py-3 font-semibold text-emerald-900 focus:bg-emerald-50 focus:text-emerald-700"
+                      >
                         {isHindi ? t.topicTitle : t.topicTitleEn || t.topicTitle}
                       </SelectItem>
                     ))}
@@ -253,22 +299,36 @@ export default function PYQFactsClient({
 
               {/* Year Select */}
               <div className="space-y-2.5">
-                <label className="text-[11px] font-black tracking-widest text-slate-400 uppercase flex items-center gap-2 px-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-pink-500"></span>
+                <label className="flex items-center gap-2 px-1 text-[11px] font-black tracking-widest text-emerald-700 uppercase">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                   {isHindi ? 'वर्ष' : 'Year'}
                 </label>
-                <Select value={selectedYear ? String(selectedYear) : 'all'} onValueChange={(val) => applyFilters(selectedSubject, selectedTopic, val === 'all' ? 0 : Number(val))}>
-                  <SelectTrigger className="w-full bg-white border-slate-200 shadow-sm rounded-2xl h-14 font-bold text-slate-700 hover:border-pink-200 transition-all">
+                <Select
+                  value={selectedYear ? String(selectedYear) : 'all'}
+                  onValueChange={(val) =>
+                    applyFilters(selectedSubject, selectedTopic, val === 'all' ? 0 : Number(val))
+                  }
+                >
+                  <SelectTrigger className="h-14 w-full rounded-2xl border-emerald-200 bg-emerald-50/50 font-bold text-emerald-900 shadow-sm transition-all hover:border-emerald-400 hover:bg-emerald-50 focus:ring-emerald-500/30">
                     <SelectValue placeholder={isHindi ? 'सभी वर्ष' : 'All Years'} />
                   </SelectTrigger>
-                  <SelectContent 
-                    position="popper" 
+                  <SelectContent
+                    position="popper"
                     sideOffset={4}
-                    className="z-[100] rounded-2xl max-h-[350px] overflow-y-auto bg-white border border-slate-200 shadow-xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-track]:bg-transparent"
+                    className="z-[100] max-h-[350px] overflow-y-auto rounded-2xl border border-emerald-100 bg-white text-emerald-900 shadow-xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-emerald-200 [&::-webkit-scrollbar-track]:bg-transparent"
                   >
-                    <SelectItem value="all" className="font-semibold py-3 cursor-pointer">{isHindi ? 'सभी वर्ष' : 'All Years'}</SelectItem>
+                    <SelectItem
+                      value="all"
+                      className="cursor-pointer py-3 font-semibold text-emerald-900 focus:bg-emerald-50 focus:text-emerald-700"
+                    >
+                      {isHindi ? 'सभी वर्ष' : 'All Years'}
+                    </SelectItem>
                     {yearOptions.map((y) => (
-                      <SelectItem key={y} value={String(y)} className="font-semibold py-3 cursor-pointer">
+                      <SelectItem
+                        key={y}
+                        value={String(y)}
+                        className="cursor-pointer py-3 font-semibold text-emerald-900 focus:bg-emerald-50 focus:text-emerald-700"
+                      >
                         {y} Exam
                       </SelectItem>
                     ))}
@@ -278,53 +338,63 @@ export default function PYQFactsClient({
             </div>
           </div>
 
-          {/* Limit Selector & Stats */}
-          <div className="mt-8 flex flex-col gap-4 border-t border-slate-100/80 pt-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap gap-2">
-              <Badge
-                variant="outline"
-                className="border-emerald-100 bg-emerald-50/50 px-2.5 py-1 font-semibold text-emerald-700"
-              >
-                {isHindi
-                  ? `डेटासेट: ${coverage.fromYear}-${coverage.toYear}`
-                  : `Dataset: ${coverage.fromYear}-${coverage.toYear}`}
-              </Badge>
-              <Badge
-                variant="outline"
-                className="border-amber-100 bg-amber-50/50 px-2.5 py-1 font-semibold text-amber-700"
-              >
-                {isHindi
-                  ? `कुल PYQ: ${coverage.pyqQuestionCount}`
-                  : `Total PYQ: ${coverage.pyqQuestionCount}`}
-              </Badge>
-              <Badge
-                variant="outline"
-                className="border-blue-100 bg-blue-50/50 px-2.5 py-1 font-semibold text-blue-700"
-              >
-                {isHindi
-                  ? `कवर हुए प्रश्न: ${coverage.mappedQuestionCount} (${coverage.mappingCoveragePercent}%)`
-                  : `Questions Mapped: ${coverage.mappedQuestionCount} (${coverage.mappingCoveragePercent}%)`}
-              </Badge>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <span className="text-[11px] font-black tracking-widest text-slate-400 uppercase">
-                {isHindi ? `दिख रहे facts: ${facts.length}` : `Showing ${facts.length} facts`}
-              </span>
-              <div className="flex gap-1.5 rounded-lg border border-slate-100 bg-slate-50 p-1">
-                {LIMIT_OPTIONS.map((item) => (
-                  <button
-                    key={item}
-                    onClick={() => applyFilters(selectedSubject, selectedTopic, selectedYear, item)}
-                    className={`rounded-md px-2.5 py-1 text-xs font-black transition-colors ${
-                      limit === item
-                        ? 'border border-slate-200/60 bg-white text-indigo-600 shadow-sm'
-                        : 'text-slate-400 hover:text-slate-600'
-                    }`}
-                  >
-                    {item}
-                  </button>
+          {/* ✦ Dark Green Stats Card */}
+          <div className="relative mt-8 overflow-hidden rounded-[2rem] border border-emerald-900 bg-emerald-950 p-6 shadow-2xl">
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:32px_32px] opacity-[0.05]" />
+            <div className="pointer-events-none absolute -top-8 -right-8 h-32 w-32 rounded-full bg-emerald-500/20 blur-3xl" />
+            <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap gap-6 sm:grid sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-emerald-800/50">
+                {[
+                  {
+                    emoji: '📅',
+                    label: isHindi ? 'डेटासेट' : 'Dataset',
+                    val: `${coverage.fromYear}–${coverage.toYear}`,
+                    color: 'text-emerald-400',
+                  },
+                  {
+                    emoji: '📝',
+                    label: isHindi ? 'कुल PYQ' : 'Total PYQ',
+                    val: coverage.pyqQuestionCount,
+                    color: 'text-emerald-300',
+                  },
+                  {
+                    emoji: '🎯',
+                    label: isHindi ? 'mapped प्रश्न' : 'Questions Mapped',
+                    val: `${coverage.mappedQuestionCount} (${coverage.mappingCoveragePercent}%)`,
+                    color: 'text-emerald-200',
+                  },
+                ].map((stat, i) => (
+                  <div key={i} className="space-y-0.5 first:pl-0 sm:px-6">
+                    <p className="flex items-center gap-1 text-[9px] font-black tracking-[0.2em] text-emerald-600 uppercase">
+                      <span className="text-sm">{stat.emoji}</span>
+                      {stat.label}
+                    </p>
+                    <p className={`text-xl font-black tracking-tight ${stat.color}`}>{stat.val}</p>
+                  </div>
                 ))}
+              </div>
+
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="text-[11px] font-black tracking-widest text-emerald-600 uppercase">
+                  {isHindi ? `दिख रहे: ${facts.length}` : `Showing ${facts.length}`}
+                </span>
+                <div className="flex gap-1 rounded-xl border border-emerald-800 bg-emerald-900 p-1">
+                  {LIMIT_OPTIONS.map((item) => (
+                    <button
+                      key={item}
+                      onClick={() =>
+                        applyFilters(selectedSubject, selectedTopic, selectedYear, item)
+                      }
+                      className={`rounded-lg px-3 py-1.5 text-xs font-black transition-colors ${
+                        limit === item
+                          ? 'bg-emerald-800 text-white shadow-sm'
+                          : 'text-emerald-500 hover:text-emerald-300'
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -538,9 +608,8 @@ export default function PYQFactsClient({
               <div
                 key={fact.id}
                 className={cn(
-                  'group relative overflow-hidden rounded-[2rem] border bg-white/70 backdrop-blur-md transition-all duration-500 hover:bg-white hover:shadow-2xl',
-                  color.border,
-                  color.shadow
+                  'group relative overflow-hidden rounded-[2.5rem] border border-white/40 bg-white/50 saturate-150 backdrop-blur-[32px] transition-all duration-500 hover:bg-white/70 hover:shadow-[0_32px_80px_rgba(0,0,0,0.1)]',
+                  color.shadow.replace('shadow-', 'shadow-')
                 )}
               >
                 <div className={cn('absolute top-0 left-0 h-full w-1.5 opacity-40', dotColor)} />

@@ -40,6 +40,7 @@ export default async function PYQAnalysisPage({ searchParams }: PageProps) {
   const selectedYears = Number.isFinite(rawYears) && rawYears > 0 ? Math.min(Math.max(rawYears, 1), 15) : defaultYears;
 
   const analysis = await getPyqTopicAnalysis(selectedSubject, selectedYears);
+  const isAdmin = user.role === 'admin';
 
   return (
     <PYQAnalysisClient
@@ -48,6 +49,7 @@ export default async function PYQAnalysisPage({ searchParams }: PageProps) {
       selectedYears={selectedYears}
       analysis={analysis}
       coverage={coverage}
+      isAdmin={isAdmin}
     />
   );
 }
