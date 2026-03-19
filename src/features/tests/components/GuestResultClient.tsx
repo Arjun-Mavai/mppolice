@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useGuestResultStore } from '../store/guestResultStore';
 import { QuizResult } from './QuizResult';
 
-export function GuestResultClient() {
+export function GuestResultClient({ userId }: { userId?: string }) {
   const router = useRouter();
   const { result, clearResult } = useGuestResultStore();
 
@@ -70,6 +70,7 @@ export function GuestResultClient() {
       }}
       title="Practice Quiz Result"
       isGuest={true}
+      userId={userId}
       disableRetry={false}
     />
   );

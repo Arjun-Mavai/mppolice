@@ -486,45 +486,57 @@ export default function PYQAnalysisClient({
             </CardHeader>
             {expanded.rising && (
               <div>
-                <CardContent className="space-y-3 p-6">
+                <CardContent className="space-y-4 p-5 sm:p-8">
                   {analysis.risingTopics.map((item, idx) => {
                     const style = VARIANTS['emerald'];
                     return (
                       <div
                         key={item.topicId}
                         className={cn(
-                          'group relative flex items-center justify-between rounded-2xl border bg-white/60 p-4 shadow-sm transition hover:shadow-md',
+                          'group relative space-y-4 rounded-3xl border bg-white/70 p-5 shadow-sm transition hover:shadow-md',
                           style.border
                         )}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={cn(
+                                'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-black',
+                                style.bg,
+                                style.text
+                              )}
+                            >
+                              #{idx + 1}
+                            </div>
+                            <h4 className="text-base font-black text-slate-800 leading-tight">
+                              {isHindi ? item.topicTitle : item.topicTitleEn || item.topicTitle}
+                            </h4>
+                          </div>
+                          <Badge
+                            variant="outline"
+                            className="shrink-0 font-black border-emerald-200 bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-lg"
+                          >
+                            +{item.trendDelta}%
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-[11px] font-black tracking-widest text-slate-400 uppercase px-1">
+                          <span>
+                            {item.totalQuestions} {isHindi ? 'प्रश्न' : 'Questions'}
+                          </span>
+                          <span>
+                            {item.latestWeightPercent.toFixed(1)}% {isHindi ? 'वेटेज' : 'Weight'}
+                          </span>
+                        </div>
+                        
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100/70 border border-slate-50">
                           <div
                             className={cn(
-                              'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black',
-                              style.bg,
-                              style.text
+                              'h-full rounded-full transition-all duration-1000 ease-out shadow-sm',
+                              style.bg.replace('50', '500')
                             )}
-                          >
-                            #{idx + 1}
-                          </div>
-                          <div>
-                            <p className="line-clamp-1 text-sm font-black text-slate-800">
-                              {isHindi ? item.topicTitle : item.topicTitleEn || item.topicTitle}
-                            </p>
-                            <p className="mt-0.5 text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                              {item.latestWeightPercent.toFixed(1)}% {isHindi ? 'वेटेज' : 'Weight'}
-                            </p>
-                          </div>
-                        </div>
-                        <div
-                          className={cn(
-                            'shrink-0 rounded-full border px-2.5 py-1 text-xs font-black shadow-sm',
-                            style.bg,
-                            style.text,
-                            style.border
-                          )}
-                        >
-                          +{item.trendDelta}%
+                            style={{ width: `${Math.min(item.latestWeightPercent, 100)}%` }}
+                          />
                         </div>
                       </div>
                     );

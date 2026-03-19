@@ -29,6 +29,7 @@ interface GuestQuizInterfaceProps {
   onExit: () => void;
   disablePalette?: boolean;
   disableInstantMode?: boolean; // Pro feature — free quiz me OFF rahega
+  user?: { name: string; email: string; mobile?: string | null } | null;
 }
 
 export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
@@ -41,6 +42,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     disablePalette = false,
     disableInstantMode = false,
     testId,
+    user,
   } = props;
 
   // No user ID props here as this IS for guests only.
@@ -153,13 +155,20 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
 
   // ── Guest entry ──
   useEffect(() => {
+    if (user) {
+      setGuestName(user.name);
+      setGuestEmail(user.email);
+      setGuestMobile(user.mobile || '');
+      return;
+    }
+
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('mppsc_guest_name');
       if (saved) setGuestName(saved);
       else setShowGuestEntryDialog(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
   const handleGuestEntrySubmit = async () => {
     if (!guestName.trim()) return;

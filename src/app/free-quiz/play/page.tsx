@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getFreeQuizWithQuestions } from '../actions';
 import { FreeQuizPlayClient } from './FreeQuizPlayClient';
+import { verifyAuth } from '@/lib/auth';
 import { Question } from '@/types/quiz';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 
@@ -16,6 +17,7 @@ interface PageProps {
 }
 
 export default async function FreeQuizPlayPage({ searchParams }: PageProps) {
+  const user = await verifyAuth();
   const params = await searchParams;
   const { testId } = params;
 
@@ -94,6 +96,7 @@ export default async function FreeQuizPlayPage({ searchParams }: PageProps) {
       testId={testId}
       title={testData.title}
       disableInstantMode={disableInstantMode}
+      user={user ? { name: user.name, email: user.email, mobile: user.mobile } : null}
     />
   );
 }
