@@ -159,6 +159,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
       setGuestName(user.name);
       setGuestEmail(user.email);
       setGuestMobile(user.mobile || '');
+      setShowGuestEntryDialog(false);
       return;
     }
 
