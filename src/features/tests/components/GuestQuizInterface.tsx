@@ -168,7 +168,6 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
       if (saved) setGuestName(saved);
       else setShowGuestEntryDialog(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const handleGuestEntrySubmit = async () => {
