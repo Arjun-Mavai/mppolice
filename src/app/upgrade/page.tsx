@@ -9,6 +9,11 @@ const PremiumExplanationSection = dynamic(() =>
     default: m.PremiumExplanationSection,
   }))
 );
+const PYQIntelligenceSection = dynamic(() =>
+  import('@/components/home/PYQIntelligenceSection').then((m) => ({
+    default: m.PYQIntelligenceSection,
+  }))
+);
 const InstantFeedbackSection = dynamic(() =>
   import('@/components/home/InstantFeedbackSection').then((m) => ({
     default: m.InstantFeedbackSection,
@@ -51,6 +56,7 @@ export default function UpgradePage() {
     <div className="min-h-screen bg-white font-sans selection:bg-slate-100 selection:text-slate-900">
       <HeroSection />
       <PremiumExplanationSection />
+      <PYQIntelligenceSection />
       <InstantFeedbackSection />
       <SubjectMasterySection />
       <ContentSuiteSection />

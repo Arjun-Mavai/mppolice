@@ -107,6 +107,128 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
         </motion.div>
 
         {/* Units Grid/List */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="space-y-4"
+        >
+          {/* ✦ PYQ Intelligence Section */}
+          <div className="mx-auto max-w-4xl">
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">📊</span>
+                <div>
+                  <h2 className="text-lg font-black text-slate-900">
+                    {language === 'hi' ? 'PYQ इंटेलिजेंस' : 'PYQ Intelligence'}
+                  </h2>
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    {language === 'hi' ? '2020-2025 · MPPSC Prelims ट्रेंड्स' : '2020-2025 · MPPSC Prelims Trends'}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/syllabus/quiz/pyq/analysis"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-black text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
+              >
+                {language === 'hi' ? 'सब देखें' : 'View All'}
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+              {/* Card 1: Year-wise Trend */}
+              <Link href="/syllabus/quiz/pyq/analysis" className="group block">
+                <div className="relative h-full rounded-[1.5rem] border border-blue-100 bg-blue-50 p-5 transition-all hover:shadow-lg hover:shadow-blue-200/40 hover:-translate-y-0.5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-2xl">📅</span>
+                    <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest text-blue-600">
+                      {language === 'hi' ? 'ट्रेंड' : 'Trend'}
+                    </span>
+                  </div>
+                  <h3 className="mb-1 text-sm font-black text-slate-800">
+                    {language === 'hi' ? 'Year-wise Matrix' : 'Year-wise Matrix'}
+                  </h3>
+                  {/* Mini bar chart */}
+                  <div className="mt-3 space-y-1.5">
+                    {[
+                      { year: '2025', pct: 90, color: 'bg-blue-500' },
+                      { year: '2024', pct: 72, color: 'bg-blue-400' },
+                      { year: '2023', pct: 58, color: 'bg-blue-300' },
+                    ].map((row) => (
+                      <div key={row.year} className="flex items-center gap-2">
+                        <span className="w-9 text-[10px] font-black text-slate-500">{row.year}</span>
+                        <div className="flex-1 h-2.5 rounded-full bg-blue-100 overflow-hidden">
+                          <div className={`h-full rounded-full ${row.color} transition-all`} style={{ width: `${row.pct}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-[11px] font-semibold text-blue-600 group-hover:underline">
+                    {language === 'hi' ? 'पूरा देखें →' : 'Explore →'}
+                  </p>
+                </div>
+              </Link>
+
+              {/* Card 2: Hot Topics */}
+              <Link href="/syllabus/quiz/pyq/analysis" className="group block">
+                <div className="relative h-full rounded-[1.5rem] border border-pink-100 bg-pink-50 p-5 transition-all hover:shadow-lg hover:shadow-pink-200/40 hover:-translate-y-0.5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-2xl">🔥</span>
+                    <span className="rounded-full bg-pink-100 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest text-pink-600">
+                      {language === 'hi' ? 'राइज़िंग' : 'Rising'}
+                    </span>
+                  </div>
+                  <h3 className="mb-1 text-sm font-black text-slate-800">
+                    {language === 'hi' ? 'हॉट टॉपिक्स' : 'Hot Topics'}
+                  </h3>
+                  <div className="mt-3 space-y-2">
+                    {[
+                      { topic: language === 'hi' ? 'पर्यावरण' : 'Environment', delta: '+12', color: 'text-pink-700' },
+                      { topic: language === 'hi' ? 'मध्यप्रदेश GK' : 'MP GK', delta: '+9', color: 'text-pink-600' },
+                      { topic: language === 'hi' ? 'अर्थव्यवस्था' : 'Economy', delta: '+7', color: 'text-pink-500' },
+                    ].map((row) => (
+                      <div key={row.topic} className="flex items-center justify-between">
+                        <span className="text-[12px] font-bold text-slate-700">{row.topic}</span>
+                        <span className={`text-[11px] font-black ${row.color}`}>{row.delta} ▲</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-[11px] font-semibold text-pink-600 group-hover:underline">
+                    {language === 'hi' ? 'ट्रेंड देखो →' : 'See Trends →'}
+                  </p>
+                </div>
+              </Link>
+
+              {/* Card 3: Quick Fact Flashcard */}
+              <Link href="/syllabus/quiz/pyq/facts" className="group block">
+                <div className="relative h-full rounded-[1.5rem] border border-emerald-100 bg-emerald-50 p-5 transition-all hover:shadow-lg hover:shadow-emerald-200/40 hover:-translate-y-0.5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-2xl">⚡</span>
+                    <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest text-emerald-600">
+                      {language === 'hi' ? 'फैक्ट' : 'Fact'}
+                    </span>
+                  </div>
+                  <h3 className="mb-1 text-sm font-black text-slate-800">
+                    {language === 'hi' ? 'क्विक PYQ फैक्ट' : 'Quick PYQ Fact'}
+                  </h3>
+                  <p className="mt-2 text-[13px] font-bold leading-relaxed text-slate-700 [text-shadow:1px_1px_1px_rgba(0,0,0,0.04)]">
+                    {language === 'hi'
+                      ? '"MP की ताप विद्युत क्षमता लगभग 12,000 MW है — यह 2025 prelims में पूछा गया था" 🎯'
+                      : '"MP\'s thermal power capacity is ~12,000 MW — directly asked in 2025 Prelims" 🎯'}
+                  </p>
+                  <p className="mt-3 text-[11px] font-semibold text-emerald-600 group-hover:underline">
+                    {language === 'hi' ? 'फैक्ट्स देखें →' : 'View Facts →'}
+                  </p>
+                </div>
+              </Link>
+
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Units Grid/List */}
         <div id="units-grid" className="scroll-mt-32">
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 gap-8 pb-32 md:grid-cols-2 lg:grid-cols-3">

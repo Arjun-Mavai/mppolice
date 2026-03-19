@@ -9,6 +9,8 @@ interface PremiumExplanationProps {
   explanation: string;
   explanationEn?: string | null;
   language?: 'hi' | 'en';
+  /** When true, Core Logic renders without a border-box — plain text, more space on small screens */
+  compact?: boolean;
 }
 
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -17,11 +19,11 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
   explanation,
   explanationEn,
   language,
+  compact = false,
 }) => {
   const storeLanguage = useSettingsStore((state) => state.language);
   const finalLanguage = language || storeLanguage;
-  // Choose the right explanation text based on language
-  // Default to 'explanation' (Hindi/Primary) if specific logic not met
+
   const DEFAULT_MSG =
     finalLanguage === 'hi'
       ? 'यह प्रश्न सीधे अवधारणात्मक (Conceptual) है। यदि यह गलत हुआ है, तो कृपया संबंधित विषय के मूल तथ्यों (Basics) को दोहराएं।'
@@ -29,15 +31,13 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
 
   const textToParse =
     (finalLanguage === 'en' && explanationEn ? explanationEn : explanation) || DEFAULT_MSG;
-  // Helper to extract sections
+
   const extractSection = (text: string, marker: string, nextMarkers: string[]) => {
     if (!text) return null;
     const startIndex = text.indexOf(marker);
     if (startIndex === -1) return null;
 
     let content = text.slice(startIndex + marker.length);
-
-    // Find the earliest next marker to end this section
     let minIndex = content.length;
     nextMarkers.forEach((nm) => {
       const idx = content.indexOf(nm);
@@ -49,20 +49,16 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
     return content.slice(0, minIndex).trim();
   };
 
-  // Markers
   const MARKERS = {
     FACT: '**💡 Exam Fact',
     TIP: '**🧠 Memory Tip',
     SCAM: '**🚫 Scam Alert',
   };
 
-  // Extract Sections
   const examFact = extractSection(textToParse, MARKERS.FACT, [MARKERS.TIP, MARKERS.SCAM]);
   const memoryTip = extractSection(textToParse, MARKERS.TIP, [MARKERS.FACT, MARKERS.SCAM]);
   const scamAlert = extractSection(textToParse, MARKERS.SCAM, [MARKERS.FACT, MARKERS.TIP]);
 
-  // Core Logic is everything before the first marker
-  // We remove the keys we found to isolate the start
   let coreLogic = textToParse;
   const allMarkers = [MARKERS.FACT, MARKERS.TIP, MARKERS.SCAM];
   let firstMarkerIndex = coreLogic.length;
@@ -76,17 +72,16 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
 
   coreLogic = coreLogic.slice(0, firstMarkerIndex).trim();
 
-  // Bhai markdown ke ## hashes aur ** bold markers hatao - clean text dikhao user ko
   const cleanContent = (s: string | null) => {
     if (!s) return null;
     return s
       .replace(/^(\s*(\(High Value\)|\(Mnemonic\)|\(Elimination\))?\s*)?(\*\*|:)?\s*:?\s*/, '')
-      .replace(/#{1,6}\s*/g, '') // ## heading markers hatao
-      .replace(/\*\*([^*]+)\*\*/g, '$1') // **bold** se sirf text rakho
-      .replace(/\*([^*]+)\*/g, '$1') // *italic* se sirf text rakho
-      .replace(/`([^`]+)`/g, '$1') // `code` se sirf text rakho
-      .replace(/---+/g, '') // horizontal rules hatao
-      .replace(/^\s*[-*]\s+/gm, '• ') // list markers ko bullet me badlo
+      .replace(/#{1,6}\s*/g, '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/---+/g, '')
+      .replace(/^\s*[-*]\s+/gm, '• ')
       .trim();
   };
 
@@ -97,14 +92,11 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
     scam: cleanContent(scamAlert),
   };
 
-  // Animation variants
   const container = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
+      transition: { staggerChildren: 0.1 },
     },
   };
 
@@ -118,34 +110,49 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
       variants={container}
       initial="hidden"
       animate="show"
-      className="space-y-5 text-left font-sans"
+      className="space-y-3.5 text-left font-sans"
     >
-      {/* 1. Core Logic — left accent bar flush, generous line-height */}
+      {/* 1. Core Logic */}
       {sections.logic && (
-        <motion.div variants={item} className="border-l-[3px] border-emerald-500 pl-3.5 sm:pl-4">
-          <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] text-emerald-600 uppercase">
-            <CheckCircle2 size={13} className="shrink-0" />{' '}
-            {finalLanguage === 'hi' ? 'तर्क' : 'Core Logic'}
-          </h4>
-          <div className="space-y-2.5 text-[14px] leading-[1.8] font-normal tracking-[-0.005em] text-slate-800 sm:text-[15px]">
-            {cleanContent(sections.logic)
-              ?.split('\n')
-              .filter((l) => l.trim())
-              .map((line, i) => (
-                <p key={i}>{line}</p>
-              ))}
-          </div>
+        <motion.div variants={item}>
+          {compact ? (
+            /* Compact mode: no border-box — full-width plain text with generous line height */
+            <div className="space-y-2 text-[15px] leading-loose font-bold tracking-tight text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.08)] sm:text-[16px]">
+              {cleanContent(sections.logic)
+                ?.split('\n')
+                .filter((l) => l.trim())
+                .map((line, i) => (
+                  <p key={i}>{line}</p>
+                ))}
+            </div>
+          ) : (
+            /* Default: left accent border */
+            <div className="border-l-2 border-emerald-500 pl-3">
+              <h4 className="mb-1 flex items-center gap-1.5 text-[10px] font-black tracking-widest text-emerald-600 uppercase">
+                <CheckCircle2 size={12} className="shrink-0" />{' '}
+                {finalLanguage === 'hi' ? 'तर्क' : 'Core Logic'}
+              </h4>
+              <div className="space-y-2 text-[14px] leading-relaxed font-bold tracking-tight text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.05)] sm:text-[15px]">
+                {cleanContent(sections.logic)
+                  ?.split('\n')
+                  .filter((l) => l.trim())
+                  .map((line, i) => (
+                    <p key={i}>{line}</p>
+                  ))}
+              </div>
+            </div>
+          )}
         </motion.div>
       )}
 
       {/* 2. Exam Fact */}
       {sections.fact && (
-        <motion.div variants={item} className="border-l-[3px] border-slate-700 pl-3.5 sm:pl-4">
-          <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] text-slate-600 uppercase">
-            <Lightbulb size={13} className="shrink-0" />{' '}
+        <motion.div variants={item} className="border-l-2 border-slate-700 pl-3">
+          <h4 className="mb-1 flex items-center gap-1.5 text-[10px] font-black tracking-widest text-slate-600 uppercase">
+            <Lightbulb size={12} className="shrink-0" />{' '}
             {finalLanguage === 'hi' ? 'एग्जाम फैक्ट' : 'Exam Fact'}
           </h4>
-          <p className="text-[14px] leading-[1.8] tracking-[-0.005em] text-slate-800 sm:text-[15px]">
+          <p className="text-[14px] leading-relaxed font-bold tracking-tight text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.05)] sm:text-[15px]">
             {sections.fact}
           </p>
         </motion.div>
@@ -153,12 +160,12 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
 
       {/* 3. Memory Tip */}
       {sections.tip && (
-        <motion.div variants={item} className="border-l-[3px] border-amber-500 pl-3.5 sm:pl-4">
-          <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] text-amber-600 uppercase">
-            <Brain size={13} className="shrink-0" />{' '}
+        <motion.div variants={item} className="border-l-2 border-amber-500 pl-3">
+          <h4 className="mb-1 flex items-center gap-1.5 text-[10px] font-black tracking-widest text-amber-600 uppercase">
+            <Brain size={12} className="shrink-0" />{' '}
             {finalLanguage === 'hi' ? 'मेमोरी टिप' : 'Memory Tip'}
           </h4>
-          <p className="rounded-lg border border-amber-100/80 bg-amber-50/60 px-3 py-2.5 text-[14px] leading-[1.8] tracking-[-0.005em] text-slate-700 italic sm:text-[15px]">
+          <p className="rounded-xl border border-amber-100/50 bg-amber-50/40 px-3 py-2 text-[14px] leading-relaxed font-bold tracking-tight text-slate-700 italic [text-shadow:1px_1px_2px_rgba(0,0,0,0.05)] sm:text-[15px]">
             {sections.tip}
           </p>
         </motion.div>
@@ -166,12 +173,12 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
 
       {/* 4. Scam Alert */}
       {sections.scam && (
-        <motion.div variants={item} className="border-l-[3px] border-red-500 pl-3.5 sm:pl-4">
-          <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] text-red-600 uppercase">
-            <AlertTriangle size={13} className="shrink-0" />{' '}
+        <motion.div variants={item} className="border-l-2 border-red-500 pl-3">
+          <h4 className="mb-1 flex items-center gap-1.5 text-[10px] font-black tracking-widest text-red-600 uppercase">
+            <AlertTriangle size={12} className="shrink-0" />{' '}
             {finalLanguage === 'hi' ? 'स्कैम अलर्ट' : 'Scam Alert'}
           </h4>
-          <p className="text-[14px] leading-[1.8] tracking-[-0.005em] text-slate-800 sm:text-[15px]">
+          <p className="text-[14px] leading-relaxed font-bold tracking-tight text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.05)] sm:text-[15px]">
             {sections.scam}
           </p>
         </motion.div>

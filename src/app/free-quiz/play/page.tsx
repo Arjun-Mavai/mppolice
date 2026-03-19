@@ -96,7 +96,15 @@ export default async function FreeQuizPlayPage({ searchParams }: PageProps) {
       testId={testId}
       title={testData.title}
       disableInstantMode={disableInstantMode}
-      user={user ? { name: user.name, email: user.email, mobile: user.mobile } : null}
+      user={
+        user
+          ? {
+              name: user.name || 'Guest', // Fallback for null name
+              email: user.email,
+              mobile: user.phone,
+            }
+          : null
+      }
     />
   );
 }
