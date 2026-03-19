@@ -268,7 +268,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
       })
       .from(guests)
       .orderBy(desc(guests.createdAt))
-      .limit(10);
+      .limit(100); // Increased limit to show more history per user request
 
     const totalTests = testsData.length;
     const totalQuestions = testsData.reduce((acc, t) => acc + (t.totalQuestions || 0), 0);
