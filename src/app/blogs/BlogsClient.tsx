@@ -1,7 +1,7 @@
 'use client';
 
 // 1. External Imports
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Loader2, ArrowLeft, Search, BookOpen, Sparkles, Crown } from 'lucide-react';
@@ -71,9 +71,18 @@ export default function BlogsClient({
   // const router = useRouter();
 
   // 3. State Hooks
-  const [activeUnit, setActiveUnit] = useState<string>('Free');
-  const [activeCategory, setActiveCategory] = useState<string>('All');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeUnit, setActiveUnit] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'Free';
+    return new URLSearchParams(window.location.search).get('unit') || 'Free';
+  });
+  const [activeCategory, setActiveCategory] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'All';
+    return new URLSearchParams(window.location.search).get('category') || 'All';
+  });
+  const [searchQuery, setSearchQuery] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return new URLSearchParams(window.location.search).get('search') || '';
+  });
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   // Track which specific blog is being navigated to (for inline loading)
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
@@ -127,8 +136,10 @@ export default function BlogsClient({
             pageParams: [1],
           }
         : undefined,
-    // ⚡ PERFORMANCE: Cache for 5 minutes prevents "White Screen" on back navigation
+    // ⚡ PERFORMANCE: Keep cache warm and retain previous list while changing filters
     staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    placeholderData: (previousData) => previousData,
   });
 
   // ------------------------------------------------------------------
@@ -146,13 +157,58 @@ export default function BlogsClient({
   const blogs = data?.pages.flatMap((page) => page.blogs) || [];
   const hasMore = hasNextPage;
 
-  // Strict Loading Sync: Wait for auth check if no server user is present
-  const isAuthLoading = !user && (authCheckStatus === 'idle' || authCheckStatus === 'loading');
-
   // Tab Definitions
   const tabs = isGuest
     ? ['Free', 'General', 'All', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)]
     : ['General', 'All', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)];
+  const defaultTab = isGuest ? 'Free' : 'General';
+
+  // Hydration-safe restore from URL/session so Back never snaps to default unexpectedly.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const readFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      const savedRaw = window.sessionStorage.getItem('blogs:last-filters');
+      const saved = savedRaw ? JSON.parse(savedRaw) : null;
+
+      const nextUnit =
+        params.get('unit') ||
+        (saved && typeof saved.unit === 'string' ? saved.unit : undefined) ||
+        defaultTab;
+      const nextCategory =
+        params.get('category') ||
+        (saved && typeof saved.category === 'string' ? saved.category : undefined) ||
+        'All';
+      const nextSearch =
+        params.get('search') ||
+        (saved && typeof saved.search === 'string' ? saved.search : undefined) ||
+        '';
+
+      setActiveUnit(nextUnit);
+      setActiveCategory(nextCategory);
+      setSearchQuery(nextSearch);
+      setDebouncedSearch(nextSearch);
+    };
+
+    readFromUrl();
+    window.addEventListener('popstate', readFromUrl);
+    return () => window.removeEventListener('popstate', readFromUrl);
+  }, [defaultTab]);
+
+  // If user tier changes and current tab is no longer valid, move to default tab
+  useEffect(() => {
+    if (!tabs.includes(activeUnit)) {
+      setActiveUnit(defaultTab);
+    }
+  }, [tabs, activeUnit, defaultTab]);
+
+  // For non-General tabs, keep category reset so URL/query key stay clean
+  useEffect(() => {
+    if (activeUnit !== 'General' && activeCategory !== 'All') {
+      setActiveCategory('All');
+    }
+  }, [activeUnit, activeCategory]);
 
   const subjects = [
     { id: 'All', label: 'All Subjects' },
@@ -178,10 +234,48 @@ export default function BlogsClient({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleNavigate = useState(() => (id: string) => setNavigatingId(id))[0];
 
+  // Persist selected filters in URL so browser back restores exact selection
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+
+    if (activeUnit === defaultTab) params.delete('unit');
+    else params.set('unit', activeUnit);
+
+    if (activeCategory === 'All') params.delete('category');
+    else params.set('category', activeCategory);
+
+    if (searchQuery.trim()) params.set('search', searchQuery.trim());
+    else params.delete('search');
+
+    const qs = params.toString();
+    const nextUrl = qs ? `/blogs?${qs}` : '/blogs';
+    if (`${window.location.pathname}${window.location.search}` !== nextUrl) {
+      window.history.replaceState(null, '', nextUrl);
+    }
+
+    window.sessionStorage.setItem(
+      'blogs:last-filters',
+      JSON.stringify({
+        unit: activeUnit,
+        category: activeCategory,
+        search: searchQuery.trim(),
+      })
+    );
+  }, [activeUnit, activeCategory, searchQuery, defaultTab]);
+
+  const returnToQuery = useMemo(() => {
+    const params = new URLSearchParams();
+    if (activeUnit !== defaultTab) params.set('unit', activeUnit);
+    if (activeCategory !== 'All') params.set('category', activeCategory);
+    if (searchQuery.trim()) params.set('search', searchQuery.trim());
+    return params.toString();
+  }, [activeUnit, activeCategory, searchQuery, defaultTab]);
+
   // ------------------------------------------------------------------
   // 💀 SKELETON / LOADING UI
   // ------------------------------------------------------------------
-  if (isAuthLoading || (isBlogsLoading && !data)) {
+  if (isBlogsLoading && !data) {
     return (
       <div className="min-h-screen bg-white">
         {/* Header Skeleton */}
@@ -476,6 +570,7 @@ export default function BlogsClient({
                     isLocked={isLocked}
                     isNavigating={navigatingId === blog.id}
                     onNavigate={handleNavigate}
+                    returnToQuery={returnToQuery}
                   />
                 );
               });

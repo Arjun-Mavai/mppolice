@@ -1,9 +1,15 @@
 import { createClient } from '@libsql/client';
 
-// Production Turso connection
+const url = process.env.TURSO_DATABASE_URL;
+const authToken = process.env.TURSO_AUTH_TOKEN;
+
+if (!url || !authToken) {
+  throw new Error('Missing TURSO credentials: set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN');
+}
+
 const client = createClient({
-  url: 'libsql://mppsc-test-series-arjun-gurjar.aws-ap-south-1.turso.io',
-  authToken: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3Njk5MTg1MjAsImlkIjoiNmZjZWY3MGEtNDZmYi00OWY5LWE4ZGQtYTMxNDk3MWFjOTlhIiwicmlkIjoiMjVkYTUxNjUtNWM1Yi00Mjc1LWEyNTYtZjlhNDhiNjQyZjA4In0.Uat6fTihImcWMjdZHXe2lmhq2tEfI7hj7TApkWgXdhLIVHnhCXB1yB56kuDpwi51m6f9LHbytvWkNlXHb1znCA'
+  url,
+  authToken,
 });
 
 const CANONICAL_TEST_IDS = {
@@ -56,21 +62,24 @@ async function recomputePyqTrends() {
     });
 
     // Create year mapping
-    const testIdToYear = {};
+    const testIdToYear: Record<string, number> = {};
     Object.entries(CANONICAL_TEST_IDS).forEach(([year, testId]) => {
       testIdToYear[testId] = parseInt(year);
     });
 
     // Calculate trends per year
-    const trendData = [];
-    const subjectTotals = {}; // year -> subject -> total count
+    const trendData: any[] = [];
+    const subjectTotals: Record<number, Record<string, number>> = {}; // year -> subject -> total count
 
     // First pass: calculate subject totals per year
     for (const row of trendsResult.rows) {
-      const year = testIdToYear[row.test_id];
+      const year = testIdToYear[String(row.test_id)];
+      const subject = String(row.subject);
+      const questionCount = Number(row.question_count);
+
       if (!subjectTotals[year]) subjectTotals[year] = {};
-      if (!subjectTotals[year][row.subject]) subjectTotals[year][row.subject] = 0;
-      subjectTotals[year][row.subject] += row.question_count;
+      if (!subjectTotals[year][subject]) subjectTotals[year][subject] = 0;
+      subjectTotals[year][subject] += questionCount;
     }
 
     console.log('\n📈 Subject totals by year:');
@@ -85,9 +94,13 @@ async function recomputePyqTrends() {
 
     // Second pass: calculate weight percentages and trends
     for (const row of trendsResult.rows) {
-      const year = testIdToYear[row.test_id];
-      const subjectTotal = subjectTotals[year]?.[row.subject] || 1;
-      const weightPercent = (row.question_count / subjectTotal) * 100;
+      const year = testIdToYear[String(row.test_id)];
+      const subject = String(row.subject);
+      const questionCount = Number(row.question_count);
+      const topicId = String(row.topic_id);
+
+      const subjectTotal = subjectTotals[year]?.[subject] || 1;
+      const weightPercent = (questionCount / subjectTotal) * 100;
       
       // Calculate trend delta (current year vs previous year)
       let trendDelta = 0;
@@ -95,23 +108,21 @@ async function recomputePyqTrends() {
       if (previousYear >= 2020) {
         // Find same topic in previous year
         const previousYearData = trendsResult.rows.find(r => 
-          r.topic_id === row.topic_id && 
-          testIdToYear[r.test_id] === previousYear
+          String(r.topic_id) === topicId && 
+          testIdToYear[String(r.test_id)] === previousYear
         );
         
         if (previousYearData) {
-          const previousSubjectTotal = subjectTotals[previousYear]?.[row.subject] || 1;
-          const previousWeightPercent = (previousYearData.question_count / previousSubjectTotal) * 100;
-          trendDelta = weightPercent - previousWeightPercent;
+          trendDelta = questionCount - Number(previousYearData.question_count);
         }
       }
 
       trendData.push({
         id: generateId(),
-        topicId: row.topic_id,
-        subject: row.subject, // Add subject
+        topicId: topicId,
+        subject: subject, // Add subject
         year: year,
-        questionCount: row.question_count,
+        questionCount: questionCount,
         weightPercent: Math.round(weightPercent * 100) / 100, // 2 decimal places
         trendDelta: Math.round(trendDelta * 100) / 100 // 2 decimal places
       });
@@ -141,7 +152,7 @@ async function recomputePyqTrends() {
           ]
         });
         successCount++;
-      } catch (error) {
+      } catch (error: any) {
         console.log(`⚠️ Error inserting trend for topic ${trend.topicId}: ${error.message}`);
       }
     }
@@ -170,7 +181,7 @@ async function recomputePyqTrends() {
       yearsCovered: years
     };
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error:', error.message);
     throw error;
   } finally {

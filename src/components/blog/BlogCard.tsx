@@ -14,6 +14,7 @@ interface BlogCardProps {
   isLocked?: boolean;
   onNavigate?: (id: string) => void;
   isNavigating?: boolean;
+  returnToQuery?: string;
 }
 
 // ... existing variants object ...
@@ -51,7 +52,14 @@ const variants = {
 
 const bgEmojis = ['📖', '📝', '💡', '🧠', '🎯', '📊', '⚖️', '📜', '🔍', '🎓'];
 
-export function BlogCard({ blog, index = 0, isLocked, onNavigate, isNavigating }: BlogCardProps) {
+export function BlogCard({
+  blog,
+  index = 0,
+  isLocked,
+  onNavigate,
+  isNavigating,
+  returnToQuery,
+}: BlogCardProps) {
   const { language } = useSettingsStore();
   const router = useRouter();
 
@@ -239,7 +247,7 @@ export function BlogCard({ blog, index = 0, isLocked, onNavigate, isNavigating }
 
   return (
     <Link
-      href={`/blogs/${blog.slug}`}
+      href={returnToQuery ? `/blogs/${blog.slug}?from=${encodeURIComponent(returnToQuery)}` : `/blogs/${blog.slug}`}
       className={cn(
         'group block h-full transition-transform outline-none active:scale-[0.98]',
         isNavigating && 'pointer-events-none opacity-80'

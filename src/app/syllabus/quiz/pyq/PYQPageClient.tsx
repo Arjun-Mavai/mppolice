@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import { QuizListItem } from '@/components/QuizListItem';
 import { QuizSubNav } from '@/features/syllabus/components/QuizSubNav';
 import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
 import { ViewTransition } from 'react';
+import { TransitionLink } from '@/components/ui/transition-link';
 
 // --- Types ---
 interface Test {
@@ -107,6 +108,7 @@ export default function PYQPageClient({
 }: PYQPageClientProps) {
   const router = useRouter();
   const { language } = useSettingsStore();
+  const [, startTransition] = useTransition();
 
   // --- State ---
   const [viewMode, setViewMode] = useState<'year' | 'subject' | 'all-subjects'>(
@@ -129,7 +131,9 @@ export default function PYQPageClient({
         test_name: test.titleEn || test.title,
         test_id: test.id,
       });
-      router.push(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);
+      startTransition(() => {
+        router.push(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);
+      });
     }
   };
 
@@ -144,10 +148,19 @@ export default function PYQPageClient({
       test_name: `${selectedSubject} (Part ${offset / limit + 1})`,
       subject: selectedSubject,
     });
-    router.push(
-      `/syllabus/quiz/play?mode=pyq-subject&subject=${selectedSubject}&limit=${limit}&offset=${offset}`
-    );
+    startTransition(() => {
+      router.push(
+        `/syllabus/quiz/play?mode=pyq-subject&subject=${selectedSubject}&limit=${limit}&offset=${offset}`
+      );
+    });
   };
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    router.prefetch('/syllabus/quiz/pyq/intelligence');
+    router.prefetch('/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject');
+    router.prefetch('/syllabus/quiz/pyq/analysis');
+  }, [router, isLoggedIn]);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
@@ -213,11 +226,13 @@ export default function PYQPageClient({
                 {/* Premium Intelligence */}
                 <div className="rounded-xl bg-gradient-to-r from-pink-500 via-red-500 via-yellow-500 to-green-500 p-[1.5px] shadow-sm transition-transform hover:scale-[1.02]">
                   <Button
-                    onClick={() => router.push('/syllabus/quiz/pyq/intelligence')}
+                    asChild
                     className="inline-flex h-full w-full items-center gap-2 rounded-[10px] bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                   >
-                    <Sparkles className="h-4 w-4 text-amber-500" />
-                    {language === 'hi' ? 'प्रीमियम इंटेलिजेंस' : 'Premium Intelligence'}
+                    <TransitionLink href="/syllabus/quiz/pyq/intelligence" transitionTypes={['slide']}>
+                      <Sparkles className="h-4 w-4 text-amber-500" />
+                      {language === 'hi' ? 'प्रीमियम इंटेलिजेंस' : 'Premium Intelligence'}
+                    </TransitionLink>
                   </Button>
                 </div>
 

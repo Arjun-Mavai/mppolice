@@ -115,8 +115,8 @@ export default function PYQAnalysisClient({
   };
 
   const totalQuestions = useMemo(
-    () => analysis.topicDistribution.reduce((acc, item) => acc + item.totalQuestions, 0),
-    [analysis.topicDistribution]
+    () => analysis.yearMatrix.reduce((acc, item) => acc + item.questionCount, 0),
+    [analysis.yearMatrix]
   );
 
   const applyFilters = (subject: string, years: number) => {
@@ -425,8 +425,8 @@ export default function PYQAnalysisClient({
                                     )}
                                   >
                                     {item.trendDelta > 0
-                                      ? `+${item.trendDelta}`
-                                      : `${item.trendDelta}`}
+                                      ? `+${Math.round(item.trendDelta)}`
+                                      : `${Math.round(item.trendDelta)}`}
                                   </Badge>
                                   <ChevronRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1" />
                                 </div>
@@ -543,8 +543,8 @@ export default function PYQAnalysisClient({
                                         )}
                                       >
                                         {item.trendDelta > 0
-                                          ? `+${item.trendDelta}%`
-                                          : `${item.trendDelta}%`}
+                                          ? `+${Math.round(item.trendDelta)}`
+                                          : `${Math.round(item.trendDelta)}`}
                                       </Badge>
                                     </TableCell>
                                   </TableRow>
@@ -648,7 +648,7 @@ export default function PYQAnalysisClient({
                                 variant="outline"
                                 className="shrink-0 rounded-lg border-emerald-200 bg-emerald-50 px-2 py-0.5 font-black text-emerald-700"
                               >
-                                +{item.trendDelta} {isHindi ? 'अधिक' : 'more'}
+                                +{Math.round(item.trendDelta)} {isHindi ? 'अधिक' : 'more'}
                               </Badge>
                             </div>
 

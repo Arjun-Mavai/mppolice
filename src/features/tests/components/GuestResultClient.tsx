@@ -71,7 +71,7 @@ export function GuestResultClient({ userId }: { userId?: string }) {
       title="Practice Quiz Result"
       isGuest={!userId}
       userId={userId}
-      disableRetry={false}
+      disableRetry={true}
     />
   );
 }

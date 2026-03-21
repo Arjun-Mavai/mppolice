@@ -1,9 +1,13 @@
 'use client';
+
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Crown, BarChart3, Clock, Zap, ChevronRight, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { calculateGuestRanking } from '@/lib/utils/quiz-ranking';
+import { TestSeriesFeedbackModal } from '@/components/test-series-feedback-modal';
+import type { FeedbackFormType } from '@/lib/schemas/feedback';
 
 interface GuestResultTeaserProps {
   score: number;
@@ -11,6 +15,7 @@ interface GuestResultTeaserProps {
   timeTaken: number;
   guestName?: string;
   onHome: () => void;
+  testId?: string; // Optional testId to link feedback to the specific test
 }
 
 export function GuestResultTeaser({
@@ -19,8 +24,24 @@ export function GuestResultTeaser({
   timeTaken,
   guestName,
   onHome,
+  testId = 'guest-demo-test',
 }: GuestResultTeaserProps) {
   const router = useRouter();
+  const [showFeedback, setShowFeedback] = useState(false);
+
+  useEffect(() => {
+    // Show feedback modal shortly after result teaser mounts (1.5s delay)
+    const timer = setTimeout(() => {
+      setShowFeedback(true);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleFeedbackSubmit = async (data: FeedbackFormType) => {
+    console.log('Guest Feedback submitted:', data);
+    // TODO: Wire up to actual /api/test-feedback endpoint when ready
+    setShowFeedback(false);
+  };
 
   // Use centralized ranking utility (deterministic - same score = same rank)
   const { beaten, percentage, rank } = calculateGuestRanking(score, totalQuestions);
@@ -185,6 +206,13 @@ export function GuestResultTeaser({
           Join a growing community of MPPSC 2026 aspirants.
         </p>
       </div>
+
+      <TestSeriesFeedbackModal
+        isOpen={showFeedback}
+        onClose={() => setShowFeedback(false)}
+        onSubmit={handleFeedbackSubmit}
+        testSeriesId={testId}
+      />
     </div>
   );
 }

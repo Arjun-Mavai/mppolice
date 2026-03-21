@@ -25,6 +25,7 @@ import {
   Trophy,
   Lock
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Question } from '@/types/quiz';
 import { cn } from '@/lib/utils';
@@ -45,6 +46,9 @@ import {
 import { logger } from '@/lib/logger';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { getPYQIntelligenceForWrongQuestions, PYQWrongTopicInsight } from '@/actions/pyq-intelligence';
+import { submitTestFeedback } from '@/app/actions/feedback';
+import { TestSeriesFeedbackModal } from '@/components/test-series-feedback-modal';
+import type { FeedbackFormType } from '@/lib/schemas/feedback';
 
 interface QuizResultProps {
   questions: Question[];
@@ -80,14 +84,39 @@ export function QuizResult({
   const isGuestLocked = isGuest && !userId;
 
   const PremiumLock = ({ label, className }: { label: string; className?: string }) => (
-    <div className={cn("absolute inset-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[2px] z-20 rounded-lg border border-slate-100", className)}>
-      <div className="bg-white p-4 rounded-2xl shadow-xl border border-slate-100 text-center max-w-[200px]">
-        <div className="mx-auto bg-amber-100 w-10 h-10 rounded-full flex items-center justify-center mb-2">
-          <Lock className="w-5 h-5 text-amber-600" />
+    <div 
+      className={cn("absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-md z-30 rounded-xl overflow-hidden pointer-events-auto cursor-pointer", className)}
+      onClick={() => {
+        toast('🔒 Pro Feature Requested', {
+          description: `This feature is locked for guest users. Unlock to access!`,
+          action: {
+            label: 'Unlock',
+            onClick: () => router.push('/pricing')
+          }
+        });
+      }}
+    >
+      <div 
+        className="bg-white w-[90%] max-w-[280px] p-6 rounded-2xl shadow-2xl border border-slate-100 text-center animate-in fade-in zoom-in duration-300 pointer-events-auto cursor-default"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mx-auto bg-slate-100 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+          <Lock className="w-6 h-6 text-slate-900" />
         </div>
-        <p className="text-sm font-bold text-slate-800 mb-2">{label}</p>
-        <Button size="sm" className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold" onClick={() => router.push('/pricing')}>
-          Unlock Now
+        <h3 className="text-lg font-black text-slate-900 mb-1 leading-tight">{label}</h3>
+        <p className="text-xs font-medium text-slate-500 mb-5 text-pretty px-2">
+          {label.includes("Strategy") 
+            ? "Upgrade to unlock advanced analytics and scenario analysis." 
+            : "Unlock PYQ Intelligence to see repeated topics and important patterns."}
+        </p>
+        <Button 
+          className="w-full h-11 bg-slate-950 hover:bg-slate-900 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-all" 
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push('/pricing');
+          }}
+        >
+          Unlock Now 🚀
         </Button>
       </div>
     </div>
@@ -98,6 +127,47 @@ export function QuizResult({
   const [pyqInsights, setPyqInsights] = useState<PYQWrongTopicInsight[]>([]);
   const [isFetchingInsights, setIsFetchingInsights] = useState(false);
   const [showSimulatorLogic, setShowSimulatorLogic] = useState(false);
+
+  const [showFeedback, setShowFeedback] = useState(false);
+
+  useEffect(() => {
+    // Show feedback modal immediately out of the gate without any timeout flicker
+    const currentTestId = testId || 'guest-test-result';
+    const hasSeenFeedback = typeof window !== 'undefined' ? sessionStorage.getItem(`feedback_shown_${currentTestId}`) : null;
+    
+    if (!hasSeenFeedback) {
+      setShowFeedback(true);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(`feedback_shown_${currentTestId}`, 'true');
+      }
+    }
+  }, [testId]);
+
+  const handleFeedbackSubmit = async (data: FeedbackFormType) => {
+    console.log('QuizResult Feedback submitted:', data);
+    
+    try {
+      // Import dynamically or ensure it's imported at the top. We will import at the top.
+      const currentTestId = testId || 'guest-test-result';
+      const testType = mode === 'pyq' ? 'pyq' : (mode === 'full' ? 'premium' : 'free');
+      
+      const response = await submitTestFeedback({
+        testId: currentTestId,
+        userId: userId || null, // from props
+        testType,
+        data,
+      });
+
+      if (!response.success) {
+        console.error('Failed to submit feedback:', response.error);
+        // Optionally show toast error here, but silently failing is fine for feedback
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+    }
+    
+    setShowFeedback(false);
+  };
 
   // Score Calculations
   let correctCount = 0;
@@ -235,7 +305,13 @@ export function QuizResult({
           <div
             onClick={() => {
               if (isLocked) {
-                // router.push('/pricing'); // Optional: redirect on click
+                toast('🔒 Pro Feature Only', {
+                  description: 'Solutions & analysis are available for premium members.',
+                  action: {
+                    label: 'Unlock',
+                    onClick: () => router.push('/pricing')
+                  }
+                });
                 return;
               }
               setExpandedQuestion(isExpanded ? null : q.id)
@@ -1050,14 +1126,14 @@ export function QuizResult({
           {renderResultContent()}
         </TabsContent>
         <TabsContent value="strategy" className="m-0 focus-visible:outline-none relative min-h-[400px]">
-          {isGuestLocked && <PremiumLock label="Strategy Analysis Locked" className="backdrop-blur-sm bg-white/80" />}
+          {isGuestLocked && <PremiumLock label="Strategy Analysis Locked" />}
           <div className={isGuestLocked ? "blur-sm pointer-events-none select-none" : ""}>
             {renderStrategyContent()}
           </div>
         </TabsContent>
         {mode === 'pyq' && (
           <TabsContent value="pyq-analysis" className="m-0 focus-visible:outline-none relative min-h-[400px]">
-            {isGuestLocked && <PremiumLock label="PYQ Intelligence Locked" className="backdrop-blur-sm bg-white/80" />}
+            {isGuestLocked && <PremiumLock label="PYQ Intelligence Locked" />}
             <div className={isGuestLocked ? "blur-sm pointer-events-none select-none" : ""}>
               {renderPYQAnalysisContent()}
             </div>
@@ -1065,6 +1141,12 @@ export function QuizResult({
         )}
       </Tabs>
       
+      <TestSeriesFeedbackModal
+        isOpen={showFeedback}
+        onClose={() => setShowFeedback(false)}
+        onSubmit={handleFeedbackSubmit}
+        testSeriesId={testId}
+      />
     </div>
   );
 }

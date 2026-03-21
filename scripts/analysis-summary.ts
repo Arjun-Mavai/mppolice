@@ -1,18 +1,6 @@
 #!/usr/bin/env tsx
 
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
-import { eq, inArray, sql } from 'drizzle-orm';
-import { 
-  pyqQuestionTopics,
-  pyqTopics,
-  questions as questionsTable
-} from '@/db/schema';
-import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
-
-// Create a simple in-memory SQLite database
-const sqlite = new Database(':memory:');
-const db = drizzle(sqlite);
+// Analysis Summary
 
 const CANONICAL_TEST_IDS: Record<number, string> = {
   2020: '5KRVTgTIw07bWNxu20YNl',
@@ -68,5 +56,4 @@ console.log('  2. Verify question links work correctly with "View All" functiona
 console.log('  3. Update Topic Analysis page to use same data source');
 console.log('  4. Deploy and monitor for consistency');
 
-sqlite.close();
 process.exit(0);

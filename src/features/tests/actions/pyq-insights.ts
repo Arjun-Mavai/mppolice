@@ -157,6 +157,7 @@ export interface TopicTrendProof {
     options: any; // JSON array of options
     correctAnswer: string; // Option ID or text
     testTitle: string; 
+    testTitleEn: string | null;
     questionOrder: number;
     explanation: string | null;
     explanationEn: string | null;
@@ -168,6 +169,7 @@ export interface TopicTrendProof {
     options: any; // JSON array of options
     correctAnswer: string; // Option ID or text
     testTitle: string; 
+    testTitleEn: string | null;
     questionOrder: number;
     explanation: string | null;
     explanationEn: string | null;
@@ -1108,6 +1110,7 @@ export const getTopicTrendProof = unstable_cache(
         explanationEn: questions.explanationEn,
         questionOrder: questions.order,
         testTitle: tests.title,
+        testTitleEn: tests.titleEn,
         testCreatedAt: tests.createdAt,
       })
       .from(questions)
@@ -1134,7 +1137,8 @@ export const getTopicTrendProof = unstable_cache(
           explanation: q.explanation,
           explanationEn: q.explanationEn,
           questionOrder: q.questionOrder,
-          testTitle: q.testTitle
+          testTitle: q.testTitle,
+          testTitleEn: q.testTitleEn
         });
       } else if (year === prevYear) {
         prevQs.push({
@@ -1146,7 +1150,8 @@ export const getTopicTrendProof = unstable_cache(
           explanation: q.explanation,
           explanationEn: q.explanationEn,
           questionOrder: q.questionOrder,
-          testTitle: q.testTitle
+          testTitle: q.testTitle,
+          testTitleEn: q.testTitleEn
         });
       }
     });

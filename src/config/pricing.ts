@@ -73,6 +73,11 @@ export const PRO_FEATURES: PlanFeatureWithIcon[] = [
   { en: 'Full Length Mock Tests (100Q)', hi: 'फुल लेंथ मॉक टेस्ट (100 प्रश्न)', icon: 'FileText' },
   { en: 'CSAT Mock Papers', hi: 'CSAT मॉक पेपर', icon: 'BookOpen' },
   { en: 'PYQ Papers (2020-2025)', hi: 'PYQ पेपर (2020-2025)', icon: 'BookOpen' },
+  {
+    en: 'PYQ Intelligence: Topic Trends, Weightage & Exam DNA',
+    hi: 'PYQ इंटेलिजेंस: टॉपिक ट्रेंड, वेटेज और एग्जाम DNA',
+    icon: 'BarChart3',
+  },
   { en: 'Smart Analytics Dashboard', hi: 'स्मार्ट एनालिटिक्स डैशबोर्ड', icon: 'BarChart3' },
   { en: 'Premium Study Blogs', hi: 'प्रीमियम स्टडी ब्लॉग्स', icon: 'FileText' },
   { en: 'Test History for Revision', hi: 'रिवीज़न के लिए टेस्ट हिस्ट्री', icon: 'History' },

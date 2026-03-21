@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo, useTransition } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -65,6 +65,14 @@ export function QuizSubNav() {
   const pathname = usePathname();
   const { language, user } = useSettingsStore();
   const hi = language === 'hi';
+  const [isPending, startTransition] = useTransition();
+
+  const activeHref = useMemo(
+    () =>
+      NAV_ITEMS.find((item) => pathname === item.href)?.href ||
+      (pathname.startsWith('/syllabus/quiz/pyq') ? '/syllabus/quiz/pyq' : pathname),
+    [pathname]
+  );
 
   const springConfig: any = { type: 'spring', stiffness: 400, damping: 40 };
 
@@ -81,6 +89,13 @@ export function QuizSubNav() {
     });
   }, [router, pathname]);
 
+  const navigateTo = (href: string) => {
+    if (href === pathname || href === activeHref) return;
+    startTransition(() => {
+      router.push(href, { scroll: false });
+    });
+  };
+
   return (
     <>
       {/* 🖥️ DESKTOP NAV (Hidden on Mobile) */}
@@ -91,12 +106,15 @@ export function QuizSubNav() {
             return (
               <button
                 key={item.id}
-                onClick={() => router.push(item.href)}
+                onClick={() => navigateTo(item.href)}
                 onMouseEnter={() => router.prefetch(item.href)}
                 onTouchStart={() => router.prefetch(item.href)}
                 className={cn(
                   'relative rounded-full px-5 py-2.5 text-xs font-black tracking-widest whitespace-nowrap uppercase transition-all outline-none',
-                  isActive ? 'text-white' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                  isActive
+                    ? 'text-white'
+                    : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600',
+                  isPending && !isActive && 'opacity-70'
                 )}
               >
                 <span className="relative z-10">{hi ? item.label.hi : item.label.en}</span>
@@ -123,12 +141,13 @@ export function QuizSubNav() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => router.push(item.href)}
+                  onClick={() => navigateTo(item.href)}
                   onMouseEnter={() => router.prefetch(item.href)}
                   onTouchStart={() => router.prefetch(item.href)}
                   className={cn(
                     'relative flex min-w-[64px] shrink-0 flex-col items-center gap-1 transition-all',
-                    isActive ? item.activeText : 'text-slate-400'
+                    isActive ? item.activeText : 'text-slate-400',
+                    isPending && !isActive && 'opacity-70'
                   )}
                 >
                   <div className={cn('flex h-full w-full flex-col items-center justify-center')}>

@@ -200,10 +200,10 @@ export default function TopicTrendProofClient({ proof }: { proof: TopicTrendProo
                   
                   <div className="flex flex-col gap-4">
                       <div className="flex flex-wrap items-center gap-2 border-b border-slate-50 pb-3">
-                         <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
-                            <Target className="h-3 w-3 text-slate-300" />
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
-                               {q.testTitle}
+                         <div className="flex items-center gap-1.5 bg-emerald-50/50 px-2.5 py-1 rounded-lg border border-emerald-100">
+                            <Target className="h-4 w-4 text-emerald-500" />
+                            <span className="text-[11px] sm:text-[13px] font-black text-emerald-900 uppercase tracking-tight">
+                               {isHindi ? q.testTitle : q.testTitleEn || q.testTitle}
                             </span>
                          </div>
                       </div>

@@ -615,6 +615,82 @@ npm run dev
 - generate
 - migrate
 
+## 🚨 Production Safety Rule (Must Follow)
+
+- Never run `db:push` on production DB.
+- Use only migration flow:
+
+```bash
+npm run db:generate
+npm run db:migrate
+```
+
+Why:
+- `drizzle-kit push` can try to drop tables that exist in DB but are not represented in `schema.ts` (for example FTS virtual tables like `questions_fts*`).
+- `migrate` only runs explicit SQL migration files, so unmanaged tables are not dropped unless you intentionally write a drop statement.
+
+## ✅ Simple Safe Process (Basics)
+
+### 1) Daily Development (Local)
+
+```bash
+# 1. schema.ts change karo
+npm run db:generate
+
+# 2. local ya target DB par apply karo
+npm run db:migrate
+```
+
+### 2) Production Deployment
+
+```bash
+# code + migration file commit karo
+git push
+
+# deploy environment par
+npm run db:migrate
+npm run build
+```
+
+### 3) Never Do This on Production
+
+```bash
+npm run db:push
+```
+
+`db:push` drift detect karke unknown tables (jaise `questions_fts*`) drop suggest kar sakta hai.
+
+## 🧠 Migration Kya Hai?
+
+Migration ek SQL instruction file hoti hai jo batati hai:
+- kaunsa table/column add hua
+- kaunsa index/constraint change hua
+
+Simple words:
+- `db:generate` = instruction banana
+- `db:migrate` = instruction chalana
+
+## 🎁 Migration ke Benefits
+
+- Safe and predictable DB changes
+- Team sync (sab same order me same changes chalate hain)
+- Audit trail (kab kya change hua clear rehta hai)
+- Deploy friendly (pending migrations hi run hoti hain)
+- Data-loss risk kam (push ke accidental drops avoid hote hain)
+
+## 🔒 Current Project Guard
+
+Project me `db:push` par guard laga hua hai.
+
+- Cloud/prod target par by default block hota hai.
+- Sirf intentional override se chalega:
+
+```bash
+ALLOW_DB_PUSH=true npm run db:push
+```
+
+Use this only for special/manual maintenance, normal workflow ke liye nahi.
+
 ### Deploy
 
 ```bash

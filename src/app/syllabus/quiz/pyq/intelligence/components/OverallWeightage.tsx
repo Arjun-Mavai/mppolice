@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import Link from 'next/link';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ChevronDown, ChevronUp, Eye, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { OverallWeightageSubjectData } from '@/actions/pyq-analytics';
 import { SUBJECTS, SUBJECT_VARIANTS } from '@/lib/pyq-ui-constants';
+import { TransitionLink } from '@/components/ui/transition-link';
 
 interface OverallWeightageProps {
   simpleSubjectStats: Record<string, number>;
@@ -18,6 +19,7 @@ interface OverallWeightageProps {
 }
 
 export function OverallWeightage({ simpleSubjectStats, subjectQuestionsData, isHindi }: OverallWeightageProps) {
+  const router = useRouter();
   const [isMainExpanded, setIsMainExpanded] = useState(false);
   const [expandedSubjects, setExpandedSubjects] = useState<string[]>([]);
 
@@ -47,6 +49,10 @@ export function OverallWeightage({ simpleSubjectStats, subjectQuestionsData, isH
       prev.includes(subjectName) ? prev.filter(s => s !== subjectName) : [...prev, subjectName]
     );
   };
+
+  useEffect(() => {
+    router.prefetch('/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject');
+  }, [router]);
 
   return (
     <div className="space-y-6">
@@ -151,14 +157,15 @@ export function OverallWeightage({ simpleSubjectStats, subjectQuestionsData, isH
                             </div>
 
                             <div className="flex items-center gap-2">
-                              <Link
+                              <TransitionLink
                                 href={`/syllabus/quiz/pyq/intelligence/questions?subject=${encodeURIComponent(sub.name)}&source=subject`}
                                 onClick={(e) => e.stopPropagation()}
+                                transitionTypes={['slide']}
                                 className="inline-flex h-7 items-center gap-1.5 rounded-md bg-indigo-500/10 px-3 text-xs font-bold text-indigo-400 transition-colors hover:bg-indigo-500/20 hover:text-indigo-300"
                               >
                                 <ExternalLink className="h-3.5 w-3.5" />
                                 {isHindi ? 'सभी देखें' : 'View All'}
-                              </Link>
+                              </TransitionLink>
 
                               <div className="shrink-0">
                                 {isSubjectExpanded ? (
@@ -236,7 +243,7 @@ export function OverallWeightage({ simpleSubjectStats, subjectQuestionsData, isH
 
       {/* Overall View All Button */}
       <div className="flex justify-center pt-4">
-        <Link href="/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject">
+        <TransitionLink href="/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject" transitionTypes={['slide']}>
           <Button
             variant="outline"
             size="lg"
@@ -246,7 +253,7 @@ export function OverallWeightage({ simpleSubjectStats, subjectQuestionsData, isH
             {isHindi ? 'सभी विषय प्रश्न देखें' : 'View All Subject Questions'}
             <ExternalLink className="ml-2 h-4 w-4" />
           </Button>
-        </Link>
+        </TransitionLink>
       </div>
     </div>
   );

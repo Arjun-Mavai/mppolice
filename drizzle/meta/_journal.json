@@ -92,6 +92,13 @@
       "when": 1774066158832,
       "tag": "0012_common_blackheart",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1774120069831,
+      "tag": "0013_foamy_scarlet_witch",
+      "breakpoints": true
     }
   ]
 }

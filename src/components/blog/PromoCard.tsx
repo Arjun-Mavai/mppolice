@@ -64,7 +64,7 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
           <div className="relative shrink-0 overflow-hidden rounded-xl p-[1px] shadow-lg shadow-indigo-500/20 transition-transform active:scale-95">
             <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#d946ef,#f43f5e,#fbbf24,#8b5cf6,#3b82f6,#d946ef)]" />
             <Link
-              href={isPro ? '/syllabus/quiz/pyq' : '/'}
+              href={isPro ? '/syllabus/quiz/pyq' : '/pricing'}
               className="relative flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition-all hover:bg-slate-900/90"
             >
               <Sparkles size={12} className={isPro ? 'text-emerald-400' : 'text-yellow-400'} />

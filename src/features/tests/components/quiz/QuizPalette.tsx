@@ -38,70 +38,77 @@ function PaletteGrid({
   totalQuestions,
 }: QuizPaletteProps & { onClose?: () => void }) {
   return (
-    <>
-      <div className="mb-4 flex items-center justify-between">
+    <div className="flex h-full w-full flex-col">
+      {/* Top Header Fixed */}
+      <div className="mb-4 flex shrink-0 items-center justify-between">
         <span className="text-base font-bold text-slate-900">{t.questionPalette}</span>
         <span className="rounded-full border border-slate-100 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-700">
           {Object.keys(answers).length}/{totalQuestions} {t.attempted}
         </span>
       </div>
 
-      <div className="mb-6 grid grid-cols-5 gap-2.5">
-        {questions.map((q, idx) => {
-          const isAns = answers[q.id] !== undefined;
-          const isMarked = markedForReview.includes(q.id);
-          const isCurrent = idx === currentIndex;
+      {/* Middle Scrollable Questions Grid */}
+      <div className="flex-1 overflow-y-auto pr-1">
+        <div className="grid grid-cols-5 gap-2.5 pb-6">
+          {questions.map((q, idx) => {
+            const isAns = answers[q.id] !== undefined;
+            const isMarked = markedForReview.includes(q.id);
+            const isCurrent = idx === currentIndex;
 
-          return (
-            <button
-              key={q.id}
-              onClick={() => onJump(idx)}
-              className={cn(
-                'relative flex aspect-square items-center justify-center rounded-xl border-2 text-sm font-bold transition-all select-none',
-                isCurrent
-                  ? 'z-10 scale-105 border-slate-800 bg-slate-800 text-white shadow-md'
-                  : isAns
-                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                    : isMarked
-                      ? 'border-amber-300 bg-amber-50 text-amber-700'
-                      : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200 hover:bg-slate-50'
-              )}
-            >
-              {idx + 1}
-              {isMarked && !isCurrent && (
-                <div className="absolute -top-1.5 -right-1.5 rounded-full border border-amber-200 bg-amber-100 p-0.5">
-                  <Flag className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
-                </div>
-              )}
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={q.id}
+                onClick={() => onJump(idx)}
+                className={cn(
+                  'relative flex aspect-square items-center justify-center rounded-xl border-2 text-sm font-bold transition-all select-none',
+                  isCurrent
+                    ? 'z-10 scale-105 border-slate-800 bg-slate-800 text-white shadow-md'
+                    : isAns
+                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                      : isMarked
+                        ? 'border-amber-300 bg-amber-50 text-amber-700'
+                        : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200 hover:bg-slate-50'
+                )}
+              >
+                {idx + 1}
+                {isMarked && !isCurrent && (
+                  <div className="absolute -top-1.5 -right-1.5 rounded-full border border-amber-200 bg-amber-100 p-0.5">
+                    <Flag className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Legend */}
-      <div className="mb-4 grid grid-cols-2 gap-3 text-xs font-medium text-slate-500">
-        <span className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full border border-emerald-500 bg-emerald-50" />{' '}
-          {t.answered}
-        </span>
-        <span className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full border border-slate-300 bg-white" /> {t.notAnswered}
-        </span>
-        <span className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full border border-amber-300 bg-amber-50" /> {t.review}
-        </span>
-        <span className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full bg-slate-800" /> {t.current}
-        </span>
-      </div>
+      {/* Bottom Fixed Area (Legend + Submit) */}
+      <div className="mt-2 shrink-0 border-t border-slate-100 pt-4 bg-white/50 backdrop-blur-sm">
+        {/* Legend */}
+        <div className="mb-4 grid grid-cols-2 gap-3 text-xs font-medium text-slate-500">
+          <span className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full border border-emerald-500 bg-emerald-50" />{' '}
+            {t.answered}
+          </span>
+          <span className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full border border-slate-300 bg-white" /> {t.notAnswered}
+          </span>
+          <span className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full border border-amber-300 bg-amber-50" /> {t.review}
+          </span>
+          <span className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full bg-slate-800" /> {t.current}
+          </span>
+        </div>
 
-      <Button
-        className="h-12 w-full bg-slate-900 text-lg font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-800"
-        onClick={onSubmit}
-      >
-        {t.submitTest}
-      </Button>
-    </>
+        <Button
+          className="h-12 w-full bg-slate-900 text-lg font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-800"
+          onClick={onSubmit}
+        >
+          {t.submitTest}
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -143,7 +150,7 @@ export function QuizPaletteMobile(props: QuizPaletteProps) {
         <SheetHeader className="border-b border-slate-100 bg-slate-50/50 p-6">
           <SheetTitle className="sr-only">{props.translations.questionPalette}</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-hidden p-6">
           <PaletteGrid {...props} onJump={handleJump} />
         </div>
       </SheetContent>
@@ -154,7 +161,7 @@ export function QuizPaletteMobile(props: QuizPaletteProps) {
 // Desktop: Always-visible sidebar palette
 export function QuizPaletteDesktop(props: QuizPaletteProps) {
   return (
-    <aside className="hidden w-[280px] shrink-0 flex-col overflow-y-auto border-l border-slate-200/80 bg-white/80 p-5 backdrop-blur-sm lg:flex xl:w-[320px]">
+    <aside className="hidden w-[280px] shrink-0 flex-col overflow-hidden border-l border-slate-200/80 bg-white/80 p-5 backdrop-blur-sm lg:flex xl:w-[320px]">
       <PaletteGrid {...props} />
     </aside>
   );

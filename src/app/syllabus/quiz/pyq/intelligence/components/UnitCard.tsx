@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { ChevronDown, ChevronUp, Eye, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { UnitBadge } from './shared/UnitBadge';
 import { formatUnitTitle, getUnitColor } from './shared/constants';
 import { QuestionList, QuestionData } from './QuestionItem';
+import { TransitionLink } from '@/components/ui/transition-link';
 
 interface UnitCardProps {
   unitId: string;
@@ -126,14 +126,15 @@ export function UnitCard({
                       ? (isHindi ? 'संक्षिप्त' : 'Collapse')
                       : (isHindi ? 'विस्तार' : 'Expand')}
                   </Button>
-                  <Link
+                  <TransitionLink
                     href={viewAllUrl}
                     onClick={(e) => e.stopPropagation()}
+                    transitionTypes={['slide']}
                     className="inline-flex h-7 items-center gap-1.5 rounded-md bg-indigo-500/10 px-3 text-xs font-bold text-indigo-400 transition-colors hover:bg-indigo-500/20 hover:text-indigo-300"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                     {isHindi ? 'सभी देखें' : 'View All'}
-                  </Link>
+                  </TransitionLink>
                 </div>
               </div>
               

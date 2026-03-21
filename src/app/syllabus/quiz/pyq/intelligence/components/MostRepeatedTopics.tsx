@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { BrainCircuit, ChevronDown, ChevronUp, Eye, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import { UnitBadge, CountBadge } from './shared/UnitBadge';
 import { formatUnitTitle } from './shared/constants';
 import { QuestionList, QuestionData } from './QuestionItem';
 import { TopicStat } from '@/actions/pyq-analytics';
+import { TransitionLink } from '@/components/ui/transition-link';
 
 interface MostRepeatedTopicsProps {
   topicStats: Record<string, TopicStat[]>;
@@ -195,14 +195,15 @@ export function MostRepeatedTopics({ topicStats, combinedStats, isHindi }: MostR
                                               ? (isHindi ? 'संक्षिप्त' : 'Collapse')
                                               : (isHindi ? 'विस्तार' : 'Expand')}
                                           </Button>
-                                          <Link
+                                          <TransitionLink
                                             href={`/syllabus/quiz/pyq/intelligence/questions?topic=${encodeURIComponent(topic.topicSlug)}&source=topic&unit=${unitKey}`}
                                             onClick={(e) => e.stopPropagation()}
+                                            transitionTypes={['slide']}
                                             className="inline-flex h-7 items-center gap-1 rounded-md bg-pink-500/10 px-2 text-xs font-bold text-pink-400 hover:bg-pink-500/20"
                                           >
                                             <ExternalLink className="h-3 w-3" />
                                             {isHindi ? 'पेज' : 'Page'}
-                                          </Link>
+                                          </TransitionLink>
                                         </div>
                                       </div>
                                       <div className="px-4 pb-2 text-[10px] font-semibold tracking-wider text-slate-500 uppercase sm:px-5">

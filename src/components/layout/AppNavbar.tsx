@@ -330,11 +330,11 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
               {/* Animated Background Pill */}
               <div
                 className={cn(
-                  'absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full bg-white shadow-sm transition-transform duration-300 ease-spring-smooth',
+                  'ease-spring-smooth absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full bg-white shadow-sm transition-transform duration-300',
                   language === 'hi' ? 'translate-x-[calc(100%+4px)]' : 'translate-x-0'
                 )}
               />
-              
+
               <button
                 onClick={() => setLanguage('en')}
                 className={cn(
@@ -595,7 +595,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                           </SheetClose>
                           <SheetClose asChild>
                             <Link
-                              href="/upgrade"
+                              href="/pricing"
                               className="flex items-center gap-3 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-slate-900/20 transition-all duration-200 active:scale-[0.98]"
                             >
                               <Crown size={18} className="text-yellow-400" />
