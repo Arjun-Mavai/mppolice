@@ -18,6 +18,8 @@ import { QuizExitDialog } from './quiz/QuizExitDialog';
 import { GuestEntryDialog } from './quiz/GuestEntryDialog';
 import { QuizExplanation } from './quiz/QuizExplanation';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
+import { getRandomFacts, Fact } from '@/actions/facts';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface QuizInterfaceProps {
   questions: Question[];
@@ -82,6 +84,23 @@ export function QuizInterface(props: QuizInterfaceProps) {
   const [guestMobile, setGuestMobile] = useState('');
   const [showGuestEntryDialog, setShowGuestEntryDialog] = useState(false);
   const [isSubmittingGuest, setIsSubmittingGuest] = useState(false);
+  
+  // Facts for loading screen
+  const [loadingFacts, setLoadingFacts] = useState<Fact[]>([]);
+  const [currentFactIndex, setCurrentFactIndex] = useState(0);
+
+  useEffect(() => {
+    getRandomFacts().then(setLoadingFacts);
+  }, []);
+
+  useEffect(() => {
+    if (isSubmitting && loadingFacts.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentFactIndex((prev) => (prev + 1) % loadingFacts.length);
+      }, 3000); // Rotate every 3 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isSubmitting, loadingFacts]);
 
   // Translations
   const t = {
@@ -425,10 +444,41 @@ export function QuizInterface(props: QuizInterfaceProps) {
 
       {/* Loading Overlay during submission */}
       {isSubmitting && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4 rounded-xl bg-white p-8 shadow-xl">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-            <p className="font-medium text-slate-800">Submitting Test...</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/95 backdrop-blur-md p-4">
+          <div className="flex flex-col items-center gap-6 rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-2xl max-w-lg w-full text-center">
+            
+            <div className="relative">
+                <div className="absolute inset-0 bg-indigo-500/20 blur-xl rounded-full animate-pulse"></div>
+                <div className="relative h-16 w-16 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent shadow-lg"></div>
+            </div>
+            
+            <div className="space-y-2">
+                <h3 className="text-xl font-bold text-white tracking-tight">Submitting Test...</h3>
+                <p className="text-slate-400 text-sm">Please wait while we calculate your result.</p>
+            </div>
+
+            {loadingFacts.length > 0 && (
+                <div className="mt-4 w-full bg-slate-800/50 rounded-xl p-6 border border-slate-700/50 relative overflow-hidden min-h-[160px] flex items-center justify-center">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={currentFactIndex}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.3 }}
+                            className="text-sm font-medium text-slate-300 leading-relaxed italic"
+                        >
+                            "{loadingFacts[currentFactIndex].text.replace(/<[^>]*>/g, '').substring(0, 200)}..."
+                        </motion.div>
+                    </AnimatePresence>
+                    
+                    <div className="absolute top-2 left-2">
+                         <span className="text-[10px] uppercase font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                            Did You Know?
+                        </span>
+                    </div>
+                </div>
+            )}
           </div>
         </div>
       )}

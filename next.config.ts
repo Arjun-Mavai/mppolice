@@ -32,9 +32,10 @@ const nextConfig: NextConfig = {
       */
     ],
   },
-
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+  experimental: {
+    viewTransition: true,
+    prefetchInlining: true,
+    appNewScrollHandler: true,
   },
   async headers() {
     return [
@@ -104,6 +105,14 @@ const nextConfig: NextConfig = {
         headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }],
       },
     ];
+  },
+  allowedDevOrigins: ['192.168.1.3'],
+  logging: {
+    browserToTerminal: true,
+    // 'error' — errors only (default)
+    // 'warn'  — warnings and errors
+    // true    — all console output
+    // false   — disabled
   },
 };
 

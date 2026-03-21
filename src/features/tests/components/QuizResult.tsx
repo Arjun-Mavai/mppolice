@@ -408,7 +408,11 @@ export function QuizResult({
                   {totalScore}
                   <span className="text-2xl text-slate-500 font-bold">/{maxMarks}</span>
                 </div>
-                <div className="text-sm text-slate-400 mt-1">After {SCORING_CONFIG.NEGATIVE_MARKING} negative deduction</div>
+                {SCORING_CONFIG.NEGATIVE_MARKING > 0 && wrongCount > 0 && (
+                    <div className="text-sm text-rose-400 mt-1 font-medium bg-rose-500/10 inline-flex px-2 py-0.5 rounded-full border border-rose-500/20">
+                        Includes penalty
+                    </div>
+                )}
               </div>
               
               <div className="flex flex-col items-center sm:items-end">

@@ -10,6 +10,9 @@ import { verifyAuth } from '@/lib/auth';
 import { getUserTier } from '@/lib/access-control';
 import PYQFactsClient from './PYQFactsClient';
 
+// ISR: Revalidate every hour - facts are mostly static
+export const revalidate = 3600;
+
 interface PageProps {
   searchParams: Promise<{
     subject?: string;

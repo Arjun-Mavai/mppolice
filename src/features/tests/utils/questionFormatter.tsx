@@ -69,6 +69,7 @@ export interface RenderTableQuestionProps {
   className?: string;
   matchPairs?: any[];
   language?: string;
+  darkMode?: boolean;
 }
 
 export function RenderTableQuestion({
@@ -76,6 +77,7 @@ export function RenderTableQuestion({
   className,
   matchPairs,
   language = 'hi',
+  darkMode = false,
 }: RenderTableQuestionProps) {
   // If we have structured matchPairs, use them directly
   if (matchPairs && Array.isArray(matchPairs) && matchPairs.length > 0) {
@@ -83,18 +85,28 @@ export function RenderTableQuestion({
     const h1 = isHindi ? 'सूची - I' : 'List - I';
     const h2 = isHindi ? 'सूची - II' : 'List - II';
 
+    // Dark mode styles
+    const borderColor = darkMode ? 'border-slate-600' : 'border-slate-800';
+    const headerBg = darkMode ? 'bg-slate-800' : 'bg-slate-50';
+    const headerText = darkMode ? 'text-slate-200' : 'text-slate-900';
+    const rowBg = darkMode ? 'bg-slate-900' : 'bg-white';
+    const cellBg = darkMode ? 'bg-slate-800' : 'bg-slate-50';
+    const cellText = darkMode ? 'text-slate-200' : 'text-slate-900';
+    const cellBorder = darkMode ? 'border-slate-700' : 'border-slate-300';
+
     return (
       <div
         className={cn(
-          'w-full overflow-hidden rounded-lg border-2 border-slate-800 text-sm sm:text-base',
+          'w-full overflow-hidden rounded-lg border-2 text-sm sm:text-base',
+          borderColor,
           className
         )}
       >
-        <div className="grid w-full grid-cols-2 border-b-2 border-slate-800 bg-slate-50">
-          <div className="border-r-2 border-slate-800 px-2 py-2.5 text-center text-xs font-bold text-slate-900 sm:px-4 sm:py-3 sm:text-sm">
+        <div className={cn('grid w-full grid-cols-2 border-b-2', borderColor, headerBg)}>
+          <div className={cn('border-r-2 px-2 py-2.5 text-center text-xs font-bold sm:px-4 sm:py-3 sm:text-sm', borderColor, headerText)}>
             {h1}
           </div>
-          <div className="px-2 py-2.5 text-center text-xs font-bold text-slate-900 sm:px-4 sm:py-3 sm:text-sm">
+          <div className={cn('px-2 py-2.5 text-center text-xs font-bold sm:px-4 sm:py-3 sm:text-sm', headerText)}>
             {h2}
           </div>
         </div>
@@ -102,23 +114,24 @@ export function RenderTableQuestion({
           <div
             key={i}
             className={cn(
-              'grid w-full grid-cols-2 bg-white',
-              i !== matchPairs.length - 1 && 'border-b border-slate-800'
+              'grid w-full grid-cols-2',
+              rowBg,
+              i !== matchPairs.length - 1 && cn('border-b', borderColor)
             )}
           >
-            <div className="flex items-center border-r-2 border-slate-800">
-              <div className="min-w-[2rem] border-r border-slate-300 bg-slate-50 px-2 py-2 text-center text-xs font-bold text-slate-900 sm:min-w-[3rem] sm:px-3 sm:py-3 sm:text-sm">
+            <div className={cn('flex items-center border-r-2', borderColor)}>
+              <div className={cn('min-w-[2rem] border-r px-2 py-2 text-center text-xs font-bold sm:min-w-[3rem] sm:px-3 sm:py-3 sm:text-sm', cellBorder, cellBg, cellText)}>
                 {pair.id}
               </div>
-              <div className="flex-1 px-2 py-2 text-xs text-slate-900 sm:px-3 sm:py-3 sm:text-sm">
+              <div className={cn('flex-1 px-2 py-2 text-xs sm:px-3 sm:py-3 sm:text-sm', cellText)}>
                 {isHindi ? pair.label : pair.labelEn || pair.label}
               </div>
             </div>
             <div className="flex items-center">
-              <div className="min-w-[2rem] border-r border-slate-300 bg-slate-50 px-2 py-2 text-center text-xs font-bold text-slate-900 sm:min-w-[3rem] sm:px-3 sm:py-3 sm:text-sm">
+              <div className={cn('min-w-[2rem] border-r px-2 py-2 text-center text-xs font-bold sm:min-w-[3rem] sm:px-3 sm:py-3 sm:text-sm', cellBorder, cellBg, cellText)}>
                 {pair.matchId}
               </div>
-              <div className="flex-1 px-2 py-2 text-xs text-slate-900 sm:px-3 sm:py-3 sm:text-sm">
+              <div className={cn('flex-1 px-2 py-2 text-xs sm:px-3 sm:py-3 sm:text-sm', cellText)}>
                 {isHindi ? pair.match : pair.matchEn || pair.match}
               </div>
             </div>

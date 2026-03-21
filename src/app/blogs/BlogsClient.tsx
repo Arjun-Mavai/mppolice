@@ -13,6 +13,7 @@ import { BlogSkeleton } from '@/components/skeletons/BlogSkeleton';
 import { BlogCard } from '@/components/blog/BlogCard';
 import { PromoCard } from '@/components/blog/PromoCard';
 import { SearchInput } from '@/components/blog/SearchInput';
+import { ViewTransition } from 'react';
 
 // 3. Internal Imports (Utils/Stores/Actions)
 import { cn } from '@/lib/utils';
@@ -240,7 +241,8 @@ export default function BlogsClient({
   // 🎨 MAIN RENDER
   // ------------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-white">
+    <ViewTransition>
+      <div className="min-h-screen bg-white">
       {/* Header Section */}
       <div className="sticky top-16 z-30 border-b border-slate-200 bg-white shadow-sm">
         <div className="mx-auto max-w-7xl px-4 py-4 md:px-8">
@@ -504,5 +506,6 @@ export default function BlogsClient({
         </div>
       </div>
     </div>
-  );
+  </ViewTransition>
+);
 }

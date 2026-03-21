@@ -9,6 +9,7 @@ import {
   Target,
   AlertCircle,
   BookOpen,
+  CheckCircle2,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,22 @@ import { Badge } from '@/components/ui/badge';
 import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
 import type { YearlySubjectQuestions } from '@/features/tests/actions/pyq-insights';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { cn } from '@/lib/utils';
+
+// Helper to parse options safely
+const getParsedOptions = (opts: any) => {
+  if (!opts) return [];
+  if (Array.isArray(opts)) return opts;
+  if (typeof opts === 'string') {
+    try {
+      const parsed = JSON.parse(opts);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  return [];
+};
 
 export default function YearlyProofClient({ data }: { data: YearlySubjectQuestions }) {
   const router = useRouter();
@@ -110,6 +127,59 @@ export default function YearlyProofClient({ data }: { data: YearlySubjectQuestio
                             </p>
                           </div>
                         )}
+                      </div>
+
+                      {/* Options Display */}
+                      <div className="space-y-3 mt-2">
+                        {getParsedOptions(q.options).map((opt: any, idx: number) => {
+                          const correctIdx = Number(q.correctAnswer);
+                          const isCorrect = !isNaN(correctIdx) && correctIdx === idx;
+                          
+                          let optionText = opt;
+                          if (typeof opt === 'object' && opt !== null) {
+                             // Handle object options {text: "...", textEn: "..."}
+                             optionText = isHindi 
+                               ? opt.text || opt.textEn || JSON.stringify(opt)
+                               : opt.textEn || opt.text || JSON.stringify(opt);
+                          }
+
+                          return (
+                            <div
+                              key={idx}
+                              className={cn(
+                                "relative flex items-center justify-between rounded-xl border-2 p-4 transition-all sm:p-5",
+                                isCorrect 
+                                  ? "bg-emerald-50 border-emerald-500 shadow-sm" 
+                                  : "bg-white border-slate-100 text-slate-500"
+                              )}
+                            >
+                               <div className="flex items-center gap-4">
+                                  <div className={cn(
+                                     "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold transition-colors",
+                                     isCorrect 
+                                       ? "border-emerald-500 bg-emerald-500 text-white" 
+                                       : "border-slate-200 text-slate-400"
+                                  )}>
+                                     {String.fromCharCode(65 + idx)}
+                                  </div>
+                                  <span className={cn(
+                                    "text-base sm:text-lg leading-relaxed",
+                                    isCorrect ? "font-bold text-emerald-900" : "font-medium"
+                                  )}>
+                                    {optionText}
+                                  </span>
+                               </div>
+                               
+                               {isCorrect && (
+                                 <div className="shrink-0">
+                                   <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 shadow-sm">
+                                      <CheckCircle2 className="h-4 w-4 text-white" />
+                                   </div>
+                                 </div>
+                               )}
+                            </div>
+                          );
+                        })}
                       </div>
 
                       { (q.explanation || q.explanationEn) && (

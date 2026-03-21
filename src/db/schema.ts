@@ -223,6 +223,48 @@ export const pyqContentImportJobs = sqliteTable(
   (table) => [index('idx_pyq_jobs_status_created').on(table.status, table.createdAt)]
 );
 
+// PYQ Repeated Questions Cache (Pre-computed for fast reads)
+export const pyqRepeatedCache = sqliteTable(
+  'pyq_repeated_cache',
+  {
+    id: text('id').primaryKey(),
+    questionId: text('question_id')
+      .references(() => questions.id, { onDelete: 'cascade' })
+      .notNull(),
+    clusterId: text('cluster_id').notNull(), // Groups similar questions
+    unitId: text('unit_id'), // unit_1, unit_2, etc.
+    unitTitle: text('unit_title'),
+    repeatCount: integer('repeat_count').default(1).notNull(),
+    years: text('years', { mode: 'json' }).$type<number[]>().notNull(), // [2020, 2021, 2023]
+    occurrences: text('occurrences', { mode: 'json' }).$type<{ year: number; qNo: number; testId: string }[]>().notNull(),
+    relatedQuestionIds: text('related_question_ids', { mode: 'json' }).$type<string[]>().notNull(), // All question IDs in this cluster
+    computedAt: integer('computed_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => [
+    index('idx_pyq_repeated_cluster').on(table.clusterId),
+    index('idx_pyq_repeated_unit').on(table.unitId),
+    index('idx_pyq_repeated_count').on(table.repeatCount),
+  ]
+);
+
+// PYQ Unit Distribution Cache (Pre-computed for fast reads)
+export const pyqUnitCache = sqliteTable(
+  'pyq_unit_cache',
+  {
+    id: text('id').primaryKey(),
+    year: integer('year').notNull(),
+    unitId: text('unit_id').notNull(),
+    unitTitle: text('unit_title').notNull(),
+    questionCount: integer('question_count').default(0).notNull(),
+    questionIds: text('question_ids', { mode: 'json' }).$type<string[]>().notNull(),
+    computedAt: integer('computed_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => [
+    uniqueIndex('pyq_unit_cache_year_unit_unique').on(table.year, table.unitId),
+    index('idx_pyq_unit_cache_year').on(table.year),
+  ]
+);
+
 // User Attempts Table
 export const userAttempts = sqliteTable(
   'user_attempts',

@@ -6,6 +6,7 @@ import { like, and, eq } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
 import { canAccessTest } from '@/lib/access-control';
 import { unstable_cache } from 'next/cache';
+import { logger } from '@/lib/logger';
 
 export interface PartAccessStatus {
   isLocked: boolean;
@@ -14,51 +15,82 @@ export interface PartAccessStatus {
   isFree?: boolean;
 }
 
-export async function getSubjectPartAccess(subject: string) {
-  const user = await verifyAuth();
-  const ALLOWED_SUBJECTS = [
-    'mp gk',
-    'history',
-    'geography',
-    'polity',
-    'economy',
-    'science',
-    'ict',
-    'current affairs',
-    'misc',
-  ];
+const ALLOWED_SUBJECTS = [
+  'mp gk',
+  'history',
+  'geography',
+  'polity',
+  'economy',
+  'science',
+  'ict',
+  'current affairs',
+  'misc',
+];
 
+// Cache the part tests fetch - this is static data
+const getCachedSubjectPartTests = unstable_cache(
+  async (subject: string) => {
+    const subjectSlug = subject.toLowerCase().replace(/\s+/g, '-');
+    const pattern = `pyq-${subjectSlug}-part-%`;
+
+    return await db
+      .select()
+      .from(tests)
+      .where(and(eq(tests.type, 'PYQ'), like(tests.slug, pattern)));
+  },
+  ['subject-part-tests'],
+  { revalidate: 300, tags: ['tests'] }
+);
+
+export async function getSubjectPartAccess(subject: string) {
   if (!ALLOWED_SUBJECTS.includes(subject.toLowerCase())) {
     return {};
   }
 
-  const subjectSlug = subject.toLowerCase().replace(/\s+/g, '-');
-  const pattern = `pyq-${subjectSlug}-part-%`;
+  // Parallelize: Fetch user and cached tests simultaneously
+  const [user, partTests] = await Promise.all([
+    verifyAuth(),
+    getCachedSubjectPartTests(subject)
+  ]);
 
-  // Fetch all part tests for this subject
-  // We use `like` to match the cached pattern
-  const partTests = await db
-    .select()
-    .from(tests)
-    .where(and(eq(tests.type, 'PYQ'), like(tests.slug, pattern)));
-
-  const accessMap: Record<number, PartAccessStatus> = {};
-
-  for (const test of partTests) {
-    // Extract part number from slug
-    // slug format: pyq-history-part-1
+  // Build access map with parallel access checks
+  const accessChecks = partTests.map(async (test) => {
     const parts = test.slug.split('-');
     const partNum = parseInt(parts[parts.length - 1]);
 
-    if (!isNaN(partNum)) {
-      // Create a minimal user object or pass null (not undefined) if not logged in
+    if (isNaN(partNum)) return null;
+
+    try {
       const hasAccess = await canAccessTest(test, user ?? null);
-      accessMap[partNum] = {
-        isLocked: !hasAccess,
-        slug: test.slug,
-        testId: test.id,
-        isFree: test.isFreeAccess || false,
+      return {
+        partNum,
+        status: {
+          isLocked: !hasAccess,
+          slug: test.slug,
+          testId: test.id,
+          isFree: test.isFreeAccess || false,
+        } as PartAccessStatus
       };
+    } catch (error) {
+      logger.warn('Failed to evaluate PYQ part access', {
+        category: 'auth',
+        metadata: {
+          testId: test.id,
+          slug: test.slug,
+          subject,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      });
+      return null;
+    }
+  });
+
+  const results = await Promise.all(accessChecks);
+  
+  const accessMap: Record<number, PartAccessStatus> = {};
+  for (const result of results) {
+    if (result) {
+      accessMap[result.partNum] = result.status;
     }
   }
 

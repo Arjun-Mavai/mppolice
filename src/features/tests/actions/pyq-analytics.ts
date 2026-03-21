@@ -54,7 +54,7 @@ export const getSubjectWisePYQStats = unstable_cache(
 );
 
 // ------------------------------------------------------------------
-// 🎮 Practice Mode Fetcher
+// 🎮 Practice Mode Fetcher (CACHED)
 // Returns: Question[] but with extra `year` field and `testTitle`
 // ------------------------------------------------------------------
 export interface MixedQuestion {
@@ -78,8 +78,9 @@ export interface MixedQuestion {
   testTitle: string;
 }
 
-export async function getQuestionsBySubject(subject: string): Promise<MixedQuestion[]> {
-  // 1. Fetch all PYQ Tests again to map TestID -> Year
+// Internal fetcher - does the heavy lifting
+const fetchQuestionsBySubjectData = async (subject: string): Promise<MixedQuestion[]> => {
+  // 1. Fetch all PYQ Tests to map TestID -> Year
   const pyqTests = await db
     .select({
       id: tests.id,
@@ -100,30 +101,39 @@ export async function getQuestionsBySubject(subject: string): Promise<MixedQuest
   });
 
   // 2. Fetch ALL questions from these tests
-  // NOTE: Fetching ALL questions (rows) and filtering in memory is inefficient for large datasets.
-  // Ideally, we should have a `canonical_subject` column in the database to allow SQL-level filtering.
-  // However, given the current complexity of `normalizeSubject` (300+ rules), reproducing this logic in SQL is risky.
-  // For the current scale (<10k questions), in-memory filtering is acceptable but should be monitored.
   const allQuestions = await db
     .select()
     .from(questions)
     .where(or(...pyqTests.map((t) => eq(questions.testId, t.id))));
 
   // 3. Filter & Map in JS
-  const filterederQuestions = allQuestions
+  const filteredQuestions = allQuestions
     .filter((q) => normalizeSubject(q.subject) === subject)
     .map((q) => {
       const testInfo = testMap.get(q.testId) || { year: 'Unknown', title: 'Unknown Test' };
       return {
         ...q,
-        type: q.type ?? 'standard', // Ensure default matches strict type
+        type: q.type ?? 'standard',
         year: testInfo.year,
         testTitle: testInfo.title,
       };
     });
 
-  // Fisher-Yates Shuffle
-  const shuffled = [...filterederQuestions];
+  return filteredQuestions;
+};
+
+// Cached version - subject-specific, revalidates every hour
+export const getCachedQuestionsBySubject = unstable_cache(
+  fetchQuestionsBySubjectData,
+  ['pyq-questions-by-subject'],
+  { revalidate: 3600, tags: ['pyq-questions', 'tests'] }
+);
+
+export async function getQuestionsBySubject(subject: string): Promise<MixedQuestion[]> {
+  const cachedQuestions = await getCachedQuestionsBySubject(subject);
+  
+  // Fisher-Yates Shuffle (done at runtime, not cached, for variety)
+  const shuffled = [...cachedQuestions];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];

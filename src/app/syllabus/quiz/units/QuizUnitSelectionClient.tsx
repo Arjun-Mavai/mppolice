@@ -13,6 +13,7 @@ import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockMo
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { getUserTier } from '@/lib/access-control';
 import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
+import { ViewTransition } from 'react';
 
 interface QuizUnitSelectionClientProps {
   availableTests: {
@@ -90,13 +91,14 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#fafbfc] pb-20 font-sans">
-      {/* 🎭 PREMIUM BACKGROUND BLURS */}
-      <div className="pointer-events-none absolute top-0 left-0 h-[500px] w-full bg-gradient-to-b from-slate-100/30 to-transparent" />
-      <div className="pointer-events-none absolute top-[-100px] right-[-100px] h-[500px] w-[500px] rounded-full bg-indigo-50/40 blur-[100px]" />
-      <div className="pointer-events-none absolute bottom-[20%] left-[-150px] h-[400px] w-[400px] rounded-full bg-emerald-50/30 blur-[100px]" />
+    <ViewTransition>
+      <div className="relative min-h-screen overflow-hidden bg-[#fafbfc] pb-20 font-sans">
+        {/* 🎭 PREMIUM BACKGROUND BLURS */}
+        <div className="pointer-events-none absolute top-0 left-0 h-[500px] w-full bg-gradient-to-b from-slate-100/30 to-transparent" />
+        <div className="pointer-events-none absolute top-[-100px] right-[-100px] h-[500px] w-[500px] rounded-full bg-indigo-50/40 blur-[100px]" />
+        <div className="pointer-events-none absolute bottom-[20%] left-[-150px] h-[400px] w-[400px] rounded-full bg-emerald-50/30 blur-[100px]" />
 
-      <div className="relative z-10 mx-auto max-w-5xl px-6 pt-10 md:pt-8">
+        <div className="relative z-10 mx-auto max-w-5xl px-6 pt-10 md:pt-8">
         {/* Header */}
         <div className="mb-8">{/* Back button removed as requested */}</div>
 
@@ -191,5 +193,6 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
 
       <SyllabusLockModal open={unlockModalOpen} onOpenChange={setUnlockModalOpen} />
     </div>
+    </ViewTransition>
   );
 }

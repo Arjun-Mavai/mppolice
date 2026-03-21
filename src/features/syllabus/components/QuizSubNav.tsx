@@ -51,6 +51,15 @@ const NAV_ITEMS = [
   },
 ];
 
+// Pages where bottom nav should be hidden (PYQ sub-pages)
+const HIDDEN_BOTTOM_NAV_PATHS = [
+  '/syllabus/quiz/pyq/intelligence',
+  '/syllabus/quiz/pyq/facts',
+  '/syllabus/quiz/pyq/analysis',
+  '/syllabus/quiz/pyq/repeated',
+  '/syllabus/quiz/pyq/question',
+];
+
 export function QuizSubNav() {
   const router = useRouter();
   const pathname = usePathname();
@@ -58,6 +67,9 @@ export function QuizSubNav() {
   const hi = language === 'hi';
 
   const springConfig: any = { type: 'spring', stiffness: 400, damping: 40 };
+
+  // Check if bottom nav should be hidden
+  const shouldHideBottomNav = HIDDEN_BOTTOM_NAV_PATHS.some(path => pathname.startsWith(path));
 
   // ⚡ LIGHT SPEED PREFETCH: All categories on mount
   useEffect(() => {
@@ -102,57 +114,59 @@ export function QuizSubNav() {
         </div>
       </div>
 
-      {/* 📱 MOBILE BOTTOM NAV (Sticky) */}
-      <div className="safe-area-bottom fixed right-0 bottom-0 left-0 z-[100] border-t border-slate-200/50 bg-white/80 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] backdrop-blur-xl md:hidden">
-        <div className="mx-auto flex max-w-md items-center justify-around gap-1 px-4 py-3">
-          {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <button
-                key={item.id}
-                onClick={() => router.push(item.href)}
-                onMouseEnter={() => router.prefetch(item.href)}
-                onTouchStart={() => router.prefetch(item.href)}
-                className={cn(
-                  'relative flex min-w-[64px] shrink-0 flex-col items-center gap-1 transition-all',
-                  isActive ? item.activeText : 'text-slate-400'
-                )}
-              >
-                <div className={cn('flex h-full w-full flex-col items-center justify-center')}>
-                  <div
-                    className={cn(
-                      'mb-0.5 rounded-2xl p-1.5 transition-all duration-300',
-                      isActive ? cn('bg-slate-100/50 shadow-sm', item.activeText) : 'text-slate-400'
-                    )}
-                  >
-                    <item.icon className={cn('h-5 w-5', isActive && 'fill-current')} />
+      {/* 📱 MOBILE BOTTOM NAV (Sticky) - Hidden on PYQ sub-pages */}
+      {!shouldHideBottomNav && (
+        <div className="safe-area-bottom fixed right-0 bottom-0 left-0 z-[100] border-t border-slate-200/50 bg-white/80 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] backdrop-blur-xl md:hidden">
+          <div className="mx-auto flex max-w-md items-center justify-around gap-1 px-4 py-3">
+            {NAV_ITEMS.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => router.push(item.href)}
+                  onMouseEnter={() => router.prefetch(item.href)}
+                  onTouchStart={() => router.prefetch(item.href)}
+                  className={cn(
+                    'relative flex min-w-[64px] shrink-0 flex-col items-center gap-1 transition-all',
+                    isActive ? item.activeText : 'text-slate-400'
+                  )}
+                >
+                  <div className={cn('flex h-full w-full flex-col items-center justify-center')}>
+                    <div
+                      className={cn(
+                        'mb-0.5 rounded-2xl p-1.5 transition-all duration-300',
+                        isActive ? cn('bg-slate-100/50 shadow-sm', item.activeText) : 'text-slate-400'
+                      )}
+                    >
+                      <item.icon className={cn('h-5 w-5', isActive && 'fill-current')} />
+                    </div>
+
+                    <span
+                      className={cn(
+                        'text-[10px] leading-none font-bold tracking-tight uppercase transition-all',
+                        isActive ? 'scale-105 text-slate-900' : 'text-slate-400'
+                      )}
+                    >
+                      {hi ? item.label.hi : item.label.en}
+                    </span>
                   </div>
 
-                  <span
-                    className={cn(
-                      'text-[10px] leading-none font-bold tracking-tight uppercase transition-all',
-                      isActive ? 'scale-105 text-slate-900' : 'text-slate-400'
-                    )}
-                  >
-                    {hi ? item.label.hi : item.label.en}
-                  </span>
-                </div>
-
-                {isActive && (
-                  <motion.div
-                    layoutId="quiz-subnav-active-mobile"
-                    className={cn(
-                      'absolute -bottom-1 h-1 w-8 rounded-t-full opacity-50',
-                      item.color.split(' ')[0]
-                    )}
-                    transition={springConfig}
-                  />
-                )}
-              </button>
-            );
-          })}
+                  {isActive && (
+                    <motion.div
+                      layoutId="quiz-subnav-active-mobile"
+                      className={cn(
+                        'absolute -bottom-1 h-1 w-8 rounded-t-full opacity-50',
+                        item.color.split(' ')[0]
+                      )}
+                      transition={springConfig}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

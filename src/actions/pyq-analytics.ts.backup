@@ -1,0 +1,558 @@
+'use server';
+
+import { db } from '@/db';
+import { tests, questions, pyqQuestionTopics, pyqTopics } from '@/db/schema';
+import { eq, inArray, sql } from 'drizzle-orm';
+import { getScopedStateServiceYear, PYQ_SCOPE_START_YEAR, PYQ_SCOPE_END_YEAR } from '@/features/tests/utils/pyq-scope';
+import { syllabusData } from '@/data/syllabusData';
+import { unstable_cache } from 'next/cache';
+import { logger } from '@/lib/logger';
+
+export interface RepeatedQuestion {
+  questionId: string;
+  text: string;
+  textEn?: string | null;
+  occurrences: { year: number; qNo: number }[];
+  count: number;
+  topics: { id: string; name: string; nameEn?: string | null }[];
+  unit?: { id: string; title: string };
+  microThemes?: string[];
+}
+
+// Hindi + English Stop Words
+const STOP_WORDS = new Set([
+  'the', 'is', 'at', 'of', 'on', 'and', 'a', 'an', 'in', 'to', 'for', 'with', 'by', 'from', 'which', 'correct', 'incorrect', 'following', 'statements', 'regarding', 'consider', 'match', 'option', 'question', 'answer', 'not', 'none', 'all', 'above', 'below', 'true', 'false',
+  'ka', 'ki', 'ke', 'hai', 'tha', 'thi', 'the', 'ko', 'se', 'me', 'mein', 'par', 'aur', 'evam', 'tatha', 'kya', 'kaun', 'kis', 'nimn', 'likhit', 'nimnalikhit', 'kathan', 'sahi', 'galat', 'h', 'nahi',
+  'है', 'हैं', 'था', 'थी', 'थे', 'का', 'की', 'के', 'को', 'से', 'में', 'पर', 'और', 'एवं', 'तथा', 'क्या', 'कौन', 'किस', 'निम्नलिखित', 'कथनों', 'कथन', 'विचार', 'कीजिए', 'सही', 'गलत', 'उत्तर', 'दीजिए', 'विकल्प', 'सुमेलित', 'कौनसा', 'नहीं', 'एक', 'यह', 'वह', 'वे', 'करते', 'होता', 'होती', 'होते', 'दिया', 'गया'
+]);
+
+// Unit Analysis Helpers
+const manualKeywords: Record<string, string[]> = {
+    unit_1: ['indus', 'harappa', 'vedic', 'mauryan', 'gupta', 'delhi sultanate', 'mughal', 'maratha', 'freedom struggle', 'gandhi', 'nehru', 'congress', 'revolution', '1857', 'buddha', 'mahavira', 'jain'],
+    unit_2: ['history of mp', 'holkar', 'scindia', 'bhopal state', 'bundela', 'baghel', 'tribal personalities', 'bhima nayak', 'tantya bhil', 'culture of mp', 'folk', 'festivals', 'literature mp'],
+    unit_3: ['geography of india', 'mountains', 'rivers', 'climate', 'monsoon', 'soil', 'agriculture', 'minerals', 'population', 'census', 'transport', 'himalaya', 'ganga', 'narmada'],
+    unit_4: ['geography of mp', 'forests', 'wildlife', 'national parks', 'rivers mp', 'narmada', 'chambal', 'betwa', 'tapti', 'climate mp', 'minerals mp', 'industries mp'],
+    unit_5: ['constitution', 'polity', 'president', 'parliament', 'supreme court', 'fundamental rights', 'dpsp', 'amendment', 'article', 'governor', 'chief minister', 'vidhan sabha', 'panchayat', 'municipality'],
+    unit_6: ['economy of india', 'gdp', 'rbi', 'banking', 'budget', 'gst', 'schemes', 'poverty', 'unemployment', 'agriculture economy', 'foreign trade', 'sensex', 'niti aayog'],
+    unit_7: ['science', 'physics', 'chemistry', 'biology', 'environment', 'pollution', 'diseases', 'vitamins', 'space', 'isro', 'satellite', 'drdo', 'food processing', 'health policy', 'disaster management'],
+    unit_8: ['current affairs', 'sports', 'games', 'olympics', 'commonwealth', 'asian games', 'awards', 'padma', 'nobel', 'cricket', 'hockey', 'football', 'badminton', 'tennis', 'tokyo', 'modi', 'summit'],
+    unit_9: ['ict', 'computer', 'internet', 'networking', 'cyber security', 'robotics', 'artificial intelligence', 'electronics', 'e-governance', 'social media', 'ecommerce', 'virus', 'hacker', 'protocol'],
+    unit_10: ['tribes of mp', 'gond', 'bhil', 'baiga', 'sahariya', 'bharia', 'kol', 'korku', 'pvtg', 'scheduled tribes', 'art and culture of tribes', 'dialects']
+};
+
+let unitKeywordsCache: Map<string, { title: string, tokens: Set<string> }> | null = null;
+
+function getTokens(text: string): Set<string> {
+    if (!text) return new Set();
+    const words = text.toLowerCase()
+        .replace(/[^\w\u0900-\u097F\s]/g, '')
+        .split(/\s+/)
+        .filter(t => t.length > 2 && !STOP_WORDS.has(t));
+    return new Set(words);
+}
+
+function prepareUnitKeywords() {
+    if (unitKeywordsCache) return unitKeywordsCache;
+    
+    unitKeywordsCache = new Map();
+    for (const [unitId, unitData] of Object.entries(syllabusData.units)) {
+        const allText = [
+            unitData.title,
+            unitData.title_en,
+            ...(unitData.topics || []).map(t => t.front + ' ' + t.back + ' ' + (t.details || '')),
+            ...(unitData.topics_en || []).map(t => t.front + ' ' + t.back),
+            ...(manualKeywords[unitId] || [])
+        ].join(' ');
+        
+        const displayTitle = unitData.unit_title || `${unitData.title} (${unitData.title_en})`;
+        
+        unitKeywordsCache.set(unitId, {
+            title: displayTitle,
+            tokens: getTokens(allText)
+        });
+    }
+    return unitKeywordsCache;
+}
+
+function assignUnitToQuestion(text: string): { id: string, title: string } | undefined {
+    const keywords = prepareUnitKeywords();
+    const qTokens = getTokens(text);
+    
+    let bestUnit: { id: string, title: string } | undefined;
+    let maxScore = 0;
+
+    for (const [unitId, data] of keywords.entries()) {
+        let score = 0;
+        for (const t of qTokens) {
+            if (data.tokens.has(t)) score++;
+        }
+        if (score > maxScore) {
+            maxScore = score;
+            bestUnit = { id: unitId, title: data.title };
+        }
+    }
+
+    return maxScore > 1 ? bestUnit : undefined;
+}
+
+function buildFtsQuery(text: string): string | null {
+  if (!text) return null;
+  const cleanWords = text.toLowerCase()
+    .replace(/[^\w\u0900-\u097F\s]/g, '')
+    .split(/\s+/)
+    .filter(t => t.length > 2 && !STOP_WORDS.has(t));
+    
+  if (cleanWords.length === 0) return null;
+  
+  // Use OR for broad matching, BM25 handles ranking
+  return cleanWords.join(' OR '); 
+}
+
+export const getRepeatedQuestions = unstable_cache(
+  async (): Promise<RepeatedQuestion[]> => {
+    try {
+      // 1. Fetch all PYQ tests and extract years
+      const pyqTests = await db.select({
+        id: tests.id,
+        title: tests.title,
+        totalQuestions: tests.totalQuestions,
+      }).from(tests).where(eq(tests.type, 'PYQ'));
+
+      const testYearMap = new Map<string, number>();
+      const testsByYear = new Map<number, typeof pyqTests>();
+
+      for (const t of pyqTests) {
+        const year = getScopedStateServiceYear(t.title);
+        if (year && year >= PYQ_SCOPE_START_YEAR && year <= PYQ_SCOPE_END_YEAR) {
+          if (!testsByYear.has(year)) testsByYear.set(year, []);
+          testsByYear.get(year)!.push(t);
+        }
+      }
+      
+      // Canonical selection
+      const selectedTestIds = new Set<string>();
+      for (const [year, candidates] of testsByYear.entries()) {
+          candidates.sort((a, b) => {
+              const isHindiA = a.title.includes('MPPSC राज्य सेवा');
+              const isHindiB = b.title.includes('MPPSC राज्य सेवा');
+              if (isHindiA && !isHindiB) return -1;
+              if (!isHindiA && isHindiB) return 1;
+              return (b.totalQuestions || 0) - (a.totalQuestions || 0);
+          });
+          if (candidates.length > 0) {
+              testYearMap.set(candidates[0].id, year);
+              selectedTestIds.add(candidates[0].id);
+          }
+      }
+      
+      if (selectedTestIds.size === 0) return [];
+
+      // 2. Fetch all canonical questions
+      const relevantTestIds = Array.from(selectedTestIds);
+      const allQuestions = await db.select({
+        id: questions.id,
+        testId: questions.testId,
+        text: questions.questionText,
+        textEn: questions.questionTextEn,
+        order: questions.order,
+      }).from(questions).where(inArray(questions.testId, relevantTestIds));
+
+      // 3. Find Matches using FTS5 (Graph Construction)
+      const parent = new Map<string, string>();
+      allQuestions.forEach(q => parent.set(q.id, q.id));
+
+      const questionMap = new Map<string, typeof allQuestions[0]>();
+      allQuestions.forEach(q => questionMap.set(q.id, q));
+
+      function find(id: string): string {
+          if (parent.get(id) === id) return id;
+          const root = find(parent.get(id)!);
+          parent.set(id, root);
+          return root;
+      }
+
+      function union(id1: string, id2: string) {
+          const root1 = find(id1);
+          const root2 = find(id2);
+          if (root1 !== root2) {
+              parent.set(root2, root1);
+          }
+      }
+
+      // Process in batches
+      const BATCH_SIZE = 10;
+      
+      for (let i = 0; i < allQuestions.length; i += BATCH_SIZE) {
+          const batch = allQuestions.slice(i, i + BATCH_SIZE);
+          
+          await Promise.all(batch.map(async (q1) => {
+              const searchQuery = buildFtsQuery((q1.text || '') + ' ' + (q1.textEn || ''));
+              if (!searchQuery) return;
+
+              try {
+                  // Find top 3 matches in FTS index
+                  // Note: We use 'any' cast for db.all if TS complains, assuming it's available on LibSQL adapter
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const matches = await (db as any).all(sql`
+                      SELECT id, testId, bm25(questions_fts) as rank
+                      FROM questions_fts 
+                      WHERE questions_fts MATCH ${searchQuery}
+                      AND testId != ${q1.testId}
+                      ORDER BY rank ASC
+                      LIMIT 3
+                  `);
+
+                  for (const match of matches) {
+                      // Only link if match is within our canonical set
+                      // Also verify order exists via map
+                      const matchedQ = questionMap.get(match.id);
+                      if (matchedQ) {
+                          const score = Math.abs(Number(match.rank));
+                          // Increase threshold to 5.0 to reduce false positives
+                          if (score > 5.0) {
+                              union(q1.id, match.id);
+                          }
+                      }
+                  }
+              } catch (error) {
+                  logger.warn('FTS lookup failed while clustering repeated PYQ questions', {
+                      category: 'db',
+                      metadata: {
+                          questionId: q1.id,
+                          testId: q1.testId,
+                          error: error instanceof Error ? error.message : String(error),
+                      },
+                  });
+              }
+          }));
+      }
+
+      // 4. Build Clusters
+      const clusters = new Map<string, typeof allQuestions>();
+      allQuestions.forEach(q => {
+          const root = find(q.id);
+          if (!clusters.has(root)) clusters.set(root, []);
+          clusters.get(root)!.push(q);
+      });
+
+      // 5. Format Result
+      const result: RepeatedQuestion[] = [];
+      
+      for (const cluster of clusters.values()) {
+          const years = new Set(cluster.map(q => testYearMap.get(q.testId)!));
+          
+          // Only include if repeated across different years
+          if (years.size > 1) {
+              cluster.sort((a, b) => testYearMap.get(b.testId)! - testYearMap.get(a.testId)!);
+              const representative = cluster[0];
+              
+              const occurrences = cluster.map(c => ({
+                  year: testYearMap.get(c.testId)!,
+                  qNo: c.order
+              })).sort((a, b) => b.year - a.year);
+
+              // Assign Unit
+              const unit = assignUnitToQuestion((representative.text || '') + ' ' + (representative.textEn || ''));
+
+              result.push({
+                  questionId: representative.id,
+                  text: representative.text || '',
+                  textEn: representative.textEn,
+                  occurrences,
+                  count: years.size,
+                  topics: [],
+                  unit,
+                  // Store IDs temporarily for topic lookup
+                  ids: cluster.map(c => c.id)
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              } as any);
+          }
+      }
+      
+      result.sort((a, b) => b.count - a.count);
+
+      // 6. Fetch Topics
+      const topRepeated = result.slice(0, 100);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const questionIds = topRepeated.flatMap(r => (r as any).ids as string[]);
+
+      if (questionIds.length > 0) {
+          const topics = await db.select({
+              questionId: pyqQuestionTopics.questionId,
+              topicId: pyqTopics.id,
+              topicTitle: pyqTopics.topicTitle,
+              topicTitleEn: pyqTopics.topicTitleEn
+          })
+          .from(pyqQuestionTopics)
+          .innerJoin(pyqTopics, eq(pyqQuestionTopics.topicId, pyqTopics.id))
+          .where(inArray(pyqQuestionTopics.questionId, questionIds));
+          
+          const topicMap = new Map<string, {id: string, name: string, nameEn?: string | null}[]>();
+          for (const t of topics) {
+              if (!topicMap.has(t.questionId)) topicMap.set(t.questionId, []);
+              topicMap.get(t.questionId)!.push({ 
+                  id: t.topicId, 
+                  name: t.topicTitle,
+                  nameEn: t.topicTitleEn
+              });
+          }
+
+          for (const r of topRepeated) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const clusterIds = (r as any).ids as string[];
+              const clusterTopics = new Map<string, {id: string, name: string, nameEn?: string | null}>();
+              for (const id of clusterIds) {
+                  const ts = topicMap.get(id);
+                  if (ts) ts.forEach(t => clusterTopics.set(t.id, t));
+              }
+              r.topics = Array.from(clusterTopics.values());
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              delete (r as any).ids;
+          }
+      }
+
+      return topRepeated;
+
+    } catch (error) {
+      console.error('Error in FTS repeated analysis:', error);
+      return [];
+    }
+  },
+  ['pyq-analytics-repeated-questions'],
+  { revalidate: 86400, tags: ['pyq-analytics', 'pyq-trends'] }
+);
+
+export interface UnitDistributionStats {
+    year: number;
+    unitId: string;
+    unitTitle: string;
+    count: number;
+    questions: { id: string; text: string; textEn?: string | null; year: number }[];
+}
+
+export const getUnitDistributionStats = unstable_cache(
+    async (): Promise<UnitDistributionStats[]> => {
+    try {
+        // 1. Fetch all PYQ tests and extract years (Reusing logic)
+        const pyqTests = await db.select({
+            id: tests.id,
+            title: tests.title,
+            totalQuestions: tests.totalQuestions,
+        }).from(tests).where(eq(tests.type, 'PYQ'));
+
+        const testYearMap = new Map<string, number>();
+        const testsByYear = new Map<number, typeof pyqTests>();
+
+        for (const t of pyqTests) {
+            const year = getScopedStateServiceYear(t.title);
+            if (year && year >= PYQ_SCOPE_START_YEAR && year <= PYQ_SCOPE_END_YEAR) {
+                if (!testsByYear.has(year)) testsByYear.set(year, []);
+                testsByYear.get(year)!.push(t);
+            }
+        }
+        
+        // Canonical selection
+        const selectedTestIds = new Set<string>();
+        for (const [year, candidates] of testsByYear.entries()) {
+            candidates.sort((a, b) => {
+                const isHindiA = a.title.includes('MPPSC राज्य सेवा');
+                const isHindiB = b.title.includes('MPPSC राज्य सेवा');
+                if (isHindiA && !isHindiB) return -1;
+                if (!isHindiA && isHindiB) return 1;
+                return (b.totalQuestions || 0) - (a.totalQuestions || 0);
+            });
+            if (candidates.length > 0) {
+                testYearMap.set(candidates[0].id, year);
+                selectedTestIds.add(candidates[0].id);
+            }
+        }
+        
+        if (selectedTestIds.size === 0) return [];
+
+        const relevantTestIds = Array.from(selectedTestIds);
+        const allQuestions = await db.select({
+            id: questions.id,
+            testId: questions.testId,
+            text: questions.questionText,
+            textEn: questions.questionTextEn,
+        }).from(questions).where(inArray(questions.testId, relevantTestIds));
+
+        // 2. Classify
+        const stats: Record<string, UnitDistributionStats> = {};
+        const questionList: {
+            id: string;
+            text: string | null;
+            textEn: string | null;
+            year: number;
+        }[] = [];
+
+        // Pre-process questions to map
+        for (const q of allQuestions) {
+             const year = testYearMap.get(q.testId)!;
+             questionList.push({
+                 id: q.id,
+                 text: q.text,
+                 textEn: q.textEn,
+                 year
+             });
+        }
+
+        for (const q of questionList) {
+            const fullText = (q.text || '') + ' ' + (q.textEn || '');
+            const unit = assignUnitToQuestion(fullText);
+
+            const key = unit ? `${q.year}-${unit.id}` : `${q.year}-unmapped`;
+            
+            if (!stats[key]) {
+                stats[key] = {
+                    year: q.year,
+                    unitId: unit ? unit.id : 'unmapped',
+                    unitTitle: unit ? unit.title : 'Unmapped / General',
+                    count: 0,
+                    questions: []
+                };
+            }
+            stats[key].count++;
+            stats[key].questions.push({
+                id: q.id,
+                text: q.text || '',
+                textEn: q.textEn,
+                year: q.year
+            });
+        }
+
+        return Object.values(stats).sort((a, b) => b.year - a.year || a.unitId.localeCompare(b.unitId));
+
+    } catch (error) {
+        console.error('Error in Unit Distribution Analysis:', error);
+        return [];
+    }
+},
+['pyq-analytics-unit-distribution'],
+{ revalidate: 86400, tags: ['pyq-analytics'] }
+);
+
+export interface TopicStat {
+    unitId: string;
+    topicId: string;
+    topicSlug: string;
+    topicTitle: string;
+    topicTitleEn?: string | null;
+    count: number;
+    years: number[];
+    questions: { id: string; text: string; textEn?: string | null; year: number }[];
+}
+
+export const getMostRepeatedTopics = unstable_cache(
+    async (): Promise<Record<string, TopicStat[]>> => {
+    try {
+        // 1. Fetch relevant questions (reusing logic to get correct scope)
+        const pyqTests = await db.select({
+            id: tests.id,
+            title: tests.title,
+            totalQuestions: tests.totalQuestions,
+        }).from(tests).where(eq(tests.type, 'PYQ'));
+
+        const testYearMap = new Map<string, number>();
+        const testsByYear = new Map<number, typeof pyqTests>();
+
+        for (const t of pyqTests) {
+            const year = getScopedStateServiceYear(t.title);
+            if (year && year >= PYQ_SCOPE_START_YEAR && year <= PYQ_SCOPE_END_YEAR) {
+                if (!testsByYear.has(year)) testsByYear.set(year, []);
+                testsByYear.get(year)!.push(t);
+            }
+        }
+        
+        const selectedTestIds = new Set<string>();
+        for (const [year, candidates] of testsByYear.entries()) {
+            candidates.sort((a, b) => {
+                const isHindiA = a.title.includes('MPPSC राज्य सेवा');
+                const isHindiB = b.title.includes('MPPSC राज्य सेवा');
+                if (isHindiA && !isHindiB) return -1;
+                if (!isHindiA && isHindiB) return 1;
+                return (b.totalQuestions || 0) - (a.totalQuestions || 0);
+            });
+            if (candidates.length > 0) {
+                testYearMap.set(candidates[0].id, year);
+                selectedTestIds.add(candidates[0].id);
+            }
+        }
+        
+        if (selectedTestIds.size === 0) return {};
+
+        const relevantTestIds = Array.from(selectedTestIds);
+
+        // 2. Fetch Topics for these questions
+        const topicData = await db.select({
+            testId: questions.testId,
+            questionId: questions.id,
+            questionText: questions.questionText,
+            questionTextEn: questions.questionTextEn,
+            topicId: pyqTopics.id,
+            topicSlug: pyqTopics.topicSlug,
+            topicTitle: pyqTopics.topicTitle,
+            topicTitleEn: pyqTopics.topicTitleEn
+        })
+        .from(questions)
+        .innerJoin(pyqQuestionTopics, eq(questions.id, pyqQuestionTopics.questionId))
+        .innerJoin(pyqTopics, eq(pyqQuestionTopics.topicId, pyqTopics.id))
+        .where(inArray(questions.testId, relevantTestIds));
+
+        // 3. Aggregate by Unit
+        const unitTopics: Record<string, Map<string, TopicStat>> = {};
+
+        for (const row of topicData) {
+            const fullText = (row.questionText || '') + ' ' + (row.questionTextEn || '');
+            const unit = assignUnitToQuestion(fullText);
+            const unitId = unit ? unit.id : 'unmapped';
+            const year = testYearMap.get(row.testId)!;
+
+            if (!unitTopics[unitId]) unitTopics[unitId] = new Map();
+            
+            const topicKey = row.topicId;
+            if (!unitTopics[unitId].has(topicKey)) {
+                unitTopics[unitId].set(topicKey, {
+                    unitId,
+                    topicId: row.topicId,
+                    topicSlug: row.topicSlug,
+                    topicTitle: row.topicTitle,
+                    topicTitleEn: row.topicTitleEn,
+                    count: 0,
+                    years: [],
+                    questions: []
+                });
+            }
+            
+            const stat = unitTopics[unitId].get(topicKey)!;
+            stat.count++;
+            if (!stat.years.includes(year)) stat.years.push(year);
+            // Avoid duplicate questions if same question maps to topic multiple times (unlikely but possible with join)
+            if (!stat.questions.some(q => q.id === row.questionId)) {
+                stat.questions.push({
+                    id: row.questionId,
+                    text: row.questionText || '',
+                    textEn: row.questionTextEn,
+                    year: year
+                });
+            }
+        }
+
+        // 4. Convert to sorted array
+        const result: Record<string, TopicStat[]> = {};
+        for (const [unitId, map] of Object.entries(unitTopics)) {
+            result[unitId] = Array.from(map.values())
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 10); // Top 10 per unit
+        }
+
+        return result;
+
+    } catch (error) {
+        console.error('Error in Most Repeated Topics Analysis:', error);
+        return {};
+    }
+},
+['pyq-analytics-most-repeated-topics'],
+{ revalidate: 86400, tags: ['pyq-analytics'] }
+);
