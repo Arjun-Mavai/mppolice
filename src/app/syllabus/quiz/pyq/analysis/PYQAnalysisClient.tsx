@@ -167,7 +167,7 @@ export default function PYQAnalysisClient({
                 <Button
                   variant="outline"
                   onClick={() => router.push('/syllabus/quiz/pyq/intelligence')}
-                  className="inline-flex h-auto w-full items-center gap-2 rounded-xl border border-indigo-500/50 bg-indigo-500/10 px-5 py-2.5 text-sm font-bold text-indigo-300 shadow-sm transition hover:bg-indigo-500/20 hover:text-indigo-200 sm:w-auto ring-1 ring-indigo-500/30"
+                  className="inline-flex h-auto w-full items-center gap-2 rounded-xl border border-indigo-500/50 bg-indigo-500/10 px-5 py-2.5 text-sm font-bold text-indigo-300 shadow-sm ring-1 ring-indigo-500/30 transition hover:bg-indigo-500/20 hover:text-indigo-200 sm:w-auto"
                 >
                   <Zap className="h-4 w-4" />
                   {isHindi ? 'Exam DNA' : 'Exam DNA'}
@@ -180,14 +180,14 @@ export default function PYQAnalysisClient({
                   <BookOpenText className="h-4 w-4" />
                   {isHindi ? 'फैक्ट लाइब्रेरी' : 'Facts Library'}
                 </Button>
-                <Button
+                {/* <Button
                   variant="outline"
                   onClick={() => router.push('/syllabus/quiz/pyq/repeated')}
                   className="inline-flex h-auto w-full items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/50 px-5 py-2.5 text-sm font-bold text-slate-200 shadow-sm transition hover:border-amber-500/50 hover:bg-slate-800 hover:text-amber-400 sm:w-auto"
                 >
                   <span className="text-base">🔥</span>
                   {isHindi ? 'रिपीटेड प्रश्न' : 'Repeated Qs'}
-                </Button>
+                </Button> */}
                 {isAdmin && (
                   <Button
                     variant="outline"
@@ -357,68 +357,7 @@ export default function PYQAnalysisClient({
           </div>
         </div>
 
-        {/* 🔥 Most Repeated Questions Summary (Link to full page) */}
-        {repeatedQuestions && repeatedQuestions.length > 0 && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-3 text-2xl font-black text-slate-800">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-xl shadow-sm ring-4 ring-white">
-                  🔥
-                </span>
-                <span>{isHindi ? 'सबसे ज्यादा दोहराए गए प्रश्न' : 'Most Repeated Questions'}</span>
-              </h2>
-              <Button
-                onClick={() => router.push('/syllabus/quiz/pyq/repeated')}
-                className="border border-amber-200 bg-amber-100 font-bold text-amber-700 hover:bg-amber-200"
-              >
-                {isHindi ? 'सभी देखें' : 'View All'}
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
-
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {repeatedQuestions.slice(0, 3).map((q) => (
-                <Card
-                  key={q.questionId}
-                  onClick={() => router.push('/syllabus/quiz/pyq/repeated')}
-                  className="group relative cursor-pointer overflow-hidden rounded-2xl border-slate-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                >
-                  {/* Hover gradient border effect */}
-                  <div className="pointer-events-none absolute inset-0 rounded-2xl border-2 border-transparent transition-colors group-hover:border-amber-100" />
-
-                  <CardContent className="flex h-full flex-col gap-4 p-6">
-                    <div className="flex items-start justify-between gap-3">
-                      <Badge className="shrink-0 border-0 bg-gradient-to-r from-amber-500 to-orange-500 px-3 font-bold text-white shadow-lg shadow-amber-200/50">
-                        {q.count}x {isHindi ? 'बार' : 'Times'}
-                      </Badge>
-                      <div className="flex max-w-[60%] flex-wrap justify-end gap-1.5">
-                        {/* Show unique years with Q No */}
-                        {q.occurrences
-                          .sort((a, b) => b.year - a.year)
-                          .slice(0, 3)
-                          .map((occ, idx) => (
-                            <span
-                              key={`${occ.year}-${idx}`}
-                              className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600 ring-1 ring-slate-500/10 ring-inset"
-                            >
-                              {occ.year}{' '}
-                              <span className="ml-1 font-medium text-slate-400">#{occ.qNo}</span>
-                            </span>
-                          ))}
-                      </div>
-                    </div>
-
-                    <div className="flex-1 space-y-2.5">
-                      <p className="line-clamp-3 text-sm leading-relaxed font-semibold text-slate-800 transition-colors group-hover:text-amber-700">
-                        {q.text}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Most Repeated Questions section temporarily hidden for now */}
 
         <div className="grid items-start gap-4 lg:grid-cols-12">
           <div className="h-fit overflow-hidden rounded-[2rem] border-blue-100 bg-blue-50/10 shadow-xl backdrop-blur-md lg:col-span-8">
@@ -454,7 +393,7 @@ export default function PYQAnalysisClient({
                         {analysis.topicDistribution.slice(0, topicLimit).map((item, idx) => {
                           const style = VARIANTS['blue'];
                           const barColor = style.bg.replace('50', '500');
-    
+
                           return (
                             <div
                               key={item.topicId}
@@ -485,7 +424,9 @@ export default function PYQAnalysisClient({
                                         : 'border-pink-200 bg-pink-50 text-pink-700'
                                     )}
                                   >
-                                    {item.trendDelta > 0 ? `+${item.trendDelta}` : `${item.trendDelta}`}
+                                    {item.trendDelta > 0
+                                      ? `+${item.trendDelta}`
+                                      : `${item.trendDelta}`}
                                   </Badge>
                                   <ChevronRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1" />
                                 </div>
@@ -516,7 +457,7 @@ export default function PYQAnalysisClient({
                           );
                         })}
                       </div>
-    
+
                       {/* Desktop Table */}
                       <div className="hidden p-2 sm:block">
                         <div className="overflow-hidden rounded-xl border border-blue-100/50">
@@ -541,12 +482,14 @@ export default function PYQAnalysisClient({
                               {analysis.topicDistribution.slice(0, topicLimit).map((item, idx) => {
                                 const style = VARIANTS['blue'];
                                 const barColor = style.bg.replace('50', '500');
-    
+
                                 return (
                                   <TableRow
                                     key={item.topicId}
                                     onClick={() =>
-                                      router.push(`/syllabus/quiz/pyq/analysis/topic/${item.topicSlug}`)
+                                      router.push(
+                                        `/syllabus/quiz/pyq/analysis/topic/${item.topicSlug}`
+                                      )
                                     }
                                     className={cn(
                                       'group hover:bg-opacity-40 cursor-pointer border-slate-100 transition-colors',
@@ -565,87 +508,87 @@ export default function PYQAnalysisClient({
                                             ? item.topicTitle
                                             : item.topicTitleEn || item.topicTitle}
                                         </span>
-                                    <ChevronRight className="h-3 w-3 text-slate-300 opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100" />
-                                  </div>
-                                </TableCell>
-                                <TableCell className="px-4 py-4 text-right font-black text-slate-700">
-                                  {item.totalQuestions}
-                                </TableCell>
-                                <TableCell className="px-4 py-4 text-right">
-                                  <div className="flex items-center justify-end gap-2">
-                                    <span className="w-12 text-sm font-bold text-slate-600">
-                                      {item.overallWeightPercent.toFixed(1)}%
-                                    </span>
-                                    <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-100">
-                                      <div
+                                        <ChevronRight className="h-3 w-3 text-slate-300 opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100" />
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="px-4 py-4 text-right font-black text-slate-700">
+                                      {item.totalQuestions}
+                                    </TableCell>
+                                    <TableCell className="px-4 py-4 text-right">
+                                      <div className="flex items-center justify-end gap-2">
+                                        <span className="w-12 text-sm font-bold text-slate-600">
+                                          {item.overallWeightPercent.toFixed(1)}%
+                                        </span>
+                                        <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-100">
+                                          <div
+                                            className={cn(
+                                              'h-full rounded-full shadow-[0_0_8px_rgba(0,0,0,0.05)] transition-all duration-500',
+                                              style.bg.replace('50', '400')
+                                            )}
+                                            style={{
+                                              width: `${Math.min(item.overallWeightPercent, 100)}%`,
+                                            }}
+                                          />
+                                        </div>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="px-6 py-4 text-right">
+                                      <Badge
+                                        variant="outline"
                                         className={cn(
-                                          'h-full rounded-full shadow-[0_0_8px_rgba(0,0,0,0.05)] transition-all duration-500',
-                                          style.bg.replace('50', '400')
+                                          'font-bold',
+                                          item.trendDelta > 0
+                                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                            : 'border-pink-200 bg-pink-50 text-pink-700'
                                         )}
-                                        style={{
-                                          width: `${Math.min(item.overallWeightPercent, 100)}%`,
-                                        }}
-                                      />
-                                    </div>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="px-6 py-4 text-right">
-                                  <Badge
-                                    variant="outline"
-                                    className={cn(
-                                      'font-bold',
-                                      item.trendDelta > 0
-                                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                                        : 'border-pink-200 bg-pink-50 text-pink-700'
-                                    )}
-                                  >
-                                    {item.trendDelta > 0
-                                      ? `+${item.trendDelta}%`
-                                      : `${item.trendDelta}%`}
-                                  </Badge>
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                    </div>
+                                      >
+                                        {item.trendDelta > 0
+                                          ? `+${item.trendDelta}%`
+                                          : `${item.trendDelta}%`}
+                                      </Badge>
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    </CardContent>
+                    {analysis.topicDistribution.length > 10 && (
+                      <div className="flex justify-center border-t border-blue-50/50 bg-white/40 p-4 backdrop-blur-sm">
+                        <Button
+                          variant="ghost"
+                          onClick={() =>
+                            setTopicLimit((prev) =>
+                              prev >= analysis.topicDistribution.length ? 10 : prev + 20
+                            )
+                          }
+                          className="flex items-center gap-1 text-xs font-bold tracking-wider text-blue-600 uppercase transition-all hover:bg-blue-50 hover:text-blue-800 active:scale-95"
+                        >
+                          {topicLimit >= analysis.topicDistribution.length
+                            ? isHindi
+                              ? 'कम दिखाएं'
+                              : 'Show Less'
+                            : isHindi
+                              ? 'और देखें'
+                              : 'View More'}
+                          <ChevronDown
+                            className={cn(
+                              'ml-1 h-4 w-4 transition-transform duration-300',
+                              topicLimit >= analysis.topicDistribution.length && 'rotate-180'
+                            )}
+                          />
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                </CardContent>
-                {analysis.topicDistribution.length > 10 && (
-                  <div className="flex justify-center border-t border-blue-50/50 bg-white/40 p-4 backdrop-blur-sm">
-                    <Button
-                      variant="ghost"
-                      onClick={() =>
-                        setTopicLimit((prev) =>
-                          prev >= analysis.topicDistribution.length ? 10 : prev + 20
-                        )
-                      }
-                      className="flex items-center gap-1 text-xs font-bold tracking-wider text-blue-600 uppercase transition-all hover:bg-blue-50 hover:text-blue-800 active:scale-95"
-                    >
-                      {topicLimit >= analysis.topicDistribution.length
-                        ? isHindi
-                          ? 'कम दिखाएं'
-                          : 'Show Less'
-                        : isHindi
-                          ? 'और देखें'
-                          : 'View More'}
-                      <ChevronDown
-                        className={cn(
-                          'ml-1 h-4 w-4 transition-transform duration-300',
-                          topicLimit >= analysis.topicDistribution.length && 'rotate-180'
-                        )}
-                      />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-      <div className="h-fit overflow-hidden rounded-[2rem] border-emerald-100 bg-emerald-50/10 shadow-xl backdrop-blur-md lg:col-span-4">
+          <div className="h-fit overflow-hidden rounded-[2rem] border-emerald-100 bg-emerald-50/10 shadow-xl backdrop-blur-md lg:col-span-4">
             <CardHeader
               className="cursor-pointer border-b border-emerald-100 bg-emerald-50/40 transition-colors select-none hover:bg-emerald-50/60"
               onClick={() => toggleSection('rising')}
@@ -697,49 +640,49 @@ export default function PYQAnalysisClient({
                                 >
                                   #{idx + 1}
                                 </div>
-                            <h4 className="text-base leading-tight font-black text-slate-800">
-                              {isHindi ? item.topicTitle : item.topicTitleEn || item.topicTitle}
-                            </h4>
+                                <h4 className="text-base leading-tight font-black text-slate-800">
+                                  {isHindi ? item.topicTitle : item.topicTitleEn || item.topicTitle}
+                                </h4>
+                              </div>
+                              <Badge
+                                variant="outline"
+                                className="shrink-0 rounded-lg border-emerald-200 bg-emerald-50 px-2 py-0.5 font-black text-emerald-700"
+                              >
+                                +{item.trendDelta} {isHindi ? 'अधिक' : 'more'}
+                              </Badge>
+                            </div>
+
+                            <div className="flex items-center justify-between px-1 text-[11px] font-black tracking-widest text-slate-400 uppercase">
+                              <span>
+                                {item.totalQuestions} {isHindi ? 'प्रश्न' : 'Questions'}
+                              </span>
+                              <span>
+                                {item.latestWeightPercent.toFixed(1)}%{' '}
+                                {isHindi ? 'लेटेस्ट हिस्सा' : 'Latest Share'}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between border-t border-slate-100 pt-2 transition-colors group-hover:border-slate-200">
+                              <span className="flex items-center gap-1 text-[9px] font-black tracking-widest text-slate-400 uppercase">
+                                <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                                {isHindi ? 'प्रमाण देखें' : 'View Proof'}
+                              </span>
+                              <ChevronRight className="h-3 w-3 text-slate-300 transition-transform group-hover:translate-x-0.5" />
+                            </div>
+
+                            <div className="h-2 w-full overflow-hidden rounded-full border border-slate-50 bg-slate-100/70">
+                              <div
+                                className={cn(
+                                  'h-full rounded-full shadow-sm transition-all duration-1000 ease-out',
+                                  style.bg.replace('50', '500')
+                                )}
+                                style={{ width: `${Math.min(item.latestWeightPercent, 100)}%` }}
+                              />
+                            </div>
                           </div>
-                          <Badge
-                            variant="outline"
-                            className="shrink-0 rounded-lg border-emerald-200 bg-emerald-50 px-2 py-0.5 font-black text-emerald-700"
-                          >
-                            +{item.trendDelta} {isHindi ? 'अधिक' : 'more'}
-                          </Badge>
-                        </div>
-
-                        <div className="flex items-center justify-between px-1 text-[11px] font-black tracking-widest text-slate-400 uppercase">
-                          <span>
-                            {item.totalQuestions} {isHindi ? 'प्रश्न' : 'Questions'}
-                          </span>
-                          <span>
-                            {item.latestWeightPercent.toFixed(1)}%{' '}
-                            {isHindi ? 'लेटेस्ट हिस्सा' : 'Latest Share'}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between border-t border-slate-100 pt-2 transition-colors group-hover:border-slate-200">
-                          <span className="flex items-center gap-1 text-[9px] font-black tracking-widest text-slate-400 uppercase">
-                            <ShieldCheck className="h-3 w-3 text-emerald-500" />
-                            {isHindi ? 'प्रमाण देखें' : 'View Proof'}
-                          </span>
-                          <ChevronRight className="h-3 w-3 text-slate-300 transition-transform group-hover:translate-x-0.5" />
-                        </div>
-
-                        <div className="h-2 w-full overflow-hidden rounded-full border border-slate-50 bg-slate-100/70">
-                          <div
-                            className={cn(
-                              'h-full rounded-full shadow-sm transition-all duration-1000 ease-out',
-                              style.bg.replace('50', '500')
-                            )}
-                            style={{ width: `${Math.min(item.latestWeightPercent, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </CardContent>
+                        );
+                      })}
+                    </CardContent>
                   </div>
                 </motion.div>
               )}

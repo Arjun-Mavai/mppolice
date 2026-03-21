@@ -7,7 +7,7 @@ import {
   PYQMenu,
   OverallWeightage,
   PaperAnalysis,
-  MostRepeatedTopics,
+  // MostRepeatedTopics, // Temporarily hidden
 } from './components';
 
 interface PYQIntelligenceClientProps {
@@ -26,7 +26,8 @@ export default function PYQIntelligenceClient({
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
 
-  // Compute combined stats for MostRepeatedTopics
+  // Compute combined stats for MostRepeatedTopics - Temporarily disabled
+  /*
   const combinedStats = stats.reduce((acc, curr) => {
     if (!acc[curr.unitId]) {
       acc[curr.unitId] = {
@@ -35,6 +36,7 @@ export default function PYQIntelligenceClient({
     }
     return acc;
   }, {} as Record<string, { unitTitle: string }>);
+  */
 
   return (
     <div className="min-h-screen bg-slate-950 pb-20 text-white selection:bg-indigo-500/30">
@@ -64,12 +66,12 @@ export default function PYQIntelligenceClient({
           isHindi={isHindi}
         />
 
-        {/* Most Repeated Topics */}
-        <MostRepeatedTopics
+        {/* Most Repeated Topics - Temporarily Hidden */}
+        {/* <MostRepeatedTopics
           topicStats={topicStats}
           combinedStats={combinedStats}
           isHindi={isHindi}
-        />
+        /> */}
 
         {/* Paper-wise Analysis (Year by Year) */}
         <PaperAnalysis
