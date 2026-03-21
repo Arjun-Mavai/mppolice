@@ -23,8 +23,24 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
+import { RenderTableQuestion } from '@/features/tests/utils/questionFormatter';
 import type { TopicTrendProof } from '@/features/tests/actions/pyq-insights';
 import { useSettingsStore } from '@/store/useSettingsStore';
+
+// Helper to parse options safely
+const getParsedOptions = (opts: any) => {
+  if (!opts) return [];
+  if (Array.isArray(opts)) return opts;
+  if (typeof opts === 'string') {
+    try {
+      const parsed = JSON.parse(opts);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  return [];
+};
 
 export default function TopicTrendProofClient({ proof }: { proof: TopicTrendProof }) {
   const router = useRouter();
@@ -193,9 +209,14 @@ export default function TopicTrendProofClient({ proof }: { proof: TopicTrendProo
                       </div>
 
                       <div className="space-y-4">
-                        <p className="text-[1.1rem] font-black text-slate-800 leading-[1.6] [text-shadow:_0_1px_1px_rgba(0,0,0,0.03)] selection:bg-blue-100 italic">
-                          {isHindi ? q.questionText : q.questionTextEn || q.questionText}
-                        </p>
+                        <div 
+                          className="prose prose-slate prose-sm max-w-none text-slate-800 sm:prose-base"
+                          dangerouslySetInnerHTML={{ 
+                            __html: (isHindi ? q.questionText : q.questionTextEn || q.questionText)
+                              .replace(/\n/g, '<br/>')
+                              .replace(/(?:\r\n|\r|\n)/g, '<br/>')
+                          }} 
+                        />
                         
                         {isHindi && q.questionTextEn && (
                           <div className="relative pl-4 border-l-2 border-slate-100 py-1">
@@ -204,6 +225,57 @@ export default function TopicTrendProofClient({ proof }: { proof: TopicTrendProo
                             </p>
                           </div>
                         )}
+
+                        {/* Options Display */}
+                        <div className="space-y-3 mt-4">
+                          {getParsedOptions(q.options).map((opt: any, idx: number) => {
+                            const correctIdx = Number(q.correctAnswer);
+                            const isCorrect = !isNaN(correctIdx) && correctIdx === idx;
+                            
+                            let optionText = opt;
+                            if (typeof opt === 'object' && opt !== null) {
+                               // Handle object options {text: "...", textEn: "..."}
+                               optionText = isHindi 
+                                 ? opt.text || opt.textEn || JSON.stringify(opt)
+                                 : opt.textEn || opt.text || JSON.stringify(opt);
+                            }
+
+                            return (
+                              <div
+                                key={idx}
+                                className={cn(
+                                  "relative flex items-center justify-between rounded-xl border-2 p-4 transition-all sm:p-5",
+                                  isCorrect 
+                                    ? "bg-emerald-50 border-emerald-500 shadow-sm" 
+                                    : "bg-white border-slate-100 text-slate-500"
+                                )}
+                              >
+                                <div className="flex items-center gap-3 flex-1">
+                                  <div
+                                    className={cn(
+                                      "flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors",
+                                      isCorrect
+                                        ? "border-emerald-500 bg-emerald-500 text-white"
+                                        : "border-slate-300 bg-white text-slate-400"
+                                    )}
+                                  >
+                                    {String.fromCharCode(65 + idx)}
+                                  </div>
+                                  <span
+                                    className={cn(
+                                      "flex-1 text-sm font-medium leading-relaxed",
+                                      isCorrect ? "text-emerald-800" : "text-slate-600"
+                                    )}
+                                    dangerouslySetInnerHTML={{ __html: optionText }}
+                                  />
+                                </div>
+                                {isCorrect && (
+                                  <CheckCircle2 className="ml-3 h-5 w-5 text-emerald-500" />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
 
                       { (q.explanation || q.explanationEn) && (

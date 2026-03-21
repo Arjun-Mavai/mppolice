@@ -40,6 +40,9 @@
   ],
   "exclude": [
     "node_modules",
-    "scripts"
+    "scripts",
+    "*.ts",
+    "!src/**/*.ts",
+    "!src/**/*.tsx"
   ]
 }

@@ -5,7 +5,9 @@ export { OverallWeightage } from './OverallWeightage';
 export { PaperAnalysis } from './PaperAnalysis';
 export { MostRepeatedTopics } from './MostRepeatedTopics';
 export { UnitCard } from './UnitCard';
+export { SubjectCard } from './SubjectCard';
 export { QuestionItem, QuestionList } from './QuestionItem';
+export { LanguageToggle } from './LanguageToggle';
 export type { QuestionData } from './QuestionItem';
 
 // Shared components

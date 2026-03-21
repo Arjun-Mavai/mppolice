@@ -639,3 +639,35 @@ export const pricingConfig = sqliteTable('pricing_config', {
   // Last updated
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
 });
+
+// Test Feedback Table
+export const testFeedback = sqliteTable('test_feedback', {
+  id: text('id').primaryKey(),
+  testId: text('test_id').notNull(),
+  userId: text('user_id'), // Optional for guest users
+  testType: text('test_type', { enum: ['free', 'premium', 'pyq'] }).notNull(),
+  
+  // Feedback ratings
+  overallRating: integer('overall_rating').notNull(), // 1-5 stars
+  difficultyLevel: text('difficulty_level', { enum: ['too_easy', 'just_right', 'too_hard'] }).notNull(),
+  questionQuality: text('question_quality', { enum: ['excellent', 'good', 'average', 'poor'] }).notNull(),
+  wouldRecommend: text('would_recommend', { enum: ['definitely', 'probably', 'maybe', 'no'] }).notNull(),
+  
+  // Optional text feedback
+  comments: text('comments'),
+  
+  // Metadata
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+});
+
+export const testFeedbackRelations = relations(testFeedback, ({ one }) => ({
+  user: one(mppscUsers, {
+    fields: [testFeedback.userId],
+    references: [mppscUsers.id],
+  }),
+  test: one(tests, {
+    fields: [testFeedback.testId],
+    references: [tests.id],
+  }),
+}));

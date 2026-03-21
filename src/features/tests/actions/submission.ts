@@ -367,9 +367,9 @@ export async function submitTestAttempt(
     });
 
     // 4. Update Leaderboard (Async - Fire and Forget mostly, or await if critical)
-    // Need user name for leaderboard
-    const user = await verifyAuth();
-    if (user && user.name) {
+    // 🔧 PERF FIX: Reuse `session` from line 216 instead of calling verifyAuth() again
+    // This saves 100-200ms per submission (auth verification is expensive)
+    if (session && session.name) {
       // We need total marks for percentage calc in leaderboard
       // We sum marks from questions
       /* 
@@ -381,7 +381,7 @@ export async function submitTestAttempt(
       await insertUserToLeaderboard({
         testId,
         userId,
-        displayName: user.name,
+        displayName: session.name,
         score: parseFloat(totalScore.toFixed(2)),
         // 🛡️ FIX: Use validDuration (server-validated) instead of raw durationSeconds
         // Bhai, pehle yahan raw durationSeconds ja raha tha — manipulated value

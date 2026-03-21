@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { LanguageToggle } from './LanguageToggle';
 
 interface PYQHeaderProps {
   title: string;
@@ -40,6 +41,9 @@ export function PYQHeader({ title, subtitle, icon }: PYQHeaderProps) {
               )}
             </div>
           </div>
+          
+          {/* Language Toggle */}
+          <LanguageToggle />
         </div>
       </div>
     </div>

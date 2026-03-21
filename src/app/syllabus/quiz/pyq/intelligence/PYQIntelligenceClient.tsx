@@ -1,7 +1,7 @@
 'use client';
 
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { UnitDistributionStats, RepeatedQuestion, TopicStat, SubjectDistributionStats } from '@/actions/pyq-analytics';
+import { UnitDistributionStats, RepeatedQuestion, TopicStat, SubjectDistributionStats, OverallWeightageSubjectData } from '@/actions/pyq-analytics';
 import {
   PYQHeader,
   PYQMenu,
@@ -15,6 +15,8 @@ interface PYQIntelligenceClientProps {
   stats: UnitDistributionStats[];
   repeatedQuestions: RepeatedQuestion[];
   topicStats: Record<string, TopicStat[]>;
+  simpleSubjectStats: Record<string, number>; // Same as PYQ page
+  subjectQuestionsData: OverallWeightageSubjectData[];
 }
 
 export default function PYQIntelligenceClient({
@@ -22,6 +24,8 @@ export default function PYQIntelligenceClient({
   stats,
   repeatedQuestions,
   topicStats,
+  simpleSubjectStats,
+  subjectQuestionsData,
 }: PYQIntelligenceClientProps) {
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
@@ -60,9 +64,8 @@ export default function PYQIntelligenceClient({
 
         {/* Overall Weightage (Subject-wise 2020-2025) */}
         <OverallWeightage
-          subjectStats={subjectStats}
-          stats={stats}
-          repeatedQuestions={repeatedQuestions}
+          simpleSubjectStats={simpleSubjectStats}
+          subjectQuestionsData={subjectQuestionsData}
           isHindi={isHindi}
         />
 

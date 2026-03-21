@@ -154,6 +154,8 @@ export interface TopicTrendProof {
     id: string; 
     questionText: string; 
     questionTextEn: string | null; 
+    options: any; // JSON array of options
+    correctAnswer: string; // Option ID or text
     testTitle: string; 
     questionOrder: number;
     explanation: string | null;
@@ -163,6 +165,8 @@ export interface TopicTrendProof {
     id: string; 
     questionText: string; 
     questionTextEn: string | null; 
+    options: any; // JSON array of options
+    correctAnswer: string; // Option ID or text
     testTitle: string; 
     questionOrder: number;
     explanation: string | null;
@@ -179,6 +183,8 @@ export interface YearlySubjectQuestions {
     questionTextEn: string | null; 
     options: any;
     correctAnswer: string;
+    type?: string | null; // standard or matching
+    matchPairs?: any; // For matching type questions
     topicTitle: string; 
     topicTitleEn: string | null; 
     questionOrder: number; 
@@ -1096,6 +1102,8 @@ export const getTopicTrendProof = unstable_cache(
         testId: questions.testId,
         questionText: questions.questionText,
         questionTextEn: questions.questionTextEn,
+        options: questions.options,
+        correctAnswer: questions.correctAnswer,
         explanation: questions.explanation,
         explanationEn: questions.explanationEn,
         questionOrder: questions.order,
@@ -1121,6 +1129,8 @@ export const getTopicTrendProof = unstable_cache(
           id: q.id,
           questionText: q.questionText,
           questionTextEn: q.questionTextEn,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
           explanation: q.explanation,
           explanationEn: q.explanationEn,
           questionOrder: q.questionOrder,
@@ -1131,6 +1141,8 @@ export const getTopicTrendProof = unstable_cache(
           id: q.id,
           questionText: q.questionText,
           questionTextEn: q.questionTextEn,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
           explanation: q.explanation,
           explanationEn: q.explanationEn,
           questionOrder: q.questionOrder,
@@ -1163,6 +1175,8 @@ export const getYearlySubjectQuestions = unstable_cache(
         questionTextEn: questions.questionTextEn,
         options: questions.options,
         correctAnswer: questions.correctAnswer,
+        type: questions.type,
+        matchPairs: questions.matchPairs,
         explanation: questions.explanation,
         explanationEn: questions.explanationEn,
         questionOrder: questions.order,
@@ -1201,6 +1215,8 @@ export const getYearlySubjectQuestions = unstable_cache(
         questionTextEn: r.questionTextEn,
         options: r.options,
         correctAnswer: r.correctAnswer,
+        type: r.type,
+        matchPairs: r.matchPairs,
         explanation: r.explanation,
         explanationEn: r.explanationEn,
         topicTitle: r.topicTitle,

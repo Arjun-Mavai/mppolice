@@ -43,16 +43,16 @@ const menuItems = [
     subtitleHi: 'विषयवार गहन विश्लेषण',
     color: 'cyan',
   },
-  {
-    id: 'repeated',
-    href: '/syllabus/quiz/pyq/repeated',
-    icon: BookOpen,
-    title: 'Repeated Questions',
-    titleHi: 'दोहराए गए प्रश्न',
-    subtitle: 'Most Asked Patterns',
-    subtitleHi: 'सबसे ज्यादा पूछे गए पैटर्न',
-    color: 'rose',
-  },
+  // {
+  //   id: 'repeated',
+  //   href: '/syllabus/quiz/pyq/repeated',
+  //   icon: BookOpen,
+  //   title: 'Repeated Questions',
+  //   titleHi: 'दोहराए गए प्रश्न',
+  //   subtitle: 'Most Asked Patterns',
+  //   subtitleHi: 'सबसे ज्यादा पूछे गए पैटर्न',
+  //   color: 'rose',
+  // },
 ];
 
 const colorClasses: Record<string, { bg: string; text: string; hover: string; border: string }> = {
@@ -121,14 +121,16 @@ export function PYQMenu({ isHindi, currentPage }: PYQMenuProps) {
                   variant="outline"
                   className={`group relative h-auto w-full justify-start gap-4 overflow-hidden p-4 ${colors.border} ${colors.bg} ${colors.text} ${colors.hover} hover:text-white`}
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-r from-${item.color}-500/10 to-transparent opacity-0 transition-opacity group-hover:opacity-100`} />
-                  <div className={`shrink-0 rounded-xl ${colors.bg} p-3 transition-colors group-hover:bg-${item.color}-500/30`}>
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-r from-${item.color}-500/10 to-transparent opacity-0 transition-opacity group-hover:opacity-100`}
+                  />
+                  <div
+                    className={`shrink-0 rounded-xl ${colors.bg} p-3 transition-colors group-hover:bg-${item.color}-500/30`}
+                  >
                     <Icon className="h-6 w-6" />
                   </div>
                   <div className="z-10 flex flex-col items-start">
-                    <span className="text-lg font-bold">
-                      {isHindi ? item.titleHi : item.title}
-                    </span>
+                    <span className="text-lg font-bold">{isHindi ? item.titleHi : item.title}</span>
                     <span className={`text-xs font-medium ${colors.text}/70`}>
                       {isHindi ? item.subtitleHi : item.subtitle}
                     </span>

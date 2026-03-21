@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getTestWithQuestions, getUserAttempts } from '@/features/tests/actions/submission';
-import { getQuestionsBySubject } from '@/features/tests/actions/pyq-analytics'; // NEW
+import { getQuestionsBySubject } from '@/features/tests/actions/pyq-analytics'; // Back to original
 import { QuizPlayClient } from './QuizPlayClient';
 import { verifyAuth } from '@/lib/auth';
 import { Question } from '@/types/quiz';

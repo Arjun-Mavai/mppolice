@@ -6,7 +6,9 @@ import {
   getRepeatedQuestions,
   getMostRepeatedTopics,
   getSubjectDistributionStats,
+  getOverallWeightageSubjectData,
 } from '@/actions/pyq-analytics';
+import { getSubjectWisePYQStats } from '@/features/tests/actions/pyq-analytics';
 import PYQIntelligenceClient from './PYQIntelligenceClient';
 import { unstable_cache } from 'next/cache';
 
@@ -18,6 +20,7 @@ const getCachedSubjectStats = unstable_cache(getSubjectDistributionStats, ['subj
 const getCachedUnitStats = unstable_cache(getUnitDistributionStats, ['unit-stats-v4'], { revalidate: 3600 });
 const getCachedRepeatedQuestions = unstable_cache(getRepeatedQuestions, ['repeated-v4'], { revalidate: 3600 });
 const getCachedTopicStats = unstable_cache(getMostRepeatedTopics, ['topics-v4'], { revalidate: 3600 });
+const getCachedSubjectQuestionsData = unstable_cache(getOverallWeightageSubjectData, ['subject-questions-v1'], { revalidate: 3600 });
 
 export default async function PYQIntelligencePage() {
   const user = await verifyAuth();
@@ -31,11 +34,13 @@ export default async function PYQIntelligencePage() {
   }
 
   // Fetch all intelligence data in parallel
-  const [subjectStats, unitStats, repeatedQuestions, topicStats] = await Promise.all([
+  const [subjectStats, unitStats, repeatedQuestions, topicStats, simpleSubjectStats, subjectQuestionsData] = await Promise.all([
     getCachedSubjectStats(),
     getCachedUnitStats(),
     getCachedRepeatedQuestions(),
     getCachedTopicStats(),
+    getSubjectWisePYQStats(), // Same as PYQ page uses
+    getCachedSubjectQuestionsData(), // Subject-wise questions for expanded view
   ]);
 
   return (
@@ -44,6 +49,8 @@ export default async function PYQIntelligencePage() {
       stats={unitStats}
       repeatedQuestions={repeatedQuestions}
       topicStats={topicStats}
+      simpleSubjectStats={simpleSubjectStats}
+      subjectQuestionsData={subjectQuestionsData}
     />
   );
 }

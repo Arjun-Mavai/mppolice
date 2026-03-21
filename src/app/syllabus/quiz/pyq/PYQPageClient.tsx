@@ -37,6 +37,7 @@ interface PYQPageClientProps {
   initialTests: Test[];
   subjectStats: Record<string, number>;
   isLoggedIn?: boolean;
+  mode?: string;
 }
 
 // --- Constants ---
@@ -102,12 +103,15 @@ export default function PYQPageClient({
   initialTests,
   subjectStats,
   isLoggedIn,
+  mode,
 }: PYQPageClientProps) {
   const router = useRouter();
   const { language } = useSettingsStore();
 
   // --- State ---
-  const [viewMode, setViewMode] = useState<'year' | 'subject'>('year');
+  const [viewMode, setViewMode] = useState<'year' | 'subject' | 'all-subjects'>(
+    mode === 'all-subjects' ? 'all-subjects' : 'year'
+  );
   const [loadingTestId, setLoadingTestId] = useState<string | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
 
@@ -237,7 +241,57 @@ export default function PYQPageClient({
       <ViewTransition>
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
           <AnimatePresence mode="wait">
-            {viewMode === 'year' ? (
+            {viewMode === 'all-subjects' ? (
+              <motion.div
+                key="all-subjects-view"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-8"
+              >
+                {/* All Subjects Header */}
+                <div className="text-center space-y-4">
+                  <h2 className="text-2xl font-bold text-slate-900">
+                    {language === 'hi' ? 'सभी विषय प्रश्न (2020-2025)' : 'All Subject Questions (2020-2025)'}
+                  </h2>
+                  <p className="text-slate-600">
+                    {language === 'hi' 
+                      ? 'पिछले 6 वर्षों के सभी प्रश्न विषयवार व्यवस्थित'
+                      : 'All questions from past 6 years organized by subject'
+                    }
+                  </p>
+                  
+                  {/* Back Button */}
+                  <Button
+                    onClick={() => setViewMode('year')}
+                    variant="outline"
+                    className="mt-4"
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    {language === 'hi' ? 'वापस जाएं' : 'Go Back'}
+                  </Button>
+                </div>
+
+                {/* All Subject Cards */}
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {SUBJECTS.filter(sub => (subjectStats[sub.name] || 0) > 0).map((sub, idx) => (
+                    <div key={sub.name} className="group">
+                      <PYQCard
+                        title={sub.name}
+                        count={subjectStats[sub.name] || 0}
+                        icon={sub.icon}
+                        color={sub.color}
+                        onClick={() => handleSubjectClick(sub.name)}
+                        delay={idx * 0.05}
+                        description={sub.description}
+                        subtitle={`${subjectStats[sub.name] || 0} ${language === 'hi' ? 'प्रश्न' : 'Questions'}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ) : viewMode === 'year' ? (
               <motion.div
                 key="year-view"
                 initial={{ opacity: 0, x: -20 }}

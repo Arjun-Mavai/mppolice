@@ -1309,3 +1309,89 @@ important pyq data and their ids
 - 2023: mQ1a9hZoTdfSRfkz40K5C (100 Qs, Q1-Q100)
 - 2024: 3XmZ0l700BJV3j2FLd0XZ (100 Qs, Q1-Q100)
 - 2025: D0gf6bklgl3RT-sTnue2n (100 Qs, Q1-Q100)
+
+## pdf feature
+
+PDF Downloads Feature Architecture
+This document outlines how the MPPSC PDF Downloads feature is architected in your codebase.
+
+1. Directory Structure
+   The feature spans across the client frontend, server API routes, and backend PDF generation logic:
+
+plaintext
+src/
+├── app/
+│ ├── pdf-downloads/
+│ │ ├── page.tsx # Server Component: Renders the download page and fetches metadata
+│ │ └── PDFDownloadClient.tsx # Client Component: Renders the UI buttons and handles the fetch() call to download the PDF
+│ └── api/
+│ └── pdf/
+│ ├── demo/download/route.ts # API Route: Handles GET requests for the Demo PDF
+│ └── full/download/route.ts # API Route: Handles GET requests for the Full PDF
+├── lib/
+│ └── pdf/
+│ ├── generator.ts # Core PDF Generation Logic: Uses @react-pdf/renderer to create the buffer
+│ ├── data/
+│ │ └── pdf-questions.ts # Data Access Layer: Uses Drizzle ORM to fetch formatting questions from DB
+│ └── components/ # PDF UI Components (React-PDF)
+│ ├── MPPSCPDFDocument.tsx # Main PDF Layout
+│ ├── PDFCoverPage.tsx # Cover Page Template
+│ ├── PDFQuestion.tsx # Question Layout Template
+│ └── PDFAnswerKey.tsx # Answer Key Layout 2. Execution Flow
+Here is the step-by-step flow from the moment the user clicks the "Download" button to the moment the PDF starts downloading in their browser:
+
+User Interaction: The user clicks the download button in
+PDFDownloadClient.tsx
+.
+Client Fetch: The React component makes a request: fetch('/api/pdf/demo/download?lang=en').
+API Route Hit: Next.js routes the request to
+src/app/api/pdf/demo/download/route.ts
+.
+Validation: The route controller validates the request (checks for valid language and type).
+Generation Triggered: The route calls
+generateDemoPDF('en')
+from
+generator.ts
+.
+Data Fetching:
+generator.ts
+calls
+getDemoPYQQuestions()
+from
+pdf-questions.ts
+.
+Under the hood, this uses Drizzle ORM (db.select().from(questions)) to pull raw data from the questions table in your SQLite database.
+Document Assembly:
+generator.ts
+passes the retrieved question data into
+MPPSCPDFDocument
+, returning a React-PDF component tree.
+Buffer Stream: pdf(pdfDoc).toBuffer() compiles the React tree into a raw binary PDF buffer.
+Response: The API route returns the buffer using a NextResponse with the Content-Type: application/pdf heading and a Content-Disposition attachment heading.
+Browser Download:
+PDFDownloadClient.tsx
+takes the blob response, creates an ephemeral object URL (window.URL.createObjectURL(blob)), simulates an invisible <a> click, and the file saves to the user's local disk. 3. The Underlying Bug (Resolved) 🐛
+The reason you were receiving a 500 Internal Server error output in the browser—despite the page superficially rendering 200 OKs—boiled down to a silent crash during Step 6 (Data Fetching).
+
+The Root Cause
+Inside
+src/lib/pdf/data/pdf-questions.ts
+, there was a broken module import pointing to the wrong directory:
+
+typescript
+// ❌ BROKEN (Module Not Found)
+import { CANONICAL_TEST_IDS } from "../pyq-constants";
+Because Next.js Turbopack failed to resolve the module silently across the boundary, CANONICAL_TEST_IDS was evaluated dynamically as undefined.
+
+When the execution reached:
+
+typescript
+const testIds = Object.values(CANONICAL_TEST_IDS);
+JavaScript fundamentally blocks you from calling Object.values on undefined, which immediately threw a TypeError. This error crashed the Drizzle operation internally resulting in the cryptic Cannot convert undefined or null to object logs that popped up.
+
+The Fix
+It was a simple fix of re-routing the import using your root alias!
+
+typescript
+// ✅ FIXED
+import { CANONICAL_TEST_IDS } from "@/lib/pyq-constants";

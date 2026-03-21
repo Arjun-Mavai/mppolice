@@ -18,6 +18,8 @@ interface PageProps {
     year?: string;
     topic?: string;
     source?: string;
+    subject?: string;
+    pdf_mode?: string;
   }>;
 }
 
@@ -114,21 +116,27 @@ const UNIT_TITLES: Record<string, string> = {
 };
 
 export default async function ViewAllQuestionsPage({ searchParams }: PageProps) {
-  const user = await verifyAuth();
-  if (!user) {
-    redirect('/pricing');
-  }
-
-  const tier = getUserTier(user);
-  if (tier === 'free') {
-    redirect('/pricing');
-  }
-
   const params = await searchParams;
+  const isPdfMode = params.pdf_mode === 'true';
+  
+  // Skip authentication for PDF generation mode
+  if (!isPdfMode) {
+    const user = await verifyAuth();
+    if (!user) {
+      redirect('/pricing');
+    }
+
+    const tier = getUserTier(user);
+    if (tier === 'free') {
+      redirect('/pricing');
+    }
+  }
+
   const unitId = params.unit || 'unit_1';
   const year = params.year ? parseInt(params.year) : undefined;
   const topicSlug = params.topic;
-  const source = (params.source as 'paper' | 'overall' | 'topic') || 'overall';
+  const source = (params.source as 'paper' | 'overall' | 'topic' | 'subject') || 'overall';
+  const subject = params.subject;
 
   let questionList: any[] = [];
   let unitTitle = UNIT_TITLES[unitId] || '';
@@ -139,6 +147,23 @@ export default async function ViewAllQuestionsPage({ searchParams }: PageProps) 
     const result = await getQuestionsByTopic(topicSlug);
     questionList = result.questions;
     topicTitle = result.topic?.topicTitle || result.topic?.topicTitleEn || undefined;
+  } else if (subject && source === 'subject') {
+    // Subject-based query - get questions by subject
+    const { getOverallWeightageSubjectData } = await import('@/actions/pyq-analytics');
+    const subjectData = await getOverallWeightageSubjectData();
+    
+    if (subject === 'All') {
+      const allQuestionIds = subjectData.flatMap(data => data.questions.map(q => q.id));
+      questionList = await getQuestionsWithDetails(allQuestionIds);
+      unitTitle = `All Subjects Questions (2020-2025)`;
+    } else {
+      const matchingSubject = subjectData.find(data => data.subject === subject);
+      if (matchingSubject) {
+        // Convert subject questions to the expected format
+        questionList = await getQuestionsWithDetails(matchingSubject.questions.map(q => q.id));
+        unitTitle = `${subject} Questions (2020-2025)`;
+      }
+    }
   } else {
     // Unit-based query - get from cached analytics data
     const stats = await getUnitDistributionStats();
@@ -172,6 +197,7 @@ export default async function ViewAllQuestionsPage({ searchParams }: PageProps) 
       source={source}
       topicTitle={topicTitle}
       year={year}
+      subject={subject}
     />
   );
 }

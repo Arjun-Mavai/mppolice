@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
+import { RenderTableQuestion } from '@/features/tests/utils/questionFormatter';
 import type { YearlySubjectQuestions } from '@/features/tests/actions/pyq-insights';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,21 @@ const getParsedOptions = (opts: any) => {
   if (typeof opts === 'string') {
     try {
       const parsed = JSON.parse(opts);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  return [];
+};
+
+// Helper to parse matchPairs safely
+const getParsedMatchPairs = (pairs: any) => {
+  if (!pairs) return [];
+  if (Array.isArray(pairs)) return pairs;
+  if (typeof pairs === 'string') {
+    try {
+      const parsed = JSON.parse(pairs);
       return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
       return [];
@@ -116,11 +132,38 @@ export default function YearlyProofClient({ data }: { data: YearlySubjectQuestio
                       </div>
 
                       <div className="space-y-4">
-                        <p className="text-[1.1rem] font-black text-slate-800 leading-[1.6] [text-shadow:1px_1px_2px_rgba(0,0,0,0.15)] selection:bg-blue-100 italic">
-                          {isHindi ? q.questionText : q.questionTextEn || q.questionText}
-                        </p>
+                        {/* Handle Matching Questions */}
+                        {q.type === 'matching' && getParsedMatchPairs(q.matchPairs).length > 0 ? (
+                          <>
+                            <div 
+                              className="prose prose-slate prose-sm max-w-none text-slate-800 sm:prose-base mb-4"
+                              dangerouslySetInnerHTML={{ 
+                                __html: (isHindi ? q.questionText : q.questionTextEn || q.questionText)
+                                  .replace(/List-?\s*I{1,2}\b.*$/gim, '')
+                                  .replace(/सूची-?\s*I{1,2}\b.*$/gim, '')
+                                  .replace(/\n/g, '<br/>')
+                                  .replace(/(?:\r\n|\r|\n)/g, '<br/>')
+                                  .trim()
+                              }} 
+                            />
+                            <RenderTableQuestion 
+                              matchPairs={getParsedMatchPairs(q.matchPairs)}
+                              language={isHindi ? 'hi' : 'en'}
+                              className="mb-4"
+                              darkMode={false}
+                            />
+                          </>
+                        ) : (
+                          <p className="text-[1.1rem] font-black text-slate-800 leading-[1.6] [text-shadow:1px_1px_2px_rgba(0,0,0,0.15)] selection:bg-blue-100 italic"
+                             dangerouslySetInnerHTML={{ 
+                               __html: (isHindi ? q.questionText : q.questionTextEn || q.questionText)
+                                 .replace(/\n/g, '<br/>')
+                                 .replace(/(?:\r\n|\r|\n)/g, '<br/>')
+                             }}
+                          />
+                        )}
                         
-                        {isHindi && q.questionTextEn && (
+                        {isHindi && q.questionTextEn && q.type !== 'matching' && (
                           <div className="relative pl-4 border-l-2 border-slate-100 py-1">
                             <p className="text-sm font-bold text-slate-400 italic leading-relaxed tracking-tight [text-shadow:1px_1px_1px_rgba(0,0,0,0.05)]">
                               {q.questionTextEn}

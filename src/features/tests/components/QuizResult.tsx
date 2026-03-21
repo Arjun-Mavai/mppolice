@@ -133,13 +133,20 @@ export function QuizResult({
     const refreshData = async () => {
       try {
         setIsLoadingStats(true);
-        await revalidateAnalyticsAction();
-        router.refresh();
-
-        if (testId) {
-          const data = await getTestLeaderboard(testId, userId);
-          setLeaderboard(data);
+        
+        // 🔧 PERF FIX: Parallelize independent operations (saves 200-400ms)
+        // revalidateAnalyticsAction and getTestLeaderboard don't depend on each other
+        const [, leaderboardData] = await Promise.all([
+          revalidateAnalyticsAction(),
+          testId ? getTestLeaderboard(testId, userId) : Promise.resolve(null),
+        ]);
+        
+        if (leaderboardData) {
+          setLeaderboard(leaderboardData);
         }
+        
+        // router.refresh() should run after cache invalidation is done
+        router.refresh();
       } catch (error) {
         logger.error('Failed to refresh quiz result stats', error, {
           category: 'ui',

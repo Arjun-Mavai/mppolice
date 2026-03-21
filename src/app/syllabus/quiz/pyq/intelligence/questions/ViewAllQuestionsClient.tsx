@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, Eye, EyeOff } from 'lucide-react';
@@ -33,9 +33,10 @@ interface ViewAllQuestionsClientProps {
   unitId: string;
   unitTitle: string;
   questions: QuestionData[];
-  source: 'paper' | 'overall' | 'topic';
+  source: 'paper' | 'overall' | 'topic' | 'subject';
   topicTitle?: string;
   year?: number;
+  subject?: string;
 }
 
 export default function ViewAllQuestionsClient({
@@ -45,6 +46,7 @@ export default function ViewAllQuestionsClient({
   source,
   topicTitle,
   year,
+  subject,
 }: ViewAllQuestionsClientProps) {
   const router = useRouter();
   const { language } = useSettingsStore();
@@ -53,7 +55,11 @@ export default function ViewAllQuestionsClient({
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [showAllExpanded, setShowAllExpanded] = useState(false);
   const [filterYear, setFilterYear] = useState<number | null>(null);
-
+  
+  // Check if we're in PDF mode (for Puppeteer)
+  const searchParams = useSearchParams();
+  const isPdfMode = searchParams.get('pdf_mode') === 'true';
+  
   // Get unique years for filtering
   const uniqueYears = useMemo(() => {
     return Array.from(new Set(questions.map((q) => q.year).filter((y): y is number => y !== undefined))).sort((a, b) => b - a);
@@ -64,6 +70,14 @@ export default function ViewAllQuestionsClient({
     if (!filterYear) return questions;
     return questions.filter((q) => q.year === filterYear);
   }, [questions, filterYear]);
+  
+  // Auto-expand all questions in PDF mode
+  useEffect(() => {
+    if (isPdfMode && filteredQuestions.length > 0) {
+      setExpandedIds(new Set(filteredQuestions.map(q => q.id)));
+      setShowAllExpanded(true);
+    }
+  }, [isPdfMode, filteredQuestions]);
 
   const toggleQuestion = useCallback((id: string) => {
     setExpandedIds((prev) => {
@@ -96,8 +110,11 @@ export default function ViewAllQuestionsClient({
     if (source === 'paper' && year) {
       return `MPPSC Prelims ${year} - ${formatUnitTitle(unitId)}`;
     }
+    if (source === 'subject' && subject) {
+      return `${subject} Questions (2020-2025)`;
+    }
     return `${formatUnitTitle(unitId)} - ${unitTitle}`;
-  }, [source, topicTitle, year, unitId, unitTitle]);
+  }, [source, topicTitle, year, unitId, unitTitle, subject]);
 
   return (
     <div className="min-h-screen bg-slate-950 pb-20 text-white selection:bg-indigo-500/30">
@@ -180,6 +197,7 @@ export default function ViewAllQuestionsClient({
               size="sm"
               onClick={toggleAll}
               className="ml-auto h-7 gap-1.5 rounded-full px-3 text-xs font-bold text-indigo-400 hover:bg-indigo-500/10"
+              data-testid="expand-all-button"
             >
               {showAllExpanded ? (
                 <>
@@ -198,7 +216,10 @@ export default function ViewAllQuestionsClient({
       </div>
 
       {/* Questions List */}
-      <div className="relative mx-auto max-w-4xl space-y-4 px-4 py-6 sm:px-6">
+      <div 
+        className="relative mx-auto max-w-4xl space-y-4 px-4 py-6 sm:px-6"
+        data-testid="questions-container"
+      >
         {filteredQuestions.map((q, idx) => {
           const isExpanded = expandedIds.has(q.id);
           const displayText = isHindi ? q.text : (q.textEn || q.text);
@@ -207,12 +228,15 @@ export default function ViewAllQuestionsClient({
           return (
             <Card
               key={q.id}
-              className="overflow-hidden border-slate-800 bg-slate-900/50 shadow-lg"
+              className="overflow-hidden border-slate-800 bg-slate-900/50 shadow-lg question-card"
+              data-question-item
+              data-question-id={q.id}
             >
               {/* Question Header */}
               <div
                 className="flex cursor-pointer items-start gap-4 p-4 transition-colors hover:bg-white/5 sm:p-5"
                 onClick={() => toggleQuestion(q.id)}
+                data-question-header
               >
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-800 font-mono text-xs font-bold text-slate-400">
                   {idx + 1}
