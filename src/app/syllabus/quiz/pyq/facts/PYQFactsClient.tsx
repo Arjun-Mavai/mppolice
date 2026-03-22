@@ -2,7 +2,15 @@
 
 import { useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { BookOpenText, Brain, Lightbulb, BarChart3, Target, ListChecks } from 'lucide-react';
+import {
+  BookOpenText,
+  Brain,
+  Lightbulb,
+  BarChart3,
+  Target,
+  ListChecks,
+  ArrowLeft,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -151,25 +159,44 @@ export default function PYQFactsClient({
     <div className="relative min-h-screen overflow-hidden bg-slate-950 pb-20 text-slate-200 selection:bg-indigo-500/30">
       {/* Background Effects */}
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-indigo-500/10 blur-[100px]" />
-        <div className="absolute right-[-10%] bottom-[-10%] h-[500px] w-[500px] rounded-full bg-rose-500/10 blur-[100px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
+        <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-amber-500/10 blur-[100px]" />
+        <div className="absolute right-[-10%] bottom-[-10%] h-[500px] w-[500px] rounded-full bg-amber-600/5 blur-[100px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
+        {/* Navigation & Back Button */}
+        <div className="mb-6 flex items-center justify-between">
+          <Button
+            variant="ghost"
+            onClick={() => router.push('/syllabus/quiz/pyq/intelligence')}
+            className="group rounded-xl border border-white/5 bg-white/5 px-4 font-bold text-slate-400 backdrop-blur-md transition-all hover:bg-white/10 hover:text-white"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
+            {isHindi ? 'वापस जाएं' : 'Back to Intelligence'}
+          </Button>
+
+          <div className="flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-3 py-1 backdrop-blur-sm">
+            <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
+            <span className="text-[10px] font-black tracking-widest text-amber-500/80 uppercase">
+              Premium Library
+            </span>
+          </div>
+        </div>
+
         {/* Header Section - Dark Intelligence Style */}
-        <div className="relative mb-8 overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-900 p-8 shadow-2xl sm:p-10">
+        <div className="relative mb-8 overflow-hidden rounded-[2.5rem] border border-slate-800 bg-slate-900/40 p-8 shadow-2xl backdrop-blur-xl sm:p-10">
           {/* grid texture */}
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px] opacity-[0.2]" />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px] opacity-[0.2]" />
           {/* glow spots */}
-          <div className="pointer-events-none absolute -top-12 -right-12 h-56 w-56 rounded-full bg-emerald-500/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-indigo-500/10 blur-3xl" />
+          <div className="pointer-events-none absolute -top-12 -right-12 h-56 w-56 rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-amber-500/5 blur-3xl" />
 
           <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex-1 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-inner ring-1 ring-white/10">
-                  <Lightbulb className="h-6 w-6 text-emerald-400" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-inner ring-1 ring-amber-500/30">
+                  <Lightbulb className="h-6 w-6 text-amber-500" />
                 </div>
                 <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
                   {isHindi ? 'फैक्ट लाइब्रेरी' : 'Facts Library'}
@@ -184,7 +211,7 @@ export default function PYQFactsClient({
             <Button
               variant="outline"
               onClick={() => router.push('/syllabus/quiz/pyq/analysis')}
-              className="inline-flex h-12 w-full shrink-0 items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/50 px-6 text-sm font-bold text-slate-200 shadow-sm transition hover:border-indigo-500/50 hover:bg-slate-800 hover:text-indigo-400 sm:w-auto"
+              className="inline-flex h-12 w-full shrink-0 items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-6 text-sm font-black text-amber-500 shadow-sm transition-all hover:bg-amber-500 hover:text-black sm:w-auto"
             >
               <BarChart3 className="mr-2 h-4 w-4" />
               {isHindi ? 'टॉपिक विश्लेषण' : 'Topic Analysis'}
@@ -195,27 +222,27 @@ export default function PYQFactsClient({
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               {/* Subject Select */}
               <div className="space-y-2.5">
-                <label className="flex items-center gap-2 px-1 text-[11px] font-black tracking-widest text-emerald-400 uppercase">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                <label className="flex items-center gap-2 px-1 text-[11px] font-black tracking-widest text-amber-400 uppercase">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></span>
                   {isHindi ? 'विषय' : 'Subject'}
                 </label>
                 <Select
                   value={selectedSubject}
                   onValueChange={(val) => applyFilters(val, undefined, selectedYear)}
                 >
-                  <SelectTrigger className="h-14 w-full rounded-2xl border-slate-700 bg-slate-800/80 font-bold text-slate-200 shadow-sm transition-all hover:border-emerald-500/50 hover:bg-slate-800 focus:ring-emerald-500/30 focus:ring-offset-0 focus:ring-offset-slate-900">
+                  <SelectTrigger className="h-14 w-full rounded-2xl border-slate-800 bg-slate-900/60 font-black tracking-tight text-white shadow-sm backdrop-blur-md transition-all hover:border-amber-500/50 hover:bg-slate-900/80 focus:ring-amber-500/30 focus:ring-offset-0">
                     <SelectValue placeholder={isHindi ? 'विषय चुनें' : 'Select Subject'} />
                   </SelectTrigger>
                   <SelectContent
                     position="popper"
                     sideOffset={4}
-                    className="z-[100] max-h-[350px] overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 text-slate-200 shadow-xl"
+                    className="z-[100] max-h-[350px] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950 text-slate-200 shadow-2xl backdrop-blur-xl"
                   >
                     {subjects.map((s) => (
                       <SelectItem
                         key={s.subject}
                         value={s.subject}
-                        className="cursor-pointer py-3 font-semibold text-slate-300 focus:bg-slate-800 focus:text-emerald-400"
+                        className="cursor-pointer py-3 font-bold text-slate-400 focus:bg-amber-500/10 focus:text-amber-400"
                       >
                         {s.subject} ({s.factCount} PYQ)
                       </SelectItem>
@@ -226,8 +253,8 @@ export default function PYQFactsClient({
 
               {/* Topic Select */}
               <div className="space-y-2.5">
-                <label className="flex items-center gap-2 px-1 text-[11px] font-black tracking-widest text-indigo-400 uppercase">
-                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+                <label className="flex items-center gap-2 px-1 text-[11px] font-black tracking-widest text-amber-500/70 uppercase">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500/50"></span>
                   {isHindi ? 'टॉपिक' : 'Topic'}
                 </label>
                 <Select
@@ -236,17 +263,17 @@ export default function PYQFactsClient({
                     applyFilters(selectedSubject, val === 'all' ? undefined : val, selectedYear)
                   }
                 >
-                  <SelectTrigger className="h-14 w-full rounded-2xl border-slate-700 bg-slate-800/80 font-bold text-slate-200 shadow-sm transition-all hover:border-indigo-500/50 hover:bg-slate-800 focus:ring-indigo-500/30 focus:ring-offset-0 focus:ring-offset-slate-900">
+                  <SelectTrigger className="h-14 w-full rounded-2xl border-slate-800 bg-slate-900/60 font-black tracking-tight text-white shadow-sm backdrop-blur-md transition-all hover:border-amber-500/40 hover:bg-slate-900/80 focus:ring-amber-500/30">
                     <SelectValue placeholder={isHindi ? 'सभी टॉपिक' : 'All Topics'} />
                   </SelectTrigger>
                   <SelectContent
                     position="popper"
                     sideOffset={4}
-                    className="z-[100] max-h-[350px] overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 text-slate-200 shadow-xl"
+                    className="z-[100] max-h-[350px] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950 text-slate-200 shadow-2xl backdrop-blur-xl"
                   >
                     <SelectItem
                       value="all"
-                      className="cursor-pointer py-3 font-semibold text-slate-300 focus:bg-slate-800 focus:text-indigo-400"
+                      className="cursor-pointer py-3 font-bold text-slate-400 focus:bg-amber-500/10 focus:text-amber-400"
                     >
                       {isHindi ? 'सभी टॉपिक' : 'All Topics'}
                     </SelectItem>
@@ -254,7 +281,7 @@ export default function PYQFactsClient({
                       <SelectItem
                         key={t.topicSlug}
                         value={t.topicSlug}
-                        className="cursor-pointer py-3 font-semibold text-slate-300 focus:bg-slate-800 focus:text-indigo-400"
+                        className="cursor-pointer py-3 font-bold text-slate-400 focus:bg-amber-500/10 focus:text-amber-400"
                       >
                         {isHindi ? t.topicTitle : t.topicTitleEn || t.topicTitle}
                       </SelectItem>
@@ -265,8 +292,8 @@ export default function PYQFactsClient({
 
               {/* Year Select */}
               <div className="space-y-2.5">
-                <label className="flex items-center gap-2 px-1 text-[11px] font-black tracking-widest text-amber-400 uppercase">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                <label className="flex items-center gap-2 px-1 text-[11px] font-black tracking-widest text-amber-600 uppercase">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-700"></span>
                   {isHindi ? 'वर्ष' : 'Year'}
                 </label>
                 <Select
@@ -275,17 +302,17 @@ export default function PYQFactsClient({
                     applyFilters(selectedSubject, selectedTopic, val === 'all' ? 0 : Number(val))
                   }
                 >
-                  <SelectTrigger className="h-14 w-full rounded-2xl border-slate-700 bg-slate-800/80 font-bold text-slate-200 shadow-sm transition-all hover:border-amber-500/50 hover:bg-slate-800 focus:ring-amber-500/30 focus:ring-offset-0 focus:ring-offset-slate-900">
+                  <SelectTrigger className="h-14 w-full rounded-2xl border-slate-800 bg-slate-900/60 font-black tracking-tight text-white shadow-sm backdrop-blur-md transition-all hover:border-amber-500/30 hover:bg-slate-900/80 focus:ring-amber-500/30">
                     <SelectValue placeholder={isHindi ? 'सभी वर्ष' : 'All Years'} />
                   </SelectTrigger>
                   <SelectContent
                     position="popper"
                     sideOffset={4}
-                    className="z-[100] max-h-[350px] overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 text-slate-200 shadow-xl"
+                    className="z-[100] max-h-[350px] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950 text-slate-200 shadow-2xl backdrop-blur-xl"
                   >
                     <SelectItem
                       value="all"
-                      className="cursor-pointer py-3 font-semibold text-slate-300 focus:bg-slate-800 focus:text-amber-400"
+                      className="cursor-pointer py-3 font-bold text-slate-400 focus:bg-amber-500/10 focus:text-amber-400"
                     >
                       {isHindi ? 'सभी वर्ष' : 'All Years'}
                     </SelectItem>
@@ -293,7 +320,7 @@ export default function PYQFactsClient({
                       <SelectItem
                         key={y}
                         value={String(y)}
-                        className="cursor-pointer py-3 font-semibold text-slate-300 focus:bg-slate-800 focus:text-amber-400"
+                        className="cursor-pointer py-3 font-bold text-slate-400 focus:bg-amber-500/10 focus:text-amber-400"
                       >
                         {y} Exam
                       </SelectItem>
@@ -304,33 +331,33 @@ export default function PYQFactsClient({
             </div>
           </div>
 
-          {/* ✦ Dark Green Stats Card */}
-          <div className="relative mt-8 overflow-hidden rounded-[2rem] border border-emerald-500/20 bg-emerald-950/30 p-6 shadow-2xl">
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px] opacity-[0.1]" />
+          {/* ✦ Dark Amber Stats Card */}
+          <div className="relative mt-8 overflow-hidden rounded-[2rem] border border-amber-500/20 bg-amber-950/20 p-6 shadow-2xl backdrop-blur-xl">
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px] opacity-[0.1]" />
             <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-wrap gap-6 sm:grid sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-white/10">
+              <div className="flex flex-wrap gap-6 sm:grid sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-white/5">
                 {[
                   {
                     emoji: '📅',
                     label: isHindi ? 'डेटासेट' : 'Dataset',
                     val: `${coverage.fromYear}–${coverage.toYear}`,
-                    color: 'text-emerald-400',
+                    color: 'text-amber-400',
                   },
                   {
                     emoji: '📝',
                     label: isHindi ? 'कुल PYQ' : 'Total PYQ',
                     val: coverage.pyqQuestionCount,
-                    color: 'text-emerald-300',
+                    color: 'text-amber-300',
                   },
                   {
                     emoji: '🎯',
                     label: isHindi ? 'mapped प्रश्न' : 'Questions Mapped',
                     val: `${coverage.mappedQuestionCount} (${coverage.mappingCoveragePercent}%)`,
-                    color: 'text-emerald-200',
+                    color: 'text-amber-200',
                   },
                 ].map((stat, i) => (
                   <div key={i} className="space-y-0.5 first:pl-0 sm:px-6">
-                    <p className="flex items-center gap-1 text-[9px] font-black tracking-[0.2em] text-emerald-600 uppercase">
+                    <p className="flex items-center gap-1 text-[9px] font-black tracking-[0.2em] text-amber-600/60 uppercase">
                       <span className="text-sm">{stat.emoji}</span>
                       {stat.label}
                     </p>
@@ -340,20 +367,20 @@ export default function PYQFactsClient({
               </div>
 
               <div className="flex shrink-0 items-center gap-3">
-                <span className="text-[11px] font-black tracking-widest text-emerald-600 uppercase">
+                <span className="text-[11px] font-black tracking-widest text-amber-600/60 uppercase">
                   {isHindi ? `दिख रहे: ${facts.length}` : `Showing ${facts.length}`}
                 </span>
-                <div className="flex gap-1 rounded-xl border border-white/10 bg-slate-800/50 p-1">
+                <div className="flex gap-1 rounded-xl border border-amber-500/20 bg-slate-900/60 p-1">
                   {LIMIT_OPTIONS.map((item) => (
                     <button
                       key={item}
                       onClick={() =>
                         applyFilters(selectedSubject, selectedTopic, selectedYear, item)
                       }
-                      className={`rounded-lg px-3 py-1.5 text-xs font-black transition-colors ${
+                      className={`rounded-lg px-3 py-1.5 text-xs font-black transition-all ${
                         limit === item
-                          ? 'bg-emerald-600 text-white shadow-sm'
-                          : 'text-emerald-500 hover:text-emerald-300'
+                          ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]'
+                          : 'text-amber-500/60 hover:text-amber-400'
                       }`}
                     >
                       {item}
@@ -564,9 +591,6 @@ export default function PYQFactsClient({
         {/* Facts Feed */}
         <div className="space-y-6">
           {facts.map((fact, idx) => {
-            const variants = ['blue', 'pink', 'emerald', 'amber'] as const;
-            const color = VARIANTS[variants[idx % 4]];
-
             const years = Array.from(
               new Set(
                 fact.enrichedRefs?.map((r) => r.year) || fact.pyqRefs?.map((r) => r.year) || []
@@ -577,11 +601,14 @@ export default function PYQFactsClient({
               <div
                 key={fact.id}
                 className={cn(
-                  'group relative overflow-hidden rounded-[2.5rem] border bg-slate-900/50 backdrop-blur-sm transition-all duration-500 hover:border-slate-700 hover:bg-slate-800/80 hover:shadow-2xl',
-                  color.border
+                  'group relative overflow-hidden rounded-[2.5rem] border border-amber-500/10 bg-slate-900/40 backdrop-blur-md transition-all duration-500 hover:border-amber-500/30 hover:bg-slate-800/60 hover:shadow-[0_0_30px_rgba(245,158,11,0.1)]'
                 )}
               >
-                <div className={cn('absolute top-0 left-0 h-full w-1.5 opacity-60', color.dot)} />
+                <div
+                  className={cn(
+                    'absolute top-0 left-0 h-full w-1.5 bg-amber-500 opacity-60 transition-all group-hover:opacity-100'
+                  )}
+                />
 
                 {/* Card Header: Metadata Badges */}
                 <div
@@ -592,7 +619,7 @@ export default function PYQFactsClient({
                   <Badge
                     variant="outline"
                     className={cn(
-                      'border-none bg-slate-800 px-3 py-1 font-bold text-slate-300 shadow-sm transition-colors'
+                      'border-none bg-amber-500/10 px-3 py-1 font-black tracking-tight text-amber-500 shadow-sm'
                     )}
                   >
                     {isHindi ? fact.topicTitle : fact.topicTitleEn || fact.topicTitle}
@@ -601,7 +628,7 @@ export default function PYQFactsClient({
                   {years.length > 0 && (
                     <Badge
                       variant="outline"
-                      className="border-amber-500/20 bg-amber-500/10 px-2.5 py-1 font-mono text-xs font-bold text-amber-400"
+                      className="border-amber-500/30 bg-amber-500/5 px-2.5 py-1 font-mono text-xs font-black text-amber-400/80"
                     >
                       {years.join(', ')}
                     </Badge>
@@ -610,20 +637,20 @@ export default function PYQFactsClient({
                     <Badge
                       key={i}
                       variant="secondary"
-                      className="border border-slate-700 bg-slate-800/50 px-2.5 py-1 font-semibold text-slate-400"
+                      className="border border-slate-700/50 bg-slate-800/50 px-2.5 py-1 font-bold text-slate-400"
                     >
                       #{tag}
                     </Badge>
                   ))}
                   {fact.importanceScore && fact.importanceScore > 8 && (
-                    <Badge className="ml-auto border-rose-500/30 bg-rose-500/10 px-3 py-1 font-bold text-rose-400 shadow-sm">
+                    <Badge className="ml-auto border-amber-500/30 bg-amber-500 px-3 py-1 font-black text-black shadow-lg shadow-amber-500/20">
                       🔥 {isHindi ? 'High Yield' : 'High Yield'}
                     </Badge>
                   )}
                   {!fact.importanceScore && (
                     <Badge
                       variant="secondary"
-                      className="ml-auto border border-slate-700 bg-slate-800 px-3 py-1 font-bold text-slate-400 shadow-sm"
+                      className="ml-auto border border-amber-500/20 bg-amber-500/5 px-3 py-1 font-black text-amber-500/60 shadow-sm"
                     >
                       {isHindi ? 'रीविजन' : 'Revision'}
                     </Badge>
@@ -633,17 +660,17 @@ export default function PYQFactsClient({
                 <div className="space-y-7 p-5 sm:p-8">
                   {/* Main Fact */}
                   <div>
-                    <h3 className="mb-3 flex items-center gap-2 text-xs font-black tracking-widest text-slate-500 uppercase">
+                    <h3 className="mb-3 flex items-center gap-2 text-xs font-black tracking-widest text-amber-500/50 uppercase">
                       <div
                         className={cn(
-                          'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-[11px] text-slate-300 shadow-inner'
+                          'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10 text-[11px] text-amber-500 shadow-inner'
                         )}
                       >
                         🎯
                       </div>
                       {isHindi ? 'महत्वपूर्ण तथ्य' : 'Core Fact'}
                     </h3>
-                    <div className="text-[16px] leading-relaxed font-extrabold tracking-wide whitespace-pre-line text-slate-200 sm:text-[18px] sm:leading-loose md:text-[20px] lg:text-[22px]">
+                    <div className="text-[17px] leading-relaxed font-black tracking-tight whitespace-pre-line text-white sm:text-[19px] sm:leading-loose md:text-[21px] lg:text-[23px]">
                       {isHindi ? fact.factText : fact.factTextEn || fact.factText}
                     </div>
                   </div>
@@ -652,31 +679,31 @@ export default function PYQFactsClient({
                   {fact.memoryTip && (
                     <div
                       className={cn(
-                        'relative overflow-hidden rounded-[1.5rem] border border-slate-700/50 bg-slate-800/30 p-5 transition-all duration-500 sm:p-6'
+                        'relative overflow-hidden rounded-[1.5rem] border border-amber-500/20 bg-amber-950/20 p-5 transition-all duration-500 sm:p-6'
                       )}
                     >
                       <div
                         className={cn(
-                          'absolute -top-6 -right-6 text-6xl text-white opacity-5 select-none'
+                          'absolute -top-6 -right-6 text-6xl text-amber-500 opacity-[0.03] select-none'
                         )}
                       >
                         🧠
                       </div>
                       <h4
                         className={cn(
-                          'mb-3 flex items-center gap-2 text-xs font-black tracking-widest text-indigo-400 uppercase'
+                          'mb-3 flex items-center gap-2 text-xs font-black tracking-widest text-amber-400 uppercase'
                         )}
                       >
                         <span
                           className={cn(
-                            'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-indigo-500/30 bg-indigo-500/20 text-[11px] text-indigo-300 shadow-sm'
+                            'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/20 text-[11px] text-amber-400 shadow-sm'
                           )}
                         >
                           🧠
                         </span>
                         {isHindi ? 'स्मृति युक्ति' : 'Memory Trick'}
                       </h4>
-                      <p className="relative z-10 text-[15px] leading-relaxed font-bold tracking-wide whitespace-pre-line text-slate-300 sm:text-[17px] sm:leading-loose md:text-[19px]">
+                      <p className="relative z-10 text-[15px] leading-relaxed font-bold tracking-tight whitespace-pre-line text-amber-100 sm:text-[17px] sm:leading-loose md:text-[19px]">
                         {isHindi ? fact.memoryTip : fact.memoryTipEn || fact.memoryTip}
                       </p>
                     </div>
@@ -684,17 +711,17 @@ export default function PYQFactsClient({
 
                   {/* Scam / Trap Alert */}
                   {fact.scamAlert && (
-                    <div className="relative overflow-hidden rounded-[1.5rem] border border-rose-500/20 bg-rose-950/20 p-5 sm:p-6">
-                      <div className="absolute -top-6 -right-6 text-6xl text-rose-500 opacity-10 select-none">
+                    <div className="relative overflow-hidden rounded-[1.5rem] border border-orange-500/30 bg-orange-950/20 p-5 sm:p-6">
+                      <div className="absolute -top-6 -right-6 text-6xl text-orange-500 opacity-[0.05] select-none">
                         ⚠️
                       </div>
-                      <h4 className="mb-3 flex items-center gap-2 text-xs font-black tracking-widest text-rose-400 uppercase">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-rose-500/30 bg-rose-500/20 text-[11px] text-rose-300 shadow-sm">
+                      <h4 className="mb-3 flex items-center gap-2 text-xs font-black tracking-widest text-orange-400 uppercase">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-orange-500/30 bg-orange-500/20 text-[11px] text-orange-400 shadow-sm">
                           ⚠️
                         </span>
                         {isHindi ? 'गलतियों से बचें' : 'Trap Alert'}
                       </h4>
-                      <p className="relative z-10 text-[15px] leading-relaxed font-bold tracking-wide whitespace-pre-line text-rose-200 sm:text-[17px] sm:leading-loose md:text-[19px]">
+                      <p className="relative z-10 text-[15px] leading-relaxed font-bold tracking-tight whitespace-pre-line text-orange-100 sm:text-[17px] sm:leading-loose md:text-[19px]">
                         {isHindi ? fact.scamAlert : fact.scamAlertEn || fact.scamAlert}
                       </p>
                     </div>
@@ -703,7 +730,8 @@ export default function PYQFactsClient({
                   {/* References Footer */}
                   <div className="flex flex-wrap items-center gap-1.5 border-t border-white/5 pt-4">
                     <span className="flex items-center gap-1.5 text-[10px] font-black tracking-widest text-slate-500 uppercase">
-                      <Lightbulb className="h-3.5 w-3.5" /> {isHindi ? 'पूछा गया:' : 'Asked in:'}
+                      <Lightbulb className="h-3.5 w-3.5 text-amber-500" />{' '}
+                      {isHindi ? 'पूछा गया:' : 'Asked in:'}
                     </span>
 
                     {fact.enrichedRefs && fact.enrichedRefs.length > 0
@@ -712,7 +740,7 @@ export default function PYQFactsClient({
                             key={i}
                             variant="secondary"
                             className={cn(
-                              'border border-slate-700 bg-slate-800 px-2.5 py-1 text-[11px] font-bold text-slate-300 shadow-none transition-colors hover:bg-slate-700'
+                              'border border-slate-800 bg-slate-900 px-2.5 py-1 text-[11px] font-bold text-slate-400 shadow-none transition-colors hover:bg-slate-800 hover:text-amber-500/80'
                             )}
                           >
                             {ref.year
@@ -733,7 +761,7 @@ export default function PYQFactsClient({
                             key={i}
                             variant="secondary"
                             className={cn(
-                              'border border-slate-700 bg-slate-800 px-2.5 py-1 text-[11px] font-bold text-slate-300 shadow-none transition-colors hover:bg-slate-700'
+                              'border border-slate-800 bg-slate-900 px-2.5 py-1 text-[11px] font-bold text-slate-400 shadow-none transition-colors hover:bg-slate-800 hover:text-amber-500/80'
                             )}
                           >
                             {ref.year

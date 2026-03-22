@@ -7,9 +7,10 @@
  * - HTML pages: Network First, fallback to cache (always fresh auth state)
  */
 
-const CACHE_NAME = 'mppsc-cache-v3'; // Bumped to v3 to force refresh for all users
+const CACHE_NAME = 'mppsc-cache-v4'; // Bumped to v4 for fresh icon and manifest alignment
 
 const urlsToCache = [
+  '/',
   '/offline',
   '/manifest.json',
   '/icons/icon-192x192.png',
@@ -41,13 +42,18 @@ function isStaticAsset(url) {
   );
 }
 
-// INSTALL: Cache only essential offline files
+// INSTALL: Cache essential files.
+// Using a pattern that doesn't block installation if a file is missing.
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
-      .then(() => self.skipWaiting()) // Activate immediately, don't wait
+    caches.open(CACHE_NAME).then((cache) => {
+      // Use map to attempt adding each URL individually to avoid one failure blocking all
+      return Promise.allSettled(
+        urlsToCache.map(url => 
+          cache.add(url).catch(err => console.warn(`Failed to cache ${url}:`, err))
+        )
+      ).then(() => self.skipWaiting());
+    })
   );
 });
 

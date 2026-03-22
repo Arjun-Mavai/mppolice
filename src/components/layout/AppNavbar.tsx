@@ -82,7 +82,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     setAuthCheckStatus,
   } = useSettingsStore();
 
-  const { isInstallable, installPwa } = usePwa();
+  const { isInstallable, installPwa, isIos } = usePwa();
 
   // Create a merged user object (prop + global), favoring global if updated
   const rawUser = (globalUser || initialUser) as UnifiedUser | null;
@@ -634,11 +634,17 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                       <div className="mt-4 border-t border-slate-100 pt-4">
                         <SheetClose asChild>
                           <button
-                            onClick={installPwa}
+                            onClick={() => {
+                              if (isIos) {
+                                window.dispatchEvent(new CustomEvent('show-ios-install-prompt'));
+                              } else {
+                                installPwa();
+                              }
+                            }}
                             className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-600"
                           >
                             <Download size={18} />
-                            Install App
+                            {isIos ? (language === 'hi' ? 'ऐप इंस्टॉल करें' : 'Install App') : (language === 'hi' ? 'ऐप इंस्टॉल करें' : 'Install App')}
                           </button>
                         </SheetClose>
                       </div>
