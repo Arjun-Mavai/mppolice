@@ -23,6 +23,7 @@ export function usePwa() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [isIos, setIsIos] = useState(false);
+  const [isSafari, setIsSafari] = useState(false);
 
   useEffect(() => {
     // 1. Check if running in standalone mode (Installed)
@@ -37,12 +38,18 @@ export function usePwa() {
 
     checkStandalone();
 
-    // 2. Detect iOS
+    // 2. Detect iOS & Safari
     const detectIos = () => {
+      const ua = navigator.userAgent;
       const isIosDevice = 
-        /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+        /iPad|iPhone|iPod/.test(ua) || 
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      
+      // On iOS, true Safari doesn't have 'CriOS' or 'FxiOS'
+      const isSafariBrowser = /Safari/i.test(ua) && !/CriOS/i.test(ua) && !/FxiOS/i.test(ua);
+      
       setIsIos(!!isIosDevice);
+      setIsSafari(!!isSafariBrowser);
       
       // On iOS, we can consider it "installable" if not already installed,
       // even though there's no native prompt.
@@ -123,5 +130,5 @@ export function usePwa() {
     setIsInstallable(false);
   };
 
-  return { isPwaInstalled, isInstallable, installPwa, isIos };
+  return { isPwaInstalled, isInstallable, installPwa, isIos, isSafari };
 }
