@@ -4,7 +4,7 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
 import { getUserTier } from '@/lib/access-control';
 import { db } from '@/db';
-import { questions, tests, pyqQuestionTopics, pyqTopics } from '@/db/schema';
+import { questions, tests } from '@/db/schema';
 import RepeatedQuestionsAllClient from './RepeatedQuestionsAllClient';
 
 const getRepeatedQuestionsWithDetails = unstable_cache(

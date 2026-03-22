@@ -330,28 +330,32 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
               {/* Animated Background Pill */}
               <div
                 className={cn(
-                  'ease-spring-smooth absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full bg-white shadow-sm transition-transform duration-300',
+                  'ease-[var(--ease-spring-smooth)] absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full bg-white shadow-sm transition-transform duration-300',
                   language === 'hi' ? 'translate-x-[calc(100%+4px)]' : 'translate-x-0'
                 )}
               />
 
               <button
+                type="button"
                 onClick={() => setLanguage('en')}
                 className={cn(
                   'relative z-10 flex-1 rounded-full px-3 py-1.5 text-xs font-bold transition-colors duration-200 sm:px-4',
                   language === 'en' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
                 )}
                 aria-label="Switch to English"
+                aria-pressed={language === 'en'}
               >
                 EN
               </button>
               <button
+                type="button"
                 onClick={() => setLanguage('hi')}
                 className={cn(
                   'relative z-10 flex-1 rounded-full px-3 py-1.5 text-xs font-bold transition-colors duration-200 sm:px-4',
                   language === 'hi' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
                 )}
                 aria-label="Switch to Hindi"
+                aria-pressed={language === 'hi'}
               >
                 HI
               </button>

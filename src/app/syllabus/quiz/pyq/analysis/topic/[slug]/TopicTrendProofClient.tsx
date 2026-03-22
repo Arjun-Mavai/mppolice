@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
-import { RenderTableQuestion } from '@/features/tests/utils/questionFormatter';
+import { RenderTableQuestion, mapCorrectAnswerToIndex } from '@/features/tests/utils/questionFormatter';
 import type { TopicTrendProof } from '@/features/tests/actions/pyq-insights';
 import { useSettingsStore } from '@/store/useSettingsStore';
 
@@ -209,14 +209,9 @@ export default function TopicTrendProofClient({ proof }: { proof: TopicTrendProo
                       </div>
 
                       <div className="space-y-4">
-                        <div 
-                          className="prose prose-slate prose-sm max-w-none text-slate-800 sm:prose-base"
-                          dangerouslySetInnerHTML={{ 
-                            __html: (isHindi ? q.questionText : q.questionTextEn || q.questionText)
-                              .replace(/\n/g, '<br/>')
-                              .replace(/(?:\r\n|\r|\n)/g, '<br/>')
-                          }} 
-                        />
+                        <div className="prose prose-slate prose-sm max-w-none whitespace-pre-line text-slate-800 sm:prose-base">
+                          {isHindi ? q.questionText : q.questionTextEn || q.questionText}
+                        </div>
                         
                         {isHindi && q.questionTextEn && (
                           <div className="relative pl-4 border-l-2 border-slate-100 py-1">
@@ -229,8 +224,8 @@ export default function TopicTrendProofClient({ proof }: { proof: TopicTrendProo
                         {/* Options Display */}
                         <div className="space-y-3 mt-4">
                           {getParsedOptions(q.options).map((opt: any, idx: number) => {
-                            const correctIdx = Number(q.correctAnswer);
-                            const isCorrect = !isNaN(correctIdx) && correctIdx === idx;
+                            const correctIdx = mapCorrectAnswerToIndex(q.correctAnswer);
+                            const isCorrect = correctIdx !== -1 && correctIdx === idx;
                             
                             let optionText = opt;
                             if (typeof opt === 'object' && opt !== null) {
@@ -263,11 +258,12 @@ export default function TopicTrendProofClient({ proof }: { proof: TopicTrendProo
                                   </div>
                                   <span
                                     className={cn(
-                                      "flex-1 text-sm font-medium leading-relaxed",
+                                      "flex-1 text-sm leading-relaxed whitespace-pre-line font-medium",
                                       isCorrect ? "text-emerald-800" : "text-slate-600"
                                     )}
-                                    dangerouslySetInnerHTML={{ __html: optionText }}
-                                  />
+                                  >
+                                    {optionText}
+                                  </span>
                                 </div>
                                 {isCorrect && (
                                   <CheckCircle2 className="ml-3 h-5 w-5 text-emerald-500" />

@@ -1,10 +1,16 @@
 import { createClient } from '@libsql/client';
 import fs from 'fs';
 
-// Production Turso connection
+const dbUrl = process.env.TURSO_DATABASE_URL;
+const authToken = process.env.TURSO_AUTH_TOKEN;
+
+if (!dbUrl || !authToken) {
+  throw new Error('Missing TURSO credentials: set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN');
+}
+
 const client = createClient({
-  url: 'libsql://mppsc-test-series-arjun-gurjar.aws-ap-south-1.turso.io',
-  authToken: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3Njk5MTg1MjAsImlkIjoiNmZjZWY3MGEtNDZmYi00OWY5LWE4ZGQtYTMxNDk3MWFjOTlhIiwicmlkIjoiMjVkYTUxNjUtNWM1Yi00Mjc1LWEyNTYtZjlhNDhiNjQyZjA4In0.Uat6fTihImcWMjdZHXe2lmhq2tEfI7hj7TApkWgXdhLIVHnhCXB1yB56kuDpwi51m6f9LHbytvWkNlXHb1znCA'
+  url: dbUrl,
+  authToken,
 });
 
 const CANONICAL_TEST_IDS = {
@@ -55,7 +61,7 @@ async function updatePyqTopicMappings() {
       FROM pyq_question_topics 
     `);
     
-    const currentMappings = currentMappingsResult.rows[0];
+    const currentMappings = currentMappingsResult.rows[0] as unknown as { total_mappings: number, unique_questions: number };
     console.log(`Current mappings: ${currentMappings.total_mappings} total, ${currentMappings.unique_questions} unique questions`);
     
     // Get all questions from canonical tests
@@ -95,35 +101,35 @@ async function updatePyqTopicMappings() {
     console.log(`Found ${topicsResult.rows.length} existing topics`);
     
     // Process questions by subject
-    const questionsBySubject = {};
-    const yearMapping = {};
+    const questionsBySubject: Record<string, any[]> = {};
+    const yearMapping: Record<string, number> = {};
     Object.entries(CANONICAL_TEST_IDS).forEach(([year, testId]) => {
       yearMapping[testId] = parseInt(year);
     });
     
-    for (const row of questionsResult.rows) {
-      const normalizedSubject = normalizeSubject(row.subject);
-      const year = yearMapping[row.testId];
+    for (const row of questionsResult.rows as any[]) {
+      const normalizedSubject = normalizeSubject(row.subject as string | null);
+      const year = yearMapping[row.testId as string];
       
       if (!questionsBySubject[normalizedSubject]) {
         questionsBySubject[normalizedSubject] = [];
       }
       
       questionsBySubject[normalizedSubject].push({
-        questionId: row.questionId,
-        testId: row.testId,
+        questionId: row.questionId as string,
+        testId: row.testId as string,
         year,
         subject: normalizedSubject,
-        questionText: row.question_text || row.question_text_en || '',
-        explanation: row.explanation || row.explanation_en || '',
-        order: row.question_order
+        questionText: (row.question_text as string) || (row.question_text_en as string) || '',
+        explanation: (row.explanation as string) || (row.explanation_en as string) || '',
+        order: row.question_order as number
       });
     }
     
     console.log('\n📈 Questions by subject:');
     Object.entries(questionsBySubject).forEach(([subject, questions]) => {
-      const yearCounts = {};
-      questions.forEach(q => {
+      const yearCounts: Record<number, number> = {};
+      questions.forEach((q: any) => {
         yearCounts[q.year] = (yearCounts[q.year] || 0) + 1;
       });
       console.log(`  ${subject}: ${questions.length} questions`);
@@ -142,10 +148,10 @@ async function updatePyqTopicMappings() {
     });
     
     const mappedQuestionIds = new Set(
-      mappedQuestionsResult.rows.map(row => row.question_id)
+      mappedQuestionsResult.rows.map(row => row.question_id as string)
     );
     
-    const allQuestionIds = questionsResult.rows.map(row => row.questionId);
+    const allQuestionIds = questionsResult.rows.map(row => row.questionId as string);
     const unmappedQuestions = allQuestionIds.filter(id => !mappedQuestionIds.has(id));
     
     console.log(`\n🎯 Mapping Status:`);
@@ -154,10 +160,10 @@ async function updatePyqTopicMappings() {
     console.log(`  📊 Coverage: ${((mappedQuestionIds.size / allQuestionIds.length) * 100).toFixed(1)}%`);
     
     // Show unmapped questions breakdown by year
-    const unmappedByYear = {};
-    for (const row of questionsResult.rows) {
-      if (unmappedQuestions.includes(row.questionId)) {
-        const year = yearMapping[row.testId];
+    const unmappedByYear: Record<number, number> = {};
+    for (const row of questionsResult.rows as any[]) {
+      if (unmappedQuestions.includes(row.questionId as string)) {
+        const year = yearMapping[row.testId as string];
         unmappedByYear[year] = (unmappedByYear[year] || 0) + 1;
       }
     }
@@ -178,13 +184,13 @@ async function updatePyqTopicMappings() {
       coveragePercent: (mappedQuestionIds.size / allQuestionIds.length) * 100,
       questionsBySubject,
       unmappedByYear,
-      sampleUnmappedQuestions: questionsResult.rows
-        .filter(row => unmappedQuestions.includes(row.questionId))
+      sampleUnmappedQuestions: (questionsResult.rows as any[])
+        .filter(row => unmappedQuestions.includes(row.questionId as string))
         .slice(0, 10)
         .map(row => ({
-          year: yearMapping[row.testId],
-          subject: normalizeSubject(row.subject),
-          questionText: (row.question_text || row.question_text_en || '').substring(0, 100) + '...'
+          year: yearMapping[row.testId as string],
+          subject: normalizeSubject(row.subject as string | null),
+          questionText: ((row.question_text as string) || (row.question_text_en as string) || '').substring(0, 100) + '...'
         }))
     };
     
@@ -193,7 +199,7 @@ async function updatePyqTopicMappings() {
     
     return bootstrapData;
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error:', error.message);
     throw error;
   } finally {

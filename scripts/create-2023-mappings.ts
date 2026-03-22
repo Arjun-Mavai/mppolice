@@ -1,10 +1,16 @@
 import { createClient } from '@libsql/client';
 import fs from 'fs';
 
-// Production Turso connection
+const dbUrl = process.env.TURSO_DATABASE_URL;
+const authToken = process.env.TURSO_AUTH_TOKEN;
+
+if (!dbUrl || !authToken) {
+  throw new Error('Missing TURSO credentials: set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN');
+}
+
 const client = createClient({
-  url: 'libsql://mppsc-test-series-arjun-gurjar.aws-ap-south-1.turso.io',
-  authToken: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3Njk5MTg1MjAsImlkIjoiNmZjZWY3MGEtNDZmYi00OWY5LWE4ZGQtYTMxNDk3MWFjOTlhIiwicmlkIjoiMjVkYTUxNjUtNWM1Yi00Mjc1LWEyNTYtZjlhNDhiNjQyZjA4In0.Uat6fTihImcWMjdZHXe2lmhq2tEfI7hj7TApkWgXdhLIVHnhCXB1yB56kuDpwi51m6f9LHbytvWkNlXHb1znCA'
+  url: dbUrl,
+  authToken,
 });
 
 const CANONICAL_TEST_IDS = {
@@ -17,17 +23,17 @@ function generateId() {
 }
 
 // Function to create topic slug
-function createSlug(text) {
+function createSlug(text: string) {
   return text
     .toLowerCase()
     .replace(/[^a-zA-Z0-9\s]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
-    .trim('-');
+    .replace(/^-+|-+$/g, ''); // Fix trim '-' which is not a string method for trimming specific chars
 }
 
 // Enhanced topic detection based on question content
-function detectTopicFromQuestion(questionText, subject, explanation = '') {
+function detectTopicFromQuestion(questionText: string, subject: string, explanation: string = '') {
   const text = (questionText + ' ' + explanation).toLowerCase();
   
   // Topic mapping rules based on keywords and patterns
@@ -91,12 +97,12 @@ function detectTopicFromQuestion(questionText, subject, explanation = '') {
   }
   
   // Fallback to subject default
-  return subjectDefaults[subject] || 'general-studies';
+  return (subjectDefaults as Record<string, string>)[subject] || 'general-studies';
 }
 
 // Function to get topic title from slug
-function getTopicTitle(slug) {
-  const titleMap = {
+function getTopicTitle(slug: string) {
+  const titleMap: Record<string, string> = {
     'ancient-indian-history': 'Ancient Indian History',
     'medieval-indian-history': 'Medieval Indian History', 
     'modern-indian-history': 'Modern Indian History',
@@ -161,8 +167,8 @@ async function create2023TopicMappings() {
     }
 
     // Normalize subjects
-    const normalizeSubject = (subject) => {
-      const subjectMap = {
+    const normalizeSubject = (subject: any) => {
+      const subjectMap: Record<string, string[]> = {
         'Indian History': ['history', 'इतिहास'],
         'Indian Polity': ['polity', 'constitution', 'संविधान'],  
         'Geography': ['geography', 'भूगोल'],
@@ -186,13 +192,13 @@ async function create2023TopicMappings() {
     };
 
     // Process questions and detect topics
-    const topicMappings = [];
-    const topicsToCreate = new Map();
+    const topicMappings: any[] = [];
+    const topicsToCreate = new Map<string, any>();
     
-    for (const question of questions) {
+    for (const question of questions as any[]) {
       const normalizedSubject = normalizeSubject(question.subject);
-      const questionText = question.question_text || question.question_text_en || '';
-      const explanation = question.explanation || question.explanation_en || '';
+      const questionText = (question.question_text as string) || (question.question_text_en as string) || '';
+      const explanation = (question.explanation as string) || (question.explanation_en as string) || '';
       
       // Detect topic
       const topicSlug = detectTopicFromQuestion(questionText, normalizedSubject, explanation);
@@ -211,7 +217,7 @@ async function create2023TopicMappings() {
       // Store mapping
       topicMappings.push({
         id: generateId(),
-        questionId: question.id,
+        questionId: question.id as string,
         topicId: topicsToCreate.get(topicSlug).id,
         confidence: 0.8,
         isPrimary: true,
@@ -224,7 +230,7 @@ async function create2023TopicMappings() {
     console.log(`  Question mappings: ${topicMappings.length}`);
 
     // Show topic breakdown
-    const topicCounts = {};
+    const topicCounts: Record<string, number> = {};
     topicMappings.forEach(mapping => {
       const topic = Array.from(topicsToCreate.values()).find(t => t.id === mapping.topicId);
       if (topic) {
@@ -262,7 +268,7 @@ async function create2023TopicMappings() {
             Math.floor(Date.now() / 1000)  // updated_at
           ]
         });
-      } catch (error) {
+      } catch (error: any) {
         console.log(`⚠️ Topic ${topic.slug} might already exist: ${error.message}`);
       }
     }
@@ -288,7 +294,7 @@ async function create2023TopicMappings() {
           ]
         });
         successCount++;
-      } catch (error) {
+      } catch (error: any) {
         console.log(`⚠️ Mapping error for question ${mapping.questionId}: ${error.message}`);
       }
     }
@@ -308,7 +314,7 @@ async function create2023TopicMappings() {
       args: [CANONICAL_TEST_IDS[2023]]
     });
 
-    const mappedCount = verifyResult.rows[0].mapped_count;
+    const mappedCount = (verifyResult.rows[0] as unknown as { mapped_count: number }).mapped_count;
     console.log(`\n🎯 Final status: ${mappedCount}/100 questions mapped for 2023`);
 
     return {
@@ -317,7 +323,7 @@ async function create2023TopicMappings() {
       finalMappedCount: mappedCount
     };
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error:', error.message);
     throw error;
   } finally {

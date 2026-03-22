@@ -46,7 +46,7 @@ import {
 import { logger } from '@/lib/logger';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { getPYQIntelligenceForWrongQuestions, PYQWrongTopicInsight } from '@/actions/pyq-intelligence';
-import { submitTestFeedback } from '@/app/actions/feedback';
+import { submitTestFeedback, hasUserSubmittedFeedback } from '@/app/actions/feedback';
 import { TestSeriesFeedbackModal } from '@/components/test-series-feedback-modal';
 import type { FeedbackFormType } from '@/lib/schemas/feedback';
 
@@ -62,6 +62,7 @@ interface QuizResultProps {
   userId?: string;
   disableRetry?: boolean;
   isGuest?: boolean;
+  showFeedbackModal?: boolean;
 }
 
 export function QuizResult({
@@ -76,6 +77,7 @@ export function QuizResult({
   userId,
   disableRetry = false,
   isGuest = false,
+  showFeedbackModal = true,
 }: QuizResultProps) {
   const router = useRouter();
   const { language } = useSettingsStore();
@@ -131,36 +133,69 @@ export function QuizResult({
   const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => {
-    // Show feedback modal immediately out of the gate without any timeout flicker
-    const currentTestId = testId || 'guest-test-result';
-    const hasSeenFeedback = typeof window !== 'undefined' ? sessionStorage.getItem(`feedback_shown_${currentTestId}`) : null;
-    
-    if (!hasSeenFeedback) {
+    if (!showFeedbackModal) return;
+
+    const checkFeedbackStatus = async () => {
+      // 1. Check LocalStorage (Global for both guests and logged-in users)
+      const hasFeedbackStorage = typeof window !== 'undefined' ? localStorage.getItem('mppsc_feedback_given') : null;
+      if (hasFeedbackStorage) {
+        setShowFeedback(false);
+        return;
+      }
+
+      // 2. Check SessionStorage (Legacy/Fallback)
+      const currentTestId = testId || 'guest-test-result';
+      const hasSeenSession = typeof window !== 'undefined' ? sessionStorage.getItem(`feedback_shown_${currentTestId}`) : null;
+      if (hasSeenSession) {
+        setShowFeedback(false);
+        return;
+      }
+
+      // 3. For logged-in users, check database
+      if (userId) {
+        const submitted = await hasUserSubmittedFeedback();
+        if (submitted) {
+          setShowFeedback(false);
+          // Sync with localStorage
+          if (typeof window !== 'undefined') localStorage.setItem('mppsc_feedback_given', 'true');
+          return;
+        }
+      }
+
+      // If no feedback found anywhere, show it
       setShowFeedback(true);
+      // Mark as shown in session to prevent flicker on re-renders,
+      // but only set final 'given' status on actual submission
       if (typeof window !== 'undefined') {
         sessionStorage.setItem(`feedback_shown_${currentTestId}`, 'true');
       }
-    }
-  }, [testId]);
+    };
+
+    checkFeedbackStatus();
+  }, [testId, userId, showFeedbackModal]);
 
   const handleFeedbackSubmit = async (data: FeedbackFormType) => {
     console.log('QuizResult Feedback submitted:', data);
     
     try {
-      // Import dynamically or ensure it's imported at the top. We will import at the top.
+      // Get guest name from localStorage if active
+      const guestName = typeof window !== 'undefined' ? localStorage.getItem('mppsc_guest_name') : null;
+
       const currentTestId = testId || 'guest-test-result';
       const testType = mode === 'pyq' ? 'pyq' : (mode === 'full' ? 'premium' : 'free');
-      
+
       const response = await submitTestFeedback({
         testId: currentTestId,
-        userId: userId || null, // from props
         testType,
         data,
+        userName: guestName,
       });
 
-      if (!response.success) {
+      if (response.success) {
+        // Sync with localStorage on success
+        if (typeof window !== 'undefined') localStorage.setItem('mppsc_feedback_given', 'true');
+      } else {
         console.error('Failed to submit feedback:', response.error);
-        // Optionally show toast error here, but silently failing is fine for feedback
       }
     } catch (error) {
       console.error('Error submitting feedback:', error);

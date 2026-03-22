@@ -656,6 +656,10 @@ export const testFeedback = sqliteTable('test_feedback', {
   // Optional text feedback
   comments: text('comments'),
   
+  // User Info (Added to identify guest/logged-in users easily)
+  userName: text('user_name'),
+  userEmail: text('user_email'),
+  
   // Metadata
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),

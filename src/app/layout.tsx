@@ -32,7 +32,7 @@ const SupportButton = dynamic(() =>
 // });
 
 export const viewport: Viewport = {
-  themeColor: '#4f46e5',
+  themeColor: '#4c1d95',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,

@@ -59,8 +59,10 @@ export default function PYQIntelligenceClient({
 
       {/* Main Content */}
       <div className="relative mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
-        {/* PYQ Analysis Menu */}
-        <PYQMenu isHindi={isHindi} currentPage="intelligence" />
+        {/* PYQ Analysis Menu - Hidden on Desktop per User Request */}
+        <div className="md:hidden">
+          <PYQMenu isHindi={isHindi} currentPage="intelligence" />
+        </div>
 
         {/* Overall Weightage (Subject-wise 2020-2025) */}
         <OverallWeightage

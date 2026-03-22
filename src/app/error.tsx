@@ -1,14 +1,18 @@
 'use client';
 
-import type { ErrorInfo } from 'next/error';
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { logger } from '@/lib/logger';
 import { AlertTriangle, RotateCcw, Home, ArrowRight } from 'lucide-react';
 
-export default function Error(props: ErrorInfo) {
-  const { error, reset, unstable_retry } = props;
-  const errorWithDigest = error as Error & { digest?: string };
+interface AppErrorProps {
+  error: Error & { digest?: string };
+  reset: () => void;
+  unstable_retry?: () => void;
+}
+
+export default function Error({ error, reset, unstable_retry }: AppErrorProps) {
+  const errorWithDigest = error;
 
   useEffect(() => {
     logger.error('App Error:', error);

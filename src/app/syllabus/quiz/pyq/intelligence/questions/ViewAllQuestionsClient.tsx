@@ -55,14 +55,16 @@ export default function ViewAllQuestionsClient({
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [showAllExpanded, setShowAllExpanded] = useState(false);
   const [filterYear, setFilterYear] = useState<number | null>(null);
-  
+
   // Check if we're in PDF mode (for Puppeteer)
   const searchParams = useSearchParams();
   const isPdfMode = searchParams.get('pdf_mode') === 'true';
-  
+
   // Get unique years for filtering
   const uniqueYears = useMemo(() => {
-    return Array.from(new Set(questions.map((q) => q.year).filter((y): y is number => y !== undefined))).sort((a, b) => b - a);
+    return Array.from(
+      new Set(questions.map((q) => q.year).filter((y): y is number => y !== undefined))
+    ).sort((a, b) => b - a);
   }, [questions]);
 
   // Filter questions by year
@@ -70,11 +72,11 @@ export default function ViewAllQuestionsClient({
     if (!filterYear) return questions;
     return questions.filter((q) => q.year === filterYear);
   }, [questions, filterYear]);
-  
+
   // Auto-expand all questions in PDF mode
   useEffect(() => {
     if (isPdfMode && filteredQuestions.length > 0) {
-      setExpandedIds(new Set(filteredQuestions.map(q => q.id)));
+      setExpandedIds(new Set(filteredQuestions.map((q) => q.id)));
       setShowAllExpanded(true);
     }
   }, [isPdfMode, filteredQuestions]);
@@ -117,279 +119,303 @@ export default function ViewAllQuestionsClient({
   }, [source, topicTitle, year, unitId, unitTitle, subject]);
 
   return (
-    <div className="min-h-screen bg-slate-950 pb-20 text-white selection:bg-indigo-500/30">
-      {/* Background */}
-      <div className="pointer-events-none fixed inset-0">
-        <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-indigo-500/10 blur-[100px]" />
-        <div className="absolute right-[-10%] bottom-[-10%] h-[500px] w-[500px] rounded-full bg-rose-500/10 blur-[100px]" />
+    <div className="min-h-screen bg-[#080510] pb-24 text-slate-200 selection:bg-violet-500/30">
+      {/* Dynamic Background */}
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-violet-600/10 blur-[120px] animate-pulse" />
+        <div className="absolute right-[-10%] bottom-[-10%] h-[600px] w-[600px] rounded-full bg-amber-600/5 blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[30%] left-[20%] h-[400px] w-[400px] rounded-full bg-purple-600/5 blur-[100px]" />
       </div>
 
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
+      {/* Premium Sticky Header */}
+      <div className="sticky top-0 z-50 border-b border-white/[0.03] bg-[#080510]/70 backdrop-blur-2xl">
         <div className="mx-auto max-w-4xl px-4 sm:px-6">
           <div className="flex h-16 items-center gap-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => router.back()}
-              className="rounded-full text-slate-400 hover:bg-white/10 hover:text-white"
+              className="group rounded-xl bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition-all active:scale-95"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
             </Button>
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-base font-bold text-white sm:text-lg">
+              <h1 className="truncate text-base font-black tracking-tight text-white sm:text-lg">
                 {pageTitle}
               </h1>
-              <p className="text-xs text-slate-400">
-                {filteredQuestions.length} {isHindi ? 'प्रश्न' : 'Questions'}
-              </p>
+              <div className="flex items-center gap-2">
+                <div className={cn('h-1.5 w-1.5 rounded-full animate-pulse', colorClass.replace('bg-', 'bg-').replace('indigo', 'violet'))} />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                  {filteredQuestions.length} {isHindi ? 'प्रश्न' : 'Solved Questions'}
+                </p>
+              </div>
             </div>
-            <div className={cn('h-8 w-2 rounded-full', colorClass)} />
+            <div className={cn('h-10 w-1 rounded-full bg-gradient-to-b opacity-50', colorClass.replace('bg-', 'from-').replace('indigo', 'violet').replace(' ', ' to-transparent'))} />
           </div>
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="sticky top-16 z-20 border-b border-white/5 bg-slate-900/90 backdrop-blur-md">
-        <div className="mx-auto max-w-4xl px-4 py-3 sm:px-6">
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Year Filter */}
+      {/* Modernized Controls */}
+      <div className="sticky top-16 z-40 border-b border-white/[0.03] bg-[#080510]/60 backdrop-blur-xl">
+        <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            {/* Year Filter Pills */}
             {uniqueYears.length > 1 && (
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-slate-500" />
-                <div className="flex gap-1">
-                  <Button
-                    variant={filterYear === null ? 'default' : 'ghost'}
-                    size="sm"
+              <div className="no-scrollbar flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+                <div className="flex h-9 items-center rounded-2xl bg-white/5 p-1">
+                  <button
                     onClick={() => setFilterYear(null)}
                     className={cn(
-                      'h-7 rounded-full px-3 text-xs font-bold',
-                      filterYear === null
-                        ? 'bg-indigo-500 text-white'
-                        : 'text-slate-400 hover:bg-white/10'
+                      'h-full rounded-xl px-4 text-xs font-black transition-all active:scale-95',
+                      filterYear === null 
+                        ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]' 
+                        : 'text-slate-400 hover:text-white'
                     )}
                   >
-                    All
-                  </Button>
-                  {uniqueYears.slice(0, 6).map((y) => (
-                    <Button
+                    ALL
+                  </button>
+                  {uniqueYears.map((y) => (
+                    <button
                       key={y}
-                      variant={filterYear === y ? 'default' : 'ghost'}
-                      size="sm"
                       onClick={() => setFilterYear(y)}
                       className={cn(
-                        'h-7 rounded-full px-3 text-xs font-bold',
+                        'h-full rounded-xl px-4 text-xs font-black transition-all active:scale-95',
                         filterYear === y
-                          ? 'bg-indigo-500 text-white'
-                          : 'text-slate-400 hover:bg-white/10'
+                          ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]'
+                          : 'text-slate-400 hover:text-white'
                       )}
                     >
                       {y}
-                    </Button>
+                    </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Expand/Collapse All */}
+            {/* Expand/Collapse All - Glass Action */}
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={toggleAll}
-              className="ml-auto h-7 gap-1.5 rounded-full px-3 text-xs font-bold text-indigo-400 hover:bg-indigo-500/10"
-              data-testid="expand-all-button"
+              className="h-9 gap-2 rounded-xl border-white/5 bg-white/5 px-4 text-xs font-bold text-white transition-all hover:bg-white/10 active:scale-95 sm:ml-auto"
             >
-              {showAllExpanded ? (
-                <>
-                  <EyeOff className="h-3.5 w-3.5" />
-                  {isHindi ? 'सब बंद करें' : 'Collapse All'}
-                </>
-              ) : (
-                <>
-                  <Eye className="h-3.5 w-3.5" />
-                  {isHindi ? 'सब खोलें' : 'Expand All'}
-                </>
-              )}
+              <AnimatePresence mode="wait">
+                {showAllExpanded ? (
+                  <motion.div
+                    key="collapse"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    className="flex items-center gap-2"
+                  >
+                    <EyeOff className="h-4 w-4 text-amber-500" />
+                    {isHindi ? 'सब बंद करें' : 'Collapse All'}
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="expand"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    className="flex items-center gap-2"
+                  >
+                    <Eye className="h-4 w-4 text-amber-500" />
+                    {isHindi ? 'सब खोलें' : 'Expand All'}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Questions List */}
-      <div 
-        className="relative mx-auto max-w-4xl space-y-4 px-4 py-6 sm:px-6"
+      {/* Questions List - Premium Cards */}
+      <div
+        className="relative mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6"
         data-testid="questions-container"
       >
         {filteredQuestions.map((q, idx) => {
           const isExpanded = expandedIds.has(q.id);
-          const displayText = isHindi ? q.text : (q.textEn || q.text);
+          const displayText = isHindi ? q.text : q.textEn || q.text;
           const altText = isHindi ? q.textEn : q.text;
 
           return (
-            <Card
+            <div
               key={q.id}
-              className="overflow-hidden border-slate-800 bg-slate-900/50 shadow-lg question-card"
+              className="group relative transition-all duration-300"
               data-question-item
               data-question-id={q.id}
             >
-              {/* Question Header */}
-              <div
-                className="flex cursor-pointer items-start gap-4 p-4 transition-colors hover:bg-white/5 sm:p-5"
-                onClick={() => toggleQuestion(q.id)}
-                data-question-header
-              >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-800 font-mono text-xs font-bold text-slate-400">
-                  {idx + 1}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div 
-                    className={cn(
-                      'text-sm leading-relaxed text-slate-200 sm:text-base',
-                      !isExpanded && 'line-clamp-2'
-                    )}
-                    dangerouslySetInnerHTML={{ 
-                      __html: displayText.slice(0, 150) + (displayText.length > 150 ? '...' : '')
-                    }}
-                  />
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  {q.qNo && (
-                    <span className="text-xs font-mono text-slate-500">
-                      Q{q.qNo}
-                    </span>
-                  )}
-                  <YearBadge year={q.year ?? 2020} variant="indigo" />
-                  {isExpanded ? (
-                    <ChevronUp className="h-5 w-5 text-indigo-400" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 text-slate-600" />
-                  )}
-                </div>
-              </div>
+              {/* Card Accent Glow */}
+              <div className={cn(
+                "absolute -inset-px rounded-[2rem] opacity-0 blur-md transition-opacity duration-500 group-hover:opacity-100",
+                isExpanded ? "opacity-40" : ""
+              )} style={{ background: `linear-gradient(to right, ${isExpanded ? '#8b5cf6' : '#1e293b'}, transparent)` }} />
 
-              {/* Expanded Content */}
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="space-y-4 border-t border-slate-800 bg-slate-950/50 p-4 sm:p-5">
-                      {/* Full Question */}
-                      <div>
-                        {q.type === 'matching' && q.matchPairs && q.matchPairs.length > 0 ? (
-                          <>
-                            <div 
-                              className="prose prose-slate prose-sm max-w-none text-slate-200 sm:prose-base mb-4"
-                              dangerouslySetInnerHTML={{ 
-                                __html: displayText
-                                  .replace(/List-?\s*I{1,2}\b.*$/gim, '') // Remove List-I/List-II text
-                                  .replace(/सूची-?\s*I{1,2}\b.*$/gim, '') // Remove Hindi list text
-                                  .replace(/\n/g, '<br/>')
-                                  .replace(/(?:\r\n|\r|\n)/g, '<br/>')
-                                  .trim()
-                              }} 
-                            />
-                            <RenderTableQuestion 
+              <Card className={cn(
+                "relative z-10 overflow-hidden rounded-[2rem] border-white/[0.03] bg-slate-900/40 shadow-2xl backdrop-blur-sm transition-all duration-300",
+                isExpanded ? "bg-[#0b081a]/80 ring-1 ring-violet-500/20" : "hover:bg-slate-900/60"
+              )}>
+                {/* Question Header Area */}
+                <div
+                  className="flex cursor-pointer items-start gap-5 p-5 sm:p-7"
+                  onClick={() => toggleQuestion(q.id)}
+                >
+                  {/* Styled Numbering */}
+                  <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
+                    <div className="absolute inset-0 rotate-45 rounded-xl bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors" />
+                    <span className="relative font-black text-sm text-amber-500">
+                      {idx + 1}
+                    </span>
+                  </div>
+
+                  <div className="min-w-0 flex-1 pt-1">
+                    <div
+                      className={cn(
+                        'text-[15px] leading-[1.6] font-medium text-slate-100 sm:text-[17px] tracking-tight',
+                        !isExpanded && 'line-clamp-2'
+                      )}
+                      dangerouslySetInnerHTML={{
+                        __html: isExpanded 
+                          ? displayText 
+                          : displayText.slice(0, 180) + (displayText.length > 180 ? '...' : ''),
+                      }}
+                    />
+                    
+                    {!isExpanded && (
+                       <div className="mt-3 flex items-center gap-3">
+                          <YearBadge year={q.year ?? 2020} variant="amber" className="px-2.5 py-1 text-[10px] uppercase font-black bg-amber-500/10 text-amber-500 border-amber-500/20" />
+                          {q.qNo && <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">SET-Q{q.qNo}</span>}
+                       </div>
+                    )}
+                  </div>
+
+                  <div className="mt-1 flex shrink-0 items-center">
+                    <div className={cn(
+                      "flex h-8 w-8 items-center justify-center rounded-full bg-white/5 transition-all text-slate-500",
+                      isExpanded ? "bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.5)] rotate-180" : "group-hover:text-slate-300"
+                    )}>
+                      <ChevronDown className="h-5 w-5" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expanded Content Area */}
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <div className="space-y-6 border-t border-white/[0.05] bg-slate-950/40 p-5 sm:p-7">
+                        {/* Table Content (if matching) */}
+                        {q.type === 'matching' && q.matchPairs && q.matchPairs.length > 0 && (
+                          <div className="rounded-2xl border border-white/5 bg-slate-900/50 p-4">
+                            <RenderTableQuestion
                               matchPairs={q.matchPairs}
                               language={isHindi ? 'hi' : 'en'}
-                              className="mb-4"
                               darkMode={true}
                             />
-                          </>
-                        ) : (
-                          <div 
-                            className="prose prose-slate prose-sm max-w-none text-slate-200 sm:prose-base"
-                            dangerouslySetInnerHTML={{ 
-                              __html: displayText
-                                .replace(/\n/g, '<br/>')
-                                .replace(/(?:\r\n|\r|\n)/g, '<br/>')
-                            }} 
-                          />
+                          </div>
                         )}
-                        {altText && altText !== displayText && (
-                          <div 
-                            className="mt-3 prose prose-slate prose-sm max-w-none text-slate-500 italic"
-                            dangerouslySetInnerHTML={{ 
-                              __html: altText
-                                .replace(/\n/g, '<br/>')
-                                .replace(/(?:\r\n|\r|\n)/g, '<br/>')
-                            }} 
-                          />
-                        )}
-                      </div>
 
-                      {/* Options */}
-                      {q.options && q.options.length > 0 && (
-                        <div className="space-y-2">
-                          {q.options.map((opt, optIdx) => {
-                            // Parse options if they're JSON objects with text/text_en, or just use as strings
+                        {/* Translation Alternative */}
+                        {altText && altText !== displayText && (
+                          <div className="relative rounded-2xl border-l-[3px] border-amber-500/30 bg-amber-500/[0.03] p-4 text-[13px] leading-relaxed text-slate-400 italic">
+                             <div className="mb-1 text-[9px] font-black uppercase tracking-tighter text-amber-400/60 opacity-50">Translated Reference</div>
+                             <div dangerouslySetInnerHTML={{ __html: altText }} />
+                          </div>
+                        )}
+
+                        {/* Redesigned Options Grid */}
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          {q.options && q.options.slice(0, 4).map((opt, optIdx) => {
                             const parsedOpt = typeof opt === 'object' && opt !== null ? opt : { text: opt };
                             const isCorrect = Number(q.correctAnswer) === optIdx;
-                            const optText = isHindi 
-                              ? (parsedOpt.text || parsedOpt) 
-                              : (parsedOpt.text_en || parsedOpt.textEn || parsedOpt.text || parsedOpt);
+                            const optText = isHindi
+                              ? parsedOpt.text || parsedOpt
+                              : parsedOpt.text_en || parsedOpt.textEn || parsedOpt.text || parsedOpt;
 
                             return (
                               <div
                                 key={optIdx}
                                 className={cn(
-                                  'rounded-lg border px-4 py-3 text-sm transition-colors',
+                                  'group/opt relative flex items-center gap-4 rounded-2xl border p-4 transition-all duration-300',
                                   isCorrect
-                                    ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300'
-                                    : 'border-slate-700/50 bg-slate-800/30 text-slate-400'
+                                    ? 'border-emerald-500/30 bg-emerald-500/[0.08] shadow-[0_0_20px_rgba(16,185,129,0.05)]'
+                                    : 'border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.05]'
                                 )}
                               >
-                                <span className="mr-2 font-bold">
-                                  {String.fromCharCode(65 + optIdx)}.
-                                </span>
-                                <div dangerouslySetInnerHTML={{ __html: optText }} />
+                                {/* Alphabet Bubble */}
+                                <div className={cn(
+                                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-all",
+                                  isCorrect 
+                                    ? "bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)]" 
+                                    : "bg-white/5 text-slate-500 group-hover/opt:bg-white/10 group-hover/opt:text-slate-300"
+                                )}>
+                                  {String.fromCharCode(65 + optIdx)}
+                                </div>
+
+                                <div className={cn(
+                                  "flex-1 text-sm font-medium leading-tight",
+                                  isCorrect ? "text-emerald-100" : "text-slate-300"
+                                )} dangerouslySetInnerHTML={{ __html: optText }} />
+
                                 {isCorrect && (
-                                  <Badge className="ml-2 h-5 border-none bg-emerald-500/20 px-1.5 text-[10px] text-emerald-400">
-                                    ✓ Correct
-                                  </Badge>
+                                   <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20">
+                                      <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                                   </div>
                                 )}
                               </div>
                             );
                           })}
                         </div>
-                      )}
 
-                      {/* Explanation */}
-                      {(q.explanation || q.explanationEn) && (
-                        <PremiumExplanation
-                          explanation={isHindi ? (q.explanation || '') : (q.explanationEn || q.explanation || '')}
-                          darkMode={true}
-                          compact={true}
-                          language={isHindi ? 'hi' : 'en'}
-                        />
-                      )}
+                        {/* Premium Insights Section */}
+                        <div className="space-y-4 pt-4">
+                           {(q.explanation || q.explanationEn) && (
+                            <PremiumExplanation
+                              explanation={isHindi ? q.explanation || '' : q.explanationEn || q.explanation || ''}
+                              darkMode={true}
+                              compact={false}
+                              language={isHindi ? 'hi' : 'en'}
+                            />
+                          )}
 
-                      {/* Link to full question page */}
-                      <Link
-                        href={`/syllabus/quiz/pyq/question/${q.id}`}
-                        className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-400 hover:text-indigo-300"
-                      >
-                        View detailed analysis →
-                      </Link>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </Card>
+                          <div className="flex items-center justify-between border-t border-white/5 pt-4">
+                             <YearBadge year={q.year ?? 2020} variant="amber" className="px-3 bg-amber-500/10 text-amber-500 border-amber-500/20" />
+                             <Link
+                                href={`/syllabus/quiz/pyq/question/${q.id}`}
+                                className="group inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-amber-500 transition-colors hover:text-amber-400"
+                              >
+                                Detailed Analysis
+                                <ArrowLeft className="h-3 w-3 rotate-180 transition-transform group-hover:translate-x-1" />
+                              </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Card>
+            </div>
           );
         })}
 
+        {/* Empty State */}
         {filteredQuestions.length === 0 && (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900/50 p-12 text-center">
-            <Filter className="mb-4 h-12 w-12 text-slate-600" />
-            <h3 className="text-lg font-bold text-slate-300">
-              {isHindi ? 'कोई प्रश्न नहीं मिला' : 'No questions found'}
+          <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-white/10 bg-white/[0.02] p-20 text-center">
+            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/5">
+               <Filter className="h-10 w-10 text-slate-600" />
+            </div>
+            <h3 className="text-xl font-black text-white">
+              {isHindi ? 'कोई प्रश्न नहीं मिला' : 'No matches found'}
             </h3>
-            <p className="mt-1 text-sm text-slate-500">
-              {isHindi ? 'इस फ़िल्टर के लिए कोई प्रश्न नहीं है' : 'No questions match this filter'}
+            <p className="mt-2 text-sm text-slate-500 max-w-[250px] mx-auto">
+              {isHindi ? 'सॉरी, इस साल या इस फ़िल्टर के लिए कोई डेटा नहीं है।' : 'Try selecting a different year or broader filters to find what you are looking for.'}
             </p>
           </div>
         )}

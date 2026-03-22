@@ -1,12 +1,16 @@
 'use client';
 
 import * as Sentry from '@sentry/nextjs';
-import NextError, { type ErrorInfo } from 'next/error';
 import { useEffect } from 'react';
 
-export default function GlobalError(props: ErrorInfo & { error: Error & { digest?: string } }) {
-  const { error, reset, unstable_retry } = props;
-  const errorWithDigest = error as Error & { digest?: string };
+interface GlobalErrorProps {
+  error: Error & { digest?: string };
+  reset: () => void;
+  unstable_retry?: () => void;
+}
+
+export default function GlobalError({ error, reset, unstable_retry }: GlobalErrorProps) {
+  const errorWithDigest = error;
 
   useEffect(() => {
     Sentry.captureException(error);
@@ -15,12 +19,10 @@ export default function GlobalError(props: ErrorInfo & { error: Error & { digest
   const handleRetry = () => {
      if (unstable_retry) {
        unstable_retry();
-     } else if (reset) {
-       reset();
      } else {
-        window.location.reload();
+       reset();
      }
-  };
+   };
 
   return (
     <html lang="en">

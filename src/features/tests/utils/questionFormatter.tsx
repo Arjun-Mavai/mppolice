@@ -27,6 +27,23 @@ export function cleanMatchingQuestionText(questionText: string, question: Questi
   return questionText;
 }
 
+/**
+ * Maps correct answer string (A/B/C/D or 0/1/2/3) to numeric index
+ */
+export function mapCorrectAnswerToIndex(answer: string | number | null | undefined): number {
+  if (answer === null || answer === undefined || answer === '') return -1;
+  const num = Number(answer);
+  if (!isNaN(num)) return num;
+  
+  // Handle 'A', 'B', 'C', 'D'
+  if (typeof answer === 'string') {
+    const charCode = answer.toUpperCase().charCodeAt(0);
+    if (charCode >= 65 && charCode <= 90) return charCode - 65;
+  }
+  
+  return -1;
+}
+
 interface FormattedQuestionTextProps {
   text: string;
   className?: string;

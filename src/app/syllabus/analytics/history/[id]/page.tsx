@@ -85,6 +85,7 @@ async function AttemptContent({ attemptId }: { attemptId: string }) {
         testId={meta.testId ?? undefined}
         userId={meta.userId ?? undefined}
         disableRetry={true}
+        showFeedbackModal={false}
       />
     </div>
   );

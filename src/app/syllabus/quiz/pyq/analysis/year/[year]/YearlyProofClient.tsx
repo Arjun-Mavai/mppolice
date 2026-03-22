@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
-import { RenderTableQuestion } from '@/features/tests/utils/questionFormatter';
+import { RenderTableQuestion, mapCorrectAnswerToIndex } from '@/features/tests/utils/questionFormatter';
 import type { YearlySubjectQuestions } from '@/features/tests/actions/pyq-insights';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { cn } from '@/lib/utils';
@@ -135,17 +135,12 @@ export default function YearlyProofClient({ data }: { data: YearlySubjectQuestio
                         {/* Handle Matching Questions */}
                         {q.type === 'matching' && getParsedMatchPairs(q.matchPairs).length > 0 ? (
                           <>
-                            <div 
-                              className="prose prose-slate prose-sm max-w-none text-slate-800 sm:prose-base mb-4"
-                              dangerouslySetInnerHTML={{ 
-                                __html: (isHindi ? q.questionText : q.questionTextEn || q.questionText)
-                                  .replace(/List-?\s*I{1,2}\b.*$/gim, '')
-                                  .replace(/सूची-?\s*I{1,2}\b.*$/gim, '')
-                                  .replace(/\n/g, '<br/>')
-                                  .replace(/(?:\r\n|\r|\n)/g, '<br/>')
-                                  .trim()
-                              }} 
-                            />
+                            <div className="prose prose-slate prose-sm mb-4 max-w-none whitespace-pre-line text-slate-800 sm:prose-base">
+                              {(isHindi ? q.questionText : q.questionTextEn || q.questionText)
+                                .replace(/List-?\s*I{1,2}\b.*$/gim, '')
+                                .replace(/सूची-?\s*I{1,2}\b.*$/gim, '')
+                                .trim()}
+                            </div>
                             <RenderTableQuestion 
                               matchPairs={getParsedMatchPairs(q.matchPairs)}
                               language={isHindi ? 'hi' : 'en'}
@@ -154,13 +149,9 @@ export default function YearlyProofClient({ data }: { data: YearlySubjectQuestio
                             />
                           </>
                         ) : (
-                          <p className="text-[1.1rem] font-black text-slate-800 leading-[1.6] [text-shadow:1px_1px_2px_rgba(0,0,0,0.15)] selection:bg-blue-100 italic"
-                             dangerouslySetInnerHTML={{ 
-                               __html: (isHindi ? q.questionText : q.questionTextEn || q.questionText)
-                                 .replace(/\n/g, '<br/>')
-                                 .replace(/(?:\r\n|\r|\n)/g, '<br/>')
-                             }}
-                          />
+                           <p className="text-[1.1rem] leading-[1.6] whitespace-pre-line italic font-black text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.15)] selection:bg-blue-100">
+                             {isHindi ? q.questionText : q.questionTextEn || q.questionText}
+                           </p>
                         )}
                         
                         {isHindi && q.questionTextEn && q.type !== 'matching' && (
@@ -175,8 +166,8 @@ export default function YearlyProofClient({ data }: { data: YearlySubjectQuestio
                       {/* Options Display */}
                       <div className="space-y-3 mt-2">
                         {getParsedOptions(q.options).map((opt: any, idx: number) => {
-                          const correctIdx = Number(q.correctAnswer);
-                          const isCorrect = !isNaN(correctIdx) && correctIdx === idx;
+                          const correctIdx = mapCorrectAnswerToIndex(q.correctAnswer);
+                          const isCorrect = correctIdx !== -1 && correctIdx === idx;
                           
                           let optionText = opt;
                           if (typeof opt === 'object' && opt !== null) {

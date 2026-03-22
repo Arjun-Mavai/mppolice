@@ -1,9 +1,15 @@
 import { createClient } from '@libsql/client';
 
-// Production Turso connection
+const dbUrl = process.env.TURSO_DATABASE_URL;
+const authToken = process.env.TURSO_AUTH_TOKEN;
+
+if (!dbUrl || !authToken) {
+  throw new Error('Missing TURSO credentials: set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN');
+}
+
 const client = createClient({
-  url: 'libsql://mppsc-test-series-arjun-gurjar.aws-ap-south-1.turso.io',
-  authToken: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3Njk5MTg1MjAsImlkIjoiNmZjZWY3MGEtNDZmYi00OWY5LWE4ZGQtYTMxNDk3MWFjOTlhIiwicmlkIjoiMjVkYTUxNjUtNWM1Yi00Mjc1LWEyNTYtZjlhNDhiNjQyZjA4In0.Uat6fTihImcWMjdZHXe2lmhq2tEfI7hj7TApkWgXdhLIVHnhCXB1yB56kuDpwi51m6f9LHbytvWkNlXHb1znCA'
+  url: dbUrl,
+  authToken,
 });
 
 const CANONICAL_TEST_IDS = {
@@ -32,13 +38,15 @@ async function verifyQuestionCounts() {
       ORDER BY total_questions DESC
     `);
     
-    const topicCounts = {};
+    const topicCounts: Record<string, number> = {};
     let topicTotal = 0;
     
     topicTrendsResult.rows.forEach(row => {
-      topicCounts[row.subject] = row.total_questions;
-      topicTotal += row.total_questions;
-      console.log(`  ${row.subject}: ${row.total_questions} questions`);
+      const subject = row.subject as string;
+      const questionCount = row.total_questions as number;
+      topicCounts[subject] = questionCount;
+      topicTotal += questionCount;
+      console.log(`  ${subject}: ${questionCount} questions`);
     });
     
     console.log(`  Total: ${topicTotal} questions\n`);
@@ -58,7 +66,7 @@ async function verifyQuestionCounts() {
       args: testIds
     });
     
-    const rawTotal = rawQuestionsResult.rows[0].total_questions;
+    const rawTotal = (rawQuestionsResult.rows[0] as unknown as { total_questions: number }).total_questions;
     console.log(`  Total Raw Questions: ${rawTotal} questions\n`);
 
     // Method 3: Check by subject from question topics
@@ -80,13 +88,15 @@ async function verifyQuestionCounts() {
       args: testIds
     });
 
-    const subjectCounts = {};
+    const subjectCounts: Record<string, number> = {};
     let subjectTotal = 0;
     
     subjectDistResult.rows.forEach(row => {
-      subjectCounts[row.subject] = row.unique_questions;
-      subjectTotal += row.unique_questions;
-      console.log(`  ${row.subject}: ${row.unique_questions} questions`);
+      const subject = row.subject as string;
+      const uniqueQs = row.unique_questions as number;
+      subjectCounts[subject] = uniqueQs;
+      subjectTotal += uniqueQs;
+      console.log(`  ${subject}: ${uniqueQs} questions`);
     });
     
     console.log(`  Total: ${subjectTotal} questions\n`);
@@ -134,7 +144,7 @@ async function verifyQuestionCounts() {
       args: testIds
     });
 
-    const unmappedCount = unmappedResult.rows[0].unmapped_count;
+    const unmappedCount = (unmappedResult.rows[0] as unknown as { unmapped_count: number }).unmapped_count;
     console.log(`\n🔍 Unmapped Questions: ${unmappedCount}`);
     
     if (unmappedCount > 0) {
@@ -149,7 +159,7 @@ async function verifyQuestionCounts() {
       isConsistent: topicTotal === subjectTotal && unmappedCount === 0
     };
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error:', error.message);
   } finally {
     client.close();

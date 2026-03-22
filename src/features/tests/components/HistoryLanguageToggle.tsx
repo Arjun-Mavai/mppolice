@@ -20,22 +20,26 @@ export const HistoryLanguageToggle = () => {
         />
         
         <button
+        type="button"
         onClick={() => setLanguage('en')}
         className={cn(
             'relative z-10 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200',
             language === 'en' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
         )}
         aria-label="Switch to English"
+        aria-pressed={language === 'en'}
         >
         EN
         </button>
         <button
+        type="button"
         onClick={() => setLanguage('hi')}
         className={cn(
             'relative z-10 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200',
             language === 'hi' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
         )}
         aria-label="Switch to Hindi"
+        aria-pressed={language === 'hi'}
         >
         HI
         </button>

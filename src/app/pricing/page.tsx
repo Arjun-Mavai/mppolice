@@ -28,6 +28,7 @@ import {
   FileText,
   Flame,
   History,
+  Newspaper,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +37,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { PRICING_DEFAULTS, LITE_FEATURES, PRO_FEATURES } from '@/config/pricing';
 import { PaymentModal } from '@/components/payment/PaymentModal';
 import { PricingCard } from '@/components/PricingCard';
+import { cn } from '@/lib/utils';
 import { getPricingData } from '@/actions/pricing-actions';
 import { useQuery } from '@tanstack/react-query';
 
@@ -164,17 +166,25 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white font-sans selection:bg-slate-100 selection:text-slate-900">
+    <div className="min-h-screen bg-[#fffdfa] font-sans selection:bg-amber-100 selection:text-amber-900 overflow-hidden relative">
+      {/* Background Decoration */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-orange-500/5 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2" />
+
       {/* ── Hero Header ──────────────────────────────────── */}
-      <section className="px-4 pt-24 pb-4 text-center md:pt-28 md:pb-6">
-        <Badge className="mb-5 cursor-default border-slate-200 bg-slate-100 px-4 py-1.5 text-xs font-semibold tracking-wide text-slate-700 transition-colors hover:bg-slate-200">
-          MPPSC 2026
+      <section className="relative z-10 px-4 pt-24 pb-4 text-center md:pt-32 md:pb-8">
+        <Badge className="mb-6 cursor-default border-amber-200 bg-amber-50 px-5 py-2 text-xs font-black tracking-widest text-amber-800 uppercase shadow-sm">
+          MPPSC 2026 Special
         </Badge>
-        <h1 className="font-display mb-3 text-3xl leading-tight font-black tracking-tight text-slate-900 md:text-5xl">
-          {hi ? 'अपना MPPSC सफलता प्लान चुनें' : 'Choose Your MPPSC Success Plan'}
+        <h1 className="font-display mb-4 text-4xl leading-tight font-black tracking-tight text-slate-900 md:text-6xl">
+          {hi ? (
+             <>अपना <span className="text-amber-600">MPPSC सफलता</span> प्लान चुनें</>
+          ) : (
+             <>Choose Your <span className="text-amber-600">MPPSC Success</span> Plan</>
+          )}
         </h1>
-        <p className="mx-auto mb-1 max-w-lg text-base font-medium text-slate-500 md:text-lg">
-          {hi ? 'छात्रों के साथ स्मार्ट तैयारी करें' : 'Join aspirants who are preparing smarter'}
+        <p className="mx-auto mb-2 max-w-2xl text-lg font-bold text-slate-600 md:text-xl">
+          {hi ? 'उन हजारों छात्रों के साथ जुड़ें जो स्मार्ट तैयारी कर रहे हैं' : 'Join thousands of aspirants who are preparing smarter every day'}
         </p>
       </section>
 
@@ -213,29 +223,51 @@ export default function PricingPage() {
           </div> */}
 
           {/* FOMO badge - "first 100 students" with joined count */}
-          <div className="mb-8 flex justify-center">
-            <div className="relative inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2">
-              <Flame className="h-3.5 w-3.5 text-red-500" />
-              <span className="text-xs font-semibold text-amber-800">
+          <div className="mb-10 flex justify-center">
+            <div className="relative inline-flex items-center gap-3 rounded-full border border-amber-200 bg-amber-50/80 backdrop-blur-sm px-5 py-2.5 shadow-xl shadow-amber-500/5">
+              <Flame className="h-4 w-4 text-orange-600 animate-pulse" />
+              <span className="text-sm font-black text-amber-900 uppercase tracking-tight">
                 {hi ? p.urgencyTextHi : p.urgencyText}
               </span>
-              <Badge className="h-5 border-emerald-200 bg-emerald-100 px-1.5 py-0 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100">
-                <Users className="mr-0.5 h-2.5 w-2.5" />
+              <div className="h-4 w-px bg-amber-200 mx-1" />
+              <Badge className="h-6 border-emerald-200 bg-emerald-100 px-2 py-0 text-xs font-black text-emerald-800 hover:bg-emerald-100">
+                <Users className="mr-1 h-3 w-3" />
                 {p.studentsBought || PRICING_DEFAULTS.studentsBought} joined
               </Badge>
-              .
             </div>
           </div>
 
           {/* ── What You Get Section ─────────────────────── */}
-          <div className="mx-auto mb-10 max-w-4xl">
-            <h2 className="mb-6 text-center text-lg font-bold text-slate-800 md:text-xl">
-              {hi ? 'आपको क्या मिलता है?' : 'What do you get?'}
-            </h2>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+          <div className="mx-auto mb-16 max-w-6xl">
+            <div className="mb-8 flex flex-col items-center gap-2">
+               <h2 className="text-2xl font-black text-slate-900 md:text-3xl tracking-tight">
+                {hi ? 'आपको क्या मिलता है?' : 'What do you get?'}
+              </h2>
+              <div className="h-1.5 w-20 rounded-full bg-amber-500" />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {[
                 {
+                  icon: BarChart3,
+                  label: hi ? 'एग्जाम DNA विश्लेषण' : 'Exam DNA Analysis',
+                  sub: hi ? 'विषय वितरण और रुझान' : 'Topic Distribution & Trends',
+                  highlight: true
+                },
+                {
                   icon: Target,
+                  label: hi ? 'सिलेबस पर महारत' : 'Master Your Syllabus',
+                  sub: hi ? 'सभी 10 यूनिट्स की पूरी समझ' : 'Basic understanding of all 10 units',
+                  highlight: true
+                },
+                {
+                  icon: Sparkles,
+                  label: hi ? 'प्रीमियम फैक्ट्स लाइब्रेरी' : 'Premium Facts Library',
+                  sub: hi ? 'हाई-यील्ड एग्जाम फैक्ट्स' : 'High-yield Exam Facts',
+                  highlight: true
+                },
+                {
+                  icon: Zap,
                   label: hi ? '5000+ प्रश्न' : '5000+ Questions',
                   sub: hi ? 'सभी विषयों में' : 'Across all topics',
                 },
@@ -245,23 +277,39 @@ export default function PricingPage() {
                   sub: hi ? '100 प्रश्न प्रत्येक' : '100Q each',
                 },
                 {
-                  icon: BarChart3,
-                  label: hi ? 'स्मार्ट एनालिटिक्स' : 'Smart Analytics',
-                  sub: hi ? 'कमज़ोर टॉपिक पहचानो' : 'Find weak areas',
-                },
-                {
                   icon: History,
                   label: hi ? '5+ साल के PYQ' : '5+ Years PYQs',
                   sub: hi ? 'विस्तृत उत्तर सहित' : 'With Explanations',
                 },
-              ].map(({ icon: Icon, label, sub }) => (
+                {
+                  icon: Newspaper,
+                  label: hi ? 'प्रीमियम ब्लॉग्स' : 'Premium Blogs',
+                  sub: hi ? 'सभी 10 यूनिट्स पर विस्तृत नोट्स' : 'In-depth Notes on all 10 units',
+                },
+                {
+                  icon: BookOpen,
+                  label: hi ? 'कॉन्सेप्ट पर महारत' : 'Master The Concept',
+                  sub: hi ? 'विस्तृत व्याख्या और शॉर्ट-कट' : 'Structured Breakdowns & Shortcuts',
+                  highlight: true
+                },
+              ].map(({ icon: Icon, label, sub, highlight }) => (
                 <div
                   key={label}
-                  className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-center"
+                  className={cn(
+                    "group rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-1 shadow-sm",
+                    highlight 
+                      ? "border-amber-200 bg-amber-50/50 shadow-amber-500/5 hover:shadow-amber-500/10 hover:border-amber-300" 
+                      : "border-slate-100 bg-white hover:border-amber-100 hover:shadow-lg"
+                  )}
                 >
-                  <Icon className="mx-auto mb-2 h-6 w-6 text-slate-700" />
-                  <p className="text-sm font-bold text-slate-800">{label}</p>
-                  <p className="text-[11px] text-slate-500">{sub}</p>
+                  <div className={cn(
+                    "mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-colors",
+                    highlight ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-700 group-hover:bg-amber-100 group-hover:text-amber-600"
+                  )}>
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <p className="mb-1 text-sm font-black text-slate-900 md:text-base tracking-tight">{label}</p>
+                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{sub}</p>
                 </div>
               ))}
             </div>

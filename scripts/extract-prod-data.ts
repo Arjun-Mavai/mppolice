@@ -1,10 +1,16 @@
 import { createClient } from '@libsql/client';
 import fs from 'fs';
 
-// Production Turso connection
+const dbUrl = process.env.TURSO_DATABASE_URL;
+const authToken = process.env.TURSO_AUTH_TOKEN;
+
+if (!dbUrl || !authToken) {
+  throw new Error('Missing TURSO credentials: set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN');
+}
+
 const client = createClient({
-  url: 'libsql://mppsc-test-series-arjun-gurjar.aws-ap-south-1.turso.io',
-  authToken: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3Njk5MTg1MjAsImlkIjoiNmZjZWY3MGEtNDZmYi00OWY5LWE4ZGQtYTMxNDk3MWFjOTlhIiwicmlkIjoiMjVkYTUxNjUtNWM1Yi00Mjc1LWEyNTYtZjlhNDhiNjQyZjA4In0.Uat6fTihImcWMjdZHXe2lmhq2tEfI7hj7TApkWgXdhLIVHnhCXB1yB56kuDpwi51m6f9LHbytvWkNlXHb1znCA'
+  url: dbUrl,
+  authToken,
 });
 
 const CANONICAL_TEST_IDS = {
@@ -16,12 +22,12 @@ const CANONICAL_TEST_IDS = {
   2025: 'D0gf6bklgl3RT-sTnue2n',
 };
 
-function cleanCsvField(field) {
+function cleanCsvField(field: any) {
   if (!field) return '';
   return String(field).replace(/\n/g, ' ').replace(/\r/g, '').trim().replace(/"/g, '""');
 }
 
-function formatOptions(optionsJson) {
+function formatOptions(optionsJson: any) {
   try {
     // Remove outer quotes if present
     let jsonStr = optionsJson.trim();
@@ -75,21 +81,21 @@ async function extractProdData() {
     
     // Process data
     const csvRows = ['year,question_id,question_text,options,correct_answer,subject'];
-    let yearCounts = {};
+    let yearCounts: Record<string, number> = {};
     let successCount = 0;
     
-    for (const row of result.rows) {
+    for (const row of result.rows as any[]) {
       // Find year from test_id
       const year = Object.keys(CANONICAL_TEST_IDS).find(
-        y => CANONICAL_TEST_IDS[y] === row.test_id
+        y => (CANONICAL_TEST_IDS as any)[y] === row.test_id
       );
       
       if (!year) continue;
       
-      const questionText = cleanCsvField(row.question_text || row.question_text_en || '');
+      const questionText = cleanCsvField((row.question_text as string) || (row.question_text_en as string) || '');
       const options = formatOptions(row.options);
-      const correctAnswer = cleanCsvField(row.correct_answer || '');
-      const subject = cleanCsvField(row.subject || '');
+      const correctAnswer = cleanCsvField((row.correct_answer as string) || '');
+      const subject = cleanCsvField((row.subject as string) || '');
       
       // Skip if essential data is missing
       if (!questionText.trim()) {
@@ -122,7 +128,7 @@ async function extractProdData() {
     console.log('📁 File: pyq_prod_analysis.csv');
     
     return successCount;
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error:', error.message);
     throw error;
   } finally {
