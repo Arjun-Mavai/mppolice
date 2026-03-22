@@ -53,8 +53,8 @@ export default function PYQIntelligenceClient({
 
       {/* Header */}
       <PYQHeader
-        title={isHindi ? 'एग्जाम DNA विश्लेषण' : 'Exam DNA Analysis'}
-        subtitle="Subject-wise Distribution (2020-2025)"
+        title={isHindi ? 'प्रीमियम इंटेलिजेंस' : 'Premium Intelligence'}
+        subtitle={isHindi ? 'PYQ के हर रहस्य का विश्लेषण' : 'Extracting Every Secret of PYQs'}
       />
 
       {/* Main Content */}

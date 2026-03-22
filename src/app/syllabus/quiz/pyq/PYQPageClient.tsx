@@ -229,9 +229,12 @@ export default function PYQPageClient({
                     asChild
                     className="inline-flex h-full w-full items-center gap-2 rounded-[10px] bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                   >
-                    <TransitionLink href="/syllabus/quiz/pyq/intelligence" transitionTypes={['slide']}>
+                    <TransitionLink
+                      href="/syllabus/quiz/pyq/intelligence"
+                      transitionTypes={['slide']}
+                    >
                       <Sparkles className="h-4 w-4 text-amber-500" />
-                      {language === 'hi' ? 'प्रीमियम इंटेलिजेंस' : 'Premium Intelligence'}
+                      {language === 'hi' ? 'विशेषज्ञ PYQ इनसाइट्स' : 'Expert PYQ Insights'}
                     </TransitionLink>
                   </Button>
                 </div>
@@ -266,23 +269,20 @@ export default function PYQPageClient({
                 className="space-y-8"
               >
                 {/* All Subjects Header */}
-                <div className="text-center space-y-4">
+                <div className="space-y-4 text-center">
                   <h2 className="text-2xl font-bold text-slate-900">
-                    {language === 'hi' ? 'सभी विषय प्रश्न (2020-2025)' : 'All Subject Questions (2020-2025)'}
+                    {language === 'hi'
+                      ? 'सभी विषय प्रश्न (2020-2025)'
+                      : 'All Subject Questions (2020-2025)'}
                   </h2>
                   <p className="text-slate-600">
-                    {language === 'hi' 
+                    {language === 'hi'
                       ? 'पिछले 6 वर्षों के सभी प्रश्न विषयवार व्यवस्थित'
-                      : 'All questions from past 6 years organized by subject'
-                    }
+                      : 'All questions from past 6 years organized by subject'}
                   </p>
-                  
+
                   {/* Back Button */}
-                  <Button
-                    onClick={() => setViewMode('year')}
-                    variant="outline"
-                    className="mt-4"
-                  >
+                  <Button onClick={() => setViewMode('year')} variant="outline" className="mt-4">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     {language === 'hi' ? 'वापस जाएं' : 'Go Back'}
                   </Button>
@@ -290,7 +290,7 @@ export default function PYQPageClient({
 
                 {/* All Subject Cards */}
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {SUBJECTS.filter(sub => (subjectStats[sub.name] || 0) > 0).map((sub, idx) => (
+                  {SUBJECTS.filter((sub) => (subjectStats[sub.name] || 0) > 0).map((sub, idx) => (
                     <div key={sub.name} className="group">
                       <PYQCard
                         title={sub.name}
