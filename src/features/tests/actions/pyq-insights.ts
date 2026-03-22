@@ -501,7 +501,7 @@ export const getPyqTopicAnalysis = unstable_cache(
           year,
           questionCount: count,
           weightPercent: total > 0 ? Number(((count / total) * 100).toFixed(2)) : 0,
-          trendDelta: null,
+          trendDelta: count - (topicYearCount.get(`${topicId}::${year - 1}`) ?? 0),
         };
       });
     }

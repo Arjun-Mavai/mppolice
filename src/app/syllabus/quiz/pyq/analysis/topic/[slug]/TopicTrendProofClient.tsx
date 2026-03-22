@@ -255,36 +255,51 @@ export default function TopicTrendProofClient({ proof }: { proof: TopicTrendProo
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
               >
-                <div className="rounded-[2.5rem] border border-slate-800 bg-slate-900/40 p-8 pt-14 shadow-2xl backdrop-blur-md group hover:border-amber-500/30 transition-all relative overflow-hidden">
-                  <div className="absolute top-6 left-8 flex h-7 px-4 items-center justify-center rounded-lg bg-amber-500 text-[10px] font-black text-black shadow-lg shadow-amber-500/20">
-                    ID #{q.id.toString().slice(-4)}
+                <div className="rounded-[2.5rem] border border-slate-800 bg-slate-900/40 p-8 pt-16 shadow-2xl backdrop-blur-md group hover:border-amber-500/30 transition-all relative overflow-hidden">
+                  {/* Numbering and Test Title - Styled from Reference */}
+                  <div className="absolute top-6 left-8 flex flex-col items-start gap-4">
+                    <div className="relative flex h-10 w-10 items-center justify-center">
+                      <div className="absolute inset-0 rotate-45 rounded-xl bg-amber-500/10 transition-colors group-hover:bg-amber-500/20" />
+                      <span className="relative text-sm font-black text-amber-500">{i + 1}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-lg border border-white/10 shadow-sm backdrop-blur-sm">
+                      <Target className="h-3 w-3 text-emerald-500" />
+                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-tight">
+                         {isHindi ? q.testTitle : q.testTitleEn || q.testTitle}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Verified Label in Top Right */}
+                  <div className="absolute top-6 right-8 flex flex-col items-end gap-1.5 text-right">
+                    <div className="px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1.5">
+                      <ShieldCheck className="h-3 w-3" />
+                      Verified PYQ
+                    </div>
                   </div>
                   
-                  <div className="flex flex-col gap-6">
-                      <div className="flex flex-wrap items-center gap-3 border-b border-white/5 pb-5">
-                         <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
-                            <Target className="h-4 w-4 text-amber-500" />
-                            <span className="text-[11px] sm:text-xs font-black text-slate-200 uppercase tracking-tight">
-                               {isHindi ? q.testTitle : q.testTitleEn || q.testTitle}
-                            </span>
-                         </div>
+                  <div className="flex flex-col gap-6 pt-6">
+                      <div className="flex flex-wrap items-center gap-3 border-b border-white/5 pb-5 mt-4">
+                         {/* Topic Badge */}
+                         {/* (topicTitle is not available in TopicTrendProof, it's the current topic) */}
                       </div>
 
                       <div className="space-y-6">
-                        <div className="prose prose-invert prose-sm max-w-none whitespace-pre-line text-slate-200 sm:prose-base font-bold leading-relaxed">
+                        <div className="prose prose-invert prose-sm max-w-none whitespace-pre-line text-slate-100 sm:prose-base font-bold leading-relaxed">
                           {isHindi ? q.questionText : q.questionTextEn || q.questionText}
                         </div>
                         
                         {isHindi && q.questionTextEn && (
-                          <div className="relative pl-5 border-l-2 border-slate-800 py-1">
-                            <p className="text-sm font-semibold text-slate-500 italic leading-relaxed tracking-tight">
+                          <div className="relative pl-5 border-l-2 border-emerald-500/30 py-1 bg-emerald-500/[0.02] rounded-r-xl">
+                            <p className="text-sm font-semibold text-slate-400 italic leading-relaxed tracking-tight">
                               {q.questionTextEn}
                             </p>
                           </div>
                         )}
 
-                        {/* Options Display */}
-                        <div className="grid grid-cols-1 gap-3 mt-6">
+                        {/* Options Display - Redesigned to match Reference */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
                           {getParsedOptions(q.options).map((opt: any, idx: number) => {
                             const correctIdx = mapCorrectAnswerToIndex(q.correctAnswer);
                             const isCorrect = correctIdx !== -1 && correctIdx === idx;
@@ -300,34 +315,36 @@ export default function TopicTrendProofClient({ proof }: { proof: TopicTrendProo
                               <div
                                 key={idx}
                                 className={cn(
-                                  "relative flex items-center justify-between rounded-2xl border-2 p-5 transition-all",
+                                  "group/opt relative flex items-center gap-4 rounded-2xl border p-4 transition-all duration-300",
                                   isCorrect 
-                                    ? "bg-amber-500/10 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]" 
-                                    : "bg-slate-900/60 border-slate-800 text-slate-400 group-hover:border-slate-700"
+                                    ? "border-emerald-500/30 bg-emerald-500/[0.08] shadow-[0_0_20px_rgba(16,185,129,0.05)]" 
+                                    : "border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.05]"
                                 )}
                               >
-                                <div className="flex items-center gap-4 flex-1">
-                                  <div
-                                    className={cn(
-                                      "flex h-9 w-9 items-center justify-center rounded-full border-2 text-xs font-black transition-all",
-                                      isCorrect
-                                        ? "border-amber-500 bg-amber-500 text-black shadow-lg shadow-amber-500/40"
-                                        : "border-slate-700 bg-slate-800 text-slate-500"
-                                    )}
-                                  >
-                                    {String.fromCharCode(65 + idx)}
-                                  </div>
-                                  <span
-                                    className={cn(
-                                      "flex-1 text-[15px] leading-relaxed whitespace-pre-line font-black",
-                                      isCorrect ? "text-white" : "text-slate-400"
-                                    )}
-                                  >
-                                    {optionText}
-                                  </span>
+                                {/* Alphabet Bubble */}
+                                <div
+                                  className={cn(
+                                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-all",
+                                    isCorrect
+                                      ? "bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)]"
+                                      : "bg-white/5 text-slate-500 group-hover/opt:bg-white/10 group-hover/opt:text-slate-300"
+                                  )}
+                                >
+                                  {String.fromCharCode(65 + idx)}
                                 </div>
+
+                                <span
+                                  className={cn(
+                                    "flex-1 text-sm leading-tight font-medium",
+                                    isCorrect ? "text-emerald-500" : "text-slate-300"
+                                  )}
+                                  dangerouslySetInnerHTML={{ __html: optionText }}
+                                />
+
                                 {isCorrect && (
-                                  <CheckCircle2 className="ml-3 h-5 w-5 text-amber-500" />
+                                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20">
+                                    <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+                                  </div>
                                 )}
                               </div>
                             );
@@ -336,12 +353,13 @@ export default function TopicTrendProofClient({ proof }: { proof: TopicTrendProo
                       </div>
 
                       { (q.explanation || q.explanationEn) && (
-                        <div className="mt-2 p-6 rounded-[2rem] bg-white/5 border border-white/5 relative overflow-hidden group/fact transition-all hover:bg-white/[0.08] hover:shadow-xl">
+                        <div className="mt-4 pt-6 border-t border-white/5">
                            <PremiumExplanation 
-                             explanation={q.explanation || ''} 
+                             explanation={isHindi ? (q.explanation || '') : (q.explanationEn || q.explanation || '')} 
                              explanationEn={q.explanationEn} 
                              language={isHindi ? 'hi' : 'en'}
-                             compact={true}
+                             compact={false}
+                             darkMode={true}
                            />
                         </div>
                       )}
