@@ -182,6 +182,19 @@ export const getBlogCounts = blogService.getBlogCounts;
  * getBlogs — Paginated, filtered blog fetcher
  */
 export async function getBlogs(params: any = {}) {
+  // Security Check: isAdmin flag should only be allowed for admins
+  if (params.isAdmin) {
+    const user = await verifyAuth();
+    if (!user) {
+      params.isAdmin = false;
+    } else {
+      const dbUser = await db.select().from(mppscUsers).where(eq(mppscUsers.id, user.id)).get();
+      if (!dbUser || dbUser.role !== 'admin') {
+        params.isAdmin = false;
+      }
+    }
+  }
+
   return blogService.getBlogs(params);
 }
 
