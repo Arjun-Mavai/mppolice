@@ -98,39 +98,41 @@ export function QuizSubNav() {
 
   return (
     <>
-      {/* 🖥️ DESKTOP NAV (Hidden on Mobile) */}
-      <div className="mb-12 hidden w-full items-center justify-center md:flex">
-        <div className="no-scrollbar flex max-w-full items-center gap-1.5 overflow-x-auto rounded-[2rem] border border-slate-200 bg-white p-1.5 shadow-sm">
-          {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <button
-                key={item.id}
-                onClick={() => navigateTo(item.href)}
-                onMouseEnter={() => router.prefetch(item.href)}
-                onTouchStart={() => router.prefetch(item.href)}
-                className={cn(
-                  'relative rounded-full px-5 py-2.5 text-xs font-black tracking-widest whitespace-nowrap uppercase transition-all outline-none',
-                  isActive
-                    ? 'text-white'
-                    : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600',
-                  isPending && !isActive && 'opacity-70'
-                )}
-              >
-                <span className="relative z-10">{hi ? item.label.hi : item.label.en}</span>
-                {isActive && (
-                  <div
-                    className={cn(
-                      'absolute inset-0 rounded-full shadow-md',
-                      item.color // This applies the bg-color
-                    )}
-                  />
-                )}
-              </button>
-            );
-          })}
+      {/* 🖥️ DESKTOP NAV (Hidden on Mobile and specific PYQ sub-pages) */}
+      {!shouldHideBottomNav && (
+        <div className="mb-12 hidden w-full items-center justify-center md:flex">
+          <div className="no-scrollbar flex max-w-full items-center gap-1.5 overflow-x-auto rounded-[2rem] border border-slate-200 bg-white p-1.5 shadow-sm">
+            {NAV_ITEMS.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => navigateTo(item.href)}
+                  onMouseEnter={() => router.prefetch(item.href)}
+                  onTouchStart={() => router.prefetch(item.href)}
+                  className={cn(
+                    'relative rounded-full px-5 py-2.5 text-xs font-black tracking-widest whitespace-nowrap uppercase transition-all outline-none',
+                    isActive
+                      ? 'text-white'
+                      : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600',
+                    isPending && !isActive && 'opacity-70'
+                  )}
+                >
+                  <span className="relative z-10">{hi ? item.label.hi : item.label.en}</span>
+                  {isActive && (
+                    <div
+                      className={cn(
+                        'absolute inset-0 rounded-full shadow-md',
+                        item.color // This applies the bg-color
+                      )}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 📱 MOBILE BOTTOM NAV (Sticky) - Hidden on PYQ sub-pages */}
       {!shouldHideBottomNav && (
