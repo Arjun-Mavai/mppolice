@@ -178,13 +178,13 @@ export default function PricingPage() {
         </Badge>
         <h1 className="font-display mb-4 text-4xl leading-tight font-black tracking-tight text-slate-900 md:text-6xl">
           {hi ? (
-             <>अपना <span className="text-amber-600">MPPSC सफलता</span> प्लान चुनें</>
+             <>अपनी <span className="text-amber-600">MPPSC सफलता</span> में निवेश करें</>
           ) : (
-             <>Choose Your <span className="text-amber-600">MPPSC Success</span> Plan</>
+             <>Invest in Your <span className="text-amber-600">MPPSC Success</span></>
           )}
         </h1>
         <p className="mx-auto mb-2 max-w-2xl text-lg font-bold text-slate-600 md:text-xl">
-          {hi ? 'उन हजारों छात्रों के साथ जुड़ें जो स्मार्ट तैयारी कर रहे हैं' : 'Join thousands of aspirants who are preparing smarter every day'}
+          {hi ? 'उन गंभीर छात्रों के साथ जुड़ें जो स्मार्ट और डेटा-आधारित तैयारी कर रहे हैं' : 'Join serious aspirants who are mastering the syllabus with a data-driven approach'}
         </p>
       </section>
 
@@ -208,36 +208,8 @@ export default function PricingPage() {
       {/* ── Free users — both plans ──────────────────────── */}
       {!isProUser && !isLiteUser && (
         <section className="px-4 pb-16">
-          {/* Urgency banner — FOMO with dynamic student count */}
-          {/* <div className="flex justify-center mb-8">
-            <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-4 py-2 md:px-5 md:py-2.5 animate-pulse">
-              <Flame className="w-4 h-4 text-red-500" />
-              <span className="text-xs md:text-sm font-semibold text-amber-800">
-                {hi
-                  ? `🔥 ${p.studentsBought || PRICING_DEFAULTS.studentsBought} छात्रों ने पहले ही ले लिया • सीमित सीटें`
-                  : `🔥 ${p.studentsBought || PRICING_DEFAULTS.studentsBought} students already joined • Limited seats`}
-              </span>
-              <Clock className="w-4 h-4 text-amber-500" />
-            </div>
-            
-          </div> */}
-
-          {/* FOMO badge - "first 100 students" with joined count */}
-          <div className="mb-10 flex justify-center">
-            <div className="relative inline-flex items-center gap-3 rounded-full border border-amber-200 bg-amber-50/80 backdrop-blur-sm px-5 py-2.5 shadow-xl shadow-amber-500/5">
-              <Flame className="h-4 w-4 text-orange-600 animate-pulse" />
-              <span className="text-sm font-black text-amber-900 uppercase tracking-tight">
-                {hi ? p.urgencyTextHi : p.urgencyText}
-              </span>
-              <div className="h-4 w-px bg-amber-200 mx-1" />
-              <Badge className="h-6 border-emerald-200 bg-emerald-100 px-2 py-0 text-xs font-black text-emerald-800 hover:bg-emerald-100">
-                <Users className="mr-1 h-3 w-3" />
-                {p.studentsBought || PRICING_DEFAULTS.studentsBought} joined
-              </Badge>
-            </div>
-          </div>
-
-          {/* ── What You Get Section ─────────────────────── */}
+          
+          {/* ── What You Get Section (Value First) ───────── */}
           <div className="mx-auto mb-16 max-w-6xl">
             <div className="mb-8 flex flex-col items-center gap-2">
                <h2 className="text-2xl font-black text-slate-900 md:text-3xl tracking-tight">
@@ -312,6 +284,21 @@ export default function PricingPage() {
                   <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{sub}</p>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* FOMO badge — Now just above pricing */}
+          <div className="mb-10 flex justify-center">
+            <div className="relative inline-flex items-center gap-3 rounded-full border border-amber-200 bg-amber-50/80 backdrop-blur-sm px-5 py-2.5 shadow-xl shadow-amber-500/5">
+              <Flame className="h-4 w-4 text-orange-600 animate-pulse" />
+              <span className="text-sm font-black text-amber-900 uppercase tracking-tight">
+                {hi ? p.urgencyTextHi : p.urgencyText}
+              </span>
+              <div className="h-4 w-px bg-amber-200 mx-1" />
+              <Badge className="h-6 border-emerald-200 bg-emerald-100 px-2 py-0 text-xs font-black text-emerald-800 hover:bg-emerald-100">
+                <Users className="mr-1 h-3 w-3" />
+                {p.studentsBought || PRICING_DEFAULTS.studentsBought} joined
+              </Badge>
             </div>
           </div>
 

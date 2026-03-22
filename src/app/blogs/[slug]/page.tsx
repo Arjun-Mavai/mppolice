@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import BlogContentRenderer from './BlogContentRenderer';
 import { verifyAuth } from '@/lib/auth';
 import { canAccessBlog } from '@/lib/access-control';
+import Script from 'next/script';
 
 // ISR: Revalidate every 7 days
 export const revalidate = 604800;
@@ -214,7 +215,8 @@ export default async function BlogDetailPage({ params }: PageProps) {
 
   return (
     <>
-      <script
+      <Script
+        id="article-schema"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
       />

@@ -22,6 +22,7 @@ export function usePwa() {
   const [isPwaInstalled, setIsPwaInstalled] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstallable, setIsInstallable] = useState(false);
+  const [isIos, setIsIos] = useState(false);
 
   useEffect(() => {
     // 1. Check if running in standalone mode (Installed)
@@ -36,6 +37,22 @@ export function usePwa() {
 
     checkStandalone();
 
+    // 2. Detect iOS
+    const detectIos = () => {
+      const isIosDevice = 
+        /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      setIsIos(!!isIosDevice);
+      
+      // On iOS, we can consider it "installable" if not already installed,
+      // even though there's no native prompt.
+      if (!!isIosDevice && !isPwaInstalled) {
+        setIsInstallable(true);
+      }
+    };
+
+    detectIos();
+
     // Listen for changes in display mode
     const mediaQuery = window.matchMedia('(display-mode: standalone)');
     const handleDisplayModeChange = (e: MediaQueryListEvent) => {
@@ -46,12 +63,9 @@ export function usePwa() {
       mediaQuery.addEventListener('change', handleDisplayModeChange);
     }
 
-    // 2. Capture the install prompt
+    // 3. Capture the install prompt (Android/Chrome)
     const handleBeforeInstallPrompt = (e: Event) => {
-      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
-      // Stash the event so it can be triggered later.
-      // We cast it because the event listener uses the standard Event type
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
       logger.debug('PWA Install Prompt captured');
@@ -59,7 +73,7 @@ export function usePwa() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // 3. Register Service Worker (Manual Registration)
+    // 4. Register Service Worker (Manual Registration)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').then(
@@ -82,9 +96,16 @@ export function usePwa() {
         mediaQuery.removeEventListener('change', handleDisplayModeChange);
       }
     };
-  }, []);
+  }, [isPwaInstalled]);
 
   const installPwa = async () => {
+    if (isIos) {
+      // For iOS, this function doesn't trigger a native prompt.
+      // The UI component using this hook should handle showing instructions.
+      logger.debug('iOS Install requested - manual instructions needed');
+      return;
+    }
+
     if (!deferredPrompt) {
       logger.debug('Install prompt not available');
       return;
@@ -102,5 +123,5 @@ export function usePwa() {
     setIsInstallable(false);
   };
 
-  return { isPwaInstalled, isInstallable, installPwa };
+  return { isPwaInstalled, isInstallable, installPwa, isIos };
 }

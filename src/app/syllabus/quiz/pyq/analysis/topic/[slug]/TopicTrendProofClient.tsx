@@ -51,185 +51,246 @@ export default function TopicTrendProofClient({ proof }: { proof: TopicTrendProo
   const isHindi = language === 'hi';
 
   return (
-    <div className="min-h-screen bg-[#FDFEFE]/40 pb-20 relative overflow-hidden">
-      {/* Apple-style background glows */}
-      <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-indigo-100/20 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[20%] right-[-5%] h-[400px] w-[400px] rounded-full bg-pink-100/10 blur-[100px] pointer-events-none" />
+    <div className="min-h-screen bg-slate-950 pb-20 relative overflow-hidden">
+      {/* Premium background effects */}
+      <div className="pointer-events-none fixed inset-0">
+        <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-amber-500/10 blur-[120px]" />
+        <div className="absolute right-[-5%] bottom-[10%] h-[500px] w-[500px] rounded-full bg-amber-600/5 blur-[100px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
+      </div>
       
-      <div className="mx-auto max-w-4xl px-4 pt-10 sm:px-6 relative z-10">
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => router.back()}
-          className="group mb-8 rounded-full bg-white/50 hover:bg-white shadow-sm border border-slate-200"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
-          {isHindi ? 'वापस जाएं' : 'Back'}
-        </Button>
+      <div className="mx-auto max-w-4xl px-4 pt-4 sm:px-6 relative z-10">
+        {/* Navigation Row */}
+        <div className="flex items-center justify-between mb-8">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            className="group rounded-xl border border-white/5 bg-white/5 px-4 font-bold text-slate-400 backdrop-blur-md transition-all hover:bg-white/10 hover:text-white"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
+            {isHindi ? 'वापस जाएं' : 'Back'}
+          </Button>
 
-        {/* Proof Header */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setLanguage(isHindi ? 'en' : 'hi')}
+            className="rounded-xl border-white/10 bg-white/5 font-black text-slate-200 backdrop-blur-md transition-all hover:bg-white/10 hover:text-amber-400 active:scale-95 px-5"
+          >
+            {isHindi ? 'English' : 'हिंदी'}
+          </Button>
+        </div>
+
+        {/* Proof Header Card */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="mb-12 space-y-6"
+          className="mb-10 p-8 sm:p-10 rounded-[2.5rem] border border-slate-800 bg-slate-900/40 shadow-2xl backdrop-blur-xl relative overflow-hidden"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div className="space-y-6">
-              <div className="flex flex-wrap items-center gap-3">
-                 <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-1.5 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20">
-                   <ShieldCheck className="h-3.5 w-3.5" />
-                   100% Data Proof Verified
-                 </div>
-                 {delta > 0 && (
-                    <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-[11px] font-black uppercase tracking-widest text-emerald-600 shadow-sm border border-emerald-100">
-                      <TrendingUp className="h-3.5 w-3.5" />
-                      +{delta} {isHindi ? 'अधिक' : 'More'}
-                    </div>
-                 )}
-              </div>
-
-              <div className="space-y-2">
-                <h1 className="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">
-                  {isHindi ? proof.topicTitle : proof.topicTitleEn || proof.topicTitle}
-                </h1>
-                <p className="text-lg font-bold text-slate-500 leading-relaxed">
-                  {isHindi 
-                    ? `यह प्रमाण है कि ${proof.currentYear} में इस टॉपिक से ${proof.currentQuestions.length} सवाल आए, जबकि ${proof.prevYear} में सिर्फ ${proof.prevQuestions.length} थे।`
-                    : `Evidence that ${proof.currentQuestions.length} questions were asked in ${proof.currentYear}, up from ${proof.prevQuestions.length} in ${proof.prevYear}.`}
-                </p>
-              </div>
+          {/* grid texture */}
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px] opacity-[0.2]" />
+          
+          <div className="relative z-10 space-y-6 text-center sm:text-left">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
+               <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                 <ShieldCheck className="h-3.5 w-3.5" />
+                 100% Data Proof Verified
+               </div>
+               {delta > 0 && (
+                  <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-orange-400">
+                    <TrendingUp className="h-3.5 w-3.5" />
+                    +{delta} {isHindi ? 'अधिक' : 'More'} Questions
+                  </div>
+               )}
             </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setLanguage(isHindi ? 'en' : 'hi')}
-              className="rounded-xl border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all active:scale-95 shadow-sm bg-white self-center sm:self-start h-auto py-2.5 px-5"
-            >
-              {isHindi ? 'English' : 'हिंदी'}
-            </Button>
+            <div className="space-y-3">
+              <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl leading-tight">
+                <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
+                  {isHindi ? proof.topicTitle : proof.topicTitleEn || proof.topicTitle}
+                </span>
+              </h1>
+              <p className="max-w-2xl text-lg font-semibold text-slate-400 leading-relaxed mx-auto sm:mx-0">
+                {isHindi 
+                  ? `यह प्रमाण है कि ${proof.currentYear} में इस टॉपिक से ${proof.currentQuestions.length} सवाल आए, जबकि ${proof.prevYear} में सिर्फ ${proof.prevQuestions.length} थे।`
+                  : `Evidence that ${proof.currentQuestions.length} questions were asked in ${proof.currentYear}, up from ${proof.prevQuestions.length} in ${proof.prevYear}.`}
+              </p>
+            </div>
           </div>
         </motion.div>
 
-        {/* Stats Grid - Vertical Layout for clarity */}
-        <div className="flex flex-col gap-4 mb-8">
-           <Card className={cn(
-             "rounded-[2rem] border-2 transition-all p-6 cursor-pointer",
-             activeYear === proof.currentYear ? "border-emerald-500 bg-emerald-50/50 shadow-xl" : "border-slate-100 bg-white hover:border-slate-200"
-           )} onClick={() => setActiveYear(proof.currentYear)}>
-              <div className="flex justify-between items-start mb-4">
-                 <div className={cn("p-3 rounded-2xl", activeYear === proof.currentYear ? "bg-emerald-500 text-white" : "bg-slate-50 text-slate-400")}>
+        {/* Stats Grid - Premium Selection Layout */}
+        <div className="flex flex-col sm:grid sm:grid-cols-2 gap-4 mb-8">
+           <div 
+             className={cn(
+               "rounded-[2.5rem] border-2 transition-all p-7 cursor-pointer relative overflow-hidden group",
+               activeYear === proof.currentYear 
+                 ? "border-amber-500 bg-amber-500/10 shadow-[0_0_30px_rgba(245,158,11,0.2)]" 
+                 : "border-slate-800 bg-slate-900/40 hover:border-slate-700 backdrop-blur-md"
+             )} 
+             onClick={() => setActiveYear(proof.currentYear)}
+           >
+              {activeYear === proof.currentYear && (
+                <div className="absolute top-0 right-0 h-32 w-32 bg-amber-500/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+              )}
+              <div className="flex justify-between items-start mb-6 relative z-10">
+                 <div className={cn(
+                   "p-3.5 rounded-2xl transition-all", 
+                   activeYear === proof.currentYear ? "bg-amber-500 text-black shadow-lg shadow-amber-500/40" : "bg-slate-800 text-slate-400"
+                 )}>
                     <Calendar className="h-6 w-6" />
                  </div>
-                 <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{isHindi ? 'नया साल' : 'New Year'}</span>
-                    <Badge className={activeYear === proof.currentYear ? "bg-emerald-600" : "bg-slate-200 text-slate-500"}>{proof.currentYear}</Badge>
+                 <div className="flex flex-col items-end gap-1">
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{isHindi ? 'नया साल' : 'New Year'}</span>
+                    <Badge className={cn(
+                      "rounded-lg px-2.5 py-0.5 font-black border-none",
+                      activeYear === proof.currentYear ? "bg-amber-500 text-black shadow-sm" : "bg-slate-800 text-slate-400"
+                    )}>
+                      {proof.currentYear}
+                    </Badge>
                  </div>
               </div>
-              <div className="text-3xl font-black text-slate-900">{proof.currentQuestions.length}</div>
-              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest">{isHindi ? 'प्रश्न पूछे गए' : 'Questions'}</div>
-           </Card>
+              <div className={cn("text-4xl font-black tracking-tight mb-1", activeYear === proof.currentYear ? "text-white" : "text-slate-300")}>
+                {proof.currentQuestions.length}
+              </div>
+              <div className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">{isHindi ? 'प्रश्न पूछे गए' : 'Questions Matched'}</div>
+           </div>
 
-           <Card className={cn(
-             "rounded-[2rem] border-2 transition-all p-6 cursor-pointer",
-             activeYear === proof.prevYear ? "border-slate-400 bg-slate-50 shadow-xl" : "border-slate-100 bg-white hover:border-slate-200"
-           )} onClick={() => setActiveYear(proof.prevYear)}>
-              <div className="flex justify-between items-start mb-4">
-                 <div className={cn("p-3 rounded-2xl", activeYear === proof.prevYear ? "bg-slate-600 text-white" : "bg-slate-50 text-slate-400")}>
+           <div 
+             className={cn(
+               "rounded-[2.5rem] border-2 transition-all p-7 cursor-pointer relative overflow-hidden group",
+               activeYear === proof.prevYear 
+                 ? "border-amber-500/50 bg-amber-500/5 shadow-xl" 
+                 : "border-slate-800 bg-slate-900/40 hover:border-slate-700 backdrop-blur-md"
+             )} 
+             onClick={() => setActiveYear(proof.prevYear)}
+           >
+              <div className="flex justify-between items-start mb-6 relative z-10">
+                 <div className={cn(
+                   "p-3.5 rounded-2xl transition-all", 
+                   activeYear === proof.prevYear ? "bg-amber-500 text-black" : "bg-slate-800 text-slate-400"
+                 )}>
                     <History className="h-6 w-6" />
                  </div>
-                 <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{isHindi ? 'पिछला साल' : 'Previous'}</span>
-                    <Badge className={activeYear === proof.prevYear ? "bg-slate-800" : "bg-slate-200 text-slate-500"}>{proof.prevYear}</Badge>
+                 <div className="flex flex-col items-end gap-1">
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{isHindi ? 'पिछला साल' : 'Previous'}</span>
+                    <Badge className={cn(
+                      "rounded-lg px-2.5 py-0.5 font-black border-none",
+                      activeYear === proof.prevYear ? "bg-amber-500 text-black" : "bg-slate-800 text-slate-400"
+                    )}>
+                      {proof.prevYear}
+                    </Badge>
                  </div>
               </div>
-              <div className="text-3xl font-black text-slate-900">{proof.prevQuestions.length}</div>
-              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest">{isHindi ? 'प्रश्न पूछे गए' : 'Questions'}</div>
-           </Card>
+              <div className={cn("text-4xl font-black tracking-tight mb-1", activeYear === proof.prevYear ? "text-white" : "text-slate-300")}>
+                {proof.prevQuestions.length}
+              </div>
+              <div className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">{isHindi ? 'प्रश्न पूछे गए' : 'Questions Matched'}</div>
+           </div>
         </div>
 
-        {/* Calculation Logic Card */}
+        {/* Calculation Logic Card - Optimized Dark Mode */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-10">
-           <Card className="rounded-[2rem] border-dashed border-slate-200 bg-slate-50 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                 <Calculator className="h-5 w-5 text-slate-400" />
-                 <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest">{isHindi ? 'ट्रेंड की गणना' : 'Trend Calculation'}</h3>
-              </div>
-              <div className="flex items-center gap-4 text-xs font-black text-slate-800 flex-wrap">
-                 <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-2xl border border-slate-200 shadow-sm">
-                    <span className="text-[10px] text-slate-400 uppercase tracking-tighter">{isHindi ? 'नया साल' : 'New Year'} ({proof.currentYear})</span>
-                    <span>{proof.currentQuestions.length} Qs</span>
+           <div className="rounded-[2.5rem] border border-white/5 bg-white/5 p-8 backdrop-blur-sm relative overflow-hidden">
+              <div className="flex items-center gap-3 mb-6 relative z-10">
+                 <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                   <Calculator className="h-4 w-4 text-amber-500" />
                  </div>
-                 <span className="text-[10px] font-black text-slate-300 uppercase shrink-0">{isHindi ? 'घटाया' : 'MINUS'}</span>
-                 <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-2xl border border-slate-200 shadow-sm">
-                    <span className="text-[10px] text-slate-400 uppercase tracking-tighter">{isHindi ? 'पिछला साल' : 'Previous'} ({proof.prevYear})</span>
-                    <span>{proof.prevQuestions.length} Qs</span>
-                 </div>
-                 <span className="text-[10px] font-black text-slate-300 uppercase shrink-0">{isHindi ? 'बराबर' : 'EQUALS'}</span>
-                 <span className={cn("px-4 py-2 rounded-2xl text-white font-black shadow-lg shadow-current/20", delta >= 0 ? "bg-emerald-600" : "bg-rose-600")}>
-                    {delta >= 0 ? `+${delta}` : delta} {isHindi ? 'ट्रेंड' : 'Trend'}
-                 </span>
+                 <h3 className="text-[11px] font-black text-amber-500/80 uppercase tracking-[0.3em]">{isHindi ? 'ट्रेंड की गणना' : 'Trend Calculation Method'}</h3>
               </div>
-           </Card>
+
+              <div className="flex flex-wrap items-center gap-4 relative z-10">
+                 <div className="flex flex-col gap-1 px-5 py-3 rounded-2xl border border-slate-800 bg-slate-900/60 font-black shadow-sm">
+                    <span className="text-[9px] text-slate-500 uppercase tracking-widest">{proof.currentYear} Data</span>
+                    <span className="text-white text-lg">{proof.currentQuestions.length} Qs</span>
+                 </div>
+                 
+                 <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-500 uppercase">
+                   vs
+                 </div>
+
+                 <div className="flex flex-col gap-1 px-5 py-3 rounded-2xl border border-slate-800 bg-slate-900/60 font-black shadow-sm">
+                    <span className="text-[9px] text-slate-500 uppercase tracking-widest">{proof.prevYear} Data</span>
+                    <span className="text-white text-lg">{proof.prevQuestions.length} Qs</span>
+                 </div>
+
+                 <div className="hidden sm:block flex-1 border-t-2 border-dashed border-slate-800 mx-2" />
+
+                 <div className={cn(
+                   "flex flex-col gap-1 px-6 py-3 rounded-2xl font-black shadow-2xl transition-all",
+                   delta >= 0 
+                     ? "bg-gradient-to-br from-amber-400 to-orange-500 text-black shadow-amber-500/20" 
+                     : "bg-gradient-to-br from-slate-400 to-slate-600 text-white"
+                 )}>
+                    <span className={cn("text-[9px] uppercase tracking-widest opacity-70", delta >= 0 ? "text-amber-950" : "text-white")}>
+                      {isHindi ? 'नेट बदलाव' : 'Net Delta'}
+                    </span>
+                    <span className="text-xl">
+                      {delta >= 0 ? `+${delta}` : delta} {isHindi ? 'ट्रेंड' : 'Trend'}
+                    </span>
+                 </div>
+              </div>
+           </div>
         </motion.div>
 
         {/* Questions List */}
         <div className="space-y-6">
           <div className="flex items-center justify-between px-2">
-            <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
-              <Search className="h-5 w-5 text-slate-400" />
-              {activeYear} {isHindi ? 'के सभी प्रश्न' : 'Questions List'}
+            <h2 className="text-xl font-black text-white flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-400">
+                <Search className="h-4 w-4" />
+              </div>
+              <span>{activeYear} {isHindi ? 'के सभी प्रश्न' : 'Questions Evidence'}</span>
             </h2>
-            <div className="text-xs font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full border border-slate-200 shadow-inner">
-              Count: {activeYear === proof.currentYear ? proof.currentQuestions.length : proof.prevQuestions.length}
+            <div className="text-[10px] font-black text-amber-500 uppercase tracking-widest bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/20 shadow-sm">
+              {activeYear === proof.currentYear ? proof.currentQuestions.length : proof.prevQuestions.length} Qs
             </div>
           </div>
 
-          <div className="grid gap-4">
+          <div className="grid gap-6">
             {(activeYear === proof.currentYear ? proof.currentQuestions : proof.prevQuestions).map((q, i) => (
               <motion.div
                 key={q.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
               >
-                <Card className="rounded-[2rem] border border-slate-200/60 bg-white p-6 pt-14 shadow-sm group hover:shadow-md transition-all relative overflow-hidden">
-                  <div className="absolute top-5 left-6 flex h-7 px-3 items-center justify-center rounded-lg bg-slate-900 text-[10px] font-black text-white shadow-lg shadow-slate-900/20">
-                    Q.{q.questionOrder}
+                <div className="rounded-[2.5rem] border border-slate-800 bg-slate-900/40 p-8 pt-14 shadow-2xl backdrop-blur-md group hover:border-amber-500/30 transition-all relative overflow-hidden">
+                  <div className="absolute top-6 left-8 flex h-7 px-4 items-center justify-center rounded-lg bg-amber-500 text-[10px] font-black text-black shadow-lg shadow-amber-500/20">
+                    ID #{q.id.toString().slice(-4)}
                   </div>
                   
-                  <div className="flex flex-col gap-4">
-                      <div className="flex flex-wrap items-center gap-2 border-b border-slate-50 pb-3">
-                         <div className="flex items-center gap-1.5 bg-emerald-50/50 px-2.5 py-1 rounded-lg border border-emerald-100">
-                            <Target className="h-4 w-4 text-emerald-500" />
-                            <span className="text-[11px] sm:text-[13px] font-black text-emerald-900 uppercase tracking-tight">
+                  <div className="flex flex-col gap-6">
+                      <div className="flex flex-wrap items-center gap-3 border-b border-white/5 pb-5">
+                         <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+                            <Target className="h-4 w-4 text-amber-500" />
+                            <span className="text-[11px] sm:text-xs font-black text-slate-200 uppercase tracking-tight">
                                {isHindi ? q.testTitle : q.testTitleEn || q.testTitle}
                             </span>
                          </div>
                       </div>
 
-                      <div className="space-y-4">
-                        <div className="prose prose-slate prose-sm max-w-none whitespace-pre-line text-slate-800 sm:prose-base">
+                      <div className="space-y-6">
+                        <div className="prose prose-invert prose-sm max-w-none whitespace-pre-line text-slate-200 sm:prose-base font-bold leading-relaxed">
                           {isHindi ? q.questionText : q.questionTextEn || q.questionText}
                         </div>
                         
                         {isHindi && q.questionTextEn && (
-                          <div className="relative pl-4 border-l-2 border-slate-100 py-1">
-                            <p className="text-sm font-bold text-slate-400 italic leading-relaxed tracking-tight">
+                          <div className="relative pl-5 border-l-2 border-slate-800 py-1">
+                            <p className="text-sm font-semibold text-slate-500 italic leading-relaxed tracking-tight">
                               {q.questionTextEn}
                             </p>
                           </div>
                         )}
 
                         {/* Options Display */}
-                        <div className="space-y-3 mt-4">
+                        <div className="grid grid-cols-1 gap-3 mt-6">
                           {getParsedOptions(q.options).map((opt: any, idx: number) => {
                             const correctIdx = mapCorrectAnswerToIndex(q.correctAnswer);
                             const isCorrect = correctIdx !== -1 && correctIdx === idx;
                             
                             let optionText = opt;
                             if (typeof opt === 'object' && opt !== null) {
-                               // Handle object options {text: "...", textEn: "..."}
                                optionText = isHindi 
                                  ? opt.text || opt.textEn || JSON.stringify(opt)
                                  : opt.textEn || opt.text || JSON.stringify(opt);
@@ -239,34 +300,34 @@ export default function TopicTrendProofClient({ proof }: { proof: TopicTrendProo
                               <div
                                 key={idx}
                                 className={cn(
-                                  "relative flex items-center justify-between rounded-xl border-2 p-4 transition-all sm:p-5",
+                                  "relative flex items-center justify-between rounded-2xl border-2 p-5 transition-all",
                                   isCorrect 
-                                    ? "bg-emerald-50 border-emerald-500 shadow-sm" 
-                                    : "bg-white border-slate-100 text-slate-500"
+                                    ? "bg-amber-500/10 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]" 
+                                    : "bg-slate-900/60 border-slate-800 text-slate-400 group-hover:border-slate-700"
                                 )}
                               >
-                                <div className="flex items-center gap-3 flex-1">
+                                <div className="flex items-center gap-4 flex-1">
                                   <div
                                     className={cn(
-                                      "flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors",
+                                      "flex h-9 w-9 items-center justify-center rounded-full border-2 text-xs font-black transition-all",
                                       isCorrect
-                                        ? "border-emerald-500 bg-emerald-500 text-white"
-                                        : "border-slate-300 bg-white text-slate-400"
+                                        ? "border-amber-500 bg-amber-500 text-black shadow-lg shadow-amber-500/40"
+                                        : "border-slate-700 bg-slate-800 text-slate-500"
                                     )}
                                   >
                                     {String.fromCharCode(65 + idx)}
                                   </div>
                                   <span
                                     className={cn(
-                                      "flex-1 text-sm leading-relaxed whitespace-pre-line font-medium",
-                                      isCorrect ? "text-emerald-800" : "text-slate-600"
+                                      "flex-1 text-[15px] leading-relaxed whitespace-pre-line font-black",
+                                      isCorrect ? "text-white" : "text-slate-400"
                                     )}
                                   >
                                     {optionText}
                                   </span>
                                 </div>
                                 {isCorrect && (
-                                  <CheckCircle2 className="ml-3 h-5 w-5 text-emerald-500" />
+                                  <CheckCircle2 className="ml-3 h-5 w-5 text-amber-500" />
                                 )}
                               </div>
                             );
@@ -275,7 +336,7 @@ export default function TopicTrendProofClient({ proof }: { proof: TopicTrendProo
                       </div>
 
                       { (q.explanation || q.explanationEn) && (
-                        <div className="mt-4 p-5 sm:p-6 rounded-[1.5rem] bg-slate-50/50 border border-slate-100/80 relative overflow-hidden group/fact transition-all hover:bg-white hover:shadow-md">
+                        <div className="mt-2 p-6 rounded-[2rem] bg-white/5 border border-white/5 relative overflow-hidden group/fact transition-all hover:bg-white/[0.08] hover:shadow-xl">
                            <PremiumExplanation 
                              explanation={q.explanation || ''} 
                              explanationEn={q.explanationEn} 
@@ -285,40 +346,46 @@ export default function TopicTrendProofClient({ proof }: { proof: TopicTrendProo
                         </div>
                       )}
                   </div>
-                </Card>
+                </div>
               </motion.div>
             ))}
 
             {(activeYear === proof.currentYear ? proof.currentQuestions : proof.prevQuestions).length === 0 && (
-               <Card className="rounded-[2.5rem] border-dashed border-slate-200 p-12 text-center bg-white/50">
-                  <div className="mx-auto w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-300">
-                     <FileText className="h-6 w-6" />
+               <div className="rounded-[3rem] border border-dashed border-slate-800 p-16 text-center bg-slate-900/40 backdrop-blur-md">
+                  <div className="mx-auto w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mb-6 text-slate-500">
+                     <FileText className="h-8 w-8" />
                   </div>
-                  <p className="text-slate-400 font-bold">इस साल इस टॉपिक से कोई सवाल नहीं आया।</p>
-               </Card>
+                  <p className="text-slate-400 font-black text-lg">इस साल इस टॉपिक से कोई सवाल नहीं आया।</p>
+               </div>
             )}
           </div>
         </div>
 
-        {/* Final Affirmation */}
+        {/* Final Affirmation - Premium Amber Callout */}
         {delta > 0 && activeYear === proof.currentYear && (
            <motion.div 
-             initial={{ opacity: 0 }}
-             animate={{ opacity: 1 }}
-             className="mt-12 p-8 rounded-[2.5rem] bg-emerald-900 text-white text-center shadow-2xl relative overflow-hidden group"
+             initial={{ opacity: 0, scale: 0.95 }}
+             animate={{ opacity: 1, scale: 1 }}
+             className="mt-16 p-10 rounded-[3rem] bg-gradient-to-br from-amber-600 to-orange-700 text-black text-center shadow-[0_20px_50px_rgba(245,158,11,0.3)] relative overflow-hidden group"
            >
-              <div className="absolute top-0 right-0 h-32 w-32 bg-white opacity-5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-              <Zap className="h-8 w-8 text-emerald-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-black mb-2">{isHindi ? 'Explosive Trend Verified' : 'Explosive Trend Verified'}</h3>
-              <p className="text-emerald-100 font-medium mb-6">
-                 {isHindi 
-                   ? `यह ${delta} अतिरिक्त सवाल दिखाते हैं कि आयोग इस विषय पर आक्रामक हो रहा है। इसे बिल्कुल मिस न करें!`
-                   : `These ${delta} extra questions prove the Commission is becoming aggressive on this topic. Don't miss it!`}
-              </p>
-              <div className="flex justify-center gap-2">
-                 <div className="h-1.5 w-12 rounded-full bg-emerald-500"></div>
-                 <div className="h-1.5 w-4 rounded-full bg-emerald-700"></div>
-                 <div className="h-1.5 w-4 rounded-full bg-emerald-700"></div>
+              <div className="absolute top-0 right-0 h-48 w-48 bg-white opacity-10 rounded-full -mr-24 -mt-24 blur-3xl group-hover:scale-125 transition-transform duration-1000"></div>
+              <div className="absolute bottom-0 left-0 h-32 w-32 bg-black opacity-10 rounded-full -ml-16 -mb-16 blur-2xl"></div>
+              
+              <div className="relative z-10">
+                <div className="bg-black/20 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-md border border-white/20">
+                  <Zap className="h-8 w-8 text-white animate-pulse" />
+                </div>
+                <h3 className="text-3xl font-black mb-3 tracking-tight">{isHindi ? 'Explosive Trend Verified' : 'Explosive Trend Verified'}</h3>
+                <p className="text-black/80 font-black mb-8 max-w-xl mx-auto leading-relaxed">
+                   {isHindi 
+                     ? `यह ${delta} अतिरिक्त सवाल दिखाते हैं कि आयोग इस विषय पर आक्रामक हो रहा है। इसे बिल्कुल मिस न करें!`
+                     : `These ${delta} extra questions prove the Commission is becoming aggressive on this topic. This is a high-priority zone for your prep!`}
+                </p>
+                <div className="flex justify-center gap-2">
+                   <div className="h-1.5 w-16 rounded-full bg-black/40"></div>
+                   <div className="h-1.5 w-4 rounded-full bg-black/20"></div>
+                   <div className="h-1.5 w-4 rounded-full bg-black/10"></div>
+                </div>
               </div>
            </motion.div>
         )}

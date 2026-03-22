@@ -122,8 +122,11 @@ export default function ViewAllQuestionsClient({
     <div className="min-h-screen bg-[#080510] pb-24 text-slate-200 selection:bg-violet-500/30">
       {/* Dynamic Background */}
       <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-violet-600/10 blur-[120px] animate-pulse" />
-        <div className="absolute right-[-10%] bottom-[-10%] h-[600px] w-[600px] rounded-full bg-amber-600/5 blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] animate-pulse rounded-full bg-violet-600/10 blur-[120px]" />
+        <div
+          className="absolute right-[-10%] bottom-[-10%] h-[600px] w-[600px] animate-pulse rounded-full bg-amber-600/5 blur-[120px]"
+          style={{ animationDelay: '2s' }}
+        />
         <div className="absolute top-[30%] left-[20%] h-[400px] w-[400px] rounded-full bg-purple-600/5 blur-[100px]" />
       </div>
 
@@ -135,7 +138,7 @@ export default function ViewAllQuestionsClient({
               variant="ghost"
               size="icon"
               onClick={() => router.back()}
-              className="group rounded-xl bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition-all active:scale-95"
+              className="group rounded-xl bg-white/5 text-slate-400 transition-all hover:bg-white/10 hover:text-white active:scale-95"
             >
               <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
             </Button>
@@ -144,13 +147,26 @@ export default function ViewAllQuestionsClient({
                 {pageTitle}
               </h1>
               <div className="flex items-center gap-2">
-                <div className={cn('h-1.5 w-1.5 rounded-full animate-pulse', colorClass.replace('bg-', 'bg-').replace('indigo', 'violet'))} />
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <div
+                  className={cn(
+                    'h-1.5 w-1.5 animate-pulse rounded-full',
+                    colorClass.replace('bg-', 'bg-').replace('indigo', 'violet')
+                  )}
+                />
+                <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
                   {filteredQuestions.length} {isHindi ? 'प्रश्न' : 'Solved Questions'}
                 </p>
               </div>
             </div>
-            <div className={cn('h-10 w-1 rounded-full bg-gradient-to-b opacity-50', colorClass.replace('bg-', 'from-').replace('indigo', 'violet').replace(' ', ' to-transparent'))} />
+            <div
+              className={cn(
+                'h-10 w-1 rounded-full bg-gradient-to-b opacity-50',
+                colorClass
+                  .replace('bg-', 'from-')
+                  .replace('indigo', 'violet')
+                  .replace(' ', 'to-transparent')
+              )}
+            />
           </div>
         </div>
       </div>
@@ -167,8 +183,8 @@ export default function ViewAllQuestionsClient({
                     onClick={() => setFilterYear(null)}
                     className={cn(
                       'h-full rounded-xl px-4 text-xs font-black transition-all active:scale-95',
-                      filterYear === null 
-                        ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]' 
+                      filterYear === null
+                        ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]'
                         : 'text-slate-400 hover:text-white'
                     )}
                   >
@@ -247,15 +263,22 @@ export default function ViewAllQuestionsClient({
               data-question-id={q.id}
             >
               {/* Card Accent Glow */}
-              <div className={cn(
-                "absolute -inset-px rounded-[2rem] opacity-0 blur-md transition-opacity duration-500 group-hover:opacity-100",
-                isExpanded ? "opacity-40" : ""
-              )} style={{ background: `linear-gradient(to right, ${isExpanded ? '#8b5cf6' : '#1e293b'}, transparent)` }} />
+              <div
+                className={cn(
+                  'absolute -inset-px rounded-[2rem] opacity-0 blur-md transition-opacity duration-500 group-hover:opacity-100',
+                  isExpanded ? 'opacity-40' : ''
+                )}
+                style={{
+                  background: `linear-gradient(to right, ${isExpanded ? '#8b5cf6' : '#1e293b'}, transparent)`,
+                }}
+              />
 
-              <Card className={cn(
-                "relative z-10 overflow-hidden rounded-[2rem] border-white/[0.03] bg-slate-900/40 shadow-2xl backdrop-blur-sm transition-all duration-300",
-                isExpanded ? "bg-[#0b081a]/80 ring-1 ring-violet-500/20" : "hover:bg-slate-900/60"
-              )}>
+              <Card
+                className={cn(
+                  'relative z-10 overflow-hidden rounded-[2rem] border-white/[0.03] bg-slate-900/40 shadow-2xl backdrop-blur-sm transition-all duration-300',
+                  isExpanded ? 'bg-[#0b081a]/80 ring-1 ring-violet-500/20' : 'hover:bg-slate-900/60'
+                )}
+              >
                 {/* Question Header Area */}
                 <div
                   className="flex cursor-pointer items-start gap-5 p-5 sm:p-7"
@@ -263,38 +286,48 @@ export default function ViewAllQuestionsClient({
                 >
                   {/* Styled Numbering */}
                   <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
-                    <div className="absolute inset-0 rotate-45 rounded-xl bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors" />
-                    <span className="relative font-black text-sm text-amber-500">
-                      {idx + 1}
-                    </span>
+                    <div className="absolute inset-0 rotate-45 rounded-xl bg-amber-500/10 transition-colors group-hover:bg-amber-500/20" />
+                    <span className="relative text-sm font-black text-amber-500">{idx + 1}</span>
                   </div>
 
                   <div className="min-w-0 flex-1 pt-1">
                     <div
                       className={cn(
-                        'text-[15px] leading-[1.6] font-medium text-slate-100 sm:text-[17px] tracking-tight',
+                        'text-[15px] leading-[1.6] font-medium tracking-tight text-slate-100 sm:text-[17px]',
                         !isExpanded && 'line-clamp-2'
                       )}
                       dangerouslySetInnerHTML={{
-                        __html: isExpanded 
-                          ? displayText 
+                        __html: isExpanded
+                          ? displayText
                           : displayText.slice(0, 180) + (displayText.length > 180 ? '...' : ''),
                       }}
                     />
-                    
+
                     {!isExpanded && (
-                       <div className="mt-3 flex items-center gap-3">
-                          <YearBadge year={q.year ?? 2020} variant="amber" className="px-2.5 py-1 text-[10px] uppercase font-black bg-amber-500/10 text-amber-500 border-amber-500/20" />
-                          {q.qNo && <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">SET-Q{q.qNo}</span>}
-                       </div>
+                      <div className="mt-3 flex items-center gap-3">
+                        <YearBadge
+                          year={q.year ?? 2020}
+                          variant="amber"
+                          className="border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[10px] font-black text-amber-500 uppercase"
+                        />
+                        {q.qNo && (
+                          <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">
+                            SET-Q{q.qNo}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
 
                   <div className="mt-1 flex shrink-0 items-center">
-                    <div className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-full bg-white/5 transition-all text-slate-500",
-                      isExpanded ? "bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.5)] rotate-180" : "group-hover:text-slate-300"
-                    )}>
+                    <div
+                      className={cn(
+                        'flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-slate-500 transition-all',
+                        isExpanded
+                          ? 'rotate-180 bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.5)]'
+                          : 'group-hover:text-slate-300'
+                      )}
+                    >
                       <ChevronDown className="h-5 w-5" />
                     </div>
                   </div>
@@ -325,67 +358,83 @@ export default function ViewAllQuestionsClient({
                         {/* Translation Alternative */}
                         {altText && altText !== displayText && (
                           <div className="relative rounded-2xl border-l-[3px] border-amber-500/30 bg-amber-500/[0.03] p-4 text-[13px] leading-relaxed text-slate-400 italic">
-                             <div className="mb-1 text-[9px] font-black uppercase tracking-tighter text-amber-400/60 opacity-50">Translated Reference</div>
-                             <div dangerouslySetInnerHTML={{ __html: altText }} />
+                            <div className="mb-1 text-[9px] font-black tracking-tighter text-amber-400/60 uppercase opacity-50">
+                              Translated Reference
+                            </div>
+                            <div dangerouslySetInnerHTML={{ __html: altText }} />
                           </div>
                         )}
 
                         {/* Redesigned Options Grid */}
                         <div className="grid gap-4 sm:grid-cols-2">
-                          {q.options && q.options.slice(0, 4).map((opt, optIdx) => {
-                            const parsedOpt = typeof opt === 'object' && opt !== null ? opt : { text: opt };
-                            const isCorrect = Number(q.correctAnswer) === optIdx;
-                            const optText = isHindi
-                              ? parsedOpt.text || parsedOpt
-                              : parsedOpt.text_en || parsedOpt.textEn || parsedOpt.text || parsedOpt;
+                          {q.options &&
+                            q.options.slice(0, 4).map((opt, optIdx) => {
+                              const parsedOpt =
+                                typeof opt === 'object' && opt !== null ? opt : { text: opt };
+                              const isCorrect = Number(q.correctAnswer) === optIdx;
+                              const optText = isHindi
+                                ? parsedOpt.text || parsedOpt
+                                : parsedOpt.text_en ||
+                                  parsedOpt.textEn ||
+                                  parsedOpt.text ||
+                                  parsedOpt;
 
-                            return (
-                              <div
-                                key={optIdx}
-                                className={cn(
-                                  'group/opt relative flex items-center gap-4 rounded-2xl border p-4 transition-all duration-300',
-                                  isCorrect
-                                    ? 'border-emerald-500/30 bg-emerald-500/[0.08] shadow-[0_0_20px_rgba(16,185,129,0.05)]'
-                                    : 'border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.05]'
-                                )}
-                              >
-                                {/* Alphabet Bubble */}
-                                <div className={cn(
-                                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-all",
-                                  isCorrect 
-                                    ? "bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)]" 
-                                    : "bg-white/5 text-slate-500 group-hover/opt:bg-white/10 group-hover/opt:text-slate-300"
-                                )}>
-                                  {String.fromCharCode(65 + optIdx)}
+                              return (
+                                <div
+                                  key={optIdx}
+                                  className={cn(
+                                    'group/opt relative flex items-center gap-4 rounded-2xl border p-4 transition-all duration-300',
+                                    isCorrect
+                                      ? 'border-emerald-500/30 bg-emerald-500/[0.08] shadow-[0_0_20px_rgba(16,185,129,0.05)]'
+                                      : 'border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.05]'
+                                  )}
+                                >
+                                  {/* Alphabet Bubble */}
+                                  <div
+                                    className={cn(
+                                      'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-all',
+                                      isCorrect
+                                        ? 'bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)]'
+                                        : 'bg-white/5 text-slate-500 group-hover/opt:bg-white/10 group-hover/opt:text-slate-300'
+                                    )}
+                                  >
+                                    {String.fromCharCode(65 + optIdx)}
+                                  </div>
+
+                                  <div
+                                    className={cn(
+                                      'flex-1 text-sm leading-tight font-medium',
+                                      isCorrect ? 'text-emerald-100' : 'text-slate-300'
+                                    )}
+                                    dangerouslySetInnerHTML={{ __html: optText }}
+                                  />
+
+                                  {isCorrect && (
+                                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20">
+                                      <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+                                    </div>
+                                  )}
                                 </div>
-
-                                <div className={cn(
-                                  "flex-1 text-sm font-medium leading-tight",
-                                  isCorrect ? "text-emerald-100" : "text-slate-300"
-                                )} dangerouslySetInnerHTML={{ __html: optText }} />
-
-                                {isCorrect && (
-                                   <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20">
-                                      <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                                   </div>
-                                )}
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
                         </div>
 
                         {/* Premium Insights Section */}
                         <div className="space-y-4 pt-4">
-                           {(q.explanation || q.explanationEn) && (
+                          {(q.explanation || q.explanationEn) && (
                             <PremiumExplanation
-                              explanation={isHindi ? q.explanation || '' : q.explanationEn || q.explanation || ''}
+                              explanation={
+                                isHindi
+                                  ? q.explanation || ''
+                                  : q.explanationEn || q.explanation || ''
+                              }
                               darkMode={true}
                               compact={false}
                               language={isHindi ? 'hi' : 'en'}
                             />
                           )}
 
-                          <div className="flex items-center justify-between border-t border-white/5 pt-4">
+                          {/* <div className="flex items-center justify-between border-t border-white/5 pt-4">
                              <YearBadge year={q.year ?? 2020} variant="amber" className="px-3 bg-amber-500/10 text-amber-500 border-amber-500/20" />
                              <Link
                                 href={`/syllabus/quiz/pyq/question/${q.id}`}
@@ -394,7 +443,7 @@ export default function ViewAllQuestionsClient({
                                 Detailed Analysis
                                 <ArrowLeft className="h-3 w-3 rotate-180 transition-transform group-hover:translate-x-1" />
                               </Link>
-                          </div>
+                          </div> */}
                         </div>
                       </div>
                     </motion.div>
@@ -409,13 +458,15 @@ export default function ViewAllQuestionsClient({
         {filteredQuestions.length === 0 && (
           <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-white/10 bg-white/[0.02] p-20 text-center">
             <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/5">
-               <Filter className="h-10 w-10 text-slate-600" />
+              <Filter className="h-10 w-10 text-slate-600" />
             </div>
             <h3 className="text-xl font-black text-white">
               {isHindi ? 'कोई प्रश्न नहीं मिला' : 'No matches found'}
             </h3>
-            <p className="mt-2 text-sm text-slate-500 max-w-[250px] mx-auto">
-              {isHindi ? 'सॉरी, इस साल या इस फ़िल्टर के लिए कोई डेटा नहीं है।' : 'Try selecting a different year or broader filters to find what you are looking for.'}
+            <p className="mx-auto mt-2 max-w-[250px] text-sm text-slate-500">
+              {isHindi
+                ? 'सॉरी, इस साल या इस फ़िल्टर के लिए कोई डेटा नहीं है।'
+                : 'Try selecting a different year or broader filters to find what you are looking for.'}
             </p>
           </div>
         )}
