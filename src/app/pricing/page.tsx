@@ -284,7 +284,7 @@ export default function PricingPage() {
                 {
                   icon: Newspaper,
                   label: hi ? 'प्रीमियम ब्लॉग्स' : 'Premium Blogs',
-                  sub: hi ? 'सभी 10 यूनिट्स पर विस्तृत नोट्स' : 'In-depth Notes on all 10 units',
+                  sub: hi ? 'MPPSC की सभी 10 यूनिट्स की बेसिक समझ' : 'Basic understanding of all 10 units of MPPSC',
                 },
                 {
                   icon: BookOpen,
