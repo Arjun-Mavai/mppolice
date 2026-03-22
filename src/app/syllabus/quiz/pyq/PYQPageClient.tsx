@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,8 @@ import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { QuizListItem } from '@/components/QuizListItem';
 import { QuizSubNav } from '@/features/syllabus/components/QuizSubNav';
 import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
+import { ViewTransition } from 'react';
+import { TransitionLink } from '@/components/ui/transition-link';
 
 // --- Types ---
 interface Test {
@@ -36,6 +38,7 @@ interface PYQPageClientProps {
   initialTests: Test[];
   subjectStats: Record<string, number>;
   isLoggedIn?: boolean;
+  mode?: string;
 }
 
 // --- Constants ---
@@ -97,12 +100,20 @@ const SUBJECTS = [
   },
 ];
 
-export default function PYQPageClient({ initialTests, subjectStats, isLoggedIn }: PYQPageClientProps) {
+export default function PYQPageClient({
+  initialTests,
+  subjectStats,
+  isLoggedIn,
+  mode,
+}: PYQPageClientProps) {
   const router = useRouter();
   const { language } = useSettingsStore();
+  const [, startTransition] = useTransition();
 
   // --- State ---
-  const [viewMode, setViewMode] = useState<'year' | 'subject'>('year');
+  const [viewMode, setViewMode] = useState<'year' | 'subject' | 'all-subjects'>(
+    mode === 'all-subjects' ? 'all-subjects' : 'year'
+  );
   const [loadingTestId, setLoadingTestId] = useState<string | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
 
@@ -120,7 +131,9 @@ export default function PYQPageClient({ initialTests, subjectStats, isLoggedIn }
         test_name: test.titleEn || test.title,
         test_id: test.id,
       });
-      router.push(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);
+      startTransition(() => {
+        router.push(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);
+      });
     }
   };
 
@@ -135,10 +148,19 @@ export default function PYQPageClient({ initialTests, subjectStats, isLoggedIn }
       test_name: `${selectedSubject} (Part ${offset / limit + 1})`,
       subject: selectedSubject,
     });
-    router.push(
-      `/syllabus/quiz/play?mode=pyq-subject&subject=${selectedSubject}&limit=${limit}&offset=${offset}`
-    );
+    startTransition(() => {
+      router.push(
+        `/syllabus/quiz/play?mode=pyq-subject&subject=${selectedSubject}&limit=${limit}&offset=${offset}`
+      );
+    });
   };
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    router.prefetch('/syllabus/quiz/pyq/intelligence');
+    router.prefetch('/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject');
+    router.prefetch('/syllabus/quiz/pyq/analysis');
+  }, [router, isLoggedIn]);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
@@ -200,16 +222,30 @@ export default function PYQPageClient({ initialTests, subjectStats, isLoggedIn }
 
             {/* Insights Shortcuts */}
             {!isLoggedIn ? null : (
-              <div className="flex justify-center mt-4">
+              <div className="mt-4 flex flex-wrap justify-center gap-4">
+                {/* Premium Intelligence */}
                 <div className="rounded-xl bg-gradient-to-r from-pink-500 via-red-500 via-yellow-500 to-green-500 p-[1.5px] shadow-sm transition-transform hover:scale-[1.02]">
                   <Button
-                    onClick={() => router.push('/syllabus/quiz/pyq/intelligence')}
+                    asChild
                     className="inline-flex h-full w-full items-center gap-2 rounded-[10px] bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                   >
-                    <Sparkles className="h-4 w-4 text-amber-500" />
-                    {language === 'hi' ? 'प्रीमियम इंटेलिजेंस' : 'Premium Intelligence'}
+                    <TransitionLink href="/syllabus/quiz/pyq/intelligence" transitionTypes={['slide']}>
+                      <Sparkles className="h-4 w-4 text-amber-500" />
+                      {language === 'hi' ? 'प्रीमियम इंटेलिजेंस' : 'Premium Intelligence'}
+                    </TransitionLink>
                   </Button>
                 </div>
+
+                {/* Most Repeated Questions */}
+                {/* <div className="rounded-xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 p-[1.5px] shadow-sm transition-transform hover:scale-[1.02]">
+                   <Button
+                    onClick={() => router.push('/syllabus/quiz/pyq/repeated')}
+                    className="inline-flex h-full w-full items-center gap-2 rounded-[10px] bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                  >
+                    <span className="flex h-4 w-4 items-center justify-center text-base">🔥</span>
+                    {language === 'hi' ? 'बार-बार पूछे गए प्रश्न' : 'Repeated Questions'}
+                  </Button>
+                </div> */}
               </div>
             )}
           </div>
@@ -217,83 +253,137 @@ export default function PYQPageClient({ initialTests, subjectStats, isLoggedIn }
       </div>
 
       {/* Content Area - Added top padding for mobile to ensure title visibility if sticky header covers it */}
-      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
-        <AnimatePresence mode="wait">
-          {viewMode === 'year' ? (
-            <motion.div
-              key="year-view"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-4"
-            >
-              {initialTests.map((test, idx) => (
-                <QuizListItem
-                  key={test.id}
-                  index={idx}
-                  title={language === 'hi' ? test.title : test.titleEn || test.title}
-                  subtitle={`${test.year}`}
-                  questions={test.totalQuestions || undefined}
-                  itemLabel={language === 'hi' ? 'प्रश्न' : 'Questions'}
-                  marks={(test.totalQuestions || 0) * QUIZ_CONSTANTS.MARKS_PER_QUESTION}
-                  duration={test.durationMinutes}
-                  isLocked={test.isLocked}
-                  isFree={test.isFree}
-                  attemptsLeft={test.attemptsLeft}
-                  maxAttempts={test.maxRetries}
-                  language={language}
-                  colorVariant={(['amber', 'emerald', 'pink', 'blue', 'indigo'] as const)[idx % 5]}
-                  isLoading={loadingTestId === test.id}
-                  onClick={() => handleYearClick(test)}
-                  onMouseEnter={() => {
-                    if (!test.isLocked) {
-                      router.prefetch(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);
+      <ViewTransition>
+        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
+          <AnimatePresence mode="wait">
+            {viewMode === 'all-subjects' ? (
+              <motion.div
+                key="all-subjects-view"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-8"
+              >
+                {/* All Subjects Header */}
+                <div className="text-center space-y-4">
+                  <h2 className="text-2xl font-bold text-slate-900">
+                    {language === 'hi' ? 'सभी विषय प्रश्न (2020-2025)' : 'All Subject Questions (2020-2025)'}
+                  </h2>
+                  <p className="text-slate-600">
+                    {language === 'hi' 
+                      ? 'पिछले 6 वर्षों के सभी प्रश्न विषयवार व्यवस्थित'
+                      : 'All questions from past 6 years organized by subject'
                     }
-                  }}
-                  onTouchStart={() => {
-                    if (!test.isLocked) {
-                      router.prefetch(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);
-                    }
-                  }}
-                />
-              ))}
-              {initialTests.length === 0 && (
-                <div className="py-20 text-center">
-                  <p className="font-medium text-slate-400">
-                    {language === 'hi'
-                      ? 'कोई PYQ उपलब्ध नहीं।'
-                      : 'No Previous Year Papers available.'}
                   </p>
+                  
+                  {/* Back Button */}
+                  <Button
+                    onClick={() => setViewMode('year')}
+                    variant="outline"
+                    className="mt-4"
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    {language === 'hi' ? 'वापस जाएं' : 'Go Back'}
+                  </Button>
                 </div>
-              )}
-            </motion.div>
-          ) : (
-            <motion.div
-              key="subject-view"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-              className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
-            >
-              {SUBJECTS.map((sub, idx) => (
-                <PYQCard
-                  key={sub.name}
-                  title={sub.name}
-                  count={subjectStats[sub.name] || 0}
-                  icon={sub.icon}
-                  color={sub.color}
-                  onClick={() => handleSubjectClick(sub.name)}
-                  delay={idx * 0.05}
-                  description={sub.description}
-                  subtitle=""
-                />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+
+                {/* All Subject Cards */}
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {SUBJECTS.filter(sub => (subjectStats[sub.name] || 0) > 0).map((sub, idx) => (
+                    <div key={sub.name} className="group">
+                      <PYQCard
+                        title={sub.name}
+                        count={subjectStats[sub.name] || 0}
+                        icon={sub.icon}
+                        color={sub.color}
+                        onClick={() => handleSubjectClick(sub.name)}
+                        delay={idx * 0.05}
+                        description={sub.description}
+                        subtitle={`${subjectStats[sub.name] || 0} ${language === 'hi' ? 'प्रश्न' : 'Questions'}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ) : viewMode === 'year' ? (
+              <motion.div
+                key="year-view"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-4"
+              >
+                {initialTests.map((test, idx) => (
+                  <QuizListItem
+                    key={test.id}
+                    index={idx}
+                    title={language === 'hi' ? test.title : test.titleEn || test.title}
+                    subtitle={`${test.year}`}
+                    questions={test.totalQuestions || undefined}
+                    itemLabel={language === 'hi' ? 'प्रश्न' : 'Questions'}
+                    marks={(test.totalQuestions || 0) * QUIZ_CONSTANTS.MARKS_PER_QUESTION}
+                    duration={test.durationMinutes}
+                    isLocked={test.isLocked}
+                    isFree={test.isFree}
+                    attemptsLeft={test.attemptsLeft}
+                    maxAttempts={test.maxRetries}
+                    language={language}
+                    colorVariant={
+                      (['amber', 'emerald', 'pink', 'blue', 'indigo'] as const)[idx % 5]
+                    }
+                    isLoading={loadingTestId === test.id}
+                    onClick={() => handleYearClick(test)}
+                    onMouseEnter={() => {
+                      if (!test.isLocked) {
+                        router.prefetch(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);
+                      }
+                    }}
+                    onTouchStart={() => {
+                      if (!test.isLocked) {
+                        router.prefetch(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);
+                      }
+                    }}
+                  />
+                ))}
+                {initialTests.length === 0 && (
+                  <div className="py-20 text-center">
+                    <p className="font-medium text-slate-400">
+                      {language === 'hi'
+                        ? 'कोई PYQ उपलब्ध नहीं।'
+                        : 'No Previous Year Papers available.'}
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="subject-view"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+                className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              >
+                {SUBJECTS.map((sub, idx) => (
+                  <PYQCard
+                    key={sub.name}
+                    title={sub.name}
+                    count={subjectStats[sub.name] || 0}
+                    icon={sub.icon}
+                    color={sub.color}
+                    onClick={() => handleSubjectClick(sub.name)}
+                    delay={idx * 0.05}
+                    description={sub.description}
+                    subtitle=""
+                  />
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </ViewTransition>
 
       {/* Series Selection Dialog */}
       {selectedSubject && (

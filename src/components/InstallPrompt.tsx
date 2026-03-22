@@ -15,9 +15,11 @@ export function InstallPrompt() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Detect iOS
-    const isIosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    setIsIos(isIosDevice);
+    // Detect iOS - Modern check including iPads
+    const isIosDevice = 
+      /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    setIsIos(!!isIosDevice);
 
     // Detect Mobile (Android/iOS) for the main prompt
     const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -35,12 +37,6 @@ export function InstallPrompt() {
       return () => clearTimeout(timer);
     }
   }, [isPwaInstalled]);
-
-  useEffect(() => {
-    if (isInstallable && !dismissed) {
-      requestAnimationFrame(() => setIsVisible(true));
-    }
-  }, [isInstallable, dismissed]);
 
   const handleDismiss = () => {
     setIsVisible(false);
@@ -61,40 +57,60 @@ export function InstallPrompt() {
     return (
       <div
         className={cn(
-          'fixed right-4 bottom-4 left-4 z-50 transform rounded-2xl border border-slate-700 bg-slate-900 p-4 text-white shadow-2xl transition-all duration-500 ease-in-out md:mx-auto md:max-w-md',
+          'fixed right-4 bottom-6 left-4 z-50 transform rounded-3xl border border-white/10 bg-[#0b081a]/90 p-5 text-white shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] md:mx-auto md:max-w-md',
           isVisible ? 'translate-y-0 opacity-100' : 'translate-y-[120%] opacity-0'
         )}
       >
         <button
           onClick={handleDismiss}
-          className="absolute top-2 right-2 p-1 text-slate-400 hover:text-white"
+          className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition-all"
         >
-          <X size={20} />
+          <X size={18} />
         </button>
-        <div className="flex gap-4">
-          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-white">
-            {/* Use the new icon here if you want */}
-            <span className="text-lg font-bold text-slate-900">MP</span>
+        
+        <div className="flex gap-5">
+          <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 shadow-xl">
+             <div className="absolute inset-0 rounded-2xl bg-white/10" />
+             <span className="relative text-xl font-black text-white">M</span>
           </div>
-          <div className="flex-1">
-            <h3 className="mb-1 text-sm font-bold">Install Mindful MPPSC</h3>
-            <p className="text-xs leading-relaxed text-slate-300">
-              Install this app on your iPhone for a better experience.
+          
+          <div className="flex-1 min-w-0">
+            <h3 className="mb-1 text-base font-black tracking-tight">Install Mindful App</h3>
+            <p className="text-xs leading-relaxed text-slate-400">
+              Get the full premium experience on your iPhone. No App Store needed.
             </p>
-            <div className="mt-3 flex flex-col gap-2 text-xs text-slate-300">
-              <div className="flex items-center gap-2">
-                1. Tap the <Share size={14} className="text-blue-400" /> Share button
+            
+            <div className="mt-4 space-y-3 rounded-2xl bg-white/5 p-4 border border-white/5">
+              <div className="flex items-center gap-3 text-xs font-bold text-slate-200">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-black">
+                   <Share size={14} />
+                </div>
+                <span>Tap the <span className="text-amber-500">Share</span> button below</span>
               </div>
-              <div className="flex items-center gap-2">
-                2. Scroll down and tap{' '}
-                <span className="font-bold text-white">Add to Home Screen</span>{' '}
-                <PlusSquare size={14} />
+              
+              <div className="flex items-center gap-3 text-xs font-bold text-slate-200">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-black">
+                   <PlusSquare size={14} />
+                </div>
+                <span>Select <span className="text-amber-500">Add to Home Screen</span></span>
               </div>
             </div>
+
+            <button 
+               onClick={() => {
+                  const el = document.getElementById('install-guide');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  else window.location.href = '/#install-guide';
+               }}
+               className="mt-4 text-[10px] font-black uppercase tracking-widest text-violet-400 hover:text-violet-300 transition-colors"
+            >
+               View Full Guide →
+            </button>
           </div>
         </div>
+        
         {/* Pointer arrow for iOS bottom bar */}
-        <div className="absolute -bottom-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-r border-b border-slate-700 bg-slate-900 md:hidden"></div>
+        <div className="absolute -bottom-2.5 left-1/2 h-5 w-5 -translate-x-1/2 rotate-45 border-r border-b border-white/10 bg-[#0b081a]/90 md:hidden"></div>
       </div>
     );
   }
@@ -104,37 +120,39 @@ export function InstallPrompt() {
     return (
       <div
         className={cn(
-          'fixed right-4 bottom-4 left-4 z-50 transform rounded-2xl border border-slate-100 bg-white p-4 shadow-xl transition-all duration-500 ease-in-out md:mx-auto md:max-w-md',
-          isVisible && isMobile ? 'translate-y-0 opacity-100' : 'translate-y-[120%] opacity-0' // Only show on mobile
+          'fixed right-4 bottom-6 left-4 z-50 transform rounded-3xl border border-white/10 bg-[#0b081a]/95 p-5 text-white shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] md:mx-auto md:max-w-md',
+          isVisible && isMobile ? 'translate-y-0 opacity-100' : 'translate-y-[120%] opacity-0'
         )}
       >
         <button
           onClick={handleDismiss}
-          className="absolute top-2 right-2 p-1 text-slate-400 hover:text-slate-900"
+          className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-slate-400 hover:bg-white/10 transition-all"
         >
-          <X size={20} />
+          <X size={18} />
         </button>
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white shadow-lg shadow-slate-900/20">
-            <span className="text-lg font-bold">MP</span>
+        
+        <div className="flex items-center gap-5">
+          <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 shadow-xl">
+             <span className="text-xl font-black">M</span>
           </div>
-          <div className="flex-1">
-            <h3 className="text-sm font-bold text-slate-900">Install App</h3>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Add to Home Screen for quick access and full screen experience.
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base font-black tracking-tight text-white">Full App Experience</h3>
+            <p className="mt-0.5 text-xs text-slate-400 leading-relaxed">
+              Faster access, full screen mode, and offline capability.
             </p>
           </div>
         </div>
-        <div className="mt-4 flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleDismiss} className="flex-1 rounded-xl">
-            Maybe Later
+        
+        <div className="mt-6 flex gap-3">
+          <Button variant="outline" size="sm" onClick={handleDismiss} className="flex-1 h-11 rounded-xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10">
+            Later
           </Button>
           <Button
             size="sm"
             onClick={installPwa}
-            className="flex-1 rounded-xl bg-slate-900 text-white hover:bg-slate-800"
+            className="flex-1 h-11 rounded-xl bg-violet-600 text-white hover:bg-violet-500 shadow-lg shadow-violet-600/20 font-black text-xs uppercase tracking-widest"
           >
-            Install Now
+            Install
           </Button>
         </div>
       </div>

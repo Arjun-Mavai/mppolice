@@ -80,12 +80,12 @@ export function PricingCard({
   const cardClasses = cn(
     'relative flex flex-col h-full transition-all duration-300',
     isPro || isUpgrade
-      ? 'border-2 border-slate-800 shadow-xl overflow-hidden'
-      : 'border border-slate-200 shadow-sm hover:shadow-md'
+      ? 'border-2 border-amber-500 shadow-[0_20px_50px_rgba(245,158,11,0.15)] overflow-hidden scale-[1.02] z-10'
+      : 'border border-amber-100 shadow-sm hover:shadow-md'
   );
 
   const titleIcon = isLite ? (
-    <Zap className="h-5 w-5 text-blue-600" />
+    <Zap className="h-5 w-5 text-amber-500" />
   ) : isPro ? (
     <Crown className="h-5 w-5 text-amber-600" />
   ) : (
@@ -108,18 +108,18 @@ export function PricingCard({
     <div className="group relative h-full">
       {/* Pro/Upgrade Glow Effect */}
       {(isPro || isUpgrade) && (
-        <div className="absolute -inset-0.5 animate-pulse rounded-xl bg-gradient-to-r from-slate-700 to-slate-900 opacity-15 blur-sm" />
+        <div className="absolute -inset-0.5 animate-pulse rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 opacity-20 blur-md" />
       )}
 
       <Card className={cn(cardClasses, 'bg-white')}>
         {/* Most Popular Badge */}
         {isPopular && isPro && (
-          <div className="absolute top-0 right-0 z-20 rounded-bl-lg bg-slate-800 px-4 py-1.5 text-[10px] font-bold tracking-widest text-white uppercase">
+          <div className="absolute top-0 right-0 z-20 rounded-bl-lg bg-amber-600 px-4 py-1.5 text-[10px] font-black tracking-widest text-white uppercase">
             {hi ? 'सबसे लोकप्रिय' : 'MOST POPULAR'}
           </div>
         )}
         {isUpgrade && (
-          <div className="absolute top-0 right-0 z-20 rounded-bl-lg bg-slate-800 px-4 py-1.5 text-[10px] font-bold tracking-widest text-white uppercase">
+          <div className="absolute top-0 right-0 z-20 rounded-bl-lg bg-orange-600 px-4 py-1.5 text-[10px] font-black tracking-widest text-white uppercase">
             {hi ? 'खास ऑफर' : 'SPECIAL OFFER'}
           </div>
         )}
@@ -132,7 +132,7 @@ export function PricingCard({
               <h3
                 className={cn(
                   'text-xl font-bold',
-                  isPro || isUpgrade ? 'text-slate-800' : 'text-slate-900'
+                  isPro || isUpgrade ? 'text-amber-900' : 'text-slate-900'
                 )}
               >
                 {title}
@@ -146,7 +146,7 @@ export function PricingCard({
             <p
               className={cn(
                 'text-sm font-medium',
-                isPro || isUpgrade ? 'text-slate-600' : 'text-slate-500'
+                isPro || isUpgrade ? 'text-amber-700/80' : 'text-slate-500'
               )}
             >
               {subtitle}
@@ -214,7 +214,7 @@ export function PricingCard({
                   <IconComp
                     className={cn(
                       'mt-0.5 h-4.5 w-4.5 shrink-0',
-                      isLite ? 'text-blue-500' : 'text-amber-600'
+                      isLite ? 'text-amber-500' : 'text-amber-600'
                     )}
                   />
                   <span>{hi ? f.hi : f.en}</span>
@@ -257,7 +257,7 @@ export function PricingCard({
                   isLite &&
                     'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900',
                   (isPro || isUpgrade) &&
-                    'bg-slate-800 text-white shadow-lg shadow-slate-300 hover:bg-slate-700'
+                    'bg-slate-950 text-white shadow-lg shadow-amber-900/20 hover:bg-black border border-amber-500/30'
                 )}
               >
                 <Link href={href} prefetch={true}>
@@ -285,7 +285,7 @@ export function PricingCard({
                   isLite &&
                     'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900',
                   (isPro || isUpgrade) &&
-                    'bg-slate-800 text-white shadow-lg shadow-slate-300 hover:bg-slate-700'
+                    'bg-slate-950 text-white shadow-lg shadow-amber-900/20 hover:bg-black border border-amber-500/30'
                 )}
               >
                 {isLite

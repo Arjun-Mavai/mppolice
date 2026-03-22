@@ -43,6 +43,14 @@ const isMissingInsightsTableError = (error: unknown): boolean => {
   );
 };
 
+const chunkArray = <T>(arr: T[], size: number): T[][] => {
+  const chunks: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+};
+
 const getTestYear = (title: string, createdAt: Date | null): number => {
   const titleYear = title.match(/\b(19|20)\d{2}\b/)?.[0];
   if (titleYear) return Number(titleYear);
@@ -55,7 +63,7 @@ type ScopedTest = {
   questionCount: number;
 };
 
-export const getScopedPyqTests = async (
+const getScopedPyqTestsImpl = async (
   fromYear = PYQ_SCOPE_START_YEAR,
   toYear = PYQ_SCOPE_END_YEAR
 ): Promise<ScopedTest[]> => {
@@ -87,6 +95,13 @@ export const getScopedPyqTests = async (
 
   return [...byYear.values()].sort((a, b) => a.year - b.year);
 };
+
+// Cached version - used heavily across insights (called 8+ times per page)
+export const getScopedPyqTests = unstable_cache(
+  getScopedPyqTestsImpl,
+  ['scoped-pyq-tests'],
+  { revalidate: 3600, tags: ['tests', 'pyq-insights'] }
+);
 
 export interface PyqFactItem {
   id: string;
@@ -139,7 +154,10 @@ export interface TopicTrendProof {
     id: string; 
     questionText: string; 
     questionTextEn: string | null; 
+    options: any; // JSON array of options
+    correctAnswer: string; // Option ID or text
     testTitle: string; 
+    testTitleEn: string | null;
     questionOrder: number;
     explanation: string | null;
     explanationEn: string | null;
@@ -148,7 +166,10 @@ export interface TopicTrendProof {
     id: string; 
     questionText: string; 
     questionTextEn: string | null; 
+    options: any; // JSON array of options
+    correctAnswer: string; // Option ID or text
     testTitle: string; 
+    testTitleEn: string | null;
     questionOrder: number;
     explanation: string | null;
     explanationEn: string | null;
@@ -162,6 +183,10 @@ export interface YearlySubjectQuestions {
     id: string; 
     questionText: string; 
     questionTextEn: string | null; 
+    options: any;
+    correctAnswer: string;
+    type?: string | null; // standard or matching
+    matchPairs?: any; // For matching type questions
     topicTitle: string; 
     topicTitleEn: string | null; 
     questionOrder: number; 
@@ -291,26 +316,31 @@ export const getPublishedPyqFacts = unstable_cache(
 
       if (allQuestionIds.size > 0) {
         try {
-          const metadataRows = await db
-            .select({
-              questionId: questions.id,
-              testTitle: tests.title,
-              testTitleEn: tests.titleEn,
-              testCreatedAt: tests.createdAt,
-              questionOrder: questions.order,
-            })
-            .from(questions)
-            .innerJoin(tests, eq(questions.testId, tests.id))
-            .where(inArray(questions.id, Array.from(allQuestionIds)));
+          const qIds = Array.from(allQuestionIds);
+          const chunks = chunkArray(qIds, 200);
 
-          metadataRows.forEach((meta) => {
-            questionMetadata.set(meta.questionId, {
-              title: meta.testTitle,
-              titleEn: meta.testTitleEn,
-              year: getTestYear(meta.testTitle, meta.testCreatedAt),
-              order: meta.questionOrder,
+          for (const chunk of chunks) {
+            const metadataRows = await db
+              .select({
+                questionId: questions.id,
+                testTitle: tests.title,
+                testTitleEn: tests.titleEn,
+                testCreatedAt: tests.createdAt,
+                questionOrder: questions.order,
+              })
+              .from(questions)
+              .innerJoin(tests, eq(questions.testId, tests.id))
+              .where(inArray(questions.id, chunk));
+
+            metadataRows.forEach((meta) => {
+              questionMetadata.set(meta.questionId, {
+                title: meta.testTitle,
+                titleEn: meta.testTitleEn,
+                year: getTestYear(meta.testTitle, meta.testCreatedAt),
+                order: meta.questionOrder,
+              });
             });
-          });
+          }
         } catch (metaError) {
           logger.warn('Failed to fetch question metadata for facts', {
             category: 'system',
@@ -589,14 +619,6 @@ export const getPyqTopicAnalysis = unstable_cache(
   ['pyq-insights-analysis'],
   { revalidate: 3600, tags: ['pyq-insights', 'pyq-trends'] }
 );
-
-const chunkArray = <T>(arr: T[], size: number): T[][] => {
-  const chunks: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) {
-    chunks.push(arr.slice(i, i + size));
-  }
-  return chunks;
-};
 
 export const getPublishedPyqFactsByYear = unstable_cache(
   async (
@@ -1082,10 +1104,13 @@ export const getTopicTrendProof = unstable_cache(
         testId: questions.testId,
         questionText: questions.questionText,
         questionTextEn: questions.questionTextEn,
+        options: questions.options,
+        correctAnswer: questions.correctAnswer,
         explanation: questions.explanation,
         explanationEn: questions.explanationEn,
         questionOrder: questions.order,
         testTitle: tests.title,
+        testTitleEn: tests.titleEn,
         testCreatedAt: tests.createdAt,
       })
       .from(questions)
@@ -1107,20 +1132,26 @@ export const getTopicTrendProof = unstable_cache(
           id: q.id,
           questionText: q.questionText,
           questionTextEn: q.questionTextEn,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
           explanation: q.explanation,
           explanationEn: q.explanationEn,
           questionOrder: q.questionOrder,
-          testTitle: q.testTitle
+          testTitle: q.testTitle,
+          testTitleEn: q.testTitleEn
         });
       } else if (year === prevYear) {
         prevQs.push({
           id: q.id,
           questionText: q.questionText,
           questionTextEn: q.questionTextEn,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
           explanation: q.explanation,
           explanationEn: q.explanationEn,
           questionOrder: q.questionOrder,
-          testTitle: q.testTitle
+          testTitle: q.testTitle,
+          testTitleEn: q.testTitleEn
         });
       }
     });
@@ -1147,6 +1178,10 @@ export const getYearlySubjectQuestions = unstable_cache(
         testId: questions.testId,
         questionText: questions.questionText,
         questionTextEn: questions.questionTextEn,
+        options: questions.options,
+        correctAnswer: questions.correctAnswer,
+        type: questions.type,
+        matchPairs: questions.matchPairs,
         explanation: questions.explanation,
         explanationEn: questions.explanationEn,
         questionOrder: questions.order,
@@ -1183,6 +1218,10 @@ export const getYearlySubjectQuestions = unstable_cache(
         id: r.id,
         questionText: r.questionText,
         questionTextEn: r.questionTextEn,
+        options: r.options,
+        correctAnswer: r.correctAnswer,
+        type: r.type,
+        matchPairs: r.matchPairs,
         explanation: r.explanation,
         explanationEn: r.explanationEn,
         topicTitle: r.topicTitle,

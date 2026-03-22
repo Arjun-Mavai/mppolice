@@ -11,21 +11,36 @@ export default function QuizLayout({ children }: { children: React.ReactNode }) 
     return <div className="relative min-h-screen bg-[#fafbfc]">{children}</div>;
   }
 
+  // Pages where nav should be hidden (PYQ sub-pages)
+  const HIDDEN_NAV_PATHS = [
+    '/syllabus/quiz/pyq/intelligence',
+    '/syllabus/quiz/pyq/facts',
+    '/syllabus/quiz/pyq/analysis',
+    '/syllabus/quiz/pyq/repeated',
+    '/syllabus/quiz/pyq/question',
+  ];
+
+  const shouldHideNav = HIDDEN_NAV_PATHS.some(path => pathname?.startsWith(path));
+
   return (
     <div className="relative min-h-screen bg-[#fafbfc]">
       {/* 
         Shared Sticky Header for Desktop
       */}
-      <div className="sticky top-0 z-40 hidden w-full border-b border-slate-200 bg-white/80 backdrop-blur-md md:block">
-        <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6 md:pt-24 lg:px-8">
-          <QuizSubNav />
+      {!shouldHideNav && (
+        <div className="sticky top-0 z-40 hidden w-full border-b border-slate-200 bg-white/80 backdrop-blur-md md:block">
+          <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6 md:pt-24 lg:px-8">
+            <QuizSubNav />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Mobile Nav */}
-      <div className="md:hidden">
-        <QuizSubNav />
-      </div>
+      {!shouldHideNav && (
+        <div className="md:hidden">
+          <QuizSubNav />
+        </div>
+      )}
 
       {children}
     </div>

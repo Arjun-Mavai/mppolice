@@ -11,6 +11,7 @@ import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockMo
 import { SyllabusTopicCard } from '@/components/SyllabusTopicCard';
 import { Button } from '@/components/ui/button';
 import { SyllabusData } from '@/types/syllabus';
+import { ViewTransition } from 'react';
 
 interface SyllabusClientProps {
   syllabusData: SyllabusData;
@@ -49,14 +50,15 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
   if (!isMounted) return null; // Prevent hydration mismatch
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#fafbfc] pb-20 font-sans selection:bg-slate-900 selection:text-white">
-      {/* 🎭 PREMIUM BACKGROUND BLURS */}
-      <div className="pointer-events-none absolute top-0 left-0 h-[600px] w-full bg-gradient-to-b from-slate-100/50 to-transparent" />
-      <div className="pointer-events-none absolute top-[-100px] right-[-100px] h-[600px] w-[600px] rounded-full bg-indigo-50/40 blur-[120px]" />
-      <div className="pointer-events-none absolute top-[20%] left-[-150px] h-[500px] w-[500px] rounded-full bg-emerald-50/30 blur-[100px]" />
+    <ViewTransition>
+      <div className="relative min-h-screen overflow-hidden bg-[#fafbfc] pb-20 font-sans selection:bg-slate-900 selection:text-white">
+        {/* 🎭 PREMIUM BACKGROUND BLURS */}
+        <div className="pointer-events-none absolute top-0 left-0 h-[600px] w-full bg-gradient-to-b from-slate-100/50 to-transparent" />
+        <div className="pointer-events-none absolute top-[-100px] right-[-100px] h-[600px] w-[600px] rounded-full bg-indigo-50/40 blur-[120px]" />
+        <div className="pointer-events-none absolute top-[20%] left-[-150px] h-[500px] w-[500px] rounded-full bg-emerald-50/30 blur-[100px]" />
 
-      {/* --- Main Content --- */}
-      <div className="relative z-10 mx-auto max-w-7xl space-y-16 px-6 pt-32 md:pt-48">
+        {/* --- Main Content --- */}
+        <div className="relative z-10 mx-auto max-w-7xl space-y-16 px-6 pt-32 md:pt-48">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -365,5 +367,6 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
         <SyllabusLockModal open={unlockModalOpen} onOpenChange={setUnlockModalOpen} />
       </div>
     </div>
-  );
+  </ViewTransition>
+);
 }

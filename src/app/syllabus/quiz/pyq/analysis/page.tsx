@@ -4,9 +4,13 @@ import {
   getPyqInsightsCoverageSummary,
   getPyqTopicAnalysis,
 } from '@/features/tests/actions/pyq-insights';
+import { getRepeatedQuestions } from '@/actions/pyq-analytics';
 import { verifyAuth } from '@/lib/auth';
 import { getUserTier } from '@/lib/access-control';
 import PYQAnalysisClient from './PYQAnalysisClient';
+
+// ISR: Revalidate every hour - analysis data is mostly static
+export const revalidate = 3600;
 
 interface PageProps {
   searchParams: Promise<{
@@ -38,8 +42,9 @@ export default async function PYQAnalysisPage({ searchParams }: PageProps) {
   const rawYears = Number(params.years);
   const defaultYears = 6;
   const selectedYears = Number.isFinite(rawYears) && rawYears > 0 ? Math.min(Math.max(rawYears, 1), 15) : defaultYears;
-
+  
   const analysis = await getPyqTopicAnalysis(selectedSubject, selectedYears);
+  const repeatedQuestions = await getRepeatedQuestions();
   const isAdmin = user.role === 'admin';
 
   return (
@@ -49,6 +54,7 @@ export default async function PYQAnalysisPage({ searchParams }: PageProps) {
       selectedYears={selectedYears}
       analysis={analysis}
       coverage={coverage}
+      repeatedQuestions={repeatedQuestions}
       isAdmin={isAdmin}
     />
   );

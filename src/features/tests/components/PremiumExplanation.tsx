@@ -11,6 +11,8 @@ interface PremiumExplanationProps {
   language?: 'hi' | 'en';
   /** When true, Core Logic renders without a border-box — plain text, more space on small screens */
   compact?: boolean;
+  /** Adapts text colors for dark backgrounds (e.g. PYQ Analysis pages) */
+  darkMode?: boolean;
 }
 
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -20,6 +22,7 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
   explanationEn,
   language,
   compact = false,
+  darkMode = false,
 }) => {
   const storeLanguage = useSettingsStore((state) => state.language);
   const finalLanguage = language || storeLanguage;
@@ -117,12 +120,15 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
         <motion.div variants={item}>
           {compact ? (
             /* Compact mode: no border-box — full-width plain text with generous line height */
-            <div className="space-y-2 text-[15px] leading-loose font-bold tracking-tight text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.08)] sm:text-[16px]">
-              {cleanContent(sections.logic)
+            <div className={cn(
+              "space-y-2 text-[15px] leading-loose font-bold tracking-tight sm:text-[16px]",
+              darkMode ? "text-slate-300 [text-shadow:none]" : "text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.08)]"
+            )}>
+              {sections.logic
                 ?.split('\n')
                 .filter((l) => l.trim())
                 .map((line, i) => (
-                  <p key={i}>{line}</p>
+                  <p key={i}>{cleanContent(line)}</p>
                 ))}
             </div>
           ) : (
@@ -132,12 +138,15 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
                 <CheckCircle2 size={12} className="shrink-0" />{' '}
                 {finalLanguage === 'hi' ? 'तर्क' : 'Core Logic'}
               </h4>
-              <div className="space-y-2 text-[14px] leading-relaxed font-bold tracking-tight text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.05)] sm:text-[15px]">
-                {cleanContent(sections.logic)
+              <div className={cn(
+                "space-y-2 text-[14px] leading-relaxed font-bold tracking-tight sm:text-[15px]",
+                darkMode ? "text-slate-300 [text-shadow:none]" : "text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.05)]"
+              )}>
+                {sections.logic
                   ?.split('\n')
                   .filter((l) => l.trim())
                   .map((line, i) => (
-                    <p key={i}>{line}</p>
+                    <p key={i}>{cleanContent(line)}</p>
                   ))}
               </div>
             </div>
@@ -148,11 +157,17 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
       {/* 2. Exam Fact */}
       {sections.fact && (
         <motion.div variants={item} className="border-l-2 border-slate-700 pl-3">
-          <h4 className="mb-1 flex items-center gap-1.5 text-[10px] font-black tracking-widest text-slate-600 uppercase">
+          <h4 className={cn(
+            "mb-1 flex items-center gap-1.5 text-[10px] font-black tracking-widest uppercase",
+            darkMode ? "text-slate-400" : "text-slate-600"
+          )}>
             <Lightbulb size={12} className="shrink-0" />{' '}
             {finalLanguage === 'hi' ? 'एग्जाम फैक्ट' : 'Exam Fact'}
           </h4>
-          <p className="text-[14px] leading-relaxed font-bold tracking-tight text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.05)] sm:text-[15px]">
+          <p className={cn(
+            "text-[14px] leading-relaxed font-bold tracking-tight sm:text-[15px]",
+            darkMode ? "text-slate-300 [text-shadow:none]" : "text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.05)]"
+          )}>
             {sections.fact}
           </p>
         </motion.div>
@@ -165,7 +180,12 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
             <Brain size={12} className="shrink-0" />{' '}
             {finalLanguage === 'hi' ? 'मेमोरी टिप' : 'Memory Tip'}
           </h4>
-          <p className="rounded-xl border border-amber-100/50 bg-amber-50/40 px-3 py-2 text-[14px] leading-relaxed font-bold tracking-tight text-slate-700 italic [text-shadow:1px_1px_2px_rgba(0,0,0,0.05)] sm:text-[15px]">
+          <p className={cn(
+            "rounded-xl border px-3 py-2 text-[14px] leading-relaxed font-bold tracking-tight italic sm:text-[15px]",
+            darkMode 
+              ? "border-amber-500/20 bg-amber-500/10 text-amber-200/90 [text-shadow:none]" 
+              : "border-amber-100/50 bg-amber-50/40 text-slate-700 [text-shadow:1px_1px_2px_rgba(0,0,0,0.05)]"
+          )}>
             {sections.tip}
           </p>
         </motion.div>
@@ -178,7 +198,10 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
             <AlertTriangle size={12} className="shrink-0" />{' '}
             {finalLanguage === 'hi' ? 'स्कैम अलर्ट' : 'Scam Alert'}
           </h4>
-          <p className="text-[14px] leading-relaxed font-bold tracking-tight text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.05)] sm:text-[15px]">
+          <p className={cn(
+            "text-[14px] leading-relaxed font-bold tracking-tight sm:text-[15px]",
+            darkMode ? "text-slate-300 [text-shadow:none]" : "text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.05)]"
+          )}>
             {sections.scam}
           </p>
         </motion.div>

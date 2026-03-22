@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Calendar, ArrowLeft, Lock, Crown } from 'lucide-react';
@@ -8,7 +9,7 @@ import NextImage from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // Format inline text: bold quoted text, bold **text**, handle Key: Value
 function formatText(text: string, highlightClassName: string = 'text-slate-900'): React.ReactNode {
@@ -230,6 +231,13 @@ export default function BlogContentRenderer({
 
   const { language, setLanguage } = useSettingsStore();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromQuery = searchParams.get('from');
+  const backHref = fromQuery ? `/blogs?${fromQuery}` : '/blogs';
+
+  useEffect(() => {
+    router.prefetch(backHref);
+  }, [router, backHref]);
 
   const rawContent = Array.isArray(blog.content)
     ? blog.content
@@ -613,7 +621,7 @@ export default function BlogContentRenderer({
             variant="ghost"
             size="sm"
             className="-ml-3 text-sm text-slate-500 hover:text-slate-900"
-            onClick={() => (window.history.length > 1 ? router.back() : router.push('/blogs'))}
+            onClick={() => (window.history.length > 1 ? router.back() : router.push(backHref))}
           >
             <ArrowLeft size={14} className="mr-1.5" /> Back
           </Button>

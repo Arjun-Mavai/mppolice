@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Outfit, Playfair_Display } from 'next/font/google';
+// import { Outfit, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import PwaRegistry from '@/components/PwaRegistry';
 import { Suspense } from 'react';
@@ -19,20 +19,20 @@ const SupportButton = dynamic(() =>
   import('@/components/SupportButton').then((m) => m.SupportButton)
 );
 
-const outfit = Outfit({
-  subsets: ['latin'],
-  variable: '--font-outfit',
-  display: 'swap',
-});
+// const outfit = Outfit({
+//   subsets: ['latin'],
+//   variable: '--font-outfit',
+//   display: 'swap',
+// });
 
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-playfair',
-  display: 'swap',
-});
+// const playfair = Playfair_Display({
+//   subsets: ['latin'],
+//   variable: '--font-playfair',
+//   display: 'swap',
+// });
 
 export const viewport: Viewport = {
-  themeColor: '#4f46e5',
+  themeColor: '#4c1d95',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -164,7 +164,7 @@ export default async function RootLayout({
         {/* End Facebook Pixel Code */}
       </head>
       <body
-        className={`${outfit.variable} ${playfair.variable} bg-gray-50 font-sans text-gray-900 antialiased`}
+        className={`bg-gray-50 font-sans text-gray-900 antialiased`}
       >
         <GlobalErrorBoundary>
           <PwaRegistry />

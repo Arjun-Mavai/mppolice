@@ -9,14 +9,47 @@ import {
   Target,
   AlertCircle,
   BookOpen,
+  CheckCircle2,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
+import { RenderTableQuestion, mapCorrectAnswerToIndex } from '@/features/tests/utils/questionFormatter';
 import type { YearlySubjectQuestions } from '@/features/tests/actions/pyq-insights';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { cn } from '@/lib/utils';
+
+// Helper to parse options safely
+const getParsedOptions = (opts: any) => {
+  if (!opts) return [];
+  if (Array.isArray(opts)) return opts;
+  if (typeof opts === 'string') {
+    try {
+      const parsed = JSON.parse(opts);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  return [];
+};
+
+// Helper to parse matchPairs safely
+const getParsedMatchPairs = (pairs: any) => {
+  if (!pairs) return [];
+  if (Array.isArray(pairs)) return pairs;
+  if (typeof pairs === 'string') {
+    try {
+      const parsed = JSON.parse(pairs);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  return [];
+};
 
 export default function YearlyProofClient({ data }: { data: YearlySubjectQuestions }) {
   const router = useRouter();
@@ -99,17 +132,88 @@ export default function YearlyProofClient({ data }: { data: YearlySubjectQuestio
                       </div>
 
                       <div className="space-y-4">
-                        <p className="text-[1.1rem] font-black text-slate-800 leading-[1.6] [text-shadow:1px_1px_2px_rgba(0,0,0,0.15)] selection:bg-blue-100 italic">
-                          {isHindi ? q.questionText : q.questionTextEn || q.questionText}
-                        </p>
+                        {/* Handle Matching Questions */}
+                        {q.type === 'matching' && getParsedMatchPairs(q.matchPairs).length > 0 ? (
+                          <>
+                            <div className="prose prose-slate prose-sm mb-4 max-w-none whitespace-pre-line text-slate-800 sm:prose-base">
+                              {(isHindi ? q.questionText : q.questionTextEn || q.questionText)
+                                .replace(/List-?\s*I{1,2}\b.*$/gim, '')
+                                .replace(/सूची-?\s*I{1,2}\b.*$/gim, '')
+                                .trim()}
+                            </div>
+                            <RenderTableQuestion 
+                              matchPairs={getParsedMatchPairs(q.matchPairs)}
+                              language={isHindi ? 'hi' : 'en'}
+                              className="mb-4"
+                              darkMode={false}
+                            />
+                          </>
+                        ) : (
+                           <p className="text-[1.1rem] leading-[1.6] whitespace-pre-line italic font-black text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.15)] selection:bg-blue-100">
+                             {isHindi ? q.questionText : q.questionTextEn || q.questionText}
+                           </p>
+                        )}
                         
-                        {isHindi && q.questionTextEn && (
+                        {isHindi && q.questionTextEn && q.type !== 'matching' && (
                           <div className="relative pl-4 border-l-2 border-slate-100 py-1">
                             <p className="text-sm font-bold text-slate-400 italic leading-relaxed tracking-tight [text-shadow:1px_1px_1px_rgba(0,0,0,0.05)]">
                               {q.questionTextEn}
                             </p>
                           </div>
                         )}
+                      </div>
+
+                      {/* Options Display */}
+                      <div className="space-y-3 mt-2">
+                        {getParsedOptions(q.options).map((opt: any, idx: number) => {
+                          const correctIdx = mapCorrectAnswerToIndex(q.correctAnswer);
+                          const isCorrect = correctIdx !== -1 && correctIdx === idx;
+                          
+                          let optionText = opt;
+                          if (typeof opt === 'object' && opt !== null) {
+                             // Handle object options {text: "...", textEn: "..."}
+                             optionText = isHindi 
+                               ? opt.text || opt.textEn || JSON.stringify(opt)
+                               : opt.textEn || opt.text || JSON.stringify(opt);
+                          }
+
+                          return (
+                            <div
+                              key={idx}
+                              className={cn(
+                                "relative flex items-center justify-between rounded-xl border-2 p-4 transition-all sm:p-5",
+                                isCorrect 
+                                  ? "bg-emerald-50 border-emerald-500 shadow-sm" 
+                                  : "bg-white border-slate-100 text-slate-500"
+                              )}
+                            >
+                               <div className="flex items-center gap-4">
+                                  <div className={cn(
+                                     "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold transition-colors",
+                                     isCorrect 
+                                       ? "border-emerald-500 bg-emerald-500 text-white" 
+                                       : "border-slate-200 text-slate-400"
+                                  )}>
+                                     {String.fromCharCode(65 + idx)}
+                                  </div>
+                                  <span className={cn(
+                                    "text-base sm:text-lg leading-relaxed",
+                                    isCorrect ? "font-bold text-emerald-900" : "font-medium"
+                                  )}>
+                                    {optionText}
+                                  </span>
+                               </div>
+                               
+                               {isCorrect && (
+                                 <div className="shrink-0">
+                                   <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 shadow-sm">
+                                      <CheckCircle2 className="h-4 w-4 text-white" />
+                                   </div>
+                                 </div>
+                               )}
+                            </div>
+                          );
+                        })}
                       </div>
 
                       { (q.explanation || q.explanationEn) && (

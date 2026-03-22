@@ -325,26 +325,37 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
           {/* Right Section */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Global Language Toggle - Visible on All Screens */}
-            <div className="flex items-center gap-0.5 rounded-full border border-slate-200 bg-slate-100 p-1">
+            {/* Optimized for mobile: larger touch targets, smooth layout animation */}
+            <div className="relative flex items-center rounded-full border border-slate-200 bg-slate-100 p-1 select-none">
+              {/* Animated Background Pill */}
+              <div
+                className={cn(
+                  'ease-[var(--ease-spring-smooth)] absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full bg-white shadow-sm transition-transform duration-300',
+                  language === 'hi' ? 'translate-x-[calc(100%+4px)]' : 'translate-x-0'
+                )}
+              />
+
               <button
+                type="button"
                 onClick={() => setLanguage('en')}
                 className={cn(
-                  'rounded-full px-2 py-1 text-[10px] font-bold transition-all sm:px-3 sm:text-xs',
-                  language === 'en'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-900'
+                  'relative z-10 flex-1 rounded-full px-3 py-1.5 text-xs font-bold transition-colors duration-200 sm:px-4',
+                  language === 'en' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
                 )}
+                aria-label="Switch to English"
+                aria-pressed={language === 'en'}
               >
                 EN
               </button>
               <button
+                type="button"
                 onClick={() => setLanguage('hi')}
                 className={cn(
-                  'rounded-full px-2 py-1 text-[10px] font-bold transition-all sm:px-3 sm:text-xs',
-                  language === 'hi'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-900'
+                  'relative z-10 flex-1 rounded-full px-3 py-1.5 text-xs font-bold transition-colors duration-200 sm:px-4',
+                  language === 'hi' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
                 )}
+                aria-label="Switch to Hindi"
+                aria-pressed={language === 'hi'}
               >
                 HI
               </button>
@@ -588,7 +599,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                           </SheetClose>
                           <SheetClose asChild>
                             <Link
-                              href="/upgrade"
+                              href="/pricing"
                               className="flex items-center gap-3 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-slate-900/20 transition-all duration-200 active:scale-[0.98]"
                             >
                               <Crown size={18} className="text-yellow-400" />

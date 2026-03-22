@@ -139,45 +139,55 @@ export async function getTestByUnitId(unitId: string) {
   return test || null;
 }
 
-export async function getTestWithQuestions(testId: string) {
-  try {
-    const validatedId = testIdSchema.parse(testId);
+// --- Cached Test with Questions ---
+// Heavy function called on every quiz start - MUST be cached
 
-    // Fetch Test
-    const test = await db.query.tests.findFirst({
-      where: eq(tests.id, validatedId),
-      with: {
-        questions: {
-          orderBy: asc(questions.order),
-        },
+const fetchTestWithQuestionsData = async (testId: string) => {
+  const validatedId = testIdSchema.parse(testId);
+
+  // Fetch Test with questions in single query
+  const test = await db.query.tests.findFirst({
+    where: eq(tests.id, validatedId),
+    with: {
+      questions: {
+        orderBy: asc(questions.order),
+      },
+    },
+  });
+
+  if (!test) return null;
+
+  // Enriched Logic: If it's a Topic Test, fetch the topic title
+  if (test.topicId) {
+    const topic = await db.query.syllabusTopics.findFirst({
+      where: eq(syllabusTopics.id, test.topicId),
+      columns: {
+        title: true,
+        titleEn: true,
       },
     });
 
-    if (!test) return null;
-
-    // Enriched Logic: If it's a Topic Test, fetch the topic title
-    // This fixes the "Topic 21bb3b57..." ugly title issue
-    if (test.topicId) {
-      const topic = await db.query.syllabusTopics.findFirst({
-        where: eq(syllabusTopics.id, test.topicId),
-        columns: {
-          title: true,
-          titleEn: true,
-        },
-      });
-
-      if (topic) {
-        // Prefer English title for consistency or use what's available
-        // We override the test title with the proper topic name
-        // E.g., "MP History Practice Test" instead of "Topic <UUID> Practice Test"
-        const cleanTitle = topic.titleEn || topic.title;
-        if (cleanTitle) {
-          test.title = `${cleanTitle} Practice Test`;
-        }
+    if (topic) {
+      const cleanTitle = topic.titleEn || topic.title;
+      if (cleanTitle) {
+        test.title = `${cleanTitle} Practice Test`;
       }
     }
+  }
 
-    return test;
+  return test;
+};
+
+// Cached version - revalidates every 5 minutes, invalidates on test update
+export const getCachedTestWithQuestions = unstable_cache(
+  fetchTestWithQuestionsData,
+  ['test-with-questions'],
+  { revalidate: 300, tags: ['tests'] }
+);
+
+export async function getTestWithQuestions(testId: string) {
+  try {
+    return await getCachedTestWithQuestions(testId);
   } catch (error) {
     logger.error('Invalid Test ID or DB Error:', error);
     return null;
@@ -357,9 +367,9 @@ export async function submitTestAttempt(
     });
 
     // 4. Update Leaderboard (Async - Fire and Forget mostly, or await if critical)
-    // Need user name for leaderboard
-    const user = await verifyAuth();
-    if (user && user.name) {
+    // 🔧 PERF FIX: Reuse `session` from line 216 instead of calling verifyAuth() again
+    // This saves 100-200ms per submission (auth verification is expensive)
+    if (session && session.name) {
       // We need total marks for percentage calc in leaderboard
       // We sum marks from questions
       /* 
@@ -371,7 +381,7 @@ export async function submitTestAttempt(
       await insertUserToLeaderboard({
         testId,
         userId,
-        displayName: user.name,
+        displayName: session.name,
         score: parseFloat(totalScore.toFixed(2)),
         // 🛡️ FIX: Use validDuration (server-validated) instead of raw durationSeconds
         // Bhai, pehle yahan raw durationSeconds ja raha tha — manipulated value

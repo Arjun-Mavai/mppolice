@@ -1,5 +1,5 @@
 import { getCachedPYQTests, getUserAttemptsByType } from '@/features/tests/actions/submission';
-import { getSubjectWisePYQStats } from '@/features/tests/actions/pyq-analytics'; // NEW
+import { getSubjectWisePYQStats } from '@/features/tests/actions/pyq-analytics'; // Back to original
 import PYQPageClient from './PYQPageClient';
 import { verifyAuth } from '@/lib/auth';
 import { getUserTier, hasAccessToContent } from '@/lib/access-control';
@@ -7,11 +7,17 @@ import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 import { Suspense } from 'react';
 import { QuizListSkeleton } from '@/components/QuizListSkeleton';
 
-export default async function PYQPage() {
+export default async function PYQPage({ 
+  searchParams 
+}: { 
+  searchParams?: Promise<{ mode?: string }> 
+}) {
+  const params = searchParams ? await searchParams : {};
+  
   return (
     <div className="relative min-h-screen bg-[#fafbfc] pb-20 font-sans">
       <Suspense fallback={<QuizListFallback />}>
-        <PYQPageData />
+        <PYQPageData mode={params.mode} />
       </Suspense>
     </div>
   );
@@ -29,7 +35,7 @@ function QuizListFallback() {
   );
 }
 
-async function PYQPageData() {
+async function PYQPageData({ mode }: { mode?: string }) {
   const userPromise = verifyAuth();
   const [user, tests, attemptLimits, attempts, subjectStats] = await Promise.all([
     userPromise,
@@ -40,7 +46,7 @@ async function PYQPageData() {
       const userId = resolvedUser?.id;
       return userId ? getUserAttemptsByType('PYQ', userId) : ({} as Record<string, number>);
     })(),
-    getSubjectWisePYQStats(), // Fetch subject stats
+    getSubjectWisePYQStats(), // Back to original working function
   ]);
 
   const tier = getUserTier(user);
@@ -72,5 +78,5 @@ async function PYQPageData() {
     };
   });
 
-  return <PYQPageClient initialTests={enrichedTests} subjectStats={subjectStats} isLoggedIn={!!user} />;
+  return <PYQPageClient initialTests={enrichedTests} subjectStats={subjectStats} isLoggedIn={!!user} mode={mode} />;
 }

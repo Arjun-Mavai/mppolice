@@ -47,24 +47,35 @@ export const getCachedFreeQuizzes = unstable_cache(
 /**
  * getFreeQuizWithQuestions — Ek specific free test + uske questions
  * Quiz play page pe use hoga — questions load karne ke liye
+ * NOW CACHED for performance - revalidates every 5 minutes
  */
+const fetchFreeQuizData = async (testId: string) => {
+  const test = await db
+    .select()
+    .from(tests)
+    .where(and(eq(tests.id, testId), eq(tests.type, 'MISC'), eq(tests.isFreeAccess, true), eq(tests.isHidden, false)))
+    .get();
+
+  if (!test) return null;
+
+  const testQuestions = await db
+    .select()
+    .from(questions)
+    .where(eq(questions.testId, testId))
+    .orderBy(questions.order);
+
+  return { ...test, questions: testQuestions };
+};
+
+export const getCachedFreeQuizWithQuestions = unstable_cache(
+  fetchFreeQuizData,
+  ['free-quiz-with-questions'],
+  { revalidate: 300, tags: ['tests'] }
+);
+
 export async function getFreeQuizWithQuestions(testId: string) {
   try {
-    const test = await db
-      .select()
-      .from(tests)
-      .where(and(eq(tests.id, testId), eq(tests.type, 'MISC'), eq(tests.isFreeAccess, true), eq(tests.isHidden, false)))
-      .get();
-
-    if (!test) return null;
-
-    const testQuestions = await db
-      .select()
-      .from(questions)
-      .where(eq(questions.testId, testId))
-      .orderBy(questions.order);
-
-    return { ...test, questions: testQuestions };
+    return await getCachedFreeQuizWithQuestions(testId);
   } catch (error) {
     logger.error('getFreeQuizWithQuestions Error:', error);
     return null;
