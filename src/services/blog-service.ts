@@ -107,6 +107,7 @@ export async function getBlogs({
   category = 'All',
   isPremium = undefined, // undefined = all, true = premium, false = free
   isFreeAccess = undefined,
+  isAdmin = false,
 }: {
   page?: number;
   limit?: number;
@@ -115,6 +116,7 @@ export async function getBlogs({
   category?: string;
   isPremium?: boolean;
   isFreeAccess?: boolean;
+  isAdmin?: boolean;
 } = {}) {
   try {
     const offset = (page - 1) * limit;
@@ -122,11 +124,11 @@ export async function getBlogs({
     // Build Where Clause
     const whereConditions = [];
 
-    // Filter by Published (always)
-    whereConditions.push(eq(contentBlogs.isPublished, true));
-
-    // Filter out hidden blogs
-    whereConditions.push(eq(contentBlogs.isHidden, false));
+    // Filter by Published & Hidden (user view only)
+    if (!isAdmin) {
+      whereConditions.push(eq(contentBlogs.isPublished, true));
+      whereConditions.push(eq(contentBlogs.isHidden, false));
+    }
 
     // Filter by Unit
     if (unitId && unitId !== 'All') {

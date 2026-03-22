@@ -50,8 +50,24 @@ export function AdminTicketsList() {
                   <td className="max-w-xs truncate px-6 py-4" title={ticket.message}>
                     {ticket.message}
                   </td>
-                  <td className="px-6 py-4 text-slate-500">
-                    {new Date(ticket.createdAt).toLocaleDateString()}
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col gap-0.5 text-[10px] whitespace-nowrap text-slate-500">
+                      <span className="font-bold text-slate-600">
+                        {new Date(ticket.createdAt).toLocaleString('en-IN', {
+                          weekday: 'long',
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </span>
+                      <span className="text-slate-400">
+                        {new Date(ticket.createdAt).toLocaleString('en-IN', {
+                          hour: 'numeric',
+                          minute: 'numeric',
+                          hour12: true,
+                        })}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <Badge

@@ -15,7 +15,7 @@
 
 import { db } from '@/db';
 import { tests, questions, syllabusTopics, testAttemptLimits, userAttempts, attemptAnswers, testLeaderboard } from '@/db/schema';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, desc } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 import { requireAdmin } from '@/lib/auth-admin';
 import { logger } from '@/lib/logger';
@@ -51,7 +51,7 @@ export async function getAllTestsForAdmin() {
       createdAt: tests.createdAt,
     })
     .from(tests)
-    .orderBy(tests.type, tests.displayOrder);
+    .orderBy(desc(tests.createdAt));
 
   // TOPIC tests ke liye syllabusTopics se proper name fetch karo
   const topicTestIds = allTests

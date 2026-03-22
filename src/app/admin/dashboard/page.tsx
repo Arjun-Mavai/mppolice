@@ -193,16 +193,23 @@ export default function AdminDashboardPage() {
                           <span>{g.mobile || 'No Mobile'}</span>
                         </div>
                       </div>
-                      <span className="ml-2 text-[10px] whitespace-nowrap text-slate-400">
-                        {new Date(g.createdAt!).toLocaleString('en-IN', {
-                          weekday: 'short',
-                          day: 'numeric',
-                          month: 'short',
-                          hour: 'numeric',
-                          minute: 'numeric',
-                          hour12: true,
-                        })}
-                      </span>
+                      <div className="ml-2 flex flex-col items-end gap-0.5 text-[10px] whitespace-nowrap text-slate-500">
+                        <span className="font-bold text-slate-600">
+                          {new Date(g.createdAt!).toLocaleString('en-IN', {
+                            weekday: 'long',
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </span>
+                        <span className="text-slate-400">
+                          {new Date(g.createdAt!).toLocaleString('en-IN', {
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true,
+                          })}
+                        </span>
+                      </div>
                     </div>
                   ))
                 )}

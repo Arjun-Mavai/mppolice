@@ -11,13 +11,14 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Star, MessageSquare } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+// No imports from date-fns needed
 
 // Types
 interface Feedback {
   id: string;
   userName?: string | null;
   userEmail?: string | null;
+  testId?: string | null;
   testTitle?: string | null;
   comments?: string | null;
   overallRating: number;
@@ -105,9 +106,14 @@ export function FeedbackTable() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="text-xs font-semibold text-slate-600 line-clamp-2" title={item.testTitle || ''}>
-                      {item.testTitle || 'Unknown Test'}
-                    </span>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-semibold text-slate-600 line-clamp-2" title={item.testTitle || ''}>
+                        {item.testTitle || 'Unknown Test'}
+                      </span>
+                      <span className="font-mono text-[9px] text-slate-400 truncate max-w-[120px]" title={item.testId || ''}>
+                        {item.testId || 'No ID'}
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell className="max-w-md">
                     <p className="truncate text-sm text-slate-700" title={item.comments || ''}>
@@ -125,8 +131,24 @@ export function FeedbackTable() {
                       {item.difficultyLevel.replace('_', ' ')}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right text-[10px] text-slate-500">
-                    {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
+                  <TableCell className="text-right">
+                    <div className="flex flex-col items-end gap-0.5 text-[10px] whitespace-nowrap text-slate-500">
+                      <span className="font-bold text-slate-600">
+                        {new Date(item.createdAt).toLocaleString('en-IN', {
+                          weekday: 'long',
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </span>
+                      <span className="text-slate-400">
+                        {new Date(item.createdAt).toLocaleString('en-IN', {
+                          hour: 'numeric',
+                          minute: 'numeric',
+                          hour12: true,
+                        })}
+                      </span>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

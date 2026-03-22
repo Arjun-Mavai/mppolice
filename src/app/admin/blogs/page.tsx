@@ -14,7 +14,7 @@ export default async function AdminBlogsPage() {
   const dbUser = await db.select().from(mppscUsers).where(eq(mppscUsers.id, user.id)).get();
   if (!dbUser || dbUser.role !== 'admin') redirect('/dashboard');
 
-  const { blogs, pagination } = await getBlogs({ page: 1, limit: 10 });
+  const { blogs, pagination } = await getBlogs({ page: 1, limit: 10, isAdmin: true });
 
   return (
     <div className="min-h-screen bg-slate-50/50 p-6 md:p-8">
