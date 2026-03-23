@@ -109,7 +109,7 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
       </div>
 
       <h3 className="font-display relative z-10 mb-2 text-xl font-bold tracking-tight">
-        Ace MPPSC 2026
+        {user ? 'Unlock More Content' : 'Ace MPPSC 2026'}
       </h3>
 
       {isPro ? (
@@ -150,7 +150,13 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
       ) : (
         <>
           <p className="relative z-10 mb-6 text-sm leading-relaxed text-slate-300">
-            Unlock premium mock tests, detailed analytics, and exclusive content.
+            {user ? (
+              <>
+                Hi <span className="font-bold text-white">{user.name?.split(' ')[0] || 'Aspirant'}</span>! Ready to level up? Unlock premium mock tests, detailed analytics, and exclusive content.
+              </>
+            ) : (
+              'Unlock premium mock tests, detailed analytics, and exclusive content.'
+            )}
           </p>
           {/* Premium Button */}
           <div className="relative overflow-hidden rounded-xl p-[1.5px] shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40">
@@ -160,7 +166,7 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
               className="relative flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white transition-all hover:bg-slate-900/90"
             >
               <Sparkles size={16} className="fill-white/20 text-yellow-400" />
-              Get Premium Access
+              {user ? 'Explore Premium' : 'Get Premium Access'}
             </Link>
           </div>
         </>
