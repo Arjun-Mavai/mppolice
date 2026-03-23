@@ -60,7 +60,7 @@ export function BlogCard({
   isNavigating,
   returnToQuery,
 }: BlogCardProps) {
-  const { language } = useSettingsStore();
+  const { language, user } = useSettingsStore();
   const router = useRouter();
 
   const colorVariant = (['blue', 'pink', 'emerald', 'amber'] as const)[index % 4];
@@ -158,7 +158,7 @@ export function BlogCard({
           )}
         </div>
 
-        {isLocked && (
+        {isLocked && !user && (
           <div
             className={cn(
               'rounded-full border p-2.5',
