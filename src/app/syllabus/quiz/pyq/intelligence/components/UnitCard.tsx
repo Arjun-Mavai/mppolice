@@ -61,7 +61,7 @@ export function UnitCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h4 className="text-sm font-bold text-white truncate">
-              {formatUnitTitle(unitId)}
+              {formatUnitTitle(unitId, isHindi)}
             </h4>
             <Badge
               variant="secondary"

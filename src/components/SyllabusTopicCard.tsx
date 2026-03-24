@@ -16,6 +16,7 @@ interface SyllabusTopicCardProps {
   variant?: 'topic' | 'unit';
   isLocked?: boolean;
   isFree?: boolean;
+  isLoading?: boolean;
   hideBadge?: boolean;
   hidePlus?: boolean;
   onClick: () => void;
@@ -67,6 +68,7 @@ export const SyllabusTopicCard: React.FC<SyllabusTopicCardProps> = ({
   variant = 'topic',
   isLocked,
   isFree,
+  isLoading,
   hideBadge = false,
   hidePlus = false,
   onClick,
@@ -86,9 +88,16 @@ export const SyllabusTopicCard: React.FC<SyllabusTopicCardProps> = ({
         style.border,
         'shadow-sm hover:shadow-2xl',
         style.shadow,
-        isLocked && 'opacity-90 grayscale-[0.5]'
+        (isLocked || isLoading) && 'pointer-events-none opacity-90 grayscale-[0.5]'
       )}
     >
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/20 backdrop-blur-[2px] animate-in fade-in duration-300">
+           <div className={cn("h-10 w-10 animate-spin rounded-full border-4 border-t-transparent", style.border.replace('border-', 'border-t-'))} style={{ borderColor: 'currentColor', borderTopColor: 'transparent' }}></div>
+           <span className={cn("mt-3 text-[10px] font-black uppercase tracking-widest", style.text)}>Loading...</span>
+        </div>
+      )}
       {/* Top Bar: Search Pill + Plus Icon */}
       <div className="relative z-10 flex items-center justify-between">
         {!hideBadge ? (

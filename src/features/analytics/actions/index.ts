@@ -8,6 +8,9 @@ import { verifyAuth } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { cachedData } from '@/lib/cache';
 
+// 🎯 MPPSC Expected Cutoff (based on historical data)
+const EXPECTED_CUTOFF_PERCENTAGE = 76;
+
 // Cache Analytics per user for 5 minutes to avoid DB spam on refresh
 export const getUserAnalytics = async (userId: string) => {
   if (!userId) return null;
@@ -30,6 +33,182 @@ export async function revalidateAnalyticsAction() {
   if (user) {
     revalidateTag(`analytics-${user.id}`, { expire: 0 });
   }
+}
+
+/**
+ * 🎯 Calculate Exam Expert Insights
+ * These are advanced metrics that help students understand their exam readiness
+ */
+function calculateExamInsights(
+  attempts: any[],
+  subjectStats: Record<string, any>,
+  overallAvg: number
+) {
+  // 1. Cutoff Comparison
+  const difference = overallAvg - EXPECTED_CUTOFF_PERCENTAGE;
+  const cutoffComparison = {
+    userScore: overallAvg,
+    expectedCutoff: EXPECTED_CUTOFF_PERCENTAGE,
+    difference: Math.round(difference),
+    status: difference >= 5 ? 'above' : difference >= -5 ? 'near' : 'below' as 'above' | 'below' | 'near',
+  };
+
+  // 2. Trend Analysis (Compare last 5 tests vs previous 5)
+  const sortedAttempts = [...attempts].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  const recent5 = sortedAttempts.slice(0, 5);
+  const previous5 = sortedAttempts.slice(5, 10);
+
+  const calcAvg = (arr: any[]) => {
+    if (arr.length === 0) return 0;
+    const total = arr.reduce((sum, a) => {
+      // Fix: Ensure maxMarks is never 0 or too small
+      const questionBasedMarks = (a.totalQuestions || 0) * 3;
+      const maxMarks = questionBasedMarks > 0 ? questionBasedMarks : (a.totalMarks || 60);
+      // Fix: Clamp percentage to 0-100 range
+      const pct = Math.min(100, Math.max(0, ((a.score || 0) / maxMarks) * 100));
+      return sum + pct;
+    }, 0);
+    return Math.round(total / arr.length);
+  };
+
+  const recentAvg = calcAvg(recent5);
+  const previousAvg = calcAvg(previous5);
+  const changePercent = previousAvg > 0 ? Math.round(((recentAvg - previousAvg) / previousAvg) * 100) : 0;
+
+  const trend = {
+    direction: changePercent > 5 ? 'improving' : changePercent < -5 ? 'declining' : 'stable' as 'improving' | 'declining' | 'stable',
+    changePercent: Math.abs(changePercent),
+    recentAvg,
+    previousAvg,
+  };
+
+  // 3. Consistency Score (Low variance = consistent)
+  const percentages = attempts.map(a => {
+    const questionBasedMarks = (a.totalQuestions || 0) * 3;
+    const maxMarks = questionBasedMarks > 0 ? questionBasedMarks : (a.totalMarks || 60);
+    // Clamp to 0-100
+    return Math.min(100, Math.max(0, ((a.score || 0) / maxMarks) * 100));
+  });
+
+  const mean = percentages.length > 0 ? percentages.reduce((a, b) => a + b, 0) / percentages.length : 0;
+  const variance = percentages.length > 0
+    ? percentages.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / percentages.length
+    : 0;
+  const stdDev = Math.sqrt(variance);
+
+  // Consistency score: 100 - (stdDev * 2), clamped 0-100
+  const consistencyScore = Math.max(0, Math.min(100, Math.round(100 - stdDev * 2)));
+
+  const consistency = {
+    score: consistencyScore,
+    variance: Math.round(variance),
+    status: consistencyScore >= 70 ? 'consistent' : consistencyScore >= 40 ? 'moderate' : 'inconsistent' as 'consistent' | 'moderate' | 'inconsistent',
+  };
+
+  // 4. Time Efficiency
+  const timeData = attempts.filter(a => a.startTime && a.endTime && a.durationMinutes);
+  let avgTimeUsed = 75; // Default
+
+  if (timeData.length > 0) {
+    const timeRatios = timeData.map(a => {
+      const start = new Date(a.startTime).getTime();
+      const end = new Date(a.endTime).getTime();
+      const usedSeconds = Math.max(0, (end - start) / 1000); // Fix: Prevent negative time
+      const allottedSeconds = (a.durationMinutes || 30) * 60;
+      // Fix: Clamp between 0-200% (allow showing overtime but cap it)
+      return Math.min(200, Math.max(0, (usedSeconds / allottedSeconds) * 100));
+    });
+    avgTimeUsed = Math.round(timeRatios.reduce((a, b) => a + b, 0) / timeRatios.length);
+  }
+
+  // Fix: Determine status BEFORE clamping for UI display
+  const timeStatus = avgTimeUsed <= 70 ? 'efficient' : avgTimeUsed <= 90 ? 'normal' : 'slow' as 'efficient' | 'normal' | 'slow';
+  
+  const timeEfficiency = {
+    avgTimeUsed: Math.min(100, avgTimeUsed), // Cap at 100% for display
+    status: timeStatus,
+    suggestion: timeStatus === 'efficient'
+      ? 'Great speed! Consider spending more time on difficult questions.'
+      : timeStatus === 'normal'
+        ? 'Good time management. Maintain this pace.'
+        : 'Try to improve speed with more practice tests.',
+  };
+
+  // 5. Study Streak - Fixed calculation
+  const dates = attempts.map(a => new Date(a.createdAt).toDateString());
+  const uniqueDates = [...new Set(dates)].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+  let currentStreak = 0;
+  let longestStreak = 0;
+  const today = new Date().toDateString();
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+
+  if (uniqueDates.length > 0) {
+    // Start streak from 1 if there's any activity
+    let tempStreak = 1;
+    
+    // Check if user was active today or yesterday to count current streak
+    const isActiveRecently = uniqueDates[0] === today || uniqueDates[0] === yesterday;
+    
+    // Calculate streaks by comparing consecutive dates
+    for (let i = 1; i < uniqueDates.length; i++) {
+      const currentDate = new Date(uniqueDates[i - 1]);
+      const prevDate = new Date(uniqueDates[i]);
+      const diffDays = Math.round((currentDate.getTime() - prevDate.getTime()) / 86400000);
+
+      if (diffDays === 1) {
+        // Consecutive day
+        tempStreak++;
+      } else {
+        // Streak broken
+        longestStreak = Math.max(longestStreak, tempStreak);
+        tempStreak = 1;
+      }
+    }
+    
+    // Final comparison
+    longestStreak = Math.max(longestStreak, tempStreak);
+    
+    // Current streak only counts if active recently
+    currentStreak = isActiveRecently ? tempStreak : 0;
+  }
+
+  const studyStreak = {
+    currentStreak,
+    longestStreak,
+    lastActiveDate: uniqueDates[0] || 'Never',
+  };
+
+  // 6. Priority Topics (weakest areas that need focus)
+  const priorityTopics = Object.entries(subjectStats)
+    .map(([id, data]: [string, any]) => ({
+      name: data.name,
+      nameEn: data.nameEn,
+      percentage: data.totalMax > 0 ? Math.round((data.totalScore / data.totalMax) * 100) : 0,
+      questionsAttempted: data.count,
+      priority: data.totalMax > 0
+        ? (data.totalScore / data.totalMax) * 100 < 40
+          ? 'high'
+          : (data.totalScore / data.totalMax) * 100 < 60
+            ? 'medium'
+            : 'low'
+        : 'high' as 'high' | 'medium' | 'low',
+    }))
+    .filter(t => t.priority !== 'low')
+    .sort((a, b) => a.percentage - b.percentage)
+    .slice(0, 5);
+
+  return {
+    cutoffComparison,
+    trend,
+    consistency,
+    timeEfficiency,
+    studyStreak,
+    priorityTopics,
+  };
 }
 
 // Extracted internal function
@@ -306,6 +485,9 @@ async function fetchAnalyticsInternal(userId: string) {
       };
     });
 
+    // 🎯 Calculate Exam Expert Insights
+    const examInsights = calculateExamInsights(attempts, subjectStats, overallAvg);
+
     return {
       overallScore: overallAvg,
       totalTests: attempts.length, // Total tests is total attempts (or unique? User said "jo latest h usi ko store karna h". Assuming total tests count is unique tests taken? Let's keep attempts.length for Total Count as "Tests Taken" usually means attempts. But Recent History needs unique.)
@@ -314,6 +496,7 @@ async function fetchAnalyticsInternal(userId: string) {
       mastery,
       recentActivity: recentActivity,
       aiSuggestion,
+      examInsights, // 🎯 NEW: Exam Expert Insights
     };
   } catch (error) {
     logger.error('Analytics Error:', error);

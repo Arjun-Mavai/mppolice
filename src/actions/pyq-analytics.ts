@@ -3,6 +3,7 @@
 import { db } from '@/db';
 import { questions, pyqQuestionTopics, pyqTopics } from '@/db/schema';
 import { eq, inArray } from 'drizzle-orm';
+import { unstable_cache } from 'next/cache';
 import { syllabusData } from '@/data/syllabusData';
 import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
 import { CANONICAL_TEST_IDS, getCanonicalTestIds, getYearFromTestId } from '@/lib/pyq-constants';
@@ -35,7 +36,7 @@ export interface OverallWeightageSubjectData {
 }
 
 // Function to get subject-wise questions for Intelligence Overall Weightage
-export async function getOverallWeightageSubjectData(): Promise<OverallWeightageSubjectData[]> {
+export async function getOverallWeightageSubjectData(limit?: number): Promise<OverallWeightageSubjectData[]> {
   const canonicalTestIds = getCanonicalTestIds();
   
   // Get all questions from canonical tests with subject grouping
@@ -63,18 +64,28 @@ export async function getOverallWeightageSubjectData(): Promise<OverallWeightage
   }
 
   // Format for UI
-  return Object.entries(subjectGroups).map(([subject, questions]) => ({
-    subject,
-    questions: questions.map(q => ({
-      id: q.id,
-      text: q.text,
-      textEn: q.textEn,
-      year: getYearFromTestId(q.testId),
-      qNo: q.order,
-      testTitle: `MPPSC Prelims ${getYearFromTestId(q.testId)}`,
-      testId: q.testId,
-    })).sort((a, b) => b.year - a.year || a.qNo - b.qNo), // Sort by year desc, then qNo asc
-  }));
+  return Object.entries(subjectGroups).map(([subject, questions]) => {
+    let resultQuestions = questions
+      .map(q => ({
+        id: q.id,
+        text: q.text,
+        textEn: q.textEn,
+        year: getYearFromTestId(q.testId),
+        qNo: q.order,
+        testTitle: `MPPSC Prelims ${getYearFromTestId(q.testId)}`,
+        testId: q.testId,
+      }))
+      .sort((a, b) => b.year - a.year || a.qNo - b.qNo);
+
+    if (limit) {
+      resultQuestions = resultQuestions.slice(0, limit);
+    }
+
+    return {
+      subject,
+      questions: resultQuestions,
+    };
+  });
 }
 
 export interface UnitDistributionStats {
@@ -527,153 +538,150 @@ function jaccardSimilarity(text1: string, text2: string): number {
 // High Jaccard threshold (0.6) for accuracy
 // ============================================
 
-export async function getRepeatedQuestions(): Promise<RepeatedQuestion[]> {
-  try {
-    const testIds = getCanonicalTestIds();
+export const getRepeatedQuestions = unstable_cache(
+  async (): Promise<RepeatedQuestion[]> => {
+    try {
+      const testIds = getCanonicalTestIds();
+      // ... (rest of the logic stays the same)
+      const allQuestions = await db
+        .select({
+          id: questions.id,
+          testId: questions.testId,
+          text: questions.questionText,
+          textEn: questions.questionTextEn,
+          order: questions.order,
+        })
+        .from(questions)
+        .where(inArray(questions.testId, testIds));
 
-    // Fetch all questions from canonical tests
-    const allQuestions = await db
-      .select({
-        id: questions.id,
-        testId: questions.testId,
-        text: questions.questionText,
-        textEn: questions.questionTextEn,
-        order: questions.order,
-      })
-      .from(questions)
-      .where(inArray(questions.testId, testIds));
-
-    // Group by year for cross-year comparison
-    const questionsByYear = new Map<number, typeof allQuestions>();
-    for (const q of allQuestions) {
-      const year = getYearFromTestId(q.testId);
-      if (!questionsByYear.has(year)) questionsByYear.set(year, []);
-      questionsByYear.get(year)!.push(q);
-    }
-
-    // Union-Find for clustering similar questions
-    const parent = new Map<string, string>();
-    allQuestions.forEach((q) => parent.set(q.id, q.id));
-
-    function find(id: string): string {
-      if (parent.get(id) === id) return id;
-      const root = find(parent.get(id)!);
-      parent.set(id, root);
-      return root;
-    }
-
-    function union(id1: string, id2: string) {
-      const root1 = find(id1);
-      const root2 = find(id2);
-      if (root1 !== root2) {
-        parent.set(root2, root1);
+      // ... (mapping logic)
+      const questionsByYear = new Map<number, typeof allQuestions>();
+      for (const q of allQuestions) {
+        const year = getYearFromTestId(q.testId);
+        if (!questionsByYear.has(year)) questionsByYear.set(year, []);
+        questionsByYear.get(year)!.push(q);
       }
-    }
 
-    // Compare questions ONLY across different years
-    // Use HIGH threshold (0.6) for accuracy
-    const SIMILARITY_THRESHOLD = 0.6;
-    const years = Array.from(questionsByYear.keys()).sort();
+      // Union-Find
+      const parent = new Map<string, string>();
+      allQuestions.forEach((q) => parent.set(q.id, q.id));
 
-    for (let i = 0; i < years.length; i++) {
-      for (let j = i + 1; j < years.length; j++) {
-        const qs1 = questionsByYear.get(years[i])!;
-        const qs2 = questionsByYear.get(years[j])!;
+      function find(id: string): string {
+        if (parent.get(id) === id) return id;
+        const root = find(parent.get(id)!);
+        parent.set(id, root);
+        return root;
+      }
 
-        for (const q1 of qs1) {
-          const q1Text = (q1.text || '') + ' ' + (q1.textEn || '');
-          for (const q2 of qs2) {
-            const q2Text = (q2.text || '') + ' ' + (q2.textEn || '');
-            const similarity = jaccardSimilarity(q1Text, q2Text);
-            if (similarity >= SIMILARITY_THRESHOLD) {
-              union(q1.id, q2.id);
+      function union(id1: string, id2: string) {
+        const root1 = find(id1);
+        const root2 = find(id2);
+        if (root1 !== root2) {
+          parent.set(root2, root1);
+        }
+      }
+
+      const SIMILARITY_THRESHOLD = 0.6;
+      const years = Array.from(questionsByYear.keys()).sort();
+
+      for (let i = 0; i < years.length; i++) {
+        for (let j = i + 1; j < years.length; j++) {
+          const qs1 = questionsByYear.get(years[i])!;
+          const qs2 = questionsByYear.get(years[j])!;
+
+          for (const q1 of qs1) {
+            const q1Text = (q1.text || '') + ' ' + (q1.textEn || '');
+            for (const q2 of qs2) {
+              const q2Text = (q2.text || '') + ' ' + (q2.textEn || '');
+              const similarity = jaccardSimilarity(q1Text, q2Text);
+              if (similarity >= SIMILARITY_THRESHOLD) {
+                union(q1.id, q2.id);
+              }
             }
           }
         }
       }
-    }
 
-    // Build clusters
-    const clusters = new Map<string, typeof allQuestions>();
-    allQuestions.forEach((q) => {
-      const root = find(q.id);
-      if (!clusters.has(root)) clusters.set(root, []);
-      clusters.get(root)!.push(q);
-    });
+      const clusters = new Map<string, typeof allQuestions>();
+      allQuestions.forEach((q) => {
+        const root = find(q.id);
+        if (!clusters.has(root)) clusters.set(root, []);
+        clusters.get(root)!.push(q);
+      });
 
-    // Format results - only include if repeated across DIFFERENT years
-    const result: RepeatedQuestion[] = [];
+      const result: RepeatedQuestion[] = [];
 
-    for (const cluster of clusters.values()) {
-      const yearsInCluster = new Set(cluster.map((q) => getYearFromTestId(q.testId)));
+      for (const cluster of clusters.values()) {
+        const yearsInCluster = new Set(cluster.map((q) => getYearFromTestId(q.testId)));
 
-      if (yearsInCluster.size > 1) {
-        // Sort by year descending to get most recent as representative
-        cluster.sort((a, b) => getYearFromTestId(b.testId) - getYearFromTestId(a.testId));
-        const representative = cluster[0];
+        if (yearsInCluster.size > 1) {
+          cluster.sort((a, b) => getYearFromTestId(b.testId) - getYearFromTestId(a.testId));
+          const representative = cluster[0];
 
-        const occurrences = cluster
-          .map((c) => ({
-            year: getYearFromTestId(c.testId),
-            qNo: c.order,
-          }))
-          .sort((a, b) => b.year - a.year);
+          const occurrences = cluster
+            .map((c) => ({
+              year: getYearFromTestId(c.testId),
+              qNo: c.order,
+            }))
+            .sort((a, b) => b.year - a.year);
 
-        const unit = assignUnitToQuestion(
-          (representative.text || '') + ' ' + (representative.textEn || '')
-        );
+          const unit = assignUnitToQuestion(
+            (representative.text || '') + ' ' + (representative.textEn || '')
+          );
 
-        result.push({
-          questionId: representative.id,
-          text: representative.text || '',
-          textEn: representative.textEn,
-          occurrences,
-          count: yearsInCluster.size,
-          topics: [],
-          unit,
-        });
-      }
-    }
-
-    result.sort((a, b) => b.count - a.count);
-
-    // Fetch topics for top repeated questions
-    const topRepeated = result.slice(0, 100);
-    const questionIds = topRepeated.map((r) => r.questionId);
-
-    if (questionIds.length > 0) {
-      const topicData = await db
-        .select({
-          questionId: pyqQuestionTopics.questionId,
-          topicId: pyqTopics.id,
-          topicTitle: pyqTopics.topicTitle,
-          topicTitleEn: pyqTopics.topicTitleEn,
-        })
-        .from(pyqQuestionTopics)
-        .innerJoin(pyqTopics, eq(pyqQuestionTopics.topicId, pyqTopics.id))
-        .where(inArray(pyqQuestionTopics.questionId, questionIds));
-
-      const topicMap = new Map<string, { id: string; name: string; nameEn?: string | null }[]>();
-      for (const t of topicData) {
-        if (!topicMap.has(t.questionId)) topicMap.set(t.questionId, []);
-        topicMap.get(t.questionId)!.push({
-          id: t.topicId,
-          name: t.topicTitle,
-          nameEn: t.topicTitleEn,
-        });
+          result.push({
+            questionId: representative.id,
+            text: representative.text || '',
+            textEn: representative.textEn,
+            occurrences,
+            count: yearsInCluster.size,
+            topics: [],
+            unit,
+          });
+        }
       }
 
-      for (const r of topRepeated) {
-        r.topics = topicMap.get(r.questionId) || [];
-      }
-    }
+      result.sort((a, b) => b.count - a.count);
 
-    return topRepeated;
-  } catch (error) {
-    console.error('Error in repeated questions analysis:', error);
-    return [];
-  }
-}
+      const topRepeated = result.slice(0, 100);
+      const questionIds = topRepeated.map((r) => r.questionId);
+
+      if (questionIds.length > 0) {
+        const topicData = await db
+          .select({
+            questionId: pyqQuestionTopics.questionId,
+            topicId: pyqTopics.id,
+            topicTitle: pyqTopics.topicTitle,
+            topicTitleEn: pyqTopics.topicTitleEn,
+          })
+          .from(pyqQuestionTopics)
+          .innerJoin(pyqTopics, eq(pyqQuestionTopics.topicId, pyqTopics.id))
+          .where(inArray(pyqQuestionTopics.questionId, questionIds));
+
+        const topicMap = new Map<string, { id: string; name: string; nameEn?: string | null }[]>();
+        for (const t of topicData) {
+          if (!topicMap.has(t.questionId)) topicMap.set(t.questionId, []);
+          topicMap.get(t.questionId)!.push({
+            id: t.topicId,
+            name: t.topicTitle,
+            nameEn: t.topicTitleEn,
+          });
+        }
+
+        for (const r of topRepeated) {
+          r.topics = topicMap.get(r.questionId) || [];
+        }
+      }
+
+      return topRepeated;
+    } catch (error) {
+      console.error('Error in repeated questions analysis:', error);
+      return [];
+    }
+  },
+  ['pyq-repeated-questions'],
+  { revalidate: 3600, tags: ['pyq-insights', 'questions'] }
+);
 
 // ============================================
 // Get Unit Distribution Stats
@@ -685,7 +693,7 @@ export async function getRepeatedQuestions(): Promise<RepeatedQuestion[]> {
 // Uses only the 6 canonical tests (2020-2025)
 // ============================================
 
-export async function getUnitDistributionStats(): Promise<UnitDistributionStats[]> {
+export async function getUnitDistributionStats(limit?: number): Promise<UnitDistributionStats[]> {
   try {
     const testIds = getCanonicalTestIds();
 
@@ -724,13 +732,17 @@ export async function getUnitDistributionStats(): Promise<UnitDistributionStats[
       }
 
       stats[key].count++;
-      stats[key].questions.push({
-        id: q.id,
-        text: q.text || '',
-        textEn: q.textEn,
-        year,
-        qNo: q.order,
-      });
+      
+      // 🚀 Optimization: Apply limit if provided (use for overview)
+      if (!limit || stats[key].questions.length < limit) {
+        stats[key].questions.push({
+          id: q.id,
+          text: q.text || '',
+          textEn: q.textEn,
+          year,
+          qNo: q.order,
+        });
+      }
     }
 
     return Object.values(stats).sort((a, b) => b.year - a.year || a.unitId.localeCompare(b.unitId));

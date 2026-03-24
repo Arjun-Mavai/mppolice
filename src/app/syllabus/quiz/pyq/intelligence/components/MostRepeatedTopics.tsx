@@ -105,7 +105,7 @@ export function MostRepeatedTopics({ topicStats, combinedStats, isHindi }: MostR
                         .slice(0, 3)
                         .map((t) => (isHindi ? t.topicTitle : t.topicTitleEn || t.topicTitle))
                         .join(', ')}
-                      {topics.length > 3 && ` +${topics.length - 3} more`}
+                      {topics.length > 3 && (isHindi ? ` +${topics.length - 3} और` : ` +${topics.length - 3} more`)}
                     </p>
                   )}
                 </div>
@@ -202,7 +202,7 @@ export function MostRepeatedTopics({ topicStats, combinedStats, isHindi }: MostR
                                             className="inline-flex h-7 items-center gap-1 rounded-md bg-pink-500/10 px-2 text-xs font-bold text-pink-400 hover:bg-pink-500/20"
                                           >
                                             <ExternalLink className="h-3 w-3" />
-                                            {isHindi ? 'पेज' : 'Page'}
+                                            {isHindi ? 'पेज' : 'View Page'}
                                           </TransitionLink>
                                         </div>
                                       </div>

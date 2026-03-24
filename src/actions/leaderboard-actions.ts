@@ -1,13 +1,52 @@
 'use server';
 
 import { db } from '@/db';
-import { testLeaderboard, tests } from '@/db/schema';
+import { testLeaderboard } from '@/db/schema';
 import { eq, desc, asc, sql, and } from 'drizzle-orm';
-import { FAKE_USERS } from '@/data/fakeUsers';
+import { FAKE_USERS, FIRST_NAMES, LAST_NAMES } from '@/data/fakeUsers';
 import { questions } from '@/db/schema';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 
 type LeaderboardEntry = typeof testLeaderboard.$inferSelect;
+
+/**
+ * 🎲 Seeded Random Number Generator (Mulberry32)
+ * Same seed = same sequence, different seed = different sequence
+ * Bhai, isse har test me alag users aayenge but same test me consistent rahenge!
+ */
+function seededRandom(seed: number): () => number {
+  return function() {
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Generate hash from string (testId) for seeding
+ */
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+}
+
+/**
+ * Fisher-Yates shuffle with seeded random
+ */
+function shuffleArray<T>(array: T[], random: () => number): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
 // Bhai, ye function ekdum raapchik hai via optimization!
 // Top 10 uthayega aur user ka rank count karega bina DB ko load diye via N+1 logic.
@@ -92,10 +131,20 @@ export async function getTestLeaderboard(testId: string, userId?: string) {
   };
 }
 
-// Helper to generate random time between min and max seconds
-const randomTime = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min);
-
+/**
+ * 🎯 Randomized Fake Leaderboard Generator
+ * 
+ * Bhai, ye naya algorithm hai jo har test me different users dikhata hai:
+ * 1. testId se seed banta hai → same test = same users (consistency)
+ * 2. Different test = completely different set of users
+ * 3. Scores bhi randomized with variance
+ * 4. Names dynamically generated (not just cycling through same 52)
+ */
 async function generateFakeLeaderboard(testId: string) {
+  // Generate deterministic seed from testId
+  const seed = hashString(testId);
+  const random = seededRandom(seed);
+
   // Get accurate total marks based on question count
   const qCount = await db
     .select({ count: sql<number>`count(*)` })
@@ -103,44 +152,79 @@ async function generateFakeLeaderboard(testId: string) {
     .where(eq(questions.testId, testId));
 
   const totalQuestions = qCount[0]?.count || 0;
-  // Fallback to 20 questions if count fails, but aim for accuracy
   const totalMarks = totalQuestions > 0 ? totalQuestions * SCORING_CONFIG.MARKS_PER_QUESTION : 60;
 
-  // Randomize count between 45 and 80
-  const minUsers = 45;
-  const maxUsers = 80;
-  const targetCount = Math.floor(Math.random() * (maxUsers - minUsers + 1)) + minUsers;
+  // 🎲 Randomize count with more variation (25-70, never more than 70)
+  // Bhai ne bola: kisi test me 30, 40, 50 aise random aaye
+  const countOptions = [25, 28, 32, 35, 38, 42, 45, 48, 52, 55, 58, 62, 65, 68, 70];
+  const targetCount = countOptions[Math.floor(random() * countOptions.length)];
 
+  // 🔀 Shuffle and select users from pool
+  const shuffledUsers = shuffleArray(FAKE_USERS, random);
+  
   // Generate fake entries
   const fakeEntries = [];
+  const usedNames = new Set<string>();
 
   for (let i = 0; i < targetCount; i++) {
-    // Cycle through fake users if we need more than we have
-    const baseUser = FAKE_USERS[i % FAKE_USERS.length];
-    const displayName = i >= FAKE_USERS.length ? `${baseUser.name} ${i + 1}` : baseUser.name;
-
-    let percentage;
-
-    // Distribution Logic - Bell Curve-ish
-    if (i < targetCount * 0.1) {
-      // Top 10% - Toppers (80-98%)
-      percentage = 80 + Math.random() * 18;
-    } else if (i < targetCount * 0.4) {
-      // Next 30% - Good scores (60-80%)
-      percentage = 60 + Math.random() * 20;
-    } else if (i < targetCount * 0.8) {
-      // Next 40% - Average scores (35-60%)
-      percentage = 35 + Math.random() * 25;
+    // 🎭 Generate unique name for this entry
+    let displayName: string;
+    
+    if (i < shuffledUsers.length) {
+      // Use shuffled preset users first
+      displayName = shuffledUsers[i].name;
     } else {
-      // Bottom 20% - Low scores (15-35%)
-      percentage = 15 + Math.random() * 20;
+      // Generate dynamic names for additional users
+      // Pick random first name + last name combination
+      const firstName = FIRST_NAMES[Math.floor(random() * FIRST_NAMES.length)];
+      const lastName = LAST_NAMES[Math.floor(random() * LAST_NAMES.length)];
+      displayName = `${firstName} ${lastName}`;
+      
+      // Ensure uniqueness
+      let attempts = 0;
+      while (usedNames.has(displayName) && attempts < 10) {
+        const newFirst = FIRST_NAMES[Math.floor(random() * FIRST_NAMES.length)];
+        const newLast = LAST_NAMES[Math.floor(random() * LAST_NAMES.length)];
+        displayName = `${newFirst} ${newLast}`;
+        attempts++;
+      }
     }
+    
+    usedNames.add(displayName);
+
+    // 🎲 Randomized score distribution with variance
+    // Not fixed percentages - adds realism!
+    let percentage: number;
+    const roll = random(); // 0-1 random number
+    
+    // Bell curve-ish distribution with test-specific variance
+    const variance = (random() - 0.5) * 10; // -5 to +5 variance
+    
+    if (roll < 0.08) {
+      // ~8% Toppers (78-96%)
+      percentage = 78 + random() * 18 + variance;
+    } else if (roll < 0.15) {
+      // ~7% Very Good (70-82%)
+      percentage = 70 + random() * 12 + variance;
+    } else if (roll < 0.35) {
+      // ~20% Good (55-72%)
+      percentage = 55 + random() * 17 + variance;
+    } else if (roll < 0.65) {
+      // ~30% Average (40-58%)
+      percentage = 40 + random() * 18 + variance;
+    } else if (roll < 0.85) {
+      // ~20% Below Average (25-42%)
+      percentage = 25 + random() * 17 + variance;
+    } else {
+      // ~15% Low (12-28%)
+      percentage = 12 + random() * 16 + variance;
+    }
+    
+    // Clamp percentage to valid range
+    percentage = Math.max(8, Math.min(98, percentage));
 
     // Calculate raw score based on percentage
     let rawScore = (percentage / 100) * totalMarks;
-
-    // Round to reasonable steps (e.g. 0.33 or 1 or 0.5 depending on marking)
-    // Since marks are 3 and neg is 1, scores are usually integers.
     rawScore = Math.round(rawScore);
 
     // Cap at totalMarks (Safety check)
@@ -149,35 +233,36 @@ async function generateFakeLeaderboard(testId: string) {
     // Ensure accurate percentage based on rounds
     const finalPercentage = (rawScore / totalMarks) * 100;
 
-    // Dynamic Time Calculation
-    // Assume 20 mins (1200s) default if DB fetch fails, to save query
-    // Or fetch test details if needed. For speed, we can assume standard times or fetch light.
-    // Let's use a standard range per question.
-    // Fast: 30s/q, Slow: 90s/q.
+    // Dynamic Time Calculation with seeded random
+    // Better time distribution based on score (toppers usually faster)
     const estTimeSeconds = totalQuestions * 60; // 1 min per question avg
-    const minSeconds = Math.floor(estTimeSeconds * 0.4);
+    const minSeconds = Math.floor(estTimeSeconds * 0.35);
     const maxSeconds = Math.floor(estTimeSeconds * 0.95);
-
-    const timeTaken = randomTime(minSeconds, maxSeconds);
+    
+    // Higher scorers tend to be faster (but not always - adds realism)
+    const speedFactor = percentage > 70 ? 0.6 : percentage > 50 ? 0.75 : 0.9;
+    const timeRange = maxSeconds - minSeconds;
+    const baseTime = minSeconds + (random() * timeRange * speedFactor);
+    const timeTaken = Math.floor(baseTime + (random() * timeRange * 0.2)); // Add some variance
 
     fakeEntries.push({
-      id: `fake_${testId}_${i}_${Date.now()}`,
+      id: `fake_${testId}_${i}_${seed}`, // Use seed instead of Date.now() for consistency
       testId,
       userId: null,
       displayName,
       score: rawScore,
       percentage: finalPercentage,
-      timeTakenSeconds: timeTaken,
+      timeTakenSeconds: Math.min(timeTaken, maxSeconds), // Cap at max
       rank: 0,
       isFake: 1,
       createdAt: new Date(),
     });
   }
 
-  // Bulk insert
+  // Bulk insert with ON CONFLICT IGNORE to handle race conditions
+  // (Multiple users viewing same new test simultaneously)
   if (fakeEntries.length > 0) {
-    // Chunking if massive (80 is fine for one go)
-    await db.insert(testLeaderboard).values(fakeEntries);
+    await db.insert(testLeaderboard).values(fakeEntries).onConflictDoNothing();
   }
 }
 

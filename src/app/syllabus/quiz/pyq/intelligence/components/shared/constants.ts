@@ -18,6 +18,9 @@ export const getUnitColor = (unitId: string): string => {
   return UNIT_COLORS[unitId] || 'bg-slate-500';
 };
 
-export const formatUnitTitle = (unitId: string): string => {
+export const formatUnitTitle = (unitId: string, isHindi: boolean = false): string => {
+  if (isHindi) {
+    return unitId.replace(/unit_/i, 'यूनिट ').replace(/_/g, ' ');
+  }
   return unitId.replace(/unit_/i, 'Unit ').replace(/_/g, ' ');
 };

@@ -118,7 +118,8 @@ export default function PYQPageClient({
   const [paywallOpen, setPaywallOpen] = useState(false);
 
   // Dialog State
-  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<string|null>(null);
+  const [isNavigatingToIntelligence, setIsNavigatingToIntelligence] = useState(false);
 
   // --- Handlers ---
   const handleYearClick = (test: Test) => {
@@ -224,17 +225,28 @@ export default function PYQPageClient({
             {!isLoggedIn ? null : (
               <div className="mt-4 flex flex-wrap justify-center gap-4">
                 {/* Premium Intelligence */}
-                <div className="rounded-xl bg-gradient-to-r from-pink-500 via-red-500 via-yellow-500 to-green-500 p-[1.5px] shadow-sm transition-transform hover:scale-[1.02]">
+                <div 
+                  onClick={() => setIsNavigatingToIntelligence(true)}
+                  className="rounded-xl bg-gradient-to-r from-pink-500 via-red-500 via-yellow-500 to-green-500 p-[1.5px] shadow-sm transition-transform hover:scale-[1.02]"
+                >
                   <Button
                     asChild
-                    className="inline-flex h-full w-full items-center gap-2 rounded-[10px] bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    disabled={isNavigatingToIntelligence}
+                    className="inline-flex h-full w-full items-center gap-2 rounded-[10px] bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 disabled:opacity-80"
                   >
                     <TransitionLink
                       href="/syllabus/quiz/pyq/intelligence"
                       transitionTypes={['slide']}
                     >
-                      <Sparkles className="h-4 w-4 text-amber-500" />
-                      {language === 'hi' ? 'विशेषज्ञ PYQ इनसाइट्स' : 'Expert PYQ Insights'}
+                      {isNavigatingToIntelligence ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+                      ) : (
+                        <Sparkles className="h-4 w-4 text-amber-500" />
+                      )}
+                      {isNavigatingToIntelligence 
+                        ? (language === 'hi' ? 'लोड हो रहा है...' : 'Loading...')
+                        : (language === 'hi' ? 'विशेषज्ञ PYQ इनसाइट्स' : 'Expert PYQ Insights')
+                      }
                     </TransitionLink>
                   </Button>
                 </div>

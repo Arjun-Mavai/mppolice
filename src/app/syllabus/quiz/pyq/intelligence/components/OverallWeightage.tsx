@@ -86,10 +86,10 @@ export function OverallWeightage({
             <div className="flex flex-col gap-1">
               <div className="mb-1 flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase">
                 <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                MPPSC Prelims
+                {isHindi ? 'MPPSC प्रिलिम्स' : 'MPPSC Prelims'}
               </div>
               <h3 className="flex items-center gap-3 text-2xl font-black tracking-tight text-white sm:text-3xl">
-                Overall Weightage
+                {isHindi ? 'समग्र वेटेज' : 'Overall Weightage'}
                 <Badge
                   variant="outline"
                   className="hidden rounded-full border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-black text-amber-500 sm:inline-flex"
@@ -163,7 +163,7 @@ export function OverallWeightage({
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2">
                                 <h4 className="truncate text-sm font-black text-white tracking-tight">
-                                  {sub.name}
+                                  {isHindi ? sub.nameHi : sub.name}
                                 </h4>
                                 <span className="text-[10px] font-black text-amber-500/60 font-mono">
                                   {sub.count}
@@ -208,7 +208,7 @@ export function OverallWeightage({
                                   {(() => {
                                     // Find questions for this subject
                                     const subjectData = subjectQuestionsData.find(
-                                      (data) => data.subject === sub.name
+                                      (data) => data.subject === sub.name || data.subject === sub.nameHi
                                     );
                                     const subjectQuestions = subjectData?.questions || [];
                                     const limitedQuestions = subjectQuestions.slice(0, 5); // Show first 5 questions
@@ -272,15 +272,15 @@ export function OverallWeightage({
           href="/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject"
           transitionTypes={['slide']}
         >
-          <Button
-            variant="outline"
-            size="lg"
-            className="h-14 rounded-2xl border-amber-500/20 bg-amber-500/10 px-8 text-xs font-black uppercase tracking-[0.2em] text-amber-500 transition-all hover:bg-amber-500/20 hover:text-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)] active:scale-95"
-          >
-            <Eye className="mr-3 h-4 w-4" />
-            {isHindi ? 'सभी विषय प्रश्न देखें' : 'Examine All Segments'}
-            <ExternalLink className="ml-3 h-4 w-4 opacity-50" />
-          </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-14 rounded-2xl border-amber-500/20 bg-amber-500/10 px-8 text-xs font-black uppercase tracking-[0.2em] text-amber-500 transition-all hover:bg-amber-500/20 hover:text-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)] active:scale-95"
+            >
+              <Eye className="mr-3 h-4 w-4" />
+              {isHindi ? 'सभी विषय प्रश्न देखें' : 'View All Subject Questions'}
+              <ExternalLink className="ml-3 h-4 w-4 opacity-50" />
+            </Button>
         </TransitionLink>
       </div>
     </div>

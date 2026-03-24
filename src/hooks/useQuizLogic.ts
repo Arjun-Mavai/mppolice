@@ -518,6 +518,7 @@ export function useQuizLogic({
     timeLeft, // Seconds remaining
     instantModeEnabled, // Is instant feedback ON?
     language, // Current language (hi/en)
+    questionTimes, // ⏱️ Time spent per question { questionId: seconds }
 
     // ───────────────────────────────────────────────────────────
     // 🎮 ACTION HANDLERS
