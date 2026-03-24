@@ -15,7 +15,7 @@ import { z } from 'zod';
 // No payment record created — metadata tracks admin grant.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const PLAN_MONTHS: Record<string, number> = { lite: 4, pro: 7 };
+const PLAN_MONTHS: Record<string, number> = { lite: 8, pro: 6 };
 
 const grantSchema = z.object({
   email: z.string().email(),
