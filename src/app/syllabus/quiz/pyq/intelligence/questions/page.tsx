@@ -150,6 +150,7 @@ export default async function ViewAllQuestionsPage({ searchParams }: PageProps) 
   } else if (subject && source === 'subject') {
     // Subject-based query - get questions by subject
     const { getOverallWeightageSubjectData } = await import('@/actions/pyq-analytics');
+    // 🔧 No limit here, we want all questions for "View All" page
     const subjectData = await getOverallWeightageSubjectData();
     
     if (subject === 'All') {

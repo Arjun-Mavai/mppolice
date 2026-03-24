@@ -62,6 +62,7 @@ export function PYQMenu({ isHindi, currentPage }: PYQMenuProps) {
   return (
     <ExpandableCard
       id="menu"
+      defaultExpanded={true}
       header={header}
       gradientFrom="from-amber-600/20"
       gradientTo="to-orange-500/10"

@@ -564,35 +564,36 @@ export const getPyqTopicAnalysis = unstable_cache(
         trendDelta: item.trendDelta,
       }))
       .sort((a, b) => b.totalQuestions - a.totalQuestions);
-    // Calculate UNIQUE Year-wise Matrix for the subject (Deduplicated)
-    const subjectQuestions = await db
+    // Calculate Year-wise Matrix for the subject efficiently
+    const rawYearMatrix = await db
       .select({
-        questionId: pyqQuestionTopics.questionId,
-        testId: questions.testId,
+        year: sql<number>`CASE 
+          WHEN ${tests.title} LIKE '%2025%' THEN 2025 
+          WHEN ${tests.title} LIKE '%2024%' THEN 2024 
+          WHEN ${tests.title} LIKE '%2023%' THEN 2023 
+          WHEN ${tests.title} LIKE '%2022%' THEN 2022 
+          WHEN ${tests.title} LIKE '%2019-20%' OR ${tests.title} LIKE '%2020%' THEN 2020 
+          WHEN ${tests.title} LIKE '%2021%' THEN 2021
+          ELSE CAST(strftime('%Y', ${tests.createdAt}) AS INTEGER)
+        END`.as('resolved_year'),
+        questionCount: sql<number>`count(distinct ${pyqQuestionTopics.questionId})`,
       })
       .from(pyqQuestionTopics)
       .innerJoin(pyqTopics, eq(pyqQuestionTopics.topicId, pyqTopics.id))
       .innerJoin(questions, eq(pyqQuestionTopics.questionId, questions.id))
       .innerJoin(tests, eq(questions.testId, tests.id))
-      .where(and(eq(pyqTopics.subject, effectiveSubject), eq(tests.type, 'PYQ')));
+      .where(and(
+        eq(pyqTopics.subject, effectiveSubject), 
+        eq(tests.type, 'PYQ'),
+        gte(sql`resolved_year`, fromYear)
+      ))
+      .groupBy(sql`resolved_year`)
+      .orderBy(sql`resolved_year`);
 
-    const testYearMapForMatrix = new Map<string, number>();
-    const scopedTestsForMatrix = await getScopedPyqTests();
-    scopedTestsForMatrix.forEach(t => testYearMapForMatrix.set(t.testId, t.year));
-
-    const uniqueYearlyQs = new Map<number, Set<string>>();
-    subjectQuestions.forEach(q => {
-      const year = testYearMapForMatrix.get(q.testId);
-      if (year && year >= fromYear) {
-        const set = uniqueYearlyQs.get(year) ?? new Set<string>();
-        set.add(q.questionId);
-        uniqueYearlyQs.set(year, set);
-      }
-    });
-
-    const yearMatrix = Array.from(uniqueYearlyQs.entries())
-      .map(([year, qs]) => ({ year, questionCount: qs.size }))
-      .sort((a, b) => a.year - b.year);
+    const yearMatrix = rawYearMatrix.map(row => ({
+      year: Number(row.year),
+      questionCount: Number(row.questionCount)
+    }));
     const risingTopics = [...topicDistribution]
       .filter((item) => item.trendDelta > 0)
       .sort((a, b) => b.trendDelta - a.trendDelta)

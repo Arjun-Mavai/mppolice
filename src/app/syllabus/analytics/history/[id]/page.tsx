@@ -48,10 +48,16 @@ async function AttemptContent({ attemptId }: { attemptId: string }) {
 
   // 2. Reconstruct Answers Record (questionId -> selectedOptionIndex)
   const answersRecord: Record<string, number> = {};
+  const questionTimesRecord: Record<string, number> = {};
+  
   answers.forEach((ans: any) => {
     // Only set if user answered (not null/undefined)
     if (ans.userAnswer !== null && ans.userAnswer !== undefined) {
-       answersRecord[ans.questionId || ans.id] = ans.userAnswer;
+       const qId = ans.questionId || ans.id;
+       answersRecord[qId] = ans.userAnswer;
+       if (ans.timeTaken !== undefined) {
+         questionTimesRecord[qId] = ans.timeTaken;
+       }
     }
   });
 
@@ -81,6 +87,7 @@ async function AttemptContent({ attemptId }: { attemptId: string }) {
         answers={answersRecord}
         mode={mode}
         timeTaken={timeTaken}
+        questionTimes={questionTimesRecord}
         title={meta.testTitle ?? undefined}
         testId={meta.testId ?? undefined}
         userId={meta.userId ?? undefined}

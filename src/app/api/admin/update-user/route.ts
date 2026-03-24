@@ -18,7 +18,7 @@ const updateUserSchema = z.object({
   accessMonths: z.number().min(1).max(24).optional(),
 });
 
-const PLAN_MONTHS: Record<string, number> = { lite: 4, pro: 7 };
+const PLAN_MONTHS: Record<string, number> = { lite: 8, pro: 6 };
 
 export async function POST(request: Request) {
   let decoded: any;

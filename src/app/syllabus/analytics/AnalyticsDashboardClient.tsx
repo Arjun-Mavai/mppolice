@@ -5,12 +5,19 @@ import { motion } from 'framer-motion';
 import {
   BarChart3,
   TrendingUp,
+  TrendingDown,
   Target,
   Clock,
   ChevronRight,
   AlertCircle,
   History,
   Lightbulb,
+  Flame,
+  Zap,
+  Award,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,6 +52,45 @@ export interface AnalyticsMastery {
   status: string;
   color: string;
 }
+
+// 🎯 NEW: Enhanced Analytics Types for Exam Expert Dashboard
+export interface ExamInsights {
+  cutoffComparison: {
+    userScore: number;
+    expectedCutoff: number;
+    difference: number;
+    status: 'above' | 'below' | 'near';
+  };
+  trend: {
+    direction: 'improving' | 'declining' | 'stable';
+    changePercent: number;
+    recentAvg: number;
+    previousAvg: number;
+  };
+  consistency: {
+    score: number; // 0-100
+    variance: number;
+    status: 'consistent' | 'moderate' | 'inconsistent';
+  };
+  timeEfficiency: {
+    avgTimeUsed: number; // percentage of allotted time
+    status: 'efficient' | 'normal' | 'slow';
+    suggestion: string;
+  };
+  studyStreak: {
+    currentStreak: number;
+    longestStreak: number;
+    lastActiveDate: string;
+  };
+  priorityTopics: {
+    name: string;
+    nameEn?: string;
+    percentage: number;
+    questionsAttempted: number;
+    priority: 'high' | 'medium' | 'low';
+  }[];
+}
+
 // AnalyticsData: Pura dashboard data structure.
 
 export interface AnalyticsData {
@@ -56,6 +102,8 @@ export interface AnalyticsData {
     en: string;
     hi: string;
   };
+  // 🎯 NEW: Exam Expert Insights
+  examInsights?: ExamInsights;
 }
 
 interface AnalyticsDashboardClientProps {
@@ -194,7 +242,7 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
     );
   }
 
-  const { overallScore, totalTests, mastery, recentActivity, aiSuggestion } = analytics;
+  const { overallScore, totalTests, mastery, recentActivity, aiSuggestion, examInsights } = analytics;
   const syllabusCoverage = Math.min(totalTests * 5, 100);
 
   const filteredHistory = recentActivity.filter((item: AnalyticsActivity) => {
@@ -319,6 +367,144 @@ export default function AnalyticsDashboardClient({ analytics }: AnalyticsDashboa
           </motion.div>
         ))}
       </motion.div>
+
+      {/* ===== 🎯 Exam Expert Insights Section ===== */}
+      {examInsights && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
+        >
+          {/* Cutoff Comparison */}
+          <Card className={cn(
+            'overflow-hidden rounded-[2rem] border-2 shadow-lg transition-all',
+            examInsights.cutoffComparison.status === 'above'
+              ? 'border-emerald-200 bg-gradient-to-br from-emerald-50 to-white'
+              : examInsights.cutoffComparison.status === 'near'
+                ? 'border-amber-200 bg-gradient-to-br from-amber-50 to-white'
+                : 'border-rose-200 bg-gradient-to-br from-rose-50 to-white'
+          )}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">
+                  {hi ? 'कटऑफ़ तुलना' : 'Cutoff Status'}
+                </span>
+                <Award className={cn('h-5 w-5', 
+                  examInsights.cutoffComparison.status === 'above' ? 'text-emerald-600' :
+                  examInsights.cutoffComparison.status === 'near' ? 'text-amber-600' : 'text-rose-600'
+                )} />
+              </div>
+              <div className="flex items-end gap-2 mb-2">
+                <span className={cn('text-3xl font-black',
+                  examInsights.cutoffComparison.status === 'above' ? 'text-emerald-700' :
+                  examInsights.cutoffComparison.status === 'near' ? 'text-amber-700' : 'text-rose-700'
+                )}>
+                  {examInsights.cutoffComparison.difference > 0 ? '+' : ''}{examInsights.cutoffComparison.difference}%
+                </span>
+                <span className="text-sm font-bold text-slate-400 mb-1">
+                  {hi ? 'कटऑफ़ से' : 'from cutoff'}
+                </span>
+              </div>
+              <div className="text-xs font-bold text-slate-500">
+                {hi ? `अपेक्षित कटऑफ़: ${examInsights.cutoffComparison.expectedCutoff}%` 
+                  : `Expected: ${examInsights.cutoffComparison.expectedCutoff}% | You: ${examInsights.cutoffComparison.userScore}%`}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Trend Analysis */}
+          <Card className="overflow-hidden rounded-[2rem] border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-white shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">
+                  {hi ? 'प्रदर्शन रुझान' : 'Performance Trend'}
+                </span>
+                {examInsights.trend.direction === 'improving' ? (
+                  <ArrowUpRight className="h-5 w-5 text-emerald-600" />
+                ) : examInsights.trend.direction === 'declining' ? (
+                  <ArrowDownRight className="h-5 w-5 text-rose-600" />
+                ) : (
+                  <Minus className="h-5 w-5 text-slate-400" />
+                )}
+              </div>
+              <div className="flex items-end gap-2 mb-2">
+                <span className={cn('text-3xl font-black',
+                  examInsights.trend.direction === 'improving' ? 'text-emerald-700' :
+                  examInsights.trend.direction === 'declining' ? 'text-rose-700' : 'text-slate-700'
+                )}>
+                  {examInsights.trend.direction === 'improving' ? '📈' : 
+                   examInsights.trend.direction === 'declining' ? '📉' : '➡️'}
+                </span>
+                <span className="text-lg font-black text-indigo-700 mb-0.5">
+                  {examInsights.trend.direction === 'improving' ? (hi ? 'सुधार हो रहा है' : 'Improving') : 
+                   examInsights.trend.direction === 'declining' ? (hi ? 'गिरावट' : 'Declining') : 
+                   (hi ? 'स्थिर' : 'Stable')}
+                </span>
+              </div>
+              <div className="text-xs font-bold text-slate-500">
+                {hi ? `हाल: ${examInsights.trend.recentAvg}% | पहले: ${examInsights.trend.previousAvg}%` 
+                  : `Recent: ${examInsights.trend.recentAvg}% | Before: ${examInsights.trend.previousAvg}%`}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Consistency Score */}
+          <Card className="overflow-hidden rounded-[2rem] border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-white shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">
+                  {hi ? 'संगति स्कोर' : 'Consistency'}
+                </span>
+                <Zap className="h-5 w-5 text-purple-600" />
+              </div>
+              <div className="flex items-end gap-2 mb-2">
+                <span className="text-3xl font-black text-purple-700">
+                  {examInsights.consistency.score}%
+                </span>
+                <span className={cn('text-xs font-black px-2 py-1 rounded-lg mb-1',
+                  examInsights.consistency.status === 'consistent' ? 'bg-emerald-100 text-emerald-700' :
+                  examInsights.consistency.status === 'moderate' ? 'bg-amber-100 text-amber-700' : 
+                  'bg-rose-100 text-rose-700'
+                )}>
+                  {examInsights.consistency.status === 'consistent' ? (hi ? 'स्थिर' : 'Stable') :
+                   examInsights.consistency.status === 'moderate' ? (hi ? 'मध्यम' : 'Moderate') :
+                   (hi ? 'अस्थिर' : 'Variable')}
+                </span>
+              </div>
+              <div className="text-xs font-bold text-slate-500">
+                {hi ? 'स्थिर प्रदर्शन = बेहतर परीक्षा तैयारी' : 'Consistent scores = Better exam readiness'}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Study Streak */}
+          <Card className="overflow-hidden rounded-[2rem] border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-white shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">
+                  {hi ? 'अध्ययन स्ट्रीक' : 'Study Streak'}
+                </span>
+                <Flame className={cn('h-5 w-5', 
+                  examInsights.studyStreak.currentStreak >= 7 ? 'text-orange-600' : 'text-slate-400'
+                )} />
+              </div>
+              <div className="flex items-end gap-2 mb-2">
+                <span className="text-3xl font-black text-orange-700">
+                  {examInsights.studyStreak.currentStreak}
+                </span>
+                <span className="text-lg font-bold text-slate-500 mb-0.5">
+                  {hi ? 'दिन' : 'days'}
+                </span>
+              </div>
+              <div className="text-xs font-bold text-slate-500">
+                {hi ? `सबसे लंबा: ${examInsights.studyStreak.longestStreak} दिन` 
+                  : `Best: ${examInsights.studyStreak.longestStreak} days | Keep it going!`}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* ===== Main Content Split ===== */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">

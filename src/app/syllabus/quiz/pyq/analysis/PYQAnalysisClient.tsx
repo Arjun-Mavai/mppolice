@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   BarChart3,
@@ -104,12 +104,13 @@ export default function PYQAnalysisClient({
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
-    distribution: false,
+    distribution: true, // Default to true for better initial view
     rising: false,
     timeline: false,
     matrix: false,
   });
   const [topicLimit, setTopicLimit] = useState(10);
+  const [isPending, startTransition] = useTransition();
 
   // Smooth toggle preventing scroll jump
   const toggleSection = (section: string) => {
@@ -122,10 +123,12 @@ export default function PYQAnalysisClient({
   );
 
   const applyFilters = (subject: string, years: number) => {
-    const params = new URLSearchParams();
-    params.set('subject', subject);
-    params.set('years', String(years));
-    router.push(`${pathname}?${params.toString()}`);
+    startTransition(() => {
+      const params = new URLSearchParams();
+      params.set('subject', subject);
+      params.set('years', String(years));
+      router.push(`${pathname}?${params.toString()}`);
+    });
   };
 
   return (
@@ -137,7 +140,30 @@ export default function PYQAnalysisClient({
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-[1400px] space-y-8 px-4 pt-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto max-w-[1400px] space-y-8 px-4 pt-4 sm:px-6 lg:px-8 transition-all duration-500"
+        style={{ opacity: isPending ? 0.4 : 1, filter: isPending ? 'blur(4px)' : 'none', pointerEvents: isPending ? 'none' : 'auto' }}
+      >
+        {/* Transition Overlay */}
+        <AnimatePresence>
+          {isPending && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/20 backdrop-blur-md"
+            >
+              <div className="relative">
+                 <div className="h-20 w-20 animate-spin rounded-full border-b-2 border-t-2 border-amber-500"></div>
+                 <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-12 w-12 animate-pulse rounded-full bg-amber-500/20"></div>
+                 </div>
+              </div>
+              <p className="mt-6 text-sm font-black tracking-[0.2em] text-amber-500 uppercase animate-pulse">
+                {isHindi ? 'नया डेटा लोड हो रहा है...' : 'Syncing Analysis...'}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
         {/* Navigation & Back Button */}
         <div className="flex items-center justify-between">
           <Button
@@ -152,7 +178,7 @@ export default function PYQAnalysisClient({
           <div className="flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-3 py-1 backdrop-blur-sm">
             <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
             <span className="text-[10px] font-black uppercase tracking-widest text-amber-500/80">
-              Live Analysis Suite
+              {isHindi ? 'लाइव विश्लेषण सूट' : 'Live Analysis Suite'}
             </span>
           </div>
         </div>
@@ -360,7 +386,7 @@ export default function PYQAnalysisClient({
               <CardTitle className="flex items-center justify-between text-lg font-black text-amber-500">
                 <div className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5 text-amber-500/80" />
-                  {isHindi ? 'टॉपिक वितरण — High Weightage' : 'Topic Distribution — High Weightage'}
+                  {isHindi ? 'टॉपिक वितरण — हाई वेटेज' : 'Topic Distribution — High Weightage'}
                 </div>
                 {expanded.distribution ? (
                   <ChevronUp className="h-5 w-5 text-slate-500" />
@@ -382,8 +408,8 @@ export default function PYQAnalysisClient({
                     <CardContent className="p-0">
                       {/* Mobile Card List */}
                       <div className="block divide-y divide-white/5 sm:hidden">
-                        {analysis.topicDistribution.slice(0, topicLimit).map((item, idx) => {
-                          return (
+                        {analysis.topicDistribution.length > 0 ? (
+                          analysis.topicDistribution.slice(0, topicLimit).map((item, idx) => (
                             <div
                               key={item.topicId}
                               onClick={() =>
@@ -437,8 +463,12 @@ export default function PYQAnalysisClient({
                                 />
                               </div>
                             </div>
-                          );
-                        })}
+                          ))
+                        ) : (
+                          <div className="p-8 text-center text-slate-500">
+                            {isHindi ? 'इस विषय के लिए कोई टॉपिक डेटा नहीं मिला।' : 'No topic distribution data found for this subject.'}
+                          </div>
+                        )}
                       </div>
 
                       {/* Desktop Table */}
@@ -590,68 +620,74 @@ export default function PYQAnalysisClient({
                 >
                   <div>
                     <CardContent className="space-y-4 p-5 sm:p-8">
-                      {analysis.risingTopics.map((item, idx) => {
-                        const style = VARIANTS['amber'];
-                        return (
-                          <div
-                            key={item.topicId}
-                            onClick={() =>
-                              router.push(`/syllabus/quiz/pyq/analysis/topic/${item.topicSlug}`)
-                            }
-                            className={cn(
-                              'group relative cursor-pointer space-y-4 rounded-3xl border border-white/10 bg-slate-900/40 p-5 shadow-xl backdrop-blur-md transition-all hover:bg-slate-800/60 active:scale-[0.98]'
-                            )}
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex items-start gap-3">
+                      {analysis.risingTopics.length > 0 ? (
+                        analysis.risingTopics.map((item, idx) => {
+                          const style = VARIANTS['amber'];
+                          return (
+                            <div
+                              key={item.topicId}
+                              onClick={() =>
+                                router.push(`/syllabus/quiz/pyq/analysis/topic/${item.topicSlug}`)
+                              }
+                              className={cn(
+                                'group relative cursor-pointer space-y-4 rounded-3xl border border-white/10 bg-slate-900/40 p-5 shadow-xl backdrop-blur-md transition-all hover:bg-slate-800/60 active:scale-[0.98]'
+                              )}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-start gap-3">
+                                  <div
+                                    className={cn(
+                                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-black bg-amber-500 text-black shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+                                    )}
+                                  >
+                                    #{idx + 1}
+                                  </div>
+                                  <h4 className="text-base leading-tight font-black text-slate-100 group-hover:text-amber-400 transition-colors">
+                                    {isHindi ? item.topicTitle : item.topicTitleEn || item.topicTitle}
+                                  </h4>
+                                </div>
+                                <Badge
+                                  variant="outline"
+                                  className="shrink-0 rounded-lg border-amber-500/20 bg-amber-500/10 px-2 py-0.5 font-black text-amber-500"
+                                >
+                                  +{Math.round(item.trendDelta)} {isHindi ? 'अधिक' : 'more'}
+                                </Badge>
+                              </div>
+
+                              <div className="flex items-center justify-between px-1 text-[11px] font-black tracking-widest text-slate-500 uppercase">
+                                <span>
+                                  {item.totalQuestions} {isHindi ? 'प्रश्न' : 'Questions'}
+                                </span>
+                                <span className="text-amber-500/80">
+                                  {item.latestWeightPercent.toFixed(1)}%{' '}
+                                  {isHindi ? 'लेटेस्ट हिस्सा' : 'Latest Share'}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center justify-between border-t border-white/5 pt-3 transition-colors group-hover:border-white/10">
+                                <span className="flex items-center gap-1.5 text-[10px] font-black tracking-widest text-amber-500/60 uppercase group-hover:text-amber-400">
+                                  <ShieldCheck className="h-3.5 w-3.5" />
+                                  {isHindi ? 'प्रमाण देखें' : 'View Proof'}
+                                </span>
+                                <ChevronRight className="h-4 w-4 text-slate-600 transition-transform group-hover:translate-x-1 group-hover:text-amber-500" />
+                              </div>
+
+                              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-950/50">
                                 <div
                                   className={cn(
-                                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-black bg-amber-500 text-black shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+                                    'h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 shadow-[0_0_10px_rgba(245,158,11,0.3)] transition-all duration-1000 ease-out'
                                   )}
-                                >
-                                  #{idx + 1}
-                                </div>
-                                <h4 className="text-base leading-tight font-black text-slate-100 group-hover:text-amber-400 transition-colors">
-                                  {isHindi ? item.topicTitle : item.topicTitleEn || item.topicTitle}
-                                </h4>
+                                  style={{ width: `${Math.min(item.latestWeightPercent, 100)}%` }}
+                                />
                               </div>
-                              <Badge
-                                variant="outline"
-                                className="shrink-0 rounded-lg border-amber-500/20 bg-amber-500/10 px-2 py-0.5 font-black text-amber-500"
-                              >
-                                +{Math.round(item.trendDelta)} {isHindi ? 'अधिक' : 'more'}
-                              </Badge>
                             </div>
-
-                            <div className="flex items-center justify-between px-1 text-[11px] font-black tracking-widest text-slate-500 uppercase">
-                              <span>
-                                {item.totalQuestions} {isHindi ? 'प्रश्न' : 'Questions'}
-                              </span>
-                              <span className="text-amber-500/80">
-                                {item.latestWeightPercent.toFixed(1)}%{' '}
-                                {isHindi ? 'लेटेस्ट हिस्सा' : 'Latest Share'}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center justify-between border-t border-white/5 pt-3 transition-colors group-hover:border-white/10">
-                              <span className="flex items-center gap-1.5 text-[10px] font-black tracking-widest text-amber-500/60 uppercase group-hover:text-amber-400">
-                                <ShieldCheck className="h-3.5 w-3.5" />
-                                {isHindi ? 'प्रमाण देखें' : 'View Proof'}
-                              </span>
-                              <ChevronRight className="h-4 w-4 text-slate-600 transition-transform group-hover:translate-x-1 group-hover:text-amber-500" />
-                            </div>
-
-                            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-950/50">
-                              <div
-                                className={cn(
-                                  'h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 shadow-[0_0_10px_rgba(245,158,11,0.3)] transition-all duration-1000 ease-out'
-                                )}
-                                style={{ width: `${Math.min(item.latestWeightPercent, 100)}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })
+                      ) : (
+                        <div className="py-12 text-center text-slate-500">
+                          {isHindi ? 'कोई उभरते टॉपिक (Rising Trends) नहीं मिले।' : 'No rising trends found for this subject.'}
+                        </div>
+                      )}
                     </CardContent>
                   </div>
                 </motion.div>

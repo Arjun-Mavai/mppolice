@@ -122,7 +122,6 @@ export async function POST(req: Request) {
     }
 
     // 🏷️ Step 5: Logic to assign Plan based on Amount
-    // 99900 paise = 999 Rs = Pro Plan
     const pricingRows = await db
       .select()
       .from(pricingConfig)
@@ -132,9 +131,15 @@ export async function POST(req: Request) {
     const proAmountPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
     const planTier = paidAmount >= proAmountPaise ? 'pro' : 'lite';
 
+    // 📅 Calculate Expiry Date
+    const months =
+      planTier === 'pro'
+        ? p.proMonths ?? PRICING_DEFAULTS.proMonths
+        : p.liteMonths ?? PRICING_DEFAULTS.liteMonths;
+    const accessExpiresAt = new Date();
+    accessExpiresAt.setMonth(accessExpiresAt.getMonth() + months);
+
     // 💾 Step 6: Persist Payment in DB + Update User Plan (ATOMIC TRANSACTION)
-    // Bhai, dono operations ek saath hone chahiye! Agar ek fail hua to dusra bhi rollback.
-    // Transaction ensures: Payment record + User update = all-or-nothing.
     await db.transaction(async (tx) => {
       await tx.insert(payments).values({
         id: `pay_${uuidv4()}`,
@@ -150,7 +155,11 @@ export async function POST(req: Request) {
 
       await tx
         .update(mppscUsers)
-        .set({ planTier: planTier as 'lite' | 'pro', isSubscribed: true })
+        .set({
+          planTier: planTier as 'lite' | 'pro',
+          isSubscribed: true,
+          accessExpiresAt,
+        })
         .where(eq(mppscUsers.id, userId));
     });
 

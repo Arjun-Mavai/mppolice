@@ -63,6 +63,7 @@ interface QuizResultProps {
   disableRetry?: boolean;
   isGuest?: boolean;
   showFeedbackModal?: boolean;
+  questionTimes?: Record<string, number>;
 }
 
 export function QuizResult({
@@ -78,6 +79,7 @@ export function QuizResult({
   disableRetry = false,
   isGuest = false,
   showFeedbackModal = true,
+  questionTimes = {},
 }: QuizResultProps) {
   const router = useRouter();
   const { language } = useSettingsStore();
@@ -87,7 +89,7 @@ export function QuizResult({
 
   const PremiumLock = ({ label, className }: { label: string; className?: string }) => (
     <div 
-      className={cn("absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-md z-30 rounded-xl overflow-hidden pointer-events-auto cursor-pointer", className)}
+      className={cn("absolute inset-0 flex items-center justify-center bg-slate-900/10 backdrop-blur-[6px] z-30 rounded-xl overflow-hidden pointer-events-auto cursor-pointer", className)}
       onClick={() => {
         toast('🔒 Pro Feature Requested', {
           description: `This feature is locked for guest users. Unlock to access!`,
@@ -99,26 +101,27 @@ export function QuizResult({
       }}
     >
       <div 
-        className="bg-white w-[90%] max-w-[280px] p-6 rounded-2xl shadow-2xl border border-slate-100 text-center animate-in fade-in zoom-in duration-300 pointer-events-auto cursor-default"
+        className="bg-white w-[85%] max-w-[280px] p-6 rounded-3xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] border border-slate-100 text-center animate-in fade-in zoom-in duration-500 pointer-events-auto cursor-default relative overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mx-auto bg-slate-100 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-400 via-rose-500 to-amber-400"></div>
+        <div className="mx-auto bg-slate-50 w-14 h-14 rounded-full flex items-center justify-center mb-5 border border-slate-100 shadow-inner">
           <Lock className="w-6 h-6 text-slate-900" />
         </div>
-        <h3 className="text-lg font-black text-slate-900 mb-1 leading-tight">{label}</h3>
-        <p className="text-xs font-medium text-slate-500 mb-5 text-pretty px-2">
+        <h3 className="text-xl font-black text-slate-900 mb-2 leading-tight tracking-tight">{label}</h3>
+        <p className="text-xs font-semibold text-slate-500 mb-6 text-pretty px-2 leading-relaxed opacity-80">
           {label.includes("Strategy") 
-            ? "Upgrade to unlock advanced analytics and scenario analysis." 
-            : "Unlock PYQ Intelligence to see repeated topics and important patterns."}
+            ? "Upgrade to Pro to unlock advanced attempt intelligence and optimal simulators." 
+            : "Get Expert PYQ Insights to see repeated patterns and high-yield topics."}
         </p>
         <Button 
-          className="w-full h-11 bg-slate-950 hover:bg-slate-900 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-all" 
+          className="w-full h-12 bg-slate-950 hover:bg-slate-900 text-white font-black rounded-2xl shadow-xl active:scale-95 transition-all text-sm tracking-wide" 
           onClick={(e) => {
             e.stopPropagation();
             router.push('/pricing');
           }}
         >
-          Unlock Now 🚀
+          Unlock Pro Access 🚀
         </Button>
       </div>
     </div>
@@ -129,6 +132,7 @@ export function QuizResult({
   const [pyqInsights, setPyqInsights] = useState<PYQWrongTopicInsight[]>([]);
   const [isFetchingInsights, setIsFetchingInsights] = useState(false);
   const [showSimulatorLogic, setShowSimulatorLogic] = useState(false);
+  const [isNavigatingToIntelligence, setIsNavigatingToIntelligence] = useState(false);
 
   const [showFeedback, setShowFeedback] = useState(false);
 
@@ -370,6 +374,13 @@ export function QuizResult({
                     text={cleanMatchingQuestionText(q.question, q)}
                     className="inline"
                   />
+                  
+                  {/* Time Taken Per Question */}
+                  {questionTimes[q.id] !== undefined && (
+                    <div className="ml-2 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500 border border-slate-200">
+                      ⏱️ {Math.round(questionTimes[q.id])}s
+                    </div>
+                  )}
 
                   {q.type === 'matching' && (
                     <RenderTableQuestion
@@ -979,125 +990,67 @@ export function QuizResult({
   // Content for PYQ Analysis Tab
   const renderPYQAnalysisContent = () => {
     return (
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 pt-6">
-        <div>
-          <h2 className="text-2xl font-black tracking-tight text-slate-900 mb-1">PYQ Intelligence</h2>
-          <p className="text-sm text-slate-500 font-medium">Topics you got wrong — with exam history</p>
+      <div className="flex flex-col items-center justify-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 pt-16 text-center">
+        <div className="max-w-sm space-y-3">
+          <div className="mx-auto w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-4 border-4 border-white shadow-sm">
+            <Sparkles size={32} />
+          </div>
+          <h2 className="text-2xl font-black tracking-tight text-slate-900">
+            {isHindi ? 'विस्तृत PYQ इंटेलिजेंस' : 'Explore PYQ Intelligence'}
+          </h2>
+          <p className="text-sm text-slate-500 font-medium leading-relaxed">
+            {isHindi 
+              ? 'सभी 6 वर्षों के पेपर्स का गहरा विश्लेषण, रिपीटेड टॉपिक्स और ट्रेंड्स देखने के लिए नीचे बटन पर क्लिक करें।' 
+              : 'Dive deep into 6 years of paper analysis, see repeated topics, unit-wise weightage and emerging trends.'}
+          </p>
         </div>
 
-        {isFetchingInsights ? (
-          <div className="flex justify-center p-12">
-            <LoadingQuotes />
-          </div>
-        ) : pyqInsights.length === 0 ? (
-          <div className="text-center p-12 bg-white rounded-2xl border border-emerald-200 bg-emerald-50/30">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm">
-              <CheckCircle2 size={32} />
-            </div>
-            <h3 className="text-xl font-black text-emerald-900">Perfect Execution!</h3>
-            <p className="text-emerald-700/80 mt-2 text-sm max-w-sm mx-auto font-medium">
-              You didn't get any PYQ-tracked questions wrong. You are well prepared for these topics based on past year trends.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-5">
-            {pyqInsights.map((insight, index) => (
-              <Card key={insight.topicId} className="overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all group">
-                <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 group-hover:bg-slate-50 transition-colors">
-                  <h3 className="font-bold text-slate-800 leading-tight">
-                    {insight.topicTitle}
-                    {insight.topicTitleEn && <span className="block text-xs text-slate-500 font-medium mt-0.5">{insight.topicTitleEn}</span>}
-                  </h3>
-                  <div className="bg-rose-100 border border-rose-200 text-rose-700 text-[10px] font-black tracking-wide px-2.5 py-1 rounded-md flex items-center gap-1.5 shrink-0 uppercase">
-                    <XCircle className="w-3.5 h-3.5" /> Wrong <span className="opacity-50 mx-1">•</span> -{SCORING_CONFIG.NEGATIVE_MARKING} pt
-                  </div>
-                </div>
-
-                <div className="p-5 space-y-5">
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className={cn(
-                      "rounded-xl border p-3 flex flex-col items-center justify-center text-center transition-colors",
-                      insight.frequencyLast6Years >= 4 ? "bg-rose-50/50 border-rose-200" : "bg-slate-50 border-slate-200"
-                    )}>
-                      <div className={cn(
-                        "text-2xl font-black",
-                        insight.frequencyLast6Years >= 4 ? "text-rose-600" : "text-slate-700"
-                      )}>{insight.frequencyLast6Years}x</div>
-                      <div className="text-[9px] font-bold tracking-widest uppercase text-slate-500 mt-1 leading-tight">Last 6 years</div>
-                    </div>
-
-                    <div className={cn(
-                      "rounded-xl border p-3 flex flex-col items-center justify-center text-center transition-colors",
-                      insight.trend2024 === 'Rising' ? "bg-amber-50 border-amber-200 text-amber-700" : 
-                      insight.trend2024 === 'Falling' ? "bg-emerald-50 border-emerald-200 text-emerald-700" :
-                      "bg-slate-50 border-slate-200 text-slate-600"
-                    )}>
-                      <div className="text-xl font-black flex items-center gap-1.5">
-                        {insight.trend2024 === 'Rising' && <TrendingUp className="w-5 h-5 flex-shrink-0" />}
-                        {insight.trend2024 === 'Falling' && <TrendingDown className="w-5 h-5 flex-shrink-0" />}
-                        {insight.trend2024 === 'Stable' && <Minus className="w-5 h-5 flex-shrink-0" />}
-                        <span className="truncate">{insight.trend2024}</span>
-                      </div>
-                      <div className="text-[9px] font-bold tracking-widest uppercase opacity-70 mt-1 leading-tight">Trend 2024</div>
-                    </div>
-
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 flex flex-col items-center justify-center text-center">
-                      <div className="text-2xl font-black text-slate-800">{insight.importanceScore}<span className="text-sm text-slate-400">/10</span></div>
-                      <div className="text-[9px] font-bold tracking-widest uppercase text-slate-500 mt-1 leading-tight">Importance</div>
-                    </div>
-                  </div>
-
-                  {/* Core Facts & Traps */}
-                  <div className="space-y-3 pt-2">
-                    {insight.coreFact && (
-                      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-sm shadow-inner relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-4 opacity-5">
-                          <BookOpen size={48} />
-                        </div>
-                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5 relative z-10">
-                          CORE FACT
-                        </div>
-                        <p className="text-slate-200 font-medium leading-relaxed relative z-10">
-                          {insight.coreFact}
-                        </p>
-                      </div>
-                    )}
-                    
-                    {/* Visual hint for memory tip */}
-                    <div className="bg-emerald-50/50 border border-emerald-200 rounded-xl p-3.5 text-sm text-emerald-700 font-medium flex gap-3 items-start">
-                       <Lightbulb className="w-5 h-5 shrink-0 fill-emerald-100 text-emerald-500 mt-0.5" />
-                       <div className="leading-relaxed">
-                        <span className="font-bold block mb-0.5 opacity-80 text-xs">MEMORY TIP</span>
-                        "Candle (Chandela) light mein Khajuraho dekho" example mnemonic
-                       </div>
-                    </div>
-
-                    {insight.trapAlert && (
-                      <div className="bg-rose-50/50 border border-rose-200 rounded-xl p-3.5 text-sm text-rose-700 font-medium flex gap-3 items-start">
-                       <AlertTriangle className="w-5 h-5 shrink-0 text-rose-500 mt-0.5" />
-                       <div className="leading-relaxed">
-                        <span className="font-bold block mb-0.5 opacity-80 text-xs">SCAM ALERT</span>
-                        Trap: Parmera → Bhojpur | Chandela → Khajuraho
-                       </div>
-                      </div>
-                    )}
-                  </div>
-
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        <div className="flex justify-center mt-8">
-          <Button 
-            onClick={() => router.push('/syllabus/quiz/pyq/intelligence')}
-            className="h-12 px-8 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-bold shadow-lg shadow-slate-900/20 flex items-center gap-2 group transition-all hover:scale-105"
+        <div className="relative group">
+           <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+           <Button 
+            disabled={isNavigatingToIntelligence}
+            onClick={() => {
+              setIsNavigatingToIntelligence(true);
+              router.push('/syllabus/quiz/pyq/intelligence');
+            }}
+            className="relative h-14 px-10 rounded-full bg-slate-950 hover:bg-slate-900 text-white font-black shadow-2xl flex items-center gap-3 transition-all hover:scale-105 active:scale-95 disabled:opacity-80"
           >
-            <Sparkles className="w-4 h-4 text-emerald-400 group-hover:text-emerald-300 transition-colors" />
-            {isHindi ? 'विस्तृत विश्लेषण देखें' : 'View Deep Analysis'}
-            <ArrowRight className="w-4 h-4 opacity-50 group-hover:translate-x-1 group-hover:opacity-100 transition-all" />
+            {isNavigatingToIntelligence ? (
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+            ) : (
+              <Sparkles className="w-5 h-5 text-amber-500 animate-pulse" />
+            )}
+            
+            <span className="text-lg">
+              {isNavigatingToIntelligence 
+                ? (isHindi ? 'खुल रहा है...' : 'Loading...')
+                : (isHindi ? 'एक्सपर्ट इनसाइट्स खोलें' : 'Open Expert Insights')
+              }
+            </span>
+            {!isNavigatingToIntelligence && <ArrowRight className="w-5 h-5 opacity-70 group-hover:translate-x-1 transition-transform" />}
           </Button>
+        </div>
+
+        <div className="bg-slate-100/50 border border-slate-200 rounded-2xl p-6 max-w-md w-full">
+           <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">What you get inside</div>
+           <div className="grid grid-cols-2 gap-4">
+              <div className="text-left space-y-1">
+                 <div className="text-xs font-bold text-slate-800">Unit Distribution</div>
+                 <div className="text-[10px] text-slate-500">Weightage of each unit</div>
+              </div>
+              <div className="text-left space-y-1">
+                 <div className="text-xs font-bold text-slate-800">Repeated Topics</div>
+                 <div className="text-[10px] text-slate-500">Most frequent patterns</div>
+              </div>
+              <div className="text-left space-y-1">
+                 <div className="text-xs font-bold text-slate-800">Trend Analysis</div>
+                 <div className="text-[10px] text-slate-500">Recent vs Old trends</div>
+              </div>
+              <div className="text-left space-y-1">
+                 <div className="text-xs font-bold text-slate-800">Paper Wise</div>
+                 <div className="text-[10px] text-slate-500">Yearly subject mix</div>
+              </div>
+           </div>
         </div>
       </div>
     );
@@ -1160,16 +1113,16 @@ export function QuizResult({
         <TabsContent value="result" className="m-0 focus-visible:outline-none">
           {renderResultContent()}
         </TabsContent>
-        <TabsContent value="strategy" className="m-0 focus-visible:outline-none relative min-h-[400px]">
+        <TabsContent value="strategy" className={cn("m-0 focus-visible:outline-none relative", isGuestLocked ? "min-h-[300px] max-h-[500px] overflow-hidden" : "min-h-[400px]")}>
           {isGuestLocked && <PremiumLock label="Strategy Analysis Locked" />}
-          <div className={isGuestLocked ? "blur-sm pointer-events-none select-none" : ""}>
+          <div className={isGuestLocked ? "blur-[6px] pointer-events-none select-none" : ""}>
             {renderStrategyContent()}
           </div>
         </TabsContent>
         {mode === 'pyq' && (
-          <TabsContent value="pyq-analysis" className="m-0 focus-visible:outline-none relative min-h-[400px]">
+          <TabsContent value="pyq-analysis" className={cn("m-0 focus-visible:outline-none relative", isGuestLocked ? "min-h-[300px] max-h-[500px] overflow-hidden" : "min-h-[400px]")}>
             {isGuestLocked && <PremiumLock label="PYQ Intelligence Locked" />}
-            <div className={isGuestLocked ? "blur-sm pointer-events-none select-none" : ""}>
+            <div className={isGuestLocked ? "blur-[6px] pointer-events-none select-none" : ""}>
               {renderPYQAnalysisContent()}
             </div>
           </TabsContent>

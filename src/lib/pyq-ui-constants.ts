@@ -18,6 +18,7 @@ import {
 
 export interface SubjectConfig {
   name: string;
+  nameHi: string;
   icon: LucideIcon;
   color: SubjectColorKey;
 }
@@ -35,15 +36,15 @@ export type SubjectColorKey =
 
 // Subject configuration - icons and color mapping
 export const SUBJECTS: SubjectConfig[] = [
-  { name: 'MP GK', icon: BookOpen, color: 'amber' },
-  { name: 'History', icon: Calendar, color: 'pink' },
-  { name: 'Geography', icon: MapPin, color: 'blue' },
-  { name: 'Polity', icon: Scale, color: 'emerald' },
-  { name: 'Economy', icon: TrendingUp, color: 'cyan' },
-  { name: 'Science', icon: Atom, color: 'indigo' },
-  { name: 'Current Affairs', icon: Newspaper, color: 'purple' },
-  { name: 'ICT', icon: Smartphone, color: 'rose' },
-  { name: 'GS', icon: GraduationCap, color: 'slate' },
+  { name: 'MP GK', nameHi: 'एमपी सामान्य ज्ञान', icon: BookOpen, color: 'amber' },
+  { name: 'History', nameHi: 'इतिहास', icon: Calendar, color: 'pink' },
+  { name: 'Geography', nameHi: 'भूगोल', icon: MapPin, color: 'blue' },
+  { name: 'Polity', nameHi: 'राजव्यवस्था', icon: Scale, color: 'emerald' },
+  { name: 'Economy', nameHi: 'अर्थव्यवस्था', icon: TrendingUp, color: 'cyan' },
+  { name: 'Science', nameHi: 'विज्ञान', icon: Atom, color: 'indigo' },
+  { name: 'Current Affairs', nameHi: 'समसामयिकी', icon: Newspaper, color: 'purple' },
+  { name: 'ICT', nameHi: 'सूचना संचार प्रौद्योगिकी', icon: Smartphone, color: 'rose' },
+  { name: 'GS', nameHi: 'सामान्य अध्ययन', icon: GraduationCap, color: 'slate' },
 ];
 
 // Color variants for cards, badges, progress bars

@@ -60,7 +60,7 @@ export function PaperAnalysis({ stats, repeatedQuestions, isHindi }: PaperAnalys
                   <div className="flex flex-col gap-1">
                     <div className="mb-1 flex items-center gap-2 text-sm font-medium tracking-wider text-slate-400 uppercase">
                       <div className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
-                      MPPSC Prelims
+                      {isHindi ? 'MPPSC प्रिलिम्स' : 'MPPSC Prelims'}
                     </div>
                     <h3 className="flex items-center gap-3 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
                       {year}
@@ -79,7 +79,7 @@ export function PaperAnalysis({ stats, repeatedQuestions, isHindi }: PaperAnalys
                       className="h-8 border border-slate-700 bg-slate-800 px-3 font-mono text-sm text-slate-300 sm:inline-flex"
                     >
                       {/* {sortedUnits.length} Units */}
-                      10 Units
+                      10 {isHindi ? 'यूनिट्स' : 'Units'}
                     </Badge>
                     <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-800 shadow-inner">
                       {isExpanded ? (

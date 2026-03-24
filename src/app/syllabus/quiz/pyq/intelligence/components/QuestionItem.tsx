@@ -75,7 +75,7 @@ export function QuestionItem({
             {repeatCount > 1 && (
               <Badge className="h-5 border-none bg-amber-500/20 px-1.5 text-[10px] text-amber-400">
                 <Repeat className="mr-0.5 h-3 w-3" />
-                Repeated {repeatCount}x
+                {isHindi ? `${repeatCount}x रिपीट` : `Repeated ${repeatCount}x`}
               </Badge>
             )}
             {isExpanded ? (
@@ -132,7 +132,7 @@ export function QuestionItem({
                   href={`/syllabus/quiz/pyq/question/${question.id}`}
                   className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-indigo-400 hover:text-indigo-300"
                 >
-                  View full question
+                  {isHindi ? 'पूरा प्रश्न देखें' : 'View full question'}
                   <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
@@ -277,7 +277,7 @@ export function QuestionList({
             onClick={() => setShowAll(true)}
             className="w-full text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-300"
           >
-            Show all {questions.length} questions
+            {isHindi ? `सभी ${questions.length} प्रश्न देखें` : `Show all ${questions.length} questions`}
             <ChevronDown className="ml-1 h-4 w-4" />
           </Button>
         </div>

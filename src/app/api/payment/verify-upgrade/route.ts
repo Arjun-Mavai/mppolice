@@ -133,6 +133,11 @@ export async function POST(req: Request) {
       planTier = 'pro';
     }
 
+    // 📅 Calculate Expiry Date (Upgrades are always to Pro/Extended)
+    const months = p.proMonths ?? PRICING_DEFAULTS.proMonths;
+    const accessExpiresAt = new Date();
+    accessExpiresAt.setMonth(accessExpiresAt.getMonth() + months);
+
     // 💾 Persist Payment & Update User
     await db.transaction(async (tx) => {
       await tx.insert(payments).values({
@@ -149,7 +154,10 @@ export async function POST(req: Request) {
 
       await tx
         .update(mppscUsers)
-        .set({ planTier: planTier as 'lite' | 'pro' })
+        .set({
+          planTier: planTier as 'lite' | 'pro',
+          accessExpiresAt,
+        })
         .where(eq(mppscUsers.id, userId));
     });
 

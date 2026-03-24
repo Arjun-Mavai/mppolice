@@ -87,6 +87,7 @@ export default function UsersClient() {
     planTier: 'pro' as 'lite' | 'pro',
     password: '',
     reason: '',
+    accessMonths: '',
   });
 
   const fetchUsers = useCallback(async () => {
@@ -237,13 +238,24 @@ export default function UsersClient() {
       const res = await fetch('/api/admin/grant-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(grantForm),
+        body: JSON.stringify({
+          ...grantForm,
+          accessMonths: grantForm.accessMonths ? Number(grantForm.accessMonths) : undefined,
+        }),
       });
       const data = await res.json();
       if (res.ok) {
         toast.success(data.message);
         setShowGrant(false);
-        setGrantForm({ name: '', email: '', phone: '', planTier: 'pro', password: '', reason: '' });
+        setGrantForm({
+          name: '',
+          email: '',
+          phone: '',
+          planTier: 'pro',
+          password: '',
+          reason: '',
+          accessMonths: '',
+        });
         fetchUsers();
       } else toast.error(data.error);
     } catch {
@@ -312,10 +324,16 @@ export default function UsersClient() {
     return 'bg-slate-200 text-slate-700';
   };
 
-  const daysLeft = (exp: string | null) => {
+  const formatExpiry = (exp: string | null) => {
     if (!exp) return 'No expiry';
-    const d = Math.ceil((new Date(exp).getTime() - now.getTime()) / 86400000);
-    return d < 0 ? `${Math.abs(d)}d ago` : `${d}d left`;
+    const date = new Date(exp);
+    const d = Math.ceil((date.getTime() - now.getTime()) / 86400000);
+    const dateStr = date.toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+    return d < 0 ? `Expired (${dateStr})` : `${d}d left (${dateStr})`;
   };
 
   return (
@@ -378,8 +396,8 @@ export default function UsersClient() {
               }
               className="h-9 rounded-lg border bg-white px-3 text-xs outline-none focus:border-purple-500"
             >
-              <option value="lite">Lite (4 months)</option>
-              <option value="pro">Pro (7 months)</option>
+              <option value="lite">Lite (8 months)</option>
+              <option value="pro">Pro (6 months)</option>
             </select>
             <input
               type="text"
@@ -387,6 +405,15 @@ export default function UsersClient() {
               placeholder="Reason (optional)"
               onChange={(e) => setGrantForm((f) => ({ ...f, reason: e.target.value }))}
               className="h-9 rounded-lg border px-3 text-xs outline-none focus:border-purple-500"
+            />
+            <input
+              type="number"
+              min={1}
+              max={24}
+              value={grantForm.accessMonths}
+              placeholder="Duration (Months - e.g. 5)"
+              onChange={(e) => setGrantForm((f) => ({ ...f, accessMonths: e.target.value }))}
+              className="h-9 rounded-lg border bg-white px-3 text-xs outline-none focus:border-purple-500"
             />
           </div>
           <Button
@@ -625,7 +652,7 @@ export default function UsersClient() {
                             {user.phone && <span>📱{user.phone}</span>}
                             <span className="flex items-center gap-0.5">
                               <Clock className="h-3 w-3" />
-                              {daysLeft(user.accessExpiresAt)}
+                              {formatExpiry(user.accessExpiresAt)}
                             </span>
                           </div>
                         </div>
@@ -752,7 +779,7 @@ export default function UsersClient() {
                           </div>
                           <div>
                             <label className="mb-0.5 block text-[10px] font-bold text-slate-400 uppercase">
-                              Extend (months)
+                              Set Expiry (Months from now)
                             </label>
                             <input
                               type="number"

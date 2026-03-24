@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
+import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +18,7 @@ import {
   BarChart3,
   Crown,
   Zap,
+  Copy,
 } from 'lucide-react';
 
 interface PaymentRecord {
@@ -368,19 +370,33 @@ export default function PaymentsPage() {
                       </td>
                       {/* Payment ID */}
                       <td className="hidden px-4 py-3 md:table-cell">
-                        <span className="font-mono text-[11px] text-slate-400">
-                          {p.paymentId ? `${p.paymentId.slice(0, 16)}...` : '—'}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono text-[11px] font-medium text-slate-500 select-all">
+                            {p.paymentId || '—'}
+                          </span>
+                          {p.paymentId && (
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(p.paymentId);
+                                toast.success('Payment ID copied');
+                              }}
+                              className="text-slate-300 hover:text-slate-600"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                       {/* Date */}
                       <td className="px-4 py-3 text-right">
-                        <div className="text-xs whitespace-nowrap text-slate-500">
+                        <div className="text-xs font-semibold whitespace-nowrap text-slate-600">
                           {new Date(p.createdAt).toLocaleDateString('en-IN', {
+                            weekday: 'short',
                             day: 'numeric',
                             month: 'short',
                           })}
                         </div>
-                        <div className="text-[10px] text-slate-300">
+                        <div className="text-[10px] text-slate-400">
                           {new Date(p.createdAt).toLocaleTimeString('en-IN', {
                             hour: '2-digit',
                             minute: '2-digit',

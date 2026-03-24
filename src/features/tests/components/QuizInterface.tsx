@@ -68,6 +68,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
     currentQuestion,
     isAnswered,
     totalQuestions,
+    questionTimes,
   } = useQuizLogic(props);
 
   const { setLanguage } = useSettingsStore();
@@ -314,6 +315,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
         answers={answers}
         mode={mode}
         timeTaken={timeLimitInMinutes * 60 - timeLeft}
+        questionTimes={questionTimes}
         onRetry={handleRetry}
         title={title}
         testId={testId}
