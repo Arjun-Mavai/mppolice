@@ -371,7 +371,10 @@ export async function submitTestAttempt(
     const postSubmissionTasks = [];
 
     if (session && session.name) {
-      const totalTestMarks = testQuestions.reduce((sum, q) => sum + (q.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION), 0);
+      const totalTestMarks = testQuestions.reduce(
+        (sum, q) => sum + (q.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION),
+        0
+      );
 
       postSubmissionTasks.push(
         insertUserToLeaderboard({
@@ -386,7 +389,7 @@ export async function submitTestAttempt(
     }
 
     // Invalidate User Analytics Cache
-    postSubmissionTasks.push(revalidateTag(`analytics-${userId}`));
+    postSubmissionTasks.push(revalidateTag(`analytics-${userId}`, { expire: 0 }));
 
     // Run all tasks in parallel
     await Promise.allSettled(postSubmissionTasks);

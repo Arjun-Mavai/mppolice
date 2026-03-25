@@ -6,17 +6,21 @@ import { sql, isNotNull, and, not, eq } from 'drizzle-orm';
 
 export interface Fact {
   id: string;
-  text: string;
+  fact: string;
+  fact_hi?: string;
+  category?: string;
 }
 
 export async function getRandomFacts(limit: number = 5): Promise<Fact[]> {
   try {
-    // We want short, useful explanations. 
+    // We want short, useful explanations.
     // Length check is approximate in SQL.
     const results = await db
       .select({
         id: questions.id,
         explanation: questions.explanation,
+        explanationEn: questions.explanationEn,
+        subject: questions.subject,
       })
       .from(questions)
       .where(
@@ -31,7 +35,9 @@ export async function getRandomFacts(limit: number = 5): Promise<Fact[]> {
 
     return results.map(r => ({
       id: r.id,
-      text: r.explanation || '',
+      fact: r.explanationEn || r.explanation || '',
+      fact_hi: r.explanation || '',
+      category: r.subject || 'General',
     }));
   } catch (error) {
     console.error('Error fetching random facts:', error);
