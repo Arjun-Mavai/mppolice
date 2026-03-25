@@ -282,7 +282,7 @@ export function OverallWeightage({
           <Button
             variant="outline"
             size="lg"
-            className="h-14 rounded-2xl border-emerald-500/20 bg-emerald-500/10 px-8 text-xs font-black tracking-[0.2em] text-emerald-500 uppercase transition-all hover:bg-emerald-500/20 hover:text-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] active:scale-95"
+            className="h-14 w-full rounded-2xl border-emerald-500/20 bg-emerald-500/10 px-10 text-xs font-black tracking-[0.1em] text-emerald-500 uppercase transition-all hover:bg-emerald-500/20 hover:text-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] active:scale-95 sm:w-fit sm:min-w-[360px]"
           >
             <Eye className="mr-3 h-4 w-4" />
             {isHindi ? 'सभी विषय प्रश्न देखें' : 'View All Subject Questions'}

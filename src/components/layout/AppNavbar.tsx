@@ -20,6 +20,7 @@ import {
   Download,
   Zap,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -511,37 +512,42 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                         const isActive = pathname === item.href;
                         const Icon = item.icon;
                         return (
-                          <SheetClose asChild key={item.href}>
-                            <Link
-                              href={item.href}
-                              className={cn(
-                                'flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-200',
-                                isActive
-                                  ? 'bg-slate-900 text-white shadow-sm'
-                                  : 'text-slate-700 hover:bg-slate-100 active:bg-slate-200'
-                              )}
-                            >
-                              <Icon
-                                size={18}
-                                className={cn(isActive ? 'text-white' : item.color)}
-                              />
-                              {item.name}
-                            </Link>
-                          </SheetClose>
+                          <motion.div whileTap={{ scale: 0.96 }} key={item.href}>
+                            <SheetClose asChild>
+                              <Link
+                                href={item.href}
+                                onMouseEnter={() => router.prefetch(item.href)}
+                                className={cn(
+                                  'flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-200',
+                                  isActive
+                                    ? 'bg-slate-900 text-white shadow-sm'
+                                    : 'text-slate-700 hover:bg-slate-100 active:bg-slate-200'
+                                )}
+                              >
+                                <Icon
+                                  size={18}
+                                  className={cn(isActive ? 'text-white' : item.color)}
+                                />
+                                {item.name}
+                              </Link>
+                            </SheetClose>
+                          </motion.div>
                         );
                       })}
 
-                    <SheetClose asChild>
-                      <a
-                        href="https://t.me/MPPSC2026_Mission"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-sky-50 hover:text-sky-600"
-                      >
-                        <Send size={18} />
-                        Join Telegram
-                      </a>
-                    </SheetClose>
+                    <motion.div whileTap={{ scale: 0.96 }}>
+                      <SheetClose asChild>
+                        <a
+                          href="https://t.me/MPPSC2026_Mission"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-sky-50 hover:text-sky-600"
+                        >
+                          <Send size={18} />
+                          Join Telegram
+                        </a>
+                      </SheetClose>
+                    </motion.div>
 
                     <div className="pt-3">
                       {user?.isSubscribed && user.planTier === 'pro' ? (

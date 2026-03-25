@@ -4,6 +4,8 @@ import { FreeQuizPlayClient } from './FreeQuizPlayClient';
 import { verifyAuth } from '@/lib/auth';
 import { Question } from '@/types/quiz';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
+import { Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🆓 FREE QUIZ PLAY — GuestQuizInterface reuse karo
@@ -16,7 +18,18 @@ interface PageProps {
   searchParams: Promise<{ testId?: string }>;
 }
 
-export default async function FreeQuizPlayPage({ searchParams }: PageProps) {
+function LoadingSkeleton() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <div className="flex flex-col items-center gap-2">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-700" />
+        <p className="font-medium text-slate-500">Loading Quiz...</p>
+      </div>
+    </div>
+  );
+}
+
+async function FreeQuizDataFetcher({ searchParams }: { searchParams: Promise<{ testId?: string }> }) {
   const user = await verifyAuth();
   const params = await searchParams;
   const { testId } = params;
@@ -51,7 +64,6 @@ export default async function FreeQuizPlayPage({ searchParams }: PageProps) {
         parsedOptions =
           typeof q.options === 'string' ? JSON.parse(q.options) : (q.options as string[]);
       } catch {
-        // Malformed JSON skip karo — page crash nahi honi chahiye
         return null;
       }
 
@@ -86,7 +98,6 @@ export default async function FreeQuizPlayPage({ searchParams }: PageProps) {
     );
   }
 
-  // Tags se check karo ki instant mode disabled h ya nahi
   const tags = Array.isArray(testData.tags) ? (testData.tags as string[]) : [];
   const disableInstantMode = tags.includes('no-instant-mode');
 
@@ -99,12 +110,20 @@ export default async function FreeQuizPlayPage({ searchParams }: PageProps) {
       user={
         user
           ? {
-              name: user.name || 'Guest', // Fallback for null name
+              name: user.name || 'Guest',
               email: user.email,
               mobile: user.phone,
             }
           : null
       }
     />
+  );
+}
+
+export default async function FreeQuizPlayPage({ searchParams }: PageProps) {
+  return (
+    <Suspense fallback={<LoadingSkeleton />}>
+      <FreeQuizDataFetcher searchParams={searchParams} />
+    </Suspense>
   );
 }

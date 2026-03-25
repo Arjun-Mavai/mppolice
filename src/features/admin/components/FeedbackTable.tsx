@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Star, MessageSquare } from 'lucide-react';
+import { cn } from '@/lib/utils';
 // No imports from date-fns needed
 
 // Types
@@ -79,18 +80,20 @@ export function FeedbackTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[180px]">User</TableHead>
-              <TableHead className="w-[150px]">Test</TableHead>
+              <TableHead className="w-[150px]">User</TableHead>
+              <TableHead className="w-[120px]">Test</TableHead>
               <TableHead>Comments</TableHead>
-              <TableHead className="w-[100px]">Rating</TableHead>
-              <TableHead className="w-[100px]">Difficulty</TableHead>
+              <TableHead className="w-[80px]">Rating</TableHead>
+              <TableHead className="w-[90px]">Difficulty</TableHead>
+              <TableHead className="w-[90px]">Quality</TableHead>
+              <TableHead className="w-[90px]">Recommend</TableHead>
               <TableHead className="w-[120px] text-right">Date</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {feedbacks.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center text-slate-500">
+                <TableCell colSpan={8} className="h-24 text-center text-slate-500">
                   No test feedback received yet.
                 </TableCell>
               </TableRow>
@@ -100,22 +103,19 @@ export function FeedbackTable() {
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="font-medium text-slate-900">{item.userName || 'Anonymous'}</span>
-                      <span className="text-[10px] text-slate-400 truncate max-w-[150px]">
+                      <span className="text-[10px] text-slate-400 truncate max-w-[120px]">
                         {item.userEmail || 'No email'}
                       </span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-xs font-semibold text-slate-600 line-clamp-2" title={item.testTitle || ''}>
+                      <span className="text-[11px] font-semibold text-slate-600 line-clamp-2" title={item.testTitle || ''}>
                         {item.testTitle || 'Unknown Test'}
-                      </span>
-                      <span className="font-mono text-[9px] text-slate-400 truncate max-w-[120px]" title={item.testId || ''}>
-                        {item.testId || 'No ID'}
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="max-w-md">
+                  <TableCell className="max-w-xs">
                     <p className="truncate text-sm text-slate-700" title={item.comments || ''}>
                       {item.comments || '-'}
                     </p>
@@ -127,26 +127,45 @@ export function FeedbackTable() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={`rounded-md border-0 text-[10px] ${getDifficultyColor(item.difficultyLevel)}`}>
+                    <Badge className={`rounded-md border-0 text-[10px] uppercase ${getDifficultyColor(item.difficultyLevel)}`}>
                       {item.difficultyLevel.replace('_', ' ')}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={cn(
+                      "rounded-md border-0 text-[10px] uppercase",
+                      item.questionQuality === 'excellent' ? "bg-emerald-100 text-emerald-700" :
+                      item.questionQuality === 'good' ? "bg-blue-100 text-blue-700" :
+                      item.questionQuality === 'average' ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
+                    )}>
+                      {item.questionQuality}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={cn(
+                      "rounded-md border-0 text-[10px] uppercase",
+                      item.wouldRecommend === 'definitely' ? "bg-indigo-100 text-indigo-700" :
+                      item.wouldRecommend === 'probably' ? "bg-sky-100 text-sky-700" :
+                      item.wouldRecommend === 'maybe' ? "bg-slate-100 text-slate-700" : "bg-red-100 text-red-700"
+                    )}>
+                      {item.wouldRecommend}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex flex-col items-end gap-0.5 text-[10px] whitespace-nowrap text-slate-500">
                       <span className="font-bold text-slate-600">
-                        {new Date(item.createdAt).toLocaleString('en-IN', {
-                          weekday: 'long',
+                        {new Date(item.createdAt).toLocaleDateString('en-IN', {
                           day: 'numeric',
                           month: 'short',
-                          year: 'numeric',
+                          year: '2-digit',
                         })}
                       </span>
                       <span className="text-slate-400">
-                        {new Date(item.createdAt).toLocaleString('en-IN', {
-                          hour: 'numeric',
-                          minute: 'numeric',
+                        {new Date(item.createdAt).toLocaleDateString('en-IN', {
+                          hour: 'numeric' as any,
+                          minute: 'numeric' as any,
                           hour12: true,
-                        })}
+                        } as any)}
                       </span>
                     </div>
                   </TableCell>

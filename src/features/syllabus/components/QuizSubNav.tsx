@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useTransition } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 
@@ -63,9 +64,9 @@ const HIDDEN_BOTTOM_NAV_PATHS = [
 export function QuizSubNav() {
   const router = useRouter();
   const pathname = usePathname();
-  const { language, user } = useSettingsStore();
+  const { language } = useSettingsStore();
   const hi = language === 'hi';
-  const [isPending, startTransition] = useTransition();
+  const [isPending] = useTransition();
 
   const activeHref = useMemo(
     () =>
@@ -81,7 +82,6 @@ export function QuizSubNav() {
 
   // ⚡ LIGHT SPEED PREFETCH: All categories on mount
   useEffect(() => {
-    // Only prefetch other routes to avoid redundant current page prefetch
     NAV_ITEMS.forEach((item) => {
       if (item.href !== pathname) {
         router.prefetch(item.href);
@@ -89,25 +89,20 @@ export function QuizSubNav() {
     });
   }, [router, pathname]);
 
-  const navigateTo = (href: string) => {
-    if (href === pathname || href === activeHref) return;
-    startTransition(() => {
-      router.push(href, { scroll: false });
-    });
-  };
-
   return (
     <>
-      {/* 🖥️ DESKTOP NAV (Hidden on Mobile and specific PYQ sub-pages) */}
+      {/* 🖥️ DESKTOP NAV */}
       {!shouldHideBottomNav && (
         <div className="mb-12 hidden w-full items-center justify-center md:flex">
           <div className="no-scrollbar flex max-w-full items-center gap-1.5 overflow-x-auto rounded-[2rem] border border-slate-200 bg-white p-1.5 shadow-sm">
             {NAV_ITEMS.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = activeHref === item.href;
               return (
-                <button
+                <Link
                   key={item.id}
-                  onClick={() => navigateTo(item.href)}
+                  href={item.href}
+                  prefetch={true}
+                  scroll={false}
                   onMouseEnter={() => router.prefetch(item.href)}
                   onTouchStart={() => router.prefetch(item.href)}
                   className={cn(
@@ -120,30 +115,34 @@ export function QuizSubNav() {
                 >
                   <span className="relative z-10">{hi ? item.label.hi : item.label.en}</span>
                   {isActive && (
-                    <div
+                    <motion.div
+                      layoutId="quiz-subnav-active-desktop"
                       className={cn(
                         'absolute inset-0 rounded-full shadow-md',
-                        item.color // This applies the bg-color
+                        item.color
                       )}
+                      transition={springConfig}
                     />
                   )}
-                </button>
+                </Link>
               );
             })}
           </div>
         </div>
       )}
 
-      {/* 📱 MOBILE BOTTOM NAV (Sticky) - Hidden on PYQ sub-pages */}
+      {/* 📱 MOBILE BOTTOM NAV */}
       {!shouldHideBottomNav && (
         <div className="safe-area-bottom fixed right-0 bottom-0 left-0 z-[100] border-t border-slate-200/50 bg-white/80 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] backdrop-blur-xl md:hidden">
           <div className="mx-auto flex max-w-md items-center justify-around gap-1 px-4 py-3">
             {NAV_ITEMS.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = activeHref === item.href;
               return (
-                <button
+                <Link
                   key={item.id}
-                  onClick={() => navigateTo(item.href)}
+                  href={item.href}
+                  prefetch={true}
+                  scroll={false}
                   onMouseEnter={() => router.prefetch(item.href)}
                   onTouchStart={() => router.prefetch(item.href)}
                   className={cn(
@@ -182,7 +181,7 @@ export function QuizSubNav() {
                       transition={springConfig}
                     />
                   )}
-                </button>
+                </Link>
               );
             })}
           </div>

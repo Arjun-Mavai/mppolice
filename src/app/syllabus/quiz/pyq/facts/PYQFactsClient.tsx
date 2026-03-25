@@ -95,8 +95,14 @@ const LIMIT_OPTIONS = [30, 50, 100, 200];
 
 const formatTestTitle = (title: string, isHindi: boolean) => {
   if (!title) return '';
-  const yearMatch = title.match(/\d{4}/);
-  const year = yearMatch ? yearMatch[0] : '';
+  const yearMatch = title.match(/(19|20)\d{2}/);
+  let year = yearMatch ? yearMatch[0] : '';
+  
+  // Strict capping for PYQ display - nothing beyond 2025
+  if (year && Number(year) > 2025) {
+    year = '2025';
+  }
+
   const titleLower = title.toLowerCase();
 
   if (
@@ -401,7 +407,7 @@ export default function PYQFactsClient({
           {facts.map((fact, idx) => {
             const years = Array.from(new Set(fact.enrichedRefs?.map(r => r.year) || fact.pyqRefs?.map(r => r.year) || [])).sort((a, b) => (b ?? 0) - (a ?? 0));
             const cardColors = [
-              'bg-[#ebf5ff] border-[#cce4ff] text-[#005cb2]', // Soft Blue
+              'bg-[#f0fdfa] border-[#ccfbf1] text-[#0f766e]', // Soft Teal (Replaced Blue)
               'bg-[#fdf2f8] border-[#fce7f3] text-[#be185d]', // Soft Pink
               'bg-[#ecfdf5] border-[#d1fae5] text-[#047857]', // Soft Emerald
               'bg-[#fffbeb] border-[#fef3c7] text-[#b45309]', // Soft Amber

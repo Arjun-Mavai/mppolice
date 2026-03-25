@@ -11,6 +11,12 @@ const AnalyticsDashboardClient = dynamic(() => import('./AnalyticsDashboardClien
   ),
 });
 
-export default function AnalyticsDashboardWrapper({ analytics }: { analytics: any }) {
-  return <AnalyticsDashboardClient analytics={analytics} />;
+export default function AnalyticsDashboardWrapper({
+  analytics,
+  actionCard,
+}: {
+  analytics: any;
+  actionCard?: React.ReactNode;
+}) {
+  return <AnalyticsDashboardClient analytics={analytics} actionCard={actionCard} />;
 }

@@ -31,7 +31,10 @@ interface DashboardViewProps {
       status: string;
       color: string;
     }[];
-    aiSuggestion: string;
+    aiSuggestion?: {
+      en: string;
+      hi: string;
+    };
     recentActivity: any[];
   } | null;
   userName?: string;
@@ -236,7 +239,9 @@ export function DashboardView({ data, userName }: DashboardViewProps) {
                 </div>
                 <div className="space-y-2">
                   <h3 className="font-display text-lg font-black tracking-tight">Coach Says:</h3>
-                  <p className="text-sm leading-relaxed text-slate-400 italic">"{aiSuggestion}"</p>
+                  <p className="text-sm leading-relaxed text-slate-400 italic">
+                   &quot;{hi ? aiSuggestion?.hi : aiSuggestion?.en}&quot;
+                  </p>
                 </div>
                 <Button
                   className="h-10 w-full rounded-xl bg-indigo-600 text-[10px] font-bold tracking-widest text-white uppercase shadow-lg shadow-indigo-600/20 hover:bg-indigo-500"

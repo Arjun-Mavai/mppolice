@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   BarChart3,
   CalendarDays,
@@ -179,11 +180,16 @@ export default function PYQAnalysisClient({
         <div className="flex items-center justify-between">
           <Button
             variant="ghost"
-            onClick={() => router.push('/syllabus/quiz/pyq/intelligence')}
+            asChild
             className="group rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-xs font-black text-slate-600 shadow-sm backdrop-blur-md transition-all hover:bg-white hover:text-black active:scale-95"
           >
-            <ArrowLeft className="mr-1.5 h-3.5 w-3.5 transition-transform group-hover:-translate-x-1" />
-            {isHindi ? 'वापस' : 'Back'}
+            <Link 
+              href="/syllabus/quiz/pyq/intelligence"
+              onMouseEnter={() => router.prefetch('/syllabus/quiz/pyq/intelligence')}
+            >
+              <ArrowLeft className="mr-1.5 h-3.5 w-3.5 transition-transform group-hover:-translate-x-1" />
+              {isHindi ? 'वापस' : 'Back'}
+            </Link>
           </Button>
 
           <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 shadow-sm backdrop-blur-md">
@@ -197,12 +203,13 @@ export default function PYQAnalysisClient({
         {/* ✨ Premium Intelligence Header Card with Emerald/Teal Theme */}
             <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-5">
-                <button
-                  onClick={() => router.push('/syllabus/quiz/pyq/intelligence')}
+                <Link
+                  href="/syllabus/quiz/pyq/intelligence"
+                  onMouseEnter={() => router.prefetch('/syllabus/quiz/pyq/intelligence')}
                   className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50 hover:scale-105 active:scale-95"
                 >
                   <ArrowLeft className="h-5 w-5 text-slate-500" />
-                </button>
+                </Link>
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
                     <Sparkles size={12} className="text-indigo-500" />

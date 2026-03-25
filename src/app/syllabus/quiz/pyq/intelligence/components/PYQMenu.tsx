@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, BookOpen, Lightbulb, BarChart3, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { Sparkles, BookOpen, Lightbulb, BarChart3, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -49,7 +50,6 @@ const menuItems = [
 
 export function PYQMenu({ isHindi, currentPage }: PYQMenuProps) {
   const router = useRouter();
-  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const header = (
     <div className="flex flex-col gap-1">
       <div className="mb-1 flex items-center gap-2 text-sm font-medium tracking-wider text-slate-400 uppercase">
@@ -77,23 +77,22 @@ export function PYQMenu({ isHindi, currentPage }: PYQMenuProps) {
             const isActive = currentPage === item.id;
 
             return (
-              <div
+              <Link
                 key={item.id}
-                className="block w-full cursor-pointer"
-                onClick={() => {
-                  if (currentPage !== item.id) {
-                    setNavigatingId(item.id);
-                    router.push(item.href);
-                  }
-                }}
+                href={item.href}
+                prefetch={true}
+                onMouseEnter={() => router.prefetch(item.href)}
+                className={cn(
+                  'block w-full cursor-pointer',
+                  isActive && 'pointer-events-none'
+                )}
               >
                 <div
                   className={cn(
                     'rounded-2xl p-[1px] transition-all duration-300',
                     isActive
                       ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]'
-                      : 'bg-white/5 hover:bg-white/10',
-                    navigatingId === item.id && 'pointer-events-none opacity-50 grayscale-[0.5]'
+                      : 'bg-white/5 hover:bg-white/10'
                   )}
                 >
                   <div
@@ -104,13 +103,6 @@ export function PYQMenu({ isHindi, currentPage }: PYQMenuProps) {
                         : 'bg-[#080510]/40 hover:bg-white/5'
                     )}
                   >
-                    {/* Loader Overlay */}
-                    {navigatingId === item.id && (
-                      <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-                        <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
-                      </div>
-                    )}
-
                     <div
                       className={cn(
                         'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-all duration-500',
@@ -143,6 +135,10 @@ export function PYQMenu({ isHindi, currentPage }: PYQMenuProps) {
                       </span>
                     </div>
 
+                    {!isActive && (
+                      <ChevronRight className="ml-auto h-5 w-5 text-slate-600 transition-transform group-hover:translate-x-1 group-hover:text-emerald-500" />
+                    )}
+
                     {isActive && (
                       <div className="ml-auto hidden sm:block">
                         <div className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
@@ -150,7 +146,7 @@ export function PYQMenu({ isHindi, currentPage }: PYQMenuProps) {
                     )}
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
