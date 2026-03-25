@@ -10,7 +10,7 @@
 //
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -96,6 +96,13 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
     router.push(`/free-quiz/play?testId=${quiz.id}`);
   };
 
+  // Prefetch quiz data
+  useEffect(() => {
+    filteredQuizzes.slice(0, 10).forEach(quiz => {
+      router.prefetch(`/free-quiz/play?testId=${quiz.id}`);
+    });
+  }, [filteredQuizzes, router]);
+
   // Unit ka display name — "Unit 1" ya "यूनिट 1"
   const getUnitLabel = (unitId: string | null): string => {
     if (!unitId) return '';
@@ -112,14 +119,13 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
           <div className="space-y-3 text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
               <Sparkles className="h-3 w-3" />
-              {/* {hi ? '100% मुफ़्त — कोई लॉगिन नहीं' : '100% Free — No Login Required'} */}
             </div>
             <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
               {hi ? 'MPPSC 2026 — फ्री डेली क्विज़' : 'MPPSC 2026 — Free Daily Quiz'}
             </h1>
             <p className="mx-auto max-w-lg text-sm text-slate-500">
               {hi
-                ? 'हर रोज़ नए प्रश्न, बिल्कुल मुफ़्त। Hindi और English दोनों में practice करो।'
+                ? 'हर रोज़ नए प्रश्न, बिल्कुल मुफ़्त। Hindi और English दोनों में practice karo।'
                 : 'Fresh questions daily, absolutely free. Practice in both Hindi & English.'}
             </p>
           </div>
@@ -130,10 +136,10 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
               variant="outline"
               size="sm"
               onClick={() => setFilterOpen(true)}
-              className="gap-2 rounded-full border-slate-200 px-4 text-xs font-bold"
+              className="gap-2 rounded-full border-slate-200 px-4 text-xs font-bold active:scale-95 transition-transform"
             >
               <Filter className="h-3.5 w-3.5" />
-              {hi ? 'फ़िल्टर' : 'Filter'}
+              {hi ? 'फ़िल्तर' : 'Filter'}
               {activeFilters > 0 && (
                 <Badge className="ml-1 h-5 w-5 rounded-full bg-indigo-600 p-0 text-[10px] text-white">
                   {activeFilters}
@@ -162,7 +168,7 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
             {activeFilters > 0 && (
               <button
                 onClick={clearFilters}
-                className="text-xs font-medium text-slate-400 hover:text-red-500"
+                className="text-xs font-medium text-slate-400 hover:text-red-500 active:scale-90 transition-transform"
               >
                 {hi ? 'सब हटाओ' : 'Clear'}
               </button>
@@ -173,97 +179,86 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
 
       {/* ── Quiz List ────────────────────────────────────────── */}
       <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
-        {/* Stats bar — total tests + students */}
         <div className="mb-4 flex items-center justify-between text-xs text-slate-500">
           <span className="font-bold">
             {filteredQuizzes.length} {hi ? 'टेस्ट उपलब्ध' : 'Tests Available'}
           </span>
         </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`${selectedSubject}-${selectedUnit}`}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-4"
-          >
-            {filteredQuizzes.length === 0 ? (
-              <div className="py-20 text-center">
-                <BookOpen className="mx-auto mb-4 h-12 w-12 text-slate-300" />
-                <p className="font-medium text-slate-400">
-                  {hi ? 'कोई टेस्ट नहीं मिला' : 'No tests found'}
-                </p>
-                {activeFilters > 0 && (
-                  <button
-                    onClick={clearFilters}
-                    className="mt-2 text-sm text-indigo-500 hover:underline"
-                  >
-                    {hi ? 'फ़िल्टर हटाओ' : 'Clear filters'}
-                  </button>
-                )}
-              </div>
-            ) : (
-              filteredQuizzes.map((quiz, idx) => {
-                const subject = getTestSubject(quiz);
-                const unitLabel = getUnitLabel(quiz.unitId);
+        <div className="space-y-4">
+          {filteredQuizzes.length === 0 ? (
+            <div className="py-20 text-center">
+              <BookOpen className="mx-auto mb-4 h-12 w-12 text-slate-300" />
+              <p className="font-medium text-slate-400">
+                {hi ? 'कोई टेस्ट नहीं मिला' : 'No tests found'}
+              </p>
+              {activeFilters > 0 && (
+                <button
+                  onClick={clearFilters}
+                  className="mt-2 text-sm text-indigo-500 hover:underline"
+                >
+                  {hi ? 'फ़िल्टर हटाओ' : 'Clear filters'}
+                </button>
+              )}
+            </div>
+          ) : (
+            filteredQuizzes.map((quiz, idx) => {
+              const subject = getTestSubject(quiz);
+              const unitLabel = getUnitLabel(quiz.unitId);
 
-                return (
-                  <div key={quiz.id} className="relative">
-                    <QuizListItem
-                      index={idx}
-                      title={hi ? quiz.title : quiz.titleEn || quiz.title}
-                      questions={quiz.totalQuestions || undefined}
-                      itemLabel={hi ? 'प्रश्न' : 'Questions'}
-                      marks={(quiz.totalQuestions || 0) * QUIZ_CONSTANTS.MARKS_PER_QUESTION}
-                      duration={Math.ceil((quiz.totalQuestions || 0) * QUIZ_CONSTANTS.TIME_PER_QUESTION_MINUTES)}
-                      isLocked={false}
-                      isFree={true}
-                      language={language}
-                      colorVariant={
-                        (['emerald', 'blue', 'amber', 'pink', 'indigo'] as const)[idx % 5]
-                      }
-                      isLoading={loadingTestId === quiz.id}
-                      onClick={() => handleQuizClick(quiz)}
-                    />
-                    {/* Subject + Unit labels — QuizListItem ke neeche */}
-                    <div className="mt-1.5 flex items-center gap-2 pl-16 sm:pl-20">
-                      {subject && (
-                        <span className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                          📚{' '}
-                          {hi
-                            ? SUBJECTS.find((s) => s.value === subject)?.labelHi || subject
-                            : subject}
-                        </span>
-                      )}
-                      {quiz.unitId && (
-                        <span className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                          🏛️ Unit {quiz.unitId.replace('unit_', '')}
-                          {unitLabel ? ` · ${unitLabel}` : ''}
-                        </span>
-                      )}
-                    </div>
+              return (
+                <div key={quiz.id} className="relative">
+                  <QuizListItem
+                    index={idx}
+                    title={hi ? quiz.title : quiz.titleEn || quiz.title}
+                    questions={quiz.totalQuestions || undefined}
+                    itemLabel={hi ? 'प्रश्न' : 'Questions'}
+                    marks={(quiz.totalQuestions || 0) * QUIZ_CONSTANTS.MARKS_PER_QUESTION}
+                    duration={Math.ceil((quiz.totalQuestions || 0) * QUIZ_CONSTANTS.TIME_PER_QUESTION_MINUTES)}
+                    isLocked={false}
+                    isFree={true}
+                    language={language}
+                    colorVariant={
+                      (['emerald', 'blue', 'amber', 'pink', 'indigo'] as const)[idx % 5]
+                    }
+                    isLoading={loadingTestId === quiz.id}
+                    onClick={() => handleQuizClick(quiz)}
+                    onMouseEnter={() => router.prefetch(`/free-quiz/play?testId=${quiz.id}`)}
+                  />
+                  <div className="mt-1.5 flex items-center gap-2 pl-16 sm:pl-20">
+                    {subject && (
+                      <span className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                        📚{' '}
+                        {hi
+                          ? SUBJECTS.find((s) => s.value === subject)?.labelHi || subject
+                          : subject}
+                      </span>
+                    )}
+                    {quiz.unitId && (
+                      <span className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                        🏛️ Unit {quiz.unitId.replace('unit_', '')}
+                        {unitLabel ? ` · ${unitLabel}` : ''}
+                      </span>
+                    )}
                   </div>
-                );
-              })
-            )}
-          </motion.div>
-        </AnimatePresence>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
 
       {/* ── Filter Modal — Subject + Unit select ─────────────── */}
       <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
         <DialogContent className="max-w-sm sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
+            <DialogTitle className="flex items-center gap-2 text-base font-black">
               <Filter className="h-4 w-4 text-indigo-600" />
               {hi ? 'टेस्ट फ़िल्टर करो' : 'Filter Tests'}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-5">
-            {/* Subject Filter — chips style */}
             <div>
               <p className="mb-2 text-xs font-bold tracking-wider text-slate-500 uppercase">
                 {hi ? 'विषय चुनो' : 'Select Subject'}
@@ -276,7 +271,7 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
                       setSelectedSubject(selectedSubject === sub.value ? null : sub.value)
                     }
                     className={cn(
-                      'rounded-full border px-3 py-1.5 text-xs font-bold transition-all',
+                      'rounded-full border px-3 py-1.5 text-xs font-bold transition-all active:scale-95',
                       selectedSubject === sub.value
                         ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                         : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
@@ -288,7 +283,6 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
               </div>
             </div>
 
-            {/* Unit Filter — chips style */}
             <div>
               <p className="mb-2 text-xs font-bold tracking-wider text-slate-500 uppercase">
                 {hi ? 'यूनिट चुनो' : 'Select Unit'}
@@ -299,7 +293,7 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
                     key={unit.id}
                     onClick={() => setSelectedUnit(selectedUnit === unit.id ? null : unit.id)}
                     className={cn(
-                      'rounded-full border px-3 py-1.5 text-xs font-bold transition-all',
+                      'rounded-full border px-3 py-1.5 text-xs font-bold transition-all active:scale-95',
                       selectedUnit === unit.id
                         ? 'border-amber-500 bg-amber-50 text-amber-700'
                         : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
@@ -314,19 +308,18 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div className="flex gap-2 pt-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 rounded-full text-xs"
+                className="flex-1 rounded-full text-xs font-bold active:scale-95"
                 onClick={clearFilters}
               >
                 {hi ? 'सब हटाओ' : 'Clear All'}
               </Button>
               <Button
                 size="sm"
-                className="flex-1 rounded-full bg-indigo-600 text-xs hover:bg-indigo-700"
+                className="flex-1 rounded-full bg-indigo-600 text-xs font-bold hover:bg-indigo-700 active:scale-95"
                 onClick={() => setFilterOpen(false)}
               >
                 {hi ? 'लागू करो' : 'Apply'}

@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { getSubjectPartAccess } from './actions';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 
 interface SubjectSeriesDialogProps {
   isOpen: boolean;
@@ -77,6 +78,7 @@ export function SubjectSeriesDialog({
   totalQuestions,
   onSelectSeries,
 }: SubjectSeriesDialogProps) {
+  const router = useRouter();
   const { language } = useSettingsStore();
   const hi = language === 'hi';
   const CHUNK_SIZE = 30;
@@ -199,6 +201,12 @@ export function SubjectSeriesDialog({
                           key={item.part}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
+                          onMouseEnter={() => {
+                            if (!locked) {
+                              const url = `/syllabus/quiz/play?mode=pyq-subject&subject=${subject}&limit=${CHUNK_SIZE}&offset=${item.offset}`;
+                              router.prefetch(url);
+                            }
+                          }}
                           onClick={() => handlePartClick(item.part, item.offset, !!locked)}
                           disabled={!!locked || isItemLoading || loadingPart !== null}
                           className={cn(

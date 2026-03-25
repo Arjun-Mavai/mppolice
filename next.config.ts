@@ -36,6 +36,10 @@ const nextConfig: NextConfig = {
     viewTransition: true,
     prefetchInlining: true,
     appNewScrollHandler: true,
+    staleTimes: {
+      dynamic: 604800,
+      static: 604800,
+    },
   },
   async headers() {
     return [

@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import { Question } from '@/types/quiz';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { PremiumExplanation } from './PremiumExplanation';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
@@ -1008,26 +1009,29 @@ export function QuizResult({
         <div className="relative group">
            <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
            <Button 
+            asChild
             disabled={isNavigatingToIntelligence}
-            onClick={() => {
-              setIsNavigatingToIntelligence(true);
-              router.push('/syllabus/quiz/pyq/intelligence');
-            }}
+            onMouseEnter={() => router.prefetch('/syllabus/quiz/pyq/intelligence')}
             className="relative h-14 px-10 rounded-full bg-slate-950 hover:bg-slate-900 text-white font-black shadow-2xl flex items-center gap-3 transition-all hover:scale-105 active:scale-95 disabled:opacity-80"
           >
-            {isNavigatingToIntelligence ? (
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
-            ) : (
-              <Sparkles className="w-5 h-5 text-amber-500 animate-pulse" />
-            )}
-            
-            <span className="text-lg">
-              {isNavigatingToIntelligence 
-                ? (isHindi ? 'खुल रहा है...' : 'Loading...')
-                : (isHindi ? 'एक्सपर्ट इनसाइट्स खोलें' : 'Open Expert Insights')
-              }
-            </span>
-            {!isNavigatingToIntelligence && <ArrowRight className="w-5 h-5 opacity-70 group-hover:translate-x-1 transition-transform" />}
+            <Link 
+              href="/syllabus/quiz/pyq/intelligence"
+              onClick={() => setIsNavigatingToIntelligence(true)}
+            >
+              {isNavigatingToIntelligence ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+              ) : (
+                <Sparkles className="w-5 h-5 text-amber-500 animate-pulse" />
+              )}
+              
+              <span className="text-lg">
+                {isNavigatingToIntelligence 
+                  ? (isHindi ? 'खुल रहा है...' : 'Loading...')
+                  : (isHindi ? 'एक्सपर्ट इनसाइट्स खोलें' : 'Open Expert Insights')
+                }
+              </span>
+              {!isNavigatingToIntelligence && <ArrowRight className="w-5 h-5 opacity-70 group-hover:translate-x-1 transition-transform" />}
+            </Link>
           </Button>
         </div>
 

@@ -53,8 +53,16 @@ const chunkArray = <T>(arr: T[], size: number): T[][] => {
 
 const getTestYear = (title: string, createdAt: Date | null): number => {
   const titleYear = title.match(/\b(19|20)\d{2}\b/)?.[0];
-  if (titleYear) return Number(titleYear);
-  return createdAt ? new Date(createdAt).getFullYear() : CURRENT_YEAR;
+  if (titleYear) {
+    const yearNum = Number(titleYear);
+    // Strict capping for PYQs - if it's a PYQ but title says 2026+, cap it at 2025
+    if (yearNum > PYQ_SCOPE_END_YEAR) return PYQ_SCOPE_END_YEAR;
+    return yearNum;
+  }
+  
+  const createdYear = createdAt ? new Date(createdAt).getFullYear() : CURRENT_YEAR;
+  // If fallback to createdYear is beyond scope, cap it at scope end
+  return Math.min(createdYear, PYQ_SCOPE_END_YEAR);
 };
 
 type ScopedTest = {
@@ -721,13 +729,20 @@ export const getPublishedPyqFactsByYear = unstable_cache(
 export const getPyqInsightsCoverageSummary = unstable_cache(
   async (
     startYear = 2020,
-    endYear = CURRENT_YEAR
+    endYear?: number
   ): Promise<PyqInsightsCoverageSummary> => {
-    const from = Math.min(startYear, endYear);
-    const to = Math.max(startYear, endYear);
+    let from = startYear;
+    let to = endYear || PYQ_SCOPE_END_YEAR;
     try {
       const scopedTests = await getScopedPyqTests(from, to);
       const scopedTestIds = scopedTests.map((item) => item.testId);
+      
+      // Determine the actual data range from scoped tests, but strictly capped within scope
+      if (scopedTests.length > 0) {
+        from = Math.max(PYQ_SCOPE_START_YEAR, Math.min(...scopedTests.map(t => t.year)));
+        to = Math.min(PYQ_SCOPE_END_YEAR, Math.max(...scopedTests.map(t => t.year)));
+      }
+
 
       const pyqRows = scopedTestIds.length
         ? await db

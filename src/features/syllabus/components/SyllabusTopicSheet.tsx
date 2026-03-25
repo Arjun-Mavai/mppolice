@@ -162,18 +162,6 @@ export function SyllabusTopicSheet({
               </Badge>
 
               <div className="flex items-center gap-2">
-                {/* Back Button with Arrow */}
-                <SheetClose asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-9 gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    {language === 'hi' ? 'वापस' : 'Back'}
-                  </Button>
-                </SheetClose>
-
                 <SheetClose asChild>
                   <Button
                     variant="ghost"
@@ -210,26 +198,28 @@ export function SyllabusTopicSheet({
 
           <ScrollArea className="h-[calc(100vh-200px)] w-full flex-1 p-0">
             <div className="space-y-8 p-5 pb-32 md:p-6">
+              {/* 🧭 Dedicated Back Button Row — High Speed Navigation */}
+              <div className="flex items-center">
+                <SheetClose asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 w-full gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black tracking-widest text-slate-500 uppercase shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98]"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    {language === 'hi' ? 'पीछे जाएं' : 'Back to Unit'}
+                  </Button>
+                </SheetClose>
+              </div>
+
               {/* 1. Mnemonic Section (If available) */}
               {topic.mnemonic ? (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-700 uppercase">
+                    <div className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase">
                       <Brain className="h-4 w-4" />{' '}
                       {language === 'hi' ? 'याद रखने की ट्रिक' : 'Memory Trick'}
                     </div>
-
-                    {/* Prominent Back Button just above Memory Trick Section */}
-                    <SheetClose asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 gap-1.5 rounded-lg border-slate-200 bg-white px-3 text-[10px] font-black tracking-widest text-slate-500 uppercase transition-all hover:bg-slate-50 hover:text-slate-900"
-                      >
-                        <ArrowLeft className="h-3.5 w-3.5" />
-                        {language === 'hi' ? 'पीछे जाएं' : 'Back'}
-                      </Button>
-                    </SheetClose>
 
                     <RevisionButton />
                   </div>
@@ -246,18 +236,8 @@ export function SyllabusTopicSheet({
                   </div>
                 </div>
               ) : (
-                /* Fallback Button Location if no Mnemonic */
-                <div className="flex items-center justify-between">
-                  <SheetClose asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 gap-1.5 rounded-lg border-slate-200 bg-white px-3 text-[10px] font-black tracking-widest text-slate-500 uppercase transition-all hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      <ArrowLeft className="h-3.5 w-3.5" />
-                      {language === 'hi' ? 'पीछे जाएं' : 'Back'}
-                    </Button>
-                  </SheetClose>
+                /* Fallback Action Row if no Mnemonic */
+                <div className="flex items-center justify-end">
                   <RevisionButton />
                 </div>
               )}

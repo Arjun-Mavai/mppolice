@@ -366,35 +366,33 @@ export async function submitTestAttempt(
       }
     });
 
-    // 4. Update Leaderboard (Async - Fire and Forget mostly, or await if critical)
-    // 🔧 PERF FIX: Reuse `session` from line 216 instead of calling verifyAuth() again
-    // This saves 100-200ms per submission (auth verification is expensive)
-    if (session && session.name) {
-      // We need total marks for percentage calc in leaderboard
-      // We sum marks from questions
-      /* 
-                Already have testQuestions with marks.
-                const totalMarks = testQuestions.reduce((sum, q) => sum + q.marks, 0); 
-             */
-      const totalTestMarks = testQuestions.reduce((sum, q) => sum + q.marks, 0);
+    // 4. Parallelize post-submission tasks (Leaderboard, Analytics, Revalidation)
+    // Bhai, ye sab kaam parallel mein honge to user ko result 200-300ms jaldi dikhega
+    const postSubmissionTasks = [];
 
-      await insertUserToLeaderboard({
-        testId,
-        userId,
-        displayName: session.name,
-        score: parseFloat(totalScore.toFixed(2)),
-        // 🛡️ FIX: Use validDuration (server-validated) instead of raw durationSeconds
-        // Bhai, pehle yahan raw durationSeconds ja raha tha — manipulated value
-        // leaderboard mein aa jaati thi! "5 second mein 100 sawal" type entries!
-        // Ab server-clamped validDuration use hota hai (0 to maxDuration range)
-        timeTaken: validDuration,
-        totalMarks: totalTestMarks,
-      });
+    if (session && session.name) {
+      const totalTestMarks = testQuestions.reduce(
+        (sum, q) => sum + (q.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION),
+        0
+      );
+
+      postSubmissionTasks.push(
+        insertUserToLeaderboard({
+          testId,
+          userId,
+          displayName: session.name,
+          score: parseFloat(totalScore.toFixed(2)),
+          timeTaken: validDuration,
+          totalMarks: totalTestMarks,
+        })
+      );
     }
 
-    // 5. Invalidate User Analytics Cache
-    // "Bhai result aa gaya, ab purana cache hatao"
-    await revalidateTag(`analytics-${userId}`, { expire: 0 });
+    // Invalidate User Analytics Cache
+    postSubmissionTasks.push(revalidateTag(`analytics-${userId}`, { expire: 0 }));
+
+    // Run all tasks in parallel
+    await Promise.allSettled(postSubmissionTasks);
 
     return { success: true, attemptId, score: parseFloat(totalScore.toFixed(2)) };
   } catch (error) {

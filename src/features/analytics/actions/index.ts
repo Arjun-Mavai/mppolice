@@ -242,7 +242,10 @@ async function fetchAnalyticsInternal(userId: string) {
         totalTests: 0,
         mastery: [],
         recentActivity: [],
-        aiSuggestion: 'Start your first test to get personalized insights!',
+        aiSuggestion: {
+          en: 'Start your first test to get personalized insights!',
+          hi: 'पर्सनलाइज्ड सुझाव पाने के लिए अपना पहला टेस्ट शुरू करें!',
+        },
       };
     }
 
