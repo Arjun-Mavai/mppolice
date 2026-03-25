@@ -33,7 +33,7 @@ export async function getRandomFacts(limit: number = 5): Promise<Fact[]> {
       .orderBy(sql`RANDOM()`)
       .limit(limit);
 
-    return results.map(r => ({
+    return results.map((r) => ({
       id: r.id,
       fact: r.explanationEn || r.explanation || '',
       fact_hi: r.explanation || '',

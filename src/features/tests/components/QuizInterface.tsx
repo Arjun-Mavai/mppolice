@@ -85,7 +85,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
   const [guestMobile, setGuestMobile] = useState('');
   const [showGuestEntryDialog, setShowGuestEntryDialog] = useState(false);
   const [isSubmittingGuest, setIsSubmittingGuest] = useState(false);
-  
+
   // Facts for loading screen
   const [loadingFacts, setLoadingFacts] = useState<Fact[]>([]);
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
@@ -260,13 +260,17 @@ export function QuizInterface(props: QuizInterfaceProps) {
           })
           .catch(() => {});
       }
-      
+
       // Update URL to include completed=true so that page refresh redirects back to test list
       if (isSubmitted) {
         const url = new URL(window.location.href);
         if (url.searchParams.get('completed') !== 'true') {
           url.searchParams.set('completed', 'true');
-          window.history.replaceState({ ...window.history.state, quizActive: false }, '', url.toString());
+          window.history.replaceState(
+            { ...window.history.state, quizActive: false },
+            '',
+            url.toString()
+          );
         }
       }
     }
@@ -446,40 +450,40 @@ export function QuizInterface(props: QuizInterfaceProps) {
 
       {/* Loading Overlay during submission */}
       {isSubmitting && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/95 backdrop-blur-md p-4">
-          <div className="flex flex-col items-center gap-6 rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-2xl max-w-lg w-full text-center">
-            
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/95 p-4 backdrop-blur-md">
+          <div className="flex w-full max-w-lg flex-col items-center gap-6 rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center shadow-2xl">
             <div className="relative">
-                <div className="absolute inset-0 bg-indigo-500/20 blur-xl rounded-full animate-pulse"></div>
-                <div className="relative h-16 w-16 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent shadow-lg"></div>
+              <div className="absolute inset-0 animate-pulse rounded-full bg-indigo-500/20 blur-xl"></div>
+              <div className="relative h-16 w-16 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent shadow-lg"></div>
             </div>
-            
+
             <div className="space-y-2">
-                <h3 className="text-xl font-bold text-white tracking-tight">Submitting Test...</h3>
-                <p className="text-slate-400 text-sm">Please wait while we calculate your result.</p>
+              <h3 className="text-xl font-bold tracking-tight text-white">Submitting Test...</h3>
+              <p className="text-sm text-slate-400">Please wait while we calculate your result.</p>
             </div>
 
             {loadingFacts.length > 0 && (
-                <div className="mt-4 w-full bg-slate-800/50 rounded-xl p-6 border border-slate-700/50 relative overflow-hidden min-h-[160px] flex items-center justify-center">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={currentFactIndex}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.3 }}
-                            className="text-sm font-medium text-slate-300 leading-relaxed italic"
-                        >
-                            "{loadingFacts[currentFactIndex].text.replace(/<[^>]*>/g, '').substring(0, 200)}..."
-                        </motion.div>
-                    </AnimatePresence>
-                    
-                    <div className="absolute top-2 left-2">
-                         <span className="text-[10px] uppercase font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
-                            Did You Know?
-                        </span>
-                    </div>
+              <div className="relative mt-4 flex min-h-[160px] w-full items-center justify-center overflow-hidden rounded-xl border border-slate-700/50 bg-slate-800/50 p-6">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentFactIndex}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-sm leading-relaxed font-medium text-slate-300 italic"
+                  >
+                    "{loadingFacts[currentFactIndex].fact.replace(/<[^>]*>/g, '').substring(0, 200)}
+                    ..."
+                  </motion.div>
+                </AnimatePresence>
+
+                <div className="absolute top-2 left-2">
+                  <span className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold text-indigo-400 uppercase">
+                    Did You Know?
+                  </span>
                 </div>
+              </div>
             )}
           </div>
         </div>
