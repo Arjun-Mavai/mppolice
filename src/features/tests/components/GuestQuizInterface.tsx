@@ -47,6 +47,15 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     user,
   } = props;
 
+  // 🔒 Lock body scroll while quiz is active — prevents footer from showing on mobile
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
   // No user ID props here as this IS for guests only.
 
   const router = useRouter();

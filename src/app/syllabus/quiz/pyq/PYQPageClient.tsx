@@ -270,7 +270,7 @@ export default function PYQPageClient({
       {/* Content Area - Optimized for Instant Switching */}
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
         {/* All Subjects View */}
-        <div className={cn(viewMode !== 'all-subjects' && 'hidden')}>
+        <div className={viewMode !== 'all-subjects' ? 'hidden' : 'block'}>
           <div className="space-y-8">
             <div className="space-y-4 text-center">
               <h2 className="text-2xl font-bold text-slate-900">
@@ -308,7 +308,7 @@ export default function PYQPageClient({
         </div>
 
         {/* Year Wise View */}
-        <div className={cn(viewMode !== 'year' && 'hidden', 'space-y-4')}>
+        <div className={viewMode !== 'year' ? 'hidden' : 'space-y-4'}>
           {initialTests.map((test, idx) => (
             <QuizListItem
               key={test.id}
@@ -349,7 +349,7 @@ export default function PYQPageClient({
         </div>
 
         {/* Topic Wise View */}
-        <div className={cn(viewMode !== 'subject' && 'hidden', 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3')}>
+        <div className={viewMode !== 'subject' ? 'hidden' : 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3'}>
           {SUBJECTS.map((sub) => (
             <PYQCard
               key={sub.name}

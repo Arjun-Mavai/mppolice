@@ -110,7 +110,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  allowedDevOrigins: ['192.168.1.3', '192.168.1.4'],
+  allowedDevOrigins: ['192.168.1.2', '192.168.1.4'],
   logging: {
     browserToTerminal: true,
     // 'error' — errors only (default)

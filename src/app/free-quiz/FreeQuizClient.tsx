@@ -98,7 +98,7 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
 
   // Prefetch quiz data
   useEffect(() => {
-    filteredQuizzes.slice(0, 10).forEach(quiz => {
+    filteredQuizzes.slice(0, 10).forEach((quiz) => {
       router.prefetch(`/free-quiz/play?testId=${quiz.id}`);
     });
   }, [filteredQuizzes, router]);
@@ -112,73 +112,80 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-32">
-      {/* ── Header — catchy title + description ────────────── */}
-      <div className="border-b border-slate-200 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto max-w-3xl px-4 pt-20 pb-6 sm:px-6 md:pt-24">
-          <div className="space-y-3 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-              <Sparkles className="h-3 w-3" />
+    <div className="flex min-h-[100dvh] flex-col bg-slate-50">
+      {/* ── Header — sticky, same style as PYQ page ───────────── */}
+      <div className="sticky top-14 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-md">
+        <div className="mx-auto max-w-3xl px-4 pt-4 pb-4 sm:px-6">
+          <div className="flex flex-col gap-3">
+            {/* Title row */}
+            <div className="flex items-center gap-3">
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                <Sparkles className="h-3 w-3" />
+                {hi ? 'फ्री' : 'Free'}
+              </div>
+              <div>
+                <h1 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+                  {hi ? 'MPPSC 2026 — फ्री डेली क्विज़' : 'MPPSC 2026 — Free Daily Quiz'}
+                </h1>
+                <p className="text-xs text-slate-500">
+                  {hi
+                    ? 'हर रोज़ नए प्रश्न, बिल्कुल मुफ़्त'
+                    : 'Fresh questions daily, absolutely free'}
+                </p>
+              </div>
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-              {hi ? 'MPPSC 2026 — फ्री डेली क्विज़' : 'MPPSC 2026 — Free Daily Quiz'}
-            </h1>
-            <p className="mx-auto max-w-lg text-sm text-slate-500">
-              {hi
-                ? 'हर रोज़ नए प्रश्न, बिल्कुल मुफ़्त। Hindi और English दोनों में practice karo।'
-                : 'Fresh questions daily, absolutely free. Practice in both Hindi & English.'}
-            </p>
-          </div>
 
-          {/* ── Filter Button + Active Filters ──────────────── */}
-          <div className="mt-4 flex items-center justify-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setFilterOpen(true)}
-              className="gap-2 rounded-full border-slate-200 px-4 text-xs font-bold active:scale-95 transition-transform"
-            >
-              <Filter className="h-3.5 w-3.5" />
-              {hi ? 'फ़िल्तर' : 'Filter'}
-              {activeFilters > 0 && (
-                <Badge className="ml-1 h-5 w-5 rounded-full bg-indigo-600 p-0 text-[10px] text-white">
-                  {activeFilters}
+            {/* ── Filter Button + Active Filters ──────────────── */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFilterOpen(true)}
+                className="gap-2 rounded-full border-slate-200 px-4 text-xs font-bold transition-transform active:scale-95"
+              >
+                <Filter className="h-3.5 w-3.5" />
+                {hi ? 'फ़िल्तर' : 'Filter'}
+                {activeFilters > 0 && (
+                  <Badge className="ml-1 h-5 w-5 rounded-full bg-indigo-600 p-0 text-[10px] text-white">
+                    {activeFilters}
+                  </Badge>
+                )}
+              </Button>
+              {selectedSubject && (
+                <Badge
+                  variant="outline"
+                  className="gap-1 rounded-full border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs text-indigo-700"
+                >
+                  {hi
+                    ? SUBJECTS.find((s) => s.value === selectedSubject)?.labelHi
+                    : selectedSubject}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedSubject(null)} />
                 </Badge>
               )}
-            </Button>
-            {/* Active filters ko chip me dikhao */}
-            {selectedSubject && (
-              <Badge
-                variant="outline"
-                className="gap-1 rounded-full border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs text-indigo-700"
-              >
-                {hi ? SUBJECTS.find((s) => s.value === selectedSubject)?.labelHi : selectedSubject}
-                <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedSubject(null)} />
-              </Badge>
-            )}
-            {selectedUnit && (
-              <Badge
-                variant="outline"
-                className="gap-1 rounded-full border-amber-200 bg-amber-50 px-2.5 py-1 text-xs text-amber-700"
-              >
-                Unit {selectedUnit.replace('unit_', '')}
-                <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedUnit(null)} />
-              </Badge>
-            )}
-            {activeFilters > 0 && (
-              <button
-                onClick={clearFilters}
-                className="text-xs font-medium text-slate-400 hover:text-red-500 active:scale-90 transition-transform"
-              >
-                {hi ? 'सब हटाओ' : 'Clear'}
-              </button>
-            )}
+              {selectedUnit && (
+                <Badge
+                  variant="outline"
+                  className="gap-1 rounded-full border-amber-200 bg-amber-50 px-2.5 py-1 text-xs text-amber-700"
+                >
+                  Unit {selectedUnit.replace('unit_', '')}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedUnit(null)} />
+                </Badge>
+              )}
+              {activeFilters > 0 && (
+                <button
+                  onClick={clearFilters}
+                  className="text-xs font-medium text-slate-400 transition-transform hover:text-red-500 active:scale-90"
+                >
+                  {hi ? 'सब हटाओ' : 'Clear'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* ── Quiz List ────────────────────────────────────────── */}
-      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
+      <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 pb-8 sm:px-6">
         <div className="mb-4 flex items-center justify-between text-xs text-slate-500">
           <span className="font-bold">
             {filteredQuizzes.length} {hi ? 'टेस्ट उपलब्ध' : 'Tests Available'}
@@ -214,7 +221,9 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
                     questions={quiz.totalQuestions || undefined}
                     itemLabel={hi ? 'प्रश्न' : 'Questions'}
                     marks={(quiz.totalQuestions || 0) * QUIZ_CONSTANTS.MARKS_PER_QUESTION}
-                    duration={Math.ceil((quiz.totalQuestions || 0) * QUIZ_CONSTANTS.TIME_PER_QUESTION_MINUTES)}
+                    duration={Math.ceil(
+                      (quiz.totalQuestions || 0) * QUIZ_CONSTANTS.TIME_PER_QUESTION_MINUTES
+                    )}
                     isLocked={false}
                     isFree={true}
                     language={language}
