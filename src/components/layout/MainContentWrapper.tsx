@@ -12,5 +12,5 @@ export function MainContentWrapper({ children }: { children: React.ReactNode }) 
 
   // If we are on the quiz play page, we don't want the global padding
   // because that page handles its own layout/spacing.
-  return <div className={cn('min-h-screen', !isQuizPlay && 'pt-14')}>{children}</div>;
+  return <div className={cn(isQuizPlay ? 'h-[100dvh] overflow-hidden' : 'min-h-screen pt-14')}>{children}</div>;
 }
