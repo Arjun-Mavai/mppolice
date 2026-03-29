@@ -8,7 +8,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { createGuestEntry as createGuestUser } from '@/actions/guest-actions';
 import { logger } from '@/lib/logger';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
-import { Loader2 } from 'lucide-react';
+import { PYQFactsLoader } from '@/components/ui/PYQFactsLoader';
 import { toast } from 'sonner';
 import { useGuestResultStore } from '../store/guestResultStore';
 
@@ -19,8 +19,7 @@ import { QuizPaletteMobile, QuizPaletteDesktop } from './quiz/QuizPalette';
 import { QuizExitDialog } from './quiz/QuizExitDialog';
 import { GuestEntryDialog } from './quiz/GuestEntryDialog';
 import { QuizExplanation } from './quiz/QuizExplanation';
-import { getRandomFacts, Fact } from '@/actions/facts';
-import { AnimatePresence, motion } from 'framer-motion';
+
 
 interface GuestQuizInterfaceProps {
   questions: Question[];
@@ -47,16 +46,8 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     user,
   } = props;
 
-  // 🔒 Lock body scroll while quiz is active — prevents footer from showing on mobile
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, []);
-
   // No user ID props here as this IS for guests only.
+  // Note: scroll is locked by the outer div's h-[100dvh] overflow-hidden — no body manipulation needed.
 
   const router = useRouter();
 
@@ -299,78 +290,11 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     }
   }, [isSubmitted, answers, questions, timeLimitInMinutes, timeLeft, router]);
 
-  // Facts for loading screen
-  const [loadingFacts, setLoadingFacts] = useState<Fact[]>([]);
-  const [currentFactIndex, setCurrentFactIndex] = useState(0);
+  // No local facts state needed — PYQFactsLoader bundles facts internally
 
-  useEffect(() => {
-    getRandomFacts().then(setLoadingFacts);
-  }, []);
-
-  useEffect(() => {
-    if (isProcessingResult && loadingFacts.length > 0) {
-      const interval = setInterval(() => {
-        setCurrentFactIndex((prev) => (prev + 1) % loadingFacts.length);
-      }, 3500); // Change fact every 3.5 seconds
-      return () => clearInterval(interval);
-    }
-  }, [isProcessingResult, loadingFacts.length]);
 
   if (isProcessingResult || (isSubmitted && !isProcessingResult)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-white p-4">
-        <div className="flex w-full max-w-md flex-col items-center gap-8 text-center">
-          <div className="relative">
-            <div className="h-20 w-20 animate-spin rounded-full border-4 border-slate-100 border-t-indigo-600" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-pulse text-indigo-600" />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <h2 className="text-2xl font-black tracking-tight text-slate-900">
-              {language === 'hi' ? 'रिजल्ट तैयार हो रहा है' : 'Calculating Results'}
-            </h2>
-            <p className="text-sm font-medium text-slate-500">
-              {language === 'hi' ? 'बस कुछ ही सेकंड...' : 'Just a few seconds...'}
-            </p>
-          </div>
-
-          {/* MPPSC Facts Carousel */}
-          <div className="min-h-[160px] w-full rounded-3xl bg-slate-50 p-6 shadow-sm ring-1 ring-slate-100">
-            <div className="mb-3 flex items-center justify-center gap-2">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-[10px] text-amber-700">💡</span>
-              <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                {language === 'hi' ? 'क्या आप जानते हैं?' : 'Did you know?'}
-              </span>
-            </div>
-            
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentFactIndex}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-3"
-              >
-                {loadingFacts.length > 0 && (
-                  <>
-                    <p className="text-sm font-bold leading-relaxed text-slate-800">
-                      {language === 'hi' 
-                        ? loadingFacts[currentFactIndex].fact_hi || loadingFacts[currentFactIndex].fact 
-                        : loadingFacts[currentFactIndex].fact}
-                    </p>
-                    <div className="inline-flex rounded-lg bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-600">
-                      #{loadingFacts[currentFactIndex].category}
-                    </div>
-                  </>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </div>
-      </div>
-    );
+    return <PYQFactsLoader variant="page" label="Calculating your results..." theme="light" />;
   }
 
   // ── Palette props ──

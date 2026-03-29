@@ -12,5 +12,8 @@ export function MainContentWrapper({ children }: { children: React.ReactNode }) 
 
   // If we are on the quiz play page, we don't want the global padding
   // because that page handles its own layout/spacing.
-  return <div className={cn(isQuizPlay ? 'h-[100dvh] overflow-hidden' : 'min-h-screen pt-14')}>{children}</div>;
+  // Note: we do NOT apply overflow-hidden here — the quiz container div
+  // (h-[100dvh] overflow-hidden) handles scroll locking internally.
+  // Applying it on the wrapper breaks the result page which renders at the same URL.
+  return <div className={cn(isQuizPlay ? '' : 'min-h-screen pt-14')}>{children}</div>;
 }
