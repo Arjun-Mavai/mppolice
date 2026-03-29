@@ -18,8 +18,7 @@ import { QuizExitDialog } from './quiz/QuizExitDialog';
 import { GuestEntryDialog } from './quiz/GuestEntryDialog';
 import { QuizExplanation } from './quiz/QuizExplanation';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
-import { getRandomFacts, Fact } from '@/actions/facts';
-import { AnimatePresence, motion } from 'framer-motion';
+import { PYQFactsLoader } from '@/components/ui/PYQFactsLoader';
 
 interface QuizInterfaceProps {
   questions: Question[];
@@ -86,22 +85,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
   const [showGuestEntryDialog, setShowGuestEntryDialog] = useState(false);
   const [isSubmittingGuest, setIsSubmittingGuest] = useState(false);
 
-  // Facts for loading screen
-  const [loadingFacts, setLoadingFacts] = useState<Fact[]>([]);
-  const [currentFactIndex, setCurrentFactIndex] = useState(0);
-
-  useEffect(() => {
-    getRandomFacts().then(setLoadingFacts);
-  }, []);
-
-  useEffect(() => {
-    if (isSubmitting && loadingFacts.length > 0) {
-      const interval = setInterval(() => {
-        setCurrentFactIndex((prev) => (prev + 1) % loadingFacts.length);
-      }, 3000); // Rotate every 3 seconds
-      return () => clearInterval(interval);
-    }
-  }, [isSubmitting, loadingFacts]);
+  // No local facts state needed — PYQFactsLoader bundles facts internally
 
   // Translations
   const t = {
@@ -448,46 +432,9 @@ export function QuizInterface(props: QuizInterfaceProps) {
         onExit={showExitModal}
       />
 
-      {/* Loading Overlay during submission */}
-      {isSubmitting && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/95 p-4 backdrop-blur-md">
-          <div className="flex w-full max-w-lg flex-col items-center gap-6 rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center shadow-2xl">
-            <div className="relative">
-              <div className="absolute inset-0 animate-pulse rounded-full bg-indigo-500/20 blur-xl"></div>
-              <div className="relative h-16 w-16 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent shadow-lg"></div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold tracking-tight text-white">Submitting Test...</h3>
-              <p className="text-sm text-slate-400">Please wait while we calculate your result.</p>
-            </div>
-
-            {loadingFacts.length > 0 && (
-              <div className="relative mt-4 flex min-h-[160px] w-full items-center justify-center overflow-hidden rounded-xl border border-slate-700/50 bg-slate-800/50 p-6">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentFactIndex}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                    className="text-sm leading-relaxed font-medium text-slate-300 italic"
-                  >
-                    "{loadingFacts[currentFactIndex].fact.replace(/<[^>]*>/g, '').substring(0, 200)}
-                    ..."
-                  </motion.div>
-                </AnimatePresence>
-
-                <div className="absolute top-2 left-2">
-                  <span className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold text-indigo-400 uppercase">
-                    Did You Know?
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Submission overlay */}
+      {isSubmitting && <PYQFactsLoader variant="overlay" label="Submitting test..." />
+      }
     </div>
   );
 }

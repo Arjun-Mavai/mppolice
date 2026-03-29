@@ -13,27 +13,51 @@ import PYQIntelligenceClient from './PYQIntelligenceClient';
 import { unstable_cache } from 'next/cache';
 import { Suspense } from 'react';
 import LoadingSkeleton from './loading';
+import type { Metadata } from 'next';
 
-// ISR: Revalidate every 1 hour (data is fixed for 6 years 2020-2025)
-export const revalidate = 3600;
+export const metadata: Metadata = {
+  title: 'Expert PYQ Intelligence | MPPSC Analytics',
+  description: 'Deep analysis of MPPSC Previous Year Questions — unit distribution, repeated questions & topic trends from 2020 to 2025.',
+};
 
-// Cached versions of the analytics functions  
-const getCachedSubjectStats = unstable_cache(getSubjectDistributionStats, ['subject-stats-v5'], { revalidate: 3600 });
-const getCachedUnitStats = unstable_cache(getUnitDistributionStats, ['unit-stats-v5'], { revalidate: 3600 });
-const getCachedRepeatedQuestions = unstable_cache(getRepeatedQuestions, ['repeated-v6'], { revalidate: 3600 });
-const getCachedTopicStats = unstable_cache(getMostRepeatedTopics, ['topics-v5'], { revalidate: 3600 });
-const getCachedSubjectQuestionsData = unstable_cache(getOverallWeightageSubjectData, ['subject-questions-v5'], { revalidate: 3600 });
+// ISR: Revalidate every 6 hours — data is fixed for 2020–2025 period
+export const revalidate = 21600;
+
+// ── Cached analytics functions (unique stable keys) ─────────────────────────
+// Note: getRepeatedQuestions is already wrapped with unstable_cache internally,
+// but we use a page-level wrapper for an extra stable route-scoped layer.
+const getCachedSubjectStats = unstable_cache(
+  getSubjectDistributionStats,
+  ['intelligence-subject-stats-v6'],
+  { revalidate: 21600 }
+);
+const getCachedUnitStats = unstable_cache(
+  getUnitDistributionStats,
+  ['intelligence-unit-stats-v6'],
+  { revalidate: 21600 }
+);
+const getCachedTopicStats = unstable_cache(
+  getMostRepeatedTopics,
+  ['intelligence-topics-v6'],
+  { revalidate: 21600 }
+);
+const getCachedSubjectQuestionsData = unstable_cache(
+  getOverallWeightageSubjectData,
+  ['intelligence-subject-questions-v6'],
+  { revalidate: 21600 }
+);
 
 async function IntelligenceDataFetcher() {
-  // Fetch heavy intelligence data in parallel
-  const [subjectStats, unitStats, repeatedQuestions, topicStats, simpleSubjectStats, subjectQuestionsData] = await Promise.all([
-    getCachedSubjectStats(),
-    getCachedUnitStats(),
-    getCachedRepeatedQuestions(),
-    getCachedTopicStats(),
-    getSubjectWisePYQStats(),
-    getCachedSubjectQuestionsData(),
-  ]);
+  // 🚀 All 5 heavy queries run in parallel — Promise.all for max speed
+  const [subjectStats, unitStats, repeatedQuestions, topicStats, simpleSubjectStats, subjectQuestionsData] =
+    await Promise.all([
+      getCachedSubjectStats(),
+      getCachedUnitStats(),
+      getRepeatedQuestions(),          // Already has its own unstable_cache internally
+      getCachedTopicStats(),
+      getSubjectWisePYQStats(),        // Already has its own unstable_cache internally
+      getCachedSubjectQuestionsData(),
+    ]);
 
   return (
     <PYQIntelligenceClient
@@ -49,14 +73,10 @@ async function IntelligenceDataFetcher() {
 
 export default async function PYQIntelligencePage() {
   const user = await verifyAuth();
-  if (!user) {
-    redirect('/pricing');
-  }
+  if (!user) redirect('/pricing');
 
   const tier = getUserTier(user);
-  if (tier === 'free') {
-    redirect('/pricing');
-  }
+  if (tier === 'free') redirect('/pricing');
 
   return (
     <Suspense fallback={<LoadingSkeleton />}>

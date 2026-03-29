@@ -1,5 +1,5 @@
-import GlobalLoader from '@/components/ui/GlobalLoader';
+import { PYQFactsLoader } from '@/components/ui/PYQFactsLoader';
 
 export default function Loading() {
-  return <GlobalLoader />;
+  return <PYQFactsLoader label="Loading Attempt History..." theme="light" />;
 }

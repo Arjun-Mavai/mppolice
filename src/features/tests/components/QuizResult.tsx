@@ -137,6 +137,17 @@ export function QuizResult({
 
   const [showFeedback, setShowFeedback] = useState(false);
 
+  // Ensure ?completed=true is in the URL whenever the result screen is shown.
+  // This means a hard refresh will hit the server with completed=true and redirect
+  // to /syllabus/quiz/pyq instead of reloading the test from scratch.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('completed') !== 'true') {
+      url.searchParams.set('completed', 'true');
+      window.history.replaceState(window.history.state, '', url.toString());
+    }
+  }, []);
+
   useEffect(() => {
     if (!showFeedbackModal) return;
 
