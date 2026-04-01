@@ -68,7 +68,7 @@ export function GuestResultClient({ userId }: { userId?: string }) {
         clearResult();
         router.push('/');
       }}
-      title="Practice Quiz Result"
+      title="Quiz Result"
       isGuest={!userId}
       userId={userId}
       disableRetry={true}

@@ -26,7 +26,7 @@ const formSchema = z.object({
   name: z.string().min(2, 'Name is required'),
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional(),
-  category: z.enum(['content', 'bug', 'ui', 'feature_request', 'other']),
+  category: z.enum(['test_series', 'content', 'bug', 'ui', 'feature_request', 'other']),
   rating: z.number().min(1).max(5),
   message: z.string().min(10, 'Please share a bit more detail (min 10 chars)'),
   role: z.string().optional(),
@@ -150,7 +150,8 @@ export default function FeedbackPage() {
                   className="grid grid-cols-2 gap-3 sm:grid-cols-3"
                 >
                   {[
-                    { value: 'content', label: 'Study Material', emoji: '📚' },
+                    { value: 'test_series', label: 'Test Series', emoji: '📝' },
+                    { value: 'content', label: 'Syllabus Understanding', emoji: '📖' },
                     { value: 'ui', label: 'App Design', emoji: '🎨' },
                     { value: 'bug', label: 'Bug Report', emoji: '🐛' },
                     { value: 'feature_request', label: 'Feature Idea', emoji: '💡' },
