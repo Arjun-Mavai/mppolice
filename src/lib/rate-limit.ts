@@ -50,6 +50,12 @@ export const paymentLimiter = createLimiter(10, '15 m', 'payment');
 // Set Password: 10/hour — user might re-click link multiple times
 export const setPasswordLimiter = createLimiter(10, '1 h', 'set-password');
 
+// Profile Update: 5 per 15 min — rate limit name/email changes
+export const profileUpdateLimiter = createLimiter(5, '15 m', 'profile-update');
+
+// Password Change: 3 per 15 min — stricter limit for password changes (brute force protection)
+export const passwordChangeLimiter = createLimiter(3, '15 m', 'password-change');
+
 /**
  * Check rate limit — fail-open (Redis down → allow)
  */

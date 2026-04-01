@@ -125,7 +125,12 @@ export default function AdminDashboardPage() {
           <StatCard icon={<CheckCircle2 />} title="FLTs" value={typeCount?.FLT || 0} color="rose" />
           <StatCard icon={<ListChecks />} title="CSAT" value={typeCount?.CSAT || 0} color="cyan" />
           <StatCard icon={<ListChecks />} title="PYQs" value={typeCount?.PYQ || 0} color="slate" />
-          <StatCard icon={<CheckCircle2 />} title="Free Quiz" value={typeCount?.MISC || 0} color="teal" />
+          <StatCard
+            icon={<CheckCircle2 />}
+            title="Free Quiz"
+            value={typeCount?.MISC || 0}
+            color="teal"
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:gap-8 lg:grid-cols-3">
@@ -170,11 +175,9 @@ export default function AdminDashboardPage() {
             {/* Recent Service Guests */}
             <Card className="h-fit border-slate-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-lg">
-                  Guest Users ({recentGuests.length ?? 0})
-                </CardTitle>
+                <CardTitle className="text-lg">Guest Users ({recentGuests.length ?? 0})</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+              <CardContent className="max-h-[500px] space-y-4 overflow-y-auto pr-2">
                 {recentGuests.length === 0 ? (
                   <p className="text-sm text-slate-400">No guests yet.</p>
                 ) : (
@@ -227,7 +230,7 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 gap-6 md:gap-8 lg:grid-cols-2">
           <div className="w-full space-y-8">
             <div>
-              <h2 className="mb-4 text-xl font-bold">Payment Exit Reasons</h2>
+              {/* <h2 className="mb-4 text-xl font-bold">Payment Exit Reasons</h2> */}
               <PaymentExitAnalytics />
             </div>
             <div>

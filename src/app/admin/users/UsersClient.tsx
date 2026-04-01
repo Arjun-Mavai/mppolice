@@ -491,7 +491,17 @@ export default function UsersClient() {
             <div className="py-12 text-center text-slate-400">No activity logs found</div>
           ) : (
             logs.map((log) => {
-              const details = log.details ? JSON.parse(log.details) : {};
+              // Handle both string and object details
+              let details: Record<string, any> = {};
+              try {
+                if (typeof log.details === 'string') {
+                  details = JSON.parse(log.details);
+                } else if (log.details && typeof log.details === 'object') {
+                  details = log.details as Record<string, any>;
+                }
+              } catch {
+                details = {};
+              }
               const timeAgo = formatDistanceToNow(new Date(log.createdAt), { addSuffix: true });
               const logDate = new Date(log.createdAt);
               const exactTime = logDate.toLocaleString('en-US', {
