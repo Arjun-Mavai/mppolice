@@ -51,6 +51,14 @@ const AdminTicketsList = dynamic(
   }
 );
 
+const GeneralFeedbackTable = dynamic(
+  () => import('@/features/admin/components/GeneralFeedbackTable').then((mod) => mod.GeneralFeedbackTable),
+  {
+    loading: () => <div className="text-sm text-slate-500">Loading app feedbacks...</div>,
+    ssr: false,
+  }
+);
+
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminDashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -228,16 +236,20 @@ export default function AdminDashboardPage() {
 
         {/* Support Tickets & Feedback Section */}
         <div className="grid grid-cols-1 gap-6 md:gap-8 lg:grid-cols-2">
+          {/* Feedbacks Column */}
           <div className="w-full space-y-8">
-            <div>
-              {/* <h2 className="mb-4 text-xl font-bold">Payment Exit Reasons</h2> */}
-              <PaymentExitAnalytics />
+            <div className="rounded-2xl border border-emerald-100 bg-white p-1 shadow-sm ring-4 ring-emerald-50/50">
+              <GeneralFeedbackTable />
             </div>
-            <div>
-              <h2 className="mb-4 text-xl font-bold">User Feedbacks</h2>
+            
+            <div className="rounded-2xl border border-indigo-100 bg-white p-1 shadow-sm ring-4 ring-indigo-50/50">
               <FeedbackTable />
             </div>
+            
+            <PaymentExitAnalytics />
           </div>
+
+          {/* Tickets Column */}
           <div className="w-full">
             <h2 className="mb-4 text-xl font-bold">Recent Support Tickets</h2>
             <AdminTicketsList />
