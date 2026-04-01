@@ -45,6 +45,7 @@ export interface TestAttemptDetail {
   startTime: Date;
   endTime: Date | null;
   dayOfWeek: string;
+  maxMarks: number;
 }
 
 /**
@@ -239,6 +240,7 @@ export async function getUserTestHistory(userId: string): Promise<TestAttemptDet
       startTime: r.startTime,
       endTime: r.endTime,
       dayOfWeek: DAYS[startDate.getDay()],
+      maxMarks: maxMarks,
     };
   });
 }

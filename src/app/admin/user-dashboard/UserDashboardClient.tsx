@@ -477,12 +477,12 @@ function TestHistoryRow({ test }: { test: TestAttemptDetail }) {
           >
             {test.totalQuestions} Qs
           </span>
-          <span
-            className="hidden text-[9px] text-slate-400 md:inline"
-            title="questions table count vs attempt_answers rows"
-          >
-            q:{test.sourceQuestionsCount || test.totalQuestions} a:{test.sourceAnswersCount}
-          </span>
+          {test.isCompleted && test.endTime && (
+            <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-slate-500">
+              ⏱️ {Math.floor((new Date(test.endTime).getTime() - new Date(test.startTime).getTime()) / 60000)}m{' '}
+              {Math.floor(((new Date(test.endTime).getTime() - new Date(test.startTime).getTime()) % 60000) / 1000)}s
+            </span>
+          )}
         </div>
       </div>
 
@@ -503,14 +503,18 @@ function TestHistoryRow({ test }: { test: TestAttemptDetail }) {
       <div className="shrink-0">
         <div
           className={cn(
-            'rounded-lg px-2 py-1 text-[10px] font-black md:text-xs',
+            'flex flex-col items-end rounded-lg px-2 py-1 text-[10px] font-black shadow-sm md:text-xs',
             test.netScore >= 0
-              ? 'bg-emerald-50 text-emerald-700'
-              : 'bg-rose-50 text-rose-700'
+              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+              : 'bg-rose-50 text-rose-700 border border-rose-100'
           )}
         >
-          {test.netScore >= 0 ? '+' : ''}{test.netScore}
-          <span className="ml-1 text-[9px] opacity-80">({test.scorePercentage}%)</span>
+          <div className="flex items-center gap-1">
+            <span className="text-slate-400 opacity-60">Score:</span>
+            <span>{test.netScore >= 0 ? '+' : ''}{test.netScore}</span>
+            <span className="text-slate-400 opacity-60">/ {test.maxMarks}</span>
+          </div>
+          <span className="text-[9px] opacity-80">{test.scorePercentage}% Accuracy</span>
         </div>
       </div>
 
