@@ -8,6 +8,7 @@ import { unstable_cache } from 'next/cache';
 import ViewAllQuestionsClient from './ViewAllQuestionsClient';
 import { getUnitDistributionStats } from '@/actions/pyq-analytics';
 import { getScopedStateServiceYear, PYQ_SCOPE_START_YEAR, PYQ_SCOPE_END_YEAR } from '@/features/tests/utils/pyq-scope';
+import { getYearFromTestId } from '@/lib/pyq-constants';
 
 // Cache for 1 hour
 export const revalidate = 3600;
@@ -49,7 +50,8 @@ const getQuestionsWithDetails = unstable_cache(
       .where(inArray(questions.id, questionIds));
 
     return questionData.map((q) => {
-      const yearMatch = q.testTitle?.match(/(20\d{2})/);
+      // Use getYearFromTestId for accurate year extraction instead of regex on title
+      const year = getYearFromTestId(q.testId);
       return {
         id: q.id,
         text: q.text,
@@ -60,7 +62,7 @@ const getQuestionsWithDetails = unstable_cache(
         correctAnswer: q.correctAnswer !== null ? Number(q.correctAnswer) : undefined,
         explanation: q.explanation,
         explanationEn: q.explanationEn,
-        year: yearMatch ? parseInt(yearMatch[1]) : 2020,
+        year,
         qNo: q.order,
         subject: q.subject,
       };
