@@ -2,37 +2,32 @@
 
 import { db } from '@/db';
 import { userAttempts, tests, questions, attemptAnswers, syllabusTopics } from '@/db/schema';
-import { eq, inArray } from 'drizzle-orm';
-import { unstable_cache, revalidateTag } from 'next/cache';
+import { eq, inArray, and, isNotNull, isNull } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { cachedData } from '@/lib/cache';
+import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 
 // 🎯 MPPSC Expected Cutoff (based on historical data)
 const EXPECTED_CUTOFF_PERCENTAGE = 80;
 
+const getAttemptTotalMarks = (attempt: any): number => {
+  const questionBasedMarks = (attempt.totalQuestions || 0) * 3;
+  if (questionBasedMarks > 0) return questionBasedMarks;
+  if ((attempt.totalMarks || 0) > 0) return attempt.totalMarks;
+  return 60;
+};
+
 // Cache Analytics per user for 5 minutes to avoid DB spam on refresh
 export const getUserAnalytics = async (userId: string) => {
   if (!userId) return null;
-
-  const getCachedAnalytics = unstable_cache(
-    async (uid: string) => {
-      // ... The entire logic ...
-      return await fetchAnalyticsInternal(uid);
-    },
-    [`user-analytics-${userId}`],
-    { revalidate: 300, tags: [`analytics-${userId}`] }
-  );
-
-  return await getCachedAnalytics(userId);
+  return await fetchAnalyticsInternal(userId);
 };
 
 // Action to explicitly revalidate analytics cache (for Client Components)
 export async function revalidateAnalyticsAction() {
-  const user = await verifyAuth();
-  if (user) {
-    revalidateTag(`analytics-${user.id}`, { expire: 0 });
-  }
+  // Analytics is now fetched fresh on each request.
+  return;
 }
 
 /**
@@ -61,16 +56,14 @@ function calculateExamInsights(
   const recent5 = sortedAttempts.slice(0, 5);
   const previous5 = sortedAttempts.slice(5, 10);
 
-  const calcAvg = (arr: any[]) => {
-    if (arr.length === 0) return 0;
-    const total = arr.reduce((sum, a) => {
-      // Fix: Ensure maxMarks is never 0 or too small
-      const questionBasedMarks = (a.totalQuestions || 0) * 3;
-      const maxMarks = questionBasedMarks > 0 ? questionBasedMarks : (a.totalMarks || 60);
-      // Fix: Clamp percentage to 0-100 range
-      const pct = Math.min(100, Math.max(0, ((a.score || 0) / maxMarks) * 100));
-      return sum + pct;
-    }, 0);
+    const calcAvg = (arr: any[]) => {
+      if (arr.length === 0) return 0;
+      const total = arr.reduce((sum, a) => {
+        const maxMarks = getAttemptTotalMarks(a);
+        // Fix: Clamp percentage to 0-100 range
+        const pct = Math.min(100, Math.max(0, ((a.score || 0) / maxMarks) * 100));
+        return sum + pct;
+      }, 0);
     return Math.round(total / arr.length);
   };
 
@@ -87,8 +80,7 @@ function calculateExamInsights(
 
   // 3. Consistency Score (Low variance = consistent)
   const percentages = attempts.map(a => {
-    const questionBasedMarks = (a.totalQuestions || 0) * 3;
-    const maxMarks = questionBasedMarks > 0 ? questionBasedMarks : (a.totalMarks || 60);
+    const maxMarks = getAttemptTotalMarks(a);
     // Clamp to 0-100
     return Math.min(100, Math.max(0, ((a.score || 0) / maxMarks) * 100));
   });
@@ -214,7 +206,7 @@ function calculateExamInsights(
 // Extracted internal function
 async function fetchAnalyticsInternal(userId: string) {
   try {
-    // 1. Fetch all completed attempts for the user
+    // 1. Fetch only completed, non-deleted attempts for the user
     const attempts = await db
       .select({
         id: userAttempts.id,
@@ -234,7 +226,14 @@ async function fetchAnalyticsInternal(userId: string) {
       })
       .from(userAttempts)
       .leftJoin(tests, eq(userAttempts.testId, tests.id))
-      .where(eq(userAttempts.userId, userId));
+      .where(
+        and(
+          eq(userAttempts.userId, userId),
+          eq(userAttempts.isCompleted, true),
+          isNotNull(userAttempts.endTime),
+          isNull(userAttempts.deletedAt)
+        )
+      );
 
     if (!attempts.length) {
       return {
@@ -248,6 +247,39 @@ async function fetchAnalyticsInternal(userId: string) {
         },
       };
     }
+
+    const attemptIds = attempts.map((a) => a.id);
+
+    // 1.5 Derive attempt score from answer-level data (source of truth for accuracy UI)
+    const derivedScoreByAttempt = new Map<string, number>();
+    if (attemptIds.length > 0) {
+      const scoredRows = await db
+        .select({
+          attemptId: attemptAnswers.attemptId,
+          isCorrect: attemptAnswers.isCorrect,
+        })
+        .from(attemptAnswers)
+        .where(inArray(attemptAnswers.attemptId, attemptIds));
+
+      scoredRows.forEach((row) => {
+        const current = derivedScoreByAttempt.get(row.attemptId) ?? 0;
+        if (row.isCorrect == null) {
+          derivedScoreByAttempt.set(row.attemptId, current);
+          return;
+        }
+
+        const delta = row.isCorrect
+          ? SCORING_CONFIG.MARKS_PER_QUESTION
+          : -SCORING_CONFIG.NEGATIVE_MARKING;
+        derivedScoreByAttempt.set(row.attemptId, Number((current + delta).toFixed(2)));
+      });
+    }
+
+    // Prefer derived score when answer rows exist (fixes stale/incorrect user_attempts.score)
+    const attemptsWithScore = attempts.map((a) => ({
+      ...a,
+      score: derivedScoreByAttempt.has(a.id) ? derivedScoreByAttempt.get(a.id)! : (a.score || 0),
+    }));
 
     // 2. Calculate Overall Stats
     let totalPercentage = 0;
@@ -267,7 +299,6 @@ async function fetchAnalyticsInternal(userId: string) {
     }
 
     // 3. Granular Analysis by Subject (Question Level)
-    const attemptIds = attempts.map((a) => a.id);
 
     let subjectStats: Record<
       string,
@@ -276,7 +307,7 @@ async function fetchAnalyticsInternal(userId: string) {
 
     if (attemptIds.length > 0) {
       // Limit to last 50 attempts for performance optimization
-      const recentAttemptIds = attemptIds.slice(0, 50);
+      const recentAttemptIds = attemptsWithScore.map((a) => a.id).slice(0, 50);
 
       // Optimized query: Use inArray instead of raw SQL IN for safety and better Drizzle support
       const answersData = await db
@@ -299,7 +330,7 @@ async function fetchAnalyticsInternal(userId: string) {
 
           // Fallback: If subject is missing (e.g. 'General'), try to infer from Test Topic
           if (!subject || subject === 'General') {
-            const attempt = attempts.find((a) => a.id === ans.attemptId);
+            const attempt = attemptsWithScore.find((a) => a.id === ans.attemptId);
             if (attempt) {
               if (attempt.topicId && topicMap.has(attempt.topicId)) {
                 const topic = topicMap.get(attempt.topicId);
@@ -341,14 +372,12 @@ async function fetchAnalyticsInternal(userId: string) {
       });
     }
 
-    attempts.forEach((attempt) => {
+    attemptsWithScore.forEach((attempt) => {
       // Logic Update: User requested "Exam Pattern" calculation.
       // Instead of trusting DB totalMarks, we calculate: Total Questions * 3
       // This ensures 100% accuracy in logic.
 
-      const estimatedMaxMarks = (attempt.totalQuestions || 0) * 3;
-      // Fallback to DB totalMarks if question count is missing (legacy)
-      const finalMaxMarks = estimatedMaxMarks > 0 ? estimatedMaxMarks : attempt.totalMarks || 1;
+      const finalMaxMarks = getAttemptTotalMarks(attempt);
 
       if (finalMaxMarks > 0) {
         const percentage = Math.min(100, ((attempt.score || 0) / finalMaxMarks) * 100);
@@ -427,9 +456,9 @@ async function fetchAnalyticsInternal(userId: string) {
     // User requested: "Recent history me sab test dikhe" but "jo latest attempt ho wahi rakhna h" (Keep only latest attempt of each unique test).
     const uniqueAttemptsMap = new Map();
     // Sort by date desc first so the first one we see is the latest
-    attempts.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+    attemptsWithScore.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
 
-    attempts.forEach((a) => {
+    attemptsWithScore.forEach((a) => {
       if (!uniqueAttemptsMap.has(a.testId)) {
         uniqueAttemptsMap.set(a.testId, a);
       }
@@ -478,6 +507,7 @@ async function fetchAnalyticsInternal(userId: string) {
 
       return {
         ...activity,
+        totalMarks: getAttemptTotalMarks(activity),
         unitName,
         testTitle: displayTitle,
         testTitleHi: displayTitleHi,
@@ -489,11 +519,11 @@ async function fetchAnalyticsInternal(userId: string) {
     });
 
     // 🎯 Calculate Exam Expert Insights
-    const examInsights = calculateExamInsights(attempts, subjectStats, overallAvg);
+    const examInsights = calculateExamInsights(attemptsWithScore, subjectStats, overallAvg);
 
     return {
       overallScore: overallAvg,
-      totalTests: attempts.length, // Total tests is total attempts (or unique? User said "jo latest h usi ko store karna h". Assuming total tests count is unique tests taken? Let's keep attempts.length for Total Count as "Tests Taken" usually means attempts. But Recent History needs unique.)
+      totalTests: attemptsWithScore.length, // Total tests is total attempts (or unique? User said "jo latest h usi ko store karna h". Assuming total tests count is unique tests taken? Let's keep attempts.length for Total Count as "Tests Taken" usually means attempts. But Recent History needs unique.)
       // Actually, "Tests Taken" usually implies total attempts. But "Recent History" shows unique tests.
       // If user took Test A 5 times, History shows Test A (latest).
       mastery,

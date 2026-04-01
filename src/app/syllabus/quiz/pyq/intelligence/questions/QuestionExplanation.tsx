@@ -14,10 +14,10 @@ export default function QuestionExplanation({
   explanation,
   explanationEn,
   isHindi,
-  compact = false
+  compact = false,
 }: QuestionExplanationProps) {
-  const rawText = isHindi ? explanation : (explanationEn || explanation);
-  
+  const rawText = isHindi ? explanation : explanationEn || explanation;
+
   if (!rawText) return null;
 
   const textToParse = rawText;
@@ -41,7 +41,7 @@ export default function QuestionExplanation({
 
   const MARKERS = {
     FACT: '**💡 Exam Fact',
-    TIP: '**🧠 Memory Tip', 
+    TIP: '**🧠 Memory Tip',
     SCAM: '**🚫 Scam Alert',
   };
 
@@ -98,16 +98,11 @@ export default function QuestionExplanation({
 
   return (
     <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
-      <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-amber-400">
+      <h4 className="mb-3 text-xs font-bold tracking-wider text-amber-400 uppercase">
         {isHindi ? 'व्याख्या' : 'Explanation'}
       </h4>
-      
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="space-y-3.5"
-      >
+
+      <motion.div variants={container} initial="hidden" animate="show" className="space-y-3.5">
         {/* Core Logic */}
         {sections.logic && (
           <motion.div variants={item}>
@@ -146,9 +141,7 @@ export default function QuestionExplanation({
               <Lightbulb size={12} className="shrink-0" />
               {isHindi ? 'एग्जाम फैक्ट' : 'Exam Fact'}
             </h5>
-            <p className="text-sm leading-relaxed text-blue-200/90">
-              {sections.fact}
-            </p>
+            <p className="text-sm leading-relaxed text-blue-200/90">{sections.fact}</p>
           </motion.div>
         )}
 
@@ -159,7 +152,7 @@ export default function QuestionExplanation({
               <Brain size={12} className="shrink-0" />
               {isHindi ? 'मेमोरी टिप' : 'Memory Tip'}
             </h5>
-            <p className="rounded-xl border border-purple-500/20 bg-purple-500/10 px-3 py-2 text-sm leading-relaxed italic text-purple-200/90">
+            <p className="rounded-xl border border-purple-500/20 bg-purple-500/10 px-3 py-2 text-sm leading-relaxed text-purple-200/90 italic">
               {sections.tip}
             </p>
           </motion.div>

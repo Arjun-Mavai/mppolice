@@ -131,7 +131,17 @@ function ActivityItem({
 }) {
   const { language } = useSettingsStore();
   const hi = language === 'hi';
-  const accuracy = Math.round(((activity.score || 0) / (activity.totalMarks || 60)) * 100);
+  const computedTotalMarks =
+    typeof activity.totalMarks === 'number' && activity.totalMarks > 0
+      ? activity.totalMarks
+      : undefined;
+  const fallbackTotalMarks =
+    typeof (activity as any).totalQuestions === 'number' && (activity as any).totalQuestions > 0
+      ? (activity as any).totalQuestions * 3
+      : 60;
+  const denominator = computedTotalMarks ?? fallbackTotalMarks;
+  const rawAccuracy = ((activity.score || 0) / denominator) * 100;
+  const accuracy = Math.max(0, Math.min(100, Math.round(rawAccuracy)));
 
   return (
     <motion.div
@@ -140,14 +150,14 @@ function ActivityItem({
       className="group flex cursor-pointer items-center justify-between border-b border-slate-100 px-6 py-5 transition-all last:border-0 hover:bg-slate-50"
     >
       <div className="flex min-w-0 items-center gap-4">
-        <div
+        {/* <div
           className={cn(
             'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border text-sm font-black shadow-sm transition-transform group-hover:scale-105 group-hover:rotate-3',
             accuracyStyle(accuracy)
           )}
         >
           {accuracy}%
-        </div>
+        </div> */}
 
         <div className="min-w-0 space-y-1">
           <div className="flex items-center gap-2">
@@ -267,7 +277,9 @@ export default function AnalyticsDashboardClient({
                 <p className="text-[10px] font-black tracking-widest text-slate-500 uppercase opacity-70">
                   {stat.label}
                 </p>
-                <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-900">{stat.value}</h3>
+                <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-900">
+                  {stat.value}
+                </h3>
               </CardContent>
             </Card>
           </motion.div>
@@ -398,7 +410,7 @@ export default function AnalyticsDashboardClient({
       </div>
 
       {/* 📊 Subject Mastery View - Mobile Only (Bhai ke liye layout!) */}
-      <SubjectMasteryWidget mastery={mastery} className="lg:hidden mb-10" />
+      <SubjectMasteryWidget mastery={mastery} className="mb-10 lg:hidden" />
 
       {/* 📜 Recent Activity History */}
       <Card className="overflow-hidden border border-slate-200 bg-white shadow-sm">
@@ -438,9 +450,7 @@ export default function AnalyticsDashboardClient({
                     key={activity.id}
                     activity={activity}
                     showType={activeTab === 'ALL'}
-                    onClick={() =>
-                      router.push(`/syllabus/analytics/history/${activity.id}`)
-                    }
+                    onClick={() => router.push(`/syllabus/analytics/history/${activity.id}`)}
                   />
                 ))
               ) : (

@@ -11,18 +11,36 @@ import {
   Users,
   Activity,
   Trophy,
-  Clock,
+  TrendingUp,
   ChevronDown,
   ChevronUp,
+  FileText,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  Medal,
+  Calendar,
+  Target,
+  Crown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
-import type { UserWithStats } from './actions';
+import type { UserWithStats, TestAttemptDetail } from './actions';
+import { getUserTestHistory } from './actions';
 
 const TIER_COLORS: Record<string, string> = {
   pro: 'bg-amber-100 text-amber-700',
   lite: 'bg-blue-100 text-blue-700',
   free: 'bg-slate-100 text-slate-600',
+};
+
+const TEST_TYPE_COLORS: Record<string, string> = {
+  FLT: 'bg-violet-100 text-violet-700',
+  UNIT: 'bg-blue-100 text-blue-700',
+  CSAT: 'bg-amber-100 text-amber-700',
+  PYQ: 'bg-emerald-100 text-emerald-700',
+  TOPIC: 'bg-rose-100 text-rose-700',
+  MISC: 'bg-slate-100 text-slate-600',
 };
 
 interface Props {
@@ -34,6 +52,8 @@ export default function UserDashboardClient({ users }: Props) {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<'recent' | 'attempts' | 'score'>('recent');
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [testHistory, setTestHistory] = useState<Record<string, TestAttemptDetail[]>>({});
+  const [loadingHistory, setLoadingHistory] = useState<string | null>(null);
   const PAGE_SIZE = 30;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
@@ -41,7 +61,12 @@ export default function UserDashboardClient({ users }: Props) {
   const totalUsers = users.length;
   const activeUsers = users.filter((u) => u.totalAttempts > 0).length;
   const totalAttempts = users.reduce((s, u) => s + u.totalAttempts, 0);
-  const avgAttempts = activeUsers > 0 ? Math.round(totalAttempts / activeUsers) : 0;
+
+  // Top 10 performers (by avg score, min 3 attempts)
+  const topPerformers = [...users]
+    .filter((u) => u.totalAttempts >= 3 && u.avgScore != null && u.avgScore > 0)
+    .sort((a, b) => (b.avgScore ?? 0) - (a.avgScore ?? 0))
+    .slice(0, 10);
 
   // Filter + Sort
   const filtered = users
@@ -62,59 +87,137 @@ export default function UserDashboardClient({ users }: Props) {
   const visible = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
 
+  // Load test history when user is expanded
+  const handleExpand = async (userId: string) => {
+    if (expandedUser === userId) {
+      setExpandedUser(null);
+      return;
+    }
+
+    setExpandedUser(userId);
+
+    // Load history if not already loaded
+    if (!testHistory[userId]) {
+      setLoadingHistory(userId);
+      try {
+        const history = await getUserTestHistory(userId);
+        setTestHistory((prev) => ({ ...prev, [userId]: history }));
+      } catch (error) {
+        console.error('Failed to load test history', error);
+      } finally {
+        setLoadingHistory(null);
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
-      <div className="mx-auto max-w-6xl space-y-6 p-6">
+      <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => router.push('/admin/dashboard')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
-                <Users className="h-6 w-6 text-slate-700" />
-                User Dashboard
-              </h1>
-              <p className="text-sm text-slate-500">
-                Har user ki test history aur performance — ek nazar me
-              </p>
-            </div>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => router.push('/admin/dashboard')}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="flex items-center gap-2 text-xl font-black text-slate-900 md:text-2xl">
+              <Users className="h-5 w-5 text-slate-700 md:h-6 md:w-6" />
+              Student Dashboard
+            </h1>
+            <p className="text-xs text-slate-500 md:text-sm">
+              Performance tracking • Test history • Insights
+            </p>
           </div>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-3 gap-3">
           <SummaryCard
             icon={<Users className="h-4 w-4" />}
-            label="Total Users"
+            label="Students"
             value={totalUsers}
             color="blue"
           />
           <SummaryCard
             icon={<Activity className="h-4 w-4" />}
-            label="Active Users"
+            label="Active"
             value={activeUsers}
             color="emerald"
           />
           <SummaryCard
             icon={<Trophy className="h-4 w-4" />}
-            label="Total Attempts"
+            label="Tests"
             value={totalAttempts}
             color="violet"
           />
-          <SummaryCard
-            icon={<Clock className="h-4 w-4" />}
-            label="Avg Attempts/User"
-            value={avgAttempts}
-            color="amber"
-          />
         </div>
+
+        {/* Top Performers Section */}
+        {topPerformers.length > 0 && (
+          <Card className="border-amber-200 bg-gradient-to-br from-amber-50/50 to-white">
+            <CardContent className="p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Crown className="h-4 w-4 text-amber-600" />
+                <h2 className="text-sm font-black uppercase tracking-wide text-amber-800">
+                  Top Performers
+                </h2>
+                <span className="text-[10px] text-amber-600">(min 3 tests)</span>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+                {topPerformers.map((user, idx) => (
+                  <div
+                    key={user.id}
+                    className={cn(
+                      'flex items-center gap-2 rounded-xl border p-2.5 transition-all hover:shadow-sm',
+                      idx === 0
+                        ? 'border-amber-300 bg-amber-100/50'
+                        : idx === 1
+                          ? 'border-slate-300 bg-slate-100/50'
+                          : idx === 2
+                            ? 'border-orange-200 bg-orange-50/50'
+                            : 'border-slate-100 bg-white'
+                    )}
+                  >
+                    {/* Rank */}
+                    <div
+                      className={cn(
+                        'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black',
+                        idx === 0
+                          ? 'bg-amber-500 text-white'
+                          : idx === 1
+                            ? 'bg-slate-400 text-white'
+                            : idx === 2
+                              ? 'bg-orange-400 text-white'
+                              : 'bg-slate-200 text-slate-600'
+                      )}
+                    >
+                      {idx + 1}
+                    </div>
+                    {/* Info */}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-bold text-slate-800">
+                        {user.name || user.email.split('@')[0]}
+                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-emerald-600">
+                          {user.avgScore?.toFixed(0)}%
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          • {user.totalAttempts} tests
+                        </span>
+                      </div>
+                    </div>
+                    {idx < 3 && <Medal className="h-4 w-4 text-amber-500" />}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Search + Sort */}
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
-            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search by name or email..."
               className="pl-10"
@@ -132,57 +235,91 @@ export default function UserDashboardClient({ users }: Props) {
                 size="sm"
                 variant={sortBy === s ? 'default' : 'outline'}
                 onClick={() => setSortBy(s)}
-                className="capitalize"
+                className="text-xs"
               >
-                {s === 'recent' ? '🕐 Recent' : s === 'attempts' ? '🔢 Attempts' : '🏆 Score'}
+                {s === 'recent' ? '🕐 Recent' : s === 'attempts' ? '🔢 Tests' : '🏆 Score'}
               </Button>
             ))}
           </div>
         </div>
 
-        <p className="text-xs text-slate-400">{filtered.length} users found</p>
+        <p className="text-xs text-slate-400">{filtered.length} students found</p>
 
         {/* User List */}
         <div className="space-y-2">
           {visible.map((user) => {
             const isExpanded = expandedUser === user.id;
+            const userHistory = testHistory[user.id] || [];
+            const isLoading = loadingHistory === user.id;
+
             return (
               <Card key={user.id} className="border transition-all hover:shadow-sm">
-                <CardContent className="p-4">
+                <CardContent className="p-3 md:p-4">
                   {/* Main Row */}
                   <div
-                    className="flex cursor-pointer items-center gap-4"
-                    onClick={() => setExpandedUser(isExpanded ? null : user.id)}
+                    className="flex cursor-pointer items-center gap-3 md:gap-4"
+                    onClick={() => handleExpand(user.id)}
                   >
                     {/* Avatar */}
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600 md:h-10 md:w-10">
                       {(user.name?.[0] || user.email[0]).toUpperCase()}
                     </div>
 
                     {/* Info */}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="truncate text-sm font-semibold text-slate-900">
+                        <h3 className="truncate text-sm font-bold text-slate-900">
                           {user.name || 'No Name'}
                         </h3>
-                        <Badge className={cn('text-[10px]', TIER_COLORS[user.planTier || 'free'])}>
+                        <Badge className={cn('text-[9px]', TIER_COLORS[user.planTier || 'free'])}>
                           {user.planTier || 'free'}
                         </Badge>
                       </div>
-                      <p className="truncate text-xs text-slate-400">{user.email}</p>
+                      <p className="truncate text-[11px] text-slate-400">{user.email}</p>
                     </div>
 
-                    {/* Quick Stats */}
-                    <div className="hidden shrink-0 items-center gap-4 text-xs text-slate-500 sm:flex">
-                      <span className="font-bold text-slate-700">
-                        {user.totalAttempts} attempts
-                      </span>
-                      {user.avgScore != null && (
-                        <span className="font-bold text-emerald-600">avg {user.avgScore}%</span>
+                    {/* Quick Stats - Desktop */}
+                    <div className="hidden shrink-0 items-center gap-3 text-xs sm:flex">
+                      <div className="flex items-center gap-1 font-bold text-slate-700">
+                        <Target className="h-3.5 w-3.5 text-slate-400" />
+                        {user.totalAttempts}
+                      </div>
+                      {user.avgScore != null && user.avgScore > 0 && (
+                        <div
+                          className={cn(
+                            'rounded-md px-2 py-0.5 text-xs font-bold',
+                            user.avgScore >= 70
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : user.avgScore >= 50
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-rose-100 text-rose-700'
+                          )}
+                        >
+                          {user.avgScore.toFixed(0)}%
+                        </div>
                       )}
                       {user.lastActiveAt && (
-                        <span className="text-slate-400">
-                          {formatRelativeDate(new Date(user.lastActiveAt))}
+                        <span className="text-[11px] text-slate-400">
+                          {formatSmartDate(new Date(user.lastActiveAt))}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Quick Stats - Mobile */}
+                    <div className="flex shrink-0 items-center gap-2 text-xs sm:hidden">
+                      <span className="font-bold text-slate-600">{user.totalAttempts}</span>
+                      {user.avgScore != null && user.avgScore > 0 && (
+                        <span
+                          className={cn(
+                            'font-bold',
+                            user.avgScore >= 70
+                              ? 'text-emerald-600'
+                              : user.avgScore >= 50
+                                ? 'text-amber-600'
+                                : 'text-rose-600'
+                          )}
+                        >
+                          {user.avgScore.toFixed(0)}%
                         </span>
                       )}
                     </div>
@@ -198,40 +335,28 @@ export default function UserDashboardClient({ users }: Props) {
 
                   {/* Expanded Details */}
                   {isExpanded && (
-                    <div className="mt-4 border-t border-slate-100 pt-4">
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+                    <div className="mt-4 space-y-4 border-t border-slate-100 pt-4">
+                      {/* Category Stats */}
+                      <div className="grid grid-cols-5 gap-2">
                         <CategoryStat label="FLT" count={user.fltCount} emoji="📝" color="violet" />
                         <CategoryStat label="Unit" count={user.unitCount} emoji="📚" color="blue" />
-                        <CategoryStat
-                          label="CSAT"
-                          count={user.csatCount}
-                          emoji="🧠"
-                          color="amber"
-                        />
-                        <CategoryStat
-                          label="PYQ"
-                          count={user.pyqCount}
-                          emoji="📜"
-                          color="emerald"
-                        />
-                        <CategoryStat
-                          label="Topic"
-                          count={user.topicCount}
-                          emoji="🎯"
-                          color="rose"
-                        />
+                        <CategoryStat label="CSAT" count={user.csatCount} emoji="🧠" color="amber" />
+                        <CategoryStat label="PYQ" count={user.pyqCount} emoji="📜" color="emerald" />
+                        <CategoryStat label="Topic" count={user.topicCount} emoji="🎯" color="rose" />
                       </div>
-                      <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-400">
+
+                      {/* Quick Info */}
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500">
                         <span>
-                          Completed:{' '}
-                          <strong className="text-slate-600">
+                          <strong className="text-slate-700">
                             {user.completedAttempts}/{user.totalAttempts}
-                          </strong>
+                          </strong>{' '}
+                          completed
                         </span>
                         <span>
-                          Joined:{' '}
-                          <strong className="text-slate-600">
-                            {user.createdAt
+                          Joined{' '}
+                          <strong className="text-slate-700">
+                            {user.createdAt && isValidDate(new Date(user.createdAt))
                               ? new Date(user.createdAt).toLocaleDateString('en-IN', {
                                   day: 'numeric',
                                   month: 'short',
@@ -240,11 +365,13 @@ export default function UserDashboardClient({ users }: Props) {
                               : 'N/A'}
                           </strong>
                         </span>
-                        {user.lastActiveAt && (
+                        {user.accessExpiresAt && isValidDate(new Date(user.accessExpiresAt)) && (
                           <span>
-                            Last Active:{' '}
-                            <strong className="text-slate-600">
-                              {new Date(user.lastActiveAt).toLocaleDateString('en-IN', {
+                            Expires{' '}
+                            <strong className={cn(
+                              new Date(user.accessExpiresAt) < new Date() ? 'text-rose-600' : 'text-emerald-600'
+                            )}>
+                              {new Date(user.accessExpiresAt).toLocaleDateString('en-IN', {
                                 day: 'numeric',
                                 month: 'short',
                                 year: 'numeric',
@@ -252,12 +379,46 @@ export default function UserDashboardClient({ users }: Props) {
                             </strong>
                           </span>
                         )}
-                        {user.avgScore != null && (
+                        {user.lastActiveAt && isValidDate(new Date(user.lastActiveAt)) && (
                           <span>
-                            Avg Score:{' '}
-                            <strong className="text-emerald-600">{user.avgScore}%</strong>
+                            Active{' '}
+                            <strong className="text-slate-700">
+                              {formatSmartDate(new Date(user.lastActiveAt))}
+                            </strong>
                           </span>
                         )}
+                      </div>
+
+                      {/* Test History Section */}
+                      <div className="rounded-xl border border-slate-200 bg-slate-50/50">
+                        <div className="flex items-center justify-between rounded-t-xl border-b border-slate-200 bg-white px-3 py-2.5 md:px-4">
+                          <h4 className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-slate-700">
+                            <FileText className="h-3.5 w-3.5 text-indigo-600" />
+                            Test History
+                          </h4>
+                          <span className="text-[10px] text-slate-500">
+                            {userHistory.length} tests
+                          </span>
+                        </div>
+
+                        <div className="max-h-[320px] overflow-y-auto p-2">
+                          {isLoading ? (
+                            <div className="flex items-center justify-center py-8 text-slate-400">
+                              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                              Loading...
+                            </div>
+                          ) : userHistory.length === 0 ? (
+                            <div className="py-8 text-center text-sm text-slate-400">
+                              No tests attempted yet
+                            </div>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {userHistory.map((test) => (
+                                <TestHistoryRow key={test.id} test={test} />
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -280,8 +441,90 @@ export default function UserDashboardClient({ users }: Props) {
         )}
 
         {filtered.length === 0 && (
-          <div className="py-16 text-center text-slate-400">No users found.</div>
+          <div className="py-16 text-center text-slate-400">No students found.</div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function TestHistoryRow({ test }: { test: TestAttemptDetail }) {
+  const startDate = new Date(test.startTime);
+
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-slate-100 bg-white p-2.5 transition-colors hover:border-slate-200 md:gap-3 md:p-3">
+      {/* Status */}
+      <div className="shrink-0">
+        {test.isCompleted ? (
+          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+        ) : (
+          <XCircle className="h-4 w-4 text-slate-300" />
+        )}
+      </div>
+
+      {/* Test Info */}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-bold text-slate-800 md:text-sm" title={test.testTitle}>
+          {test.testTitle}
+        </p>
+        <div className="mt-0.5 flex items-center gap-1.5">
+          <Badge className={cn('h-4 text-[8px] md:text-[9px]', TEST_TYPE_COLORS[test.testType])}>
+            {test.testType}
+          </Badge>
+          <span
+            className="text-[9px] text-slate-400 md:text-[10px]"
+            title={`testId: ${test.testId} • attemptId: ${test.id} • userId: ${test.userId}`}
+          >
+            {test.totalQuestions} Qs
+          </span>
+          <span
+            className="hidden text-[9px] text-slate-400 md:inline"
+            title="questions table count vs attempt_answers rows"
+          >
+            q:{test.sourceQuestionsCount || test.totalQuestions} a:{test.sourceAnswersCount}
+          </span>
+        </div>
+      </div>
+
+      {/* Correct/Wrong/Skipped */}
+      <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+        <span className="flex items-center gap-0.5 rounded bg-emerald-50 px-1 py-0.5 text-[9px] font-bold text-emerald-700 sm:px-1.5 sm:text-[10px]">
+          ✓{test.correctAnswers}
+        </span>
+        <span className="flex items-center gap-0.5 rounded bg-rose-50 px-1 py-0.5 text-[9px] font-bold text-rose-700 sm:px-1.5 sm:text-[10px]">
+          ✗{test.wrongAnswers}
+        </span>
+        <span className="hidden sm:flex items-center gap-0.5 rounded bg-slate-100 px-1 py-0.5 text-[9px] font-bold text-slate-500 sm:px-1.5 sm:text-[10px]">
+          ⊘{test.skippedAnswers}
+        </span>
+      </div>
+
+      {/* Net Score */}
+      <div className="shrink-0">
+        <div
+          className={cn(
+            'rounded-lg px-2 py-1 text-[10px] font-black md:text-xs',
+            test.netScore >= 0
+              ? 'bg-emerald-50 text-emerald-700'
+              : 'bg-rose-50 text-rose-700'
+          )}
+        >
+          {test.netScore >= 0 ? '+' : ''}{test.netScore}
+          <span className="ml-1 text-[9px] opacity-80">({test.scorePercentage}%)</span>
+        </div>
+      </div>
+
+      {/* Date & Day */}
+      <div className="shrink-0 text-right">
+        <div className="flex items-center justify-end gap-1 text-[9px] font-bold text-slate-600 sm:text-[11px]">
+          {test.dayOfWeek}
+        </div>
+        <div className="text-[8px] text-slate-400 sm:text-[10px]">
+          {startDate.toLocaleDateString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+          })}
+        </div>
       </div>
     </div>
   );
@@ -306,11 +549,13 @@ function SummaryCard({
   };
   return (
     <Card className="border-slate-100">
-      <CardContent className="flex items-center gap-3 p-4">
+      <CardContent className="flex items-center gap-2 p-3 md:gap-3 md:p-4">
         <div className={cn('rounded-full p-2', colors[color])}>{icon}</div>
         <div>
-          <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">{label}</p>
-          <p className="text-xl font-black text-slate-900">{value}</p>
+          <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 md:text-[10px]">
+            {label}
+          </p>
+          <p className="text-lg font-black text-slate-900 md:text-xl">{value}</p>
         </div>
       </CardContent>
     </Card>
@@ -336,21 +581,54 @@ function CategoryStat({
     rose: 'bg-rose-50 border-rose-100',
   };
   return (
-    <div className={cn('rounded-xl border p-3 text-center', colors[color])}>
-      <div className="text-lg">{emoji}</div>
-      <div className="text-lg font-black text-slate-900">{count}</div>
-      <div className="text-[10px] font-bold text-slate-500 uppercase">{label}</div>
+    <div className={cn('rounded-xl border p-2 text-center md:p-3', colors[color])}>
+      <div className="text-sm md:text-lg">{emoji}</div>
+      <div className="text-base font-black text-slate-900 md:text-lg">{count}</div>
+      <div className="text-[8px] font-bold uppercase text-slate-500 md:text-[10px]">{label}</div>
     </div>
   );
 }
 
-function formatRelativeDate(date: Date): string {
+/**
+ * Smart date formatter - shows meaningful relative/absolute dates
+ */
+function formatSmartDate(date: Date): string {
+  if (!isValidDate(date)) return 'N/A';
+  
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  // Today/Yesterday
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return `${diffDays}d ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-  return `${Math.floor(diffDays / 30)}mo ago`;
+
+  // Within last 7 days - show day name
+  if (diffDays < 7) {
+    return date.toLocaleDateString('en-IN', { weekday: 'short' });
+  }
+
+  // Within last 30 days - show "X days ago"
+  if (diffDays < 30) {
+    return `${diffDays}d ago`;
+  }
+
+  // Within same year - show date without year
+  if (date.getFullYear() === now.getFullYear()) {
+    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  }
+
+  // Older - show full date
+  return date.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: '2-digit',
+  });
+}
+
+/**
+ * Check if date is valid (not 1970, not NaN)
+ */
+function isValidDate(date: Date): boolean {
+  return date instanceof Date && !isNaN(date.getTime()) && date.getFullYear() > 1980;
 }

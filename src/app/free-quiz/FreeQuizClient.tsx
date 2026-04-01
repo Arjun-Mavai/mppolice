@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { Sparkles, Filter, X, BookOpen, Clock, ChevronRight } from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { QuizListItem } from '@/components/QuizListItem';
+import { ConnectSocials } from '@/components/ConnectSocials';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { MPPSC_UNITS } from './constants';
 
@@ -118,21 +119,25 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
         <div className="mx-auto max-w-3xl px-4 pt-4 pb-4 sm:px-6">
           <div className="flex flex-col gap-3">
             {/* Title row */}
-            <div className="flex items-center gap-3">
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                <Sparkles className="h-3 w-3" />
-                {hi ? 'फ्री' : 'Free'}
+            <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-3">
+                <div className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 sm:h-10 sm:w-10">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+                    {hi ? 'MPPSC 2026 — फ्री डेली क्विज़' : 'MPPSC 2026 — Free Daily Quiz'}
+                  </h1>
+                  <p className="text-xs text-slate-500">
+                    {hi
+                      ? 'हर रोज़ नए प्रश्न, बिल्कुल मुफ़्त'
+                      : 'Fresh questions daily, absolutely free'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">
-                  {hi ? 'MPPSC 2026 — फ्री डेली क्विज़' : 'MPPSC 2026 — Free Daily Quiz'}
-                </h1>
-                <p className="text-xs text-slate-500">
-                  {hi
-                    ? 'हर रोज़ नए प्रश्न, बिल्कुल मुफ़्त'
-                    : 'Fresh questions daily, absolutely free'}
-                </p>
-              </div>
+
+              {/* ── Connect with Us — Premium Social Box ──────────────── */}
+              <ConnectSocials />
             </div>
 
             {/* ── Filter Button + Active Filters ──────────────── */}
