@@ -7,7 +7,7 @@ export const CANONICAL_TEST_IDS: Record<number, string> = {
   2020: '5KRVTgTIw07bWNxu20YNl',
   2021: 'ix0FnJV496Rgvw0YHOEFj',
   2022: 'o_rO3J1tSEACKENOLT9QI',
-  2023: 'x0Hhabkk8NNys9cuOd34L',
+  2023: 'mQ1a9hZoTdfSRfkz40K5C',
   2024: '3XmZ0l700BJV3j2FLd0XZ',
   2025: 'D0gf6bklgl3RT-sTnue2n',
 };
