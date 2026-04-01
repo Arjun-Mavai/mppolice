@@ -282,7 +282,8 @@ export function SyllabusTopicSheet({
                         className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-rose-200"
                       >
                         <div className="absolute top-0 right-0 rounded-bl-xl bg-slate-100 px-3 py-1 text-[10px] font-bold tracking-wider text-slate-500 uppercase transition-colors group-hover:bg-rose-50 group-hover:text-rose-600">
-                          {item.year || 'PYQ'} • {item.type || 'PRELIMS'}
+                          {/* // phle yaha item.year || PYQ tha ab isko change kr diya hai */}
+                          {'PYQ'} • {item.type || 'PRELIMS'}
                         </div>
                         <p className="mb-3 pt-2 pr-8 text-base leading-snug font-bold text-slate-800 sm:text-lg">
                           "{item.question}"

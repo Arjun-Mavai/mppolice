@@ -258,10 +258,21 @@ export default function AnalyticsDashboardClient({
         className="grid grid-cols-2 gap-4 md:grid-cols-4"
       >
         {overviewStats.map((stat, idx) => (
-          <motion.div key={idx} variants={item}>
+          <motion.div
+            key={idx}
+            variants={item}
+            whileHover={{ y: -5 }}
+            whileTap={{ scale: 0.98 }}
+            className="cursor-pointer"
+            onClick={() => {
+              if (stat.label.includes('Tests') || stat.label.includes('टैस्ट')) {
+                router.push('/syllabus/test-history');
+              }
+            }}
+          >
             <Card
               className={cn(
-                'overflow-hidden border border-slate-200 bg-white shadow-sm backdrop-blur-sm',
+                'overflow-hidden border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md active:shadow-inner',
                 stat.accent
               )}
             >
@@ -277,9 +288,14 @@ export default function AnalyticsDashboardClient({
                 <p className="text-[10px] font-black tracking-widest text-slate-500 uppercase opacity-70">
                   {stat.label}
                 </p>
-                <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-900">
-                  {stat.value}
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-900">
+                    {stat.value}
+                  </h3>
+                  {(stat.label.includes('Tests') || stat.label.includes('टैस्ट')) && (
+                    <ChevronRight size={16} className="text-slate-400 group-hover:text-indigo-600" />
+                  )}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -416,11 +432,22 @@ export default function AnalyticsDashboardClient({
       <Card className="overflow-hidden border border-slate-200 bg-white shadow-sm">
         <CardHeader className="border-b border-slate-100 bg-slate-50/50 p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <History className="h-5 w-5 text-indigo-500" />
-              <CardTitle className="text-lg font-black tracking-tight text-slate-900">
-                {hi ? 'हालिया प्रयास' : 'Recent Attempts'}
-              </CardTitle>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <History className="h-5 w-5 text-indigo-500" />
+                <CardTitle className="text-lg font-black tracking-tight text-slate-900">
+                  {hi ? 'हालिया प्रयास' : 'Recent Attempts'}
+                </CardTitle>
+              </div>
+
+              {/* 🔗 VIEW ALL BUTTON — Bhai ke liye shortcut! */}
+              <button
+                onClick={() => router.push('/syllabus/test-history')}
+                className="group flex items-center gap-1 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[10px] font-black tracking-widest text-indigo-700 uppercase transition-all hover:bg-indigo-600 hover:text-white"
+              >
+                {hi ? 'सभी देखें' : 'View All'}
+                <ChevronRight size={12} className="transition-transform group-hover:translate-x-0.5" />
+              </button>
             </div>
 
             <div className="no-scrollbar flex gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1">

@@ -1264,64 +1264,50 @@ export function QuizResult({
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* ── Header: Conditional for Guest vs Auth ───────────────── */}
-      {isGuest ? (
-        <div className="sticky top-14 z-40 border-b border-slate-200 bg-white/80 backdrop-blur-md">
-          <div className="mx-auto max-w-3xl px-4 pb-4 pt-4 sm:px-6">
-            <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-              <div className="flex items-center gap-3">
+      {/* ── Header: Unified Light Look for All Users ───────────────── */}
+      <div className="sticky top-14 z-40 border-b border-slate-200 bg-white/80 backdrop-blur-md">
+        <div className="mx-auto max-w-3xl px-4 pb-4 pt-4 sm:px-6">
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-3">
+              {/* If auth user, show Home button to navigate back, else Sparkles */}
+              {!isGuest ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    if (onExit) onExit();
+                    else router.push('/syllabus/quiz');
+                  }}
+                  className="h-10 w-10 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+                >
+                  <Home className="h-5 w-5" />
+                </Button>
+              ) : (
                 <div className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 sm:h-10 sm:w-10">
                   <Sparkles className="h-4 w-4" />
                 </div>
-                <div>
-                  <h1 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">
-                    {isHindi ? 'क्विज़ रिजल्ट' : 'Quiz Result'}
-                  </h1>
-                  <p className="text-xs font-medium text-slate-500">
-                    {isHindi
-                      ? 'अपनी तैयारी को अगले स्तर पर ले जाएं'
-                      : 'Take your preparation to the next level'}
-                  </p>
-                </div>
+              )}
+              <div>
+                <h1 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+                  {title || (isHindi ? 'क्विज़ रिजल्ट' : 'Quiz Result')}
+                </h1>
+                <p className="text-xs font-medium text-slate-500">
+                  {isHindi
+                    ? 'अपनी तैयारी को अगले स्तर पर ले जाएं'
+                    : 'Take your preparation to the next level'}
+                </p>
               </div>
-
-              {/* ── Connect Socials: Bottom on mobile, Side on desktop ────────── */}
-              <ConnectSocials className="w-full sm:w-auto" />
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* Original App-like Dark Header for Auth Users */
-        <div className="sticky top-14 z-40 border-b border-slate-800 bg-slate-900 shadow-md">
-          <div className="mx-auto flex max-w-3xl items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  if (onExit) onExit();
-                  else router.push('/syllabus/quiz');
-                }}
-                className="h-10 w-10 rounded-full text-slate-400 hover:bg-slate-800 hover:text-white"
-              >
-                <Home className="h-5 w-5" />
-              </Button>
-              <h1 className="font-display max-w-[120px] truncate text-lg font-bold text-white sm:max-w-md">
-                {title || 'Results'}
-              </h1>
             </div>
 
-            <div className="flex items-center gap-2">
-              <ConnectSocials
-                variant="dark"
-                className="flex origin-right scale-[0.8] sm:scale-90"
-              />
-              {!disableRetry && (
+            {/* ── Connect Socials + Retry Button ────────── */}
+            <div className="flex w-full items-center justify-between gap-3 sm:w-auto">
+              <ConnectSocials className="flex-1 sm:w-auto" />
+              {!disableRetry && !isGuest && (
                 <Button
                   onClick={onRetry}
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="font-bold text-slate-400 hover:bg-slate-800 hover:text-white"
+                  className="hidden h-9 font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 sm:flex"
                 >
                   <RefreshCw className="mr-2 h-4 w-4" /> Retry
                 </Button>
@@ -1329,7 +1315,7 @@ export function QuizResult({
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       <Tabs defaultValue="result" className="mx-auto w-full max-w-3xl px-4 md:px-0">
         <div className="sticky top-[140px] z-40 border-b border-slate-200/60 bg-slate-50 pt-4 pb-2 shadow-sm/50 sm:top-[118px]">
