@@ -357,7 +357,7 @@ export function QuizResult({
       const isCorrect = userAnswer === q.correctAnswer;
       const isSkipped = userAnswer === undefined;
       const isExpanded = expandedQuestion === q.id;
-      const isLocked = isGuestLocked && !isCorrect;
+      const isLocked = isGuestLocked && (isCorrect || isSkipped);
 
       return (
         <Card
