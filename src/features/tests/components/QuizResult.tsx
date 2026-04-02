@@ -357,7 +357,7 @@ export function QuizResult({
       const isCorrect = userAnswer === q.correctAnswer;
       const isSkipped = userAnswer === undefined;
       const isExpanded = expandedQuestion === q.id;
-      const isLocked = isGuestLocked && !isCorrect;
+      const isLocked = isGuestLocked && (isCorrect || isSkipped);
 
       return (
         <Card
@@ -561,8 +561,25 @@ export function QuizResult({
           <div className="absolute bottom-0 left-0 -mb-20 -ml-20 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl"></div>
 
           <div className="relative z-10">
-            <div className="mb-2 text-sm font-bold text-slate-400 capitalize">
-              {title || 'Test Result'}
+            <div className="mb-2 flex items-center justify-between">
+              <div className="text-sm font-bold text-slate-400 capitalize">
+                {title || 'Test Result'}
+              </div>
+
+              {isGuest && (
+                <Link
+                  href="/"
+                  className="group relative flex items-center gap-2 overflow-hidden rounded-full border border-amber-400/30 bg-slate-950 px-4 py-1.5 text-[10px] font-black tracking-wider text-white uppercase shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all hover:scale-105 hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] active:scale-95"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-amber-500/20 opacity-0 transition-opacity group-hover:opacity-100" />
+                  <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)] bg-[length:250%_250%] animate-[shimmer_3s_infinite]" />
+                  <span className="relative flex items-center gap-1.5">
+                    <Sparkles className="h-3 w-3 text-amber-400 animate-pulse" />
+                    <span>Explore MPPSC 2026 Pro Platform 🚀</span>
+                    <ArrowRight className="h-3 w-3 text-amber-400 transition-transform group-hover:translate-x-1" />
+                  </span>
+                </Link>
+              )}
             </div>
 
             <div className="mt-4 mb-8 flex flex-col items-center justify-between gap-6 sm:flex-row">
