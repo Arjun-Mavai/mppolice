@@ -19,7 +19,9 @@ export type LogCategory =
   | 'email'
   | 'system'
   | 'admin'
-  | 'ui';
+  | 'ui'
+  | 'error-boundary'
+  | 'production-error';
 
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 

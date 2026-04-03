@@ -9,6 +9,7 @@ import { createGuestEntry as createGuestUser } from '@/actions/guest-actions';
 import { GuestResultTeaser } from '@/app/syllabus/quiz/play/GuestResultTeaser';
 import { logger } from '@/lib/logger';
 import { trackFbStandardEvent } from '@/lib/analytics/facebook-pixel';
+import { requestFullscreenSafely, exitFullscreenSafely, isFullscreenActive, isFullscreenSupported } from '@/lib/fullscreen-utils';
 
 import { QuizHeader } from './quiz/QuizHeader';
 import { QuizQuestion } from './quiz/QuizQuestion';
@@ -119,24 +120,26 @@ export function QuizInterface(props: QuizInterfaceProps) {
   };
 
   // ── Fullscreen helpers ──
-  const requestFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      document.documentElement
-        .requestFullscreen()
-        .then(() => {
-          setIsFullscreen(true);
-          localStorage.setItem('mppsc_quiz_fullscreen', 'true');
-        })
-        .catch(() => {});
+  const requestFullscreen = useCallback(async () => {
+    if (!isFullscreenActive()) {
+      const success = await requestFullscreenSafely();
+      if (success) {
+        setIsFullscreen(true);
+        localStorage.setItem('mppsc_quiz_fullscreen', 'true');
+      } else {
+        // Fullscreen failed or not supported - continue without it
+        console.info('Fullscreen not available on this device');
+      }
     }
   }, []);
 
-  const handleConfirmedExit = useCallback(() => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen().then(() => {
+  const handleConfirmedExit = useCallback(async () => {
+    if (isFullscreenActive()) {
+      const success = await exitFullscreenSafely();
+      if (success) {
         setIsFullscreen(false);
         localStorage.removeItem('mppsc_quiz_fullscreen');
-      });
+      }
     }
     onExit();
   }, [onExit]);
@@ -145,7 +148,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
 
   const handleExitCancel = useCallback(() => {
     setShowExitConfirm(false);
-    if (!document.fullscreenElement && !isSubmitted) {
+    if (!isFullscreenActive() && !isSubmitted) {
       requestFullscreen();
     }
   }, [isSubmitted, requestFullscreen]);

@@ -6,6 +6,7 @@ import { Question } from '@/types/quiz';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
+import { ProductionErrorBoundary } from '@/components/ProductionErrorBoundary';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🆓 FREE QUIZ PLAY — GuestQuizInterface reuse karo
@@ -102,21 +103,23 @@ async function FreeQuizDataFetcher({ searchParams }: { searchParams: Promise<{ t
   const disableInstantMode = tags.includes('no-instant-mode');
 
   return (
-    <FreeQuizPlayClient
-      questions={questions}
-      testId={testId}
-      title={testData.title}
-      disableInstantMode={disableInstantMode}
-      user={
-        user
-          ? {
-              name: user.name || 'Guest',
-              email: user.email,
-              mobile: user.phone,
-            }
-          : null
-      }
-    />
+    <ProductionErrorBoundary>
+      <FreeQuizPlayClient
+        questions={questions}
+        testId={testId}
+        title={testData.title}
+        disableInstantMode={disableInstantMode}
+        user={
+          user
+            ? {
+                name: user.name || 'Guest',
+                email: user.email,
+                mobile: user.phone,
+              }
+            : null
+        }
+      />
+    </ProductionErrorBoundary>
   );
 }
 
