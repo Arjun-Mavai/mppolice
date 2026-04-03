@@ -9,6 +9,7 @@ import { Resend } from 'resend';
 import { v4 as uuidv4 } from 'uuid';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { PRICING_DEFAULTS } from '@/config/pricing';
+import { notifyAdminOnPayment, notifyAdminOnEmailFailure } from '@/lib/admin-notify';
 
 /**
  * Payment Verification API FOR UPGRADES 🚀
@@ -196,7 +197,29 @@ export async function POST(req: Request) {
         userId,
         metadata: { to: user.email },
       });
+      
+      // 🚨 Notify admin that user email failed
+      notifyAdminOnEmailFailure({
+        userName: user.name || 'Unknown',
+        userEmail: user.email,
+        errorMessage: typeof emailError === 'object' && emailError !== null && 'message' in emailError 
+          ? String(emailError.message) 
+          : JSON.stringify(emailError),
+        paymentId: razorpay_payment_id,
+      }).catch(() => {});
     }
+
+    // 📧 Notify Admin of Upgrade (Non-blocking)
+    notifyAdminOnPayment({
+      type: 'upgrade',
+      userName: user.name || 'Unknown',
+      userEmail: user.email,
+      planTier: planTier as 'lite' | 'pro',
+      amountInRupees: paidAmount / 100,
+      orderId: razorpay_order_id,
+      paymentId: razorpay_payment_id,
+      isUpgrade: true,
+    }).catch(() => {}); // Fire and forget
 
     // ── Log Activity ──────────────────────────────────────────────
     try {

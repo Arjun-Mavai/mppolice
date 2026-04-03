@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { ConnectSocials } from '@/components/ConnectSocials';
 import {
@@ -33,7 +33,6 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
-import { PremiumExplanation } from './PremiumExplanation';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { getTestLeaderboard } from '@/actions/leaderboard-actions';
 import { revalidateAnalyticsAction } from '@/features/analytics/actions';
@@ -54,6 +53,9 @@ import {
 import { submitTestFeedback, hasUserSubmittedFeedback } from '@/app/actions/feedback';
 import { TestSeriesFeedbackModal } from '@/components/test-series-feedback-modal';
 import type { FeedbackFormType } from '@/lib/schemas/feedback';
+
+// ⚡ LAZY LOAD HEAVY COMPONENTS
+const PremiumExplanation = lazy(() => import('./PremiumExplanation').then(m => ({ default: m.PremiumExplanation })));
 
 interface QuizResultProps {
   questions: Question[];
