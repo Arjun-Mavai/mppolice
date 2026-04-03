@@ -18,6 +18,9 @@ const hostnames = [
 ];
 
 const nextConfig: NextConfig = {
+  // ⚡ REACT 19 COMPILER - AUTO-MEMOIZATION
+  reactCompiler: true,
+  
   images: {
     remotePatterns: [
       ...hostnames.map((hostname) => ({
@@ -32,13 +35,31 @@ const nextConfig: NextConfig = {
       */
     ],
   },
+  
+  // ⚡ Typed Routes for better developer experience (moved from experimental)
+  // typedRoutes: true, // Enable when ready - requires full type generation
+  
   experimental: {
+    // ⚡ Next.js 16 Performance Features
     viewTransition: true,
     prefetchInlining: true,
     appNewScrollHandler: true,
+    
+    // ⚡ OPTIMIZED PACKAGE IMPORTS - Tree shaking for heavy libs
+    optimizePackageImports: [
+      'lucide-react',
+      'framer-motion',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-tabs',
+      'date-fns',
+      'recharts',
+    ],
+    
+    // ⚡ CACHE OPTIMIZATION
     staleTimes: {
-      dynamic: 604800,
-      static: 604800,
+      dynamic: 604800,  // 7 days for dynamic pages
+      static: 604800,   // 7 days for static pages
     },
   },
   async headers() {

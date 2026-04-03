@@ -12,6 +12,7 @@ import { addHours } from 'date-fns';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { appPath } from '@/lib/app-url';
 import { PRICING_DEFAULTS } from '@/config/pricing';
+import { notifyAdminOnPayment, notifyAdminOnEmailFailure } from '@/lib/admin-notify';
 
 /**
  * Payment Verification API - The Trust Center 🏦
@@ -195,12 +196,36 @@ export async function POST(req: Request) {
     });
 
     if (emailError) {
+      // 🚨 User email failed! Log error + notify admin immediately
       logger.error('Failed to send welcome email via Resend', emailError, {
         category: 'email',
         userId,
         metadata: { to: user.email },
       });
+      
+      // 📧 CRITICAL: Admin ko batao ki user ko email nahi gaya
+      // Taaki manually contact kar sake!
+      notifyAdminOnEmailFailure({
+        userName: user.name || 'Unknown',
+        userEmail: user.email,
+        errorMessage: typeof emailError === 'object' && emailError !== null && 'message' in emailError 
+          ? String(emailError.message) 
+          : JSON.stringify(emailError),
+        paymentId: razorpay_payment_id,
+      }).catch(() => {});
     }
+
+    // 📧 Step 9: Notify Admin (Non-blocking)
+    // Admin ko bhi email bhejo ki naya payment aaya hai
+    notifyAdminOnPayment({
+      type: 'new_payment',
+      userName: user.name || 'Unknown',
+      userEmail: user.email,
+      planTier,
+      amountInRupees: paidAmount / 100,
+      orderId: razorpay_order_id,
+      paymentId: razorpay_payment_id,
+    }).catch(() => {}); // Fire and forget, don't block response
 
     // ── Log Activity ──────────────────────────────────────────────
     try {

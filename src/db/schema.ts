@@ -543,12 +543,13 @@ export const guests = sqliteTable(
     id: text('id').primaryKey(),
     name: text('name').notNull(),
     email: text('email'),
-    mobile: text('mobile'),
+    mobile: text('mobile'), // Primary identifier for upsert (last 10 digits stored)
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   },
   (table) => [
     index('idx_guests_email').on(table.email),
-    index('idx_guests_mobile').on(table.mobile),
+    uniqueIndex('idx_guests_mobile_unique').on(table.mobile), // Unique for upsert logic
   ]
 );
 

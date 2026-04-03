@@ -31,6 +31,8 @@ interface Feedback {
 export function FeedbackTable() {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<'rating' | 'latest'>('rating');
+
 
   useEffect(() => {
     fetchFeedbacks();
@@ -41,14 +43,7 @@ export function FeedbackTable() {
       const res = await fetch('/api/admin/test-feedbacks');
       if (res.ok) {
         const data = await res.json();
-        // Sort by rating (5 stars first) then by date
-        const sorted = data.feedbacks.sort((a: Feedback, b: Feedback) => {
-          if (b.overallRating !== a.overallRating) {
-            return b.overallRating - a.overallRating;
-          }
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        });
-        setFeedbacks(sorted);
+        applySort(data.feedbacks, sortBy);
       }
     } catch (error) {
       console.error('Failed to fetch test feedbacks', error);
@@ -56,6 +51,27 @@ export function FeedbackTable() {
       setLoading(false);
     }
   };
+
+  const applySort = (data: Feedback[], mode: 'rating' | 'latest') => {
+    const sorted = [...data].sort((a, b) => {
+      if (mode === 'latest') {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      // Default: Rating desc, then Date desc
+      if (b.overallRating !== a.overallRating) {
+        return b.overallRating - a.overallRating;
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    setFeedbacks(sorted);
+  };
+
+  useEffect(() => {
+    if (feedbacks.length > 0) {
+      applySort(feedbacks, sortBy);
+    }
+  }, [sortBy]);
+
 
   const getDifficultyColor = (level: string) => {
     switch (level) {
@@ -82,8 +98,17 @@ export function FeedbackTable() {
     ? (feedbacks.reduce((sum, f) => sum + f.overallRating, 0) / feedbacks.length).toFixed(1)
     : '0.0';
   
+  const starCounts = {
+    5: feedbacks.filter(f => f.overallRating === 5).length,
+    4: feedbacks.filter(f => f.overallRating === 4).length,
+    3: feedbacks.filter(f => f.overallRating === 3).length,
+    2: feedbacks.filter(f => f.overallRating === 2).length,
+    1: feedbacks.filter(f => f.overallRating === 1).length,
+  };
+
   const excellentCount = feedbacks.filter(f => f.overallRating >= 4).length;
   const needsImprovement = feedbacks.filter(f => f.overallRating < 3).length;
+
 
   if (loading) return <div className="p-8 text-center text-slate-500">Loading test feedbacks...</div>;
 
@@ -98,36 +123,75 @@ export function FeedbackTable() {
           </div>
           
           <div className="flex flex-wrap items-center gap-3">
-            {/* Average Rating */}
-            <div className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 shadow-sm border border-slate-200">
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-black text-slate-900">{avgRating}</span>
-              <span className="text-xs font-medium text-slate-500">avg</span>
+            {/* Rating Breakdown - High End proper display */}
+            <div className="flex flex-col gap-1 rounded-xl bg-white/80 p-3 shadow-inner border border-slate-200/50 min-w-[160px]">
+              {[5, 4, 3, 2, 1].map((star) => {
+                const count = starCounts[star as keyof typeof starCounts];
+                const percentage = feedbacks.length > 0 ? (count / feedbacks.length) * 100 : 0;
+                return (
+                  <div key={star} className="flex items-center gap-3 group">
+                    <div className="flex items-center gap-1 w-10">
+                      <span className="text-[10px] font-black text-slate-600">{star}</span>
+                      <Star size={8} className="fill-slate-400 text-slate-400 group-hover:fill-amber-400 group-hover:text-amber-400 transition-colors" />
+                    </div>
+                    <div className="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden border border-slate-200/50">
+                      <div 
+                        className={cn(
+                          "h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(0,0,0,0.1)]",
+                          star >= 4 ? "bg-gradient-to-r from-emerald-400 to-emerald-500" : 
+                          star === 3 ? "bg-gradient-to-r from-amber-400 to-amber-500" : 
+                          "bg-gradient-to-r from-rose-400 to-rose-500"
+                        )}
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                    <span className={cn(
+                      "text-[10px] font-black w-4 text-right",
+                      count > 0 ? "text-slate-900" : "text-slate-300"
+                    )}>
+                      {count}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* Excellent Count */}
-            {excellentCount > 0 && (
-              <div className="flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 border border-emerald-200">
-                <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
-                <span className="text-xs font-bold text-emerald-700">{excellentCount} Excellent</span>
-              </div>
-            )}
 
-            {/* Needs Improvement */}
-            {needsImprovement > 0 && (
-              <div className="flex items-center gap-1.5 rounded-lg bg-rose-50 px-3 py-1.5 border border-rose-200">
-                <TrendingDown className="h-3.5 w-3.5 text-rose-600" />
-                <span className="text-xs font-bold text-rose-700">{needsImprovement} Low</span>
+            {/* Average Rating */}
+            <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 shadow-[0_8px_16px_-6px_rgba(0,0,0,0.05)] border border-slate-200">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">Average</span>
+                <div className="flex items-center gap-1.5">
+                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  <span className="text-lg font-black text-slate-900 leading-none">{avgRating}</span>
+                </div>
               </div>
-            )}
+            </div>
+
+            {/* Sort Toggle */}
+            <button
+              onClick={() => setSortBy(sortBy === 'rating' ? 'latest' : 'rating')}
+              className={cn(
+                "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition-all duration-300 shadow-md border active:scale-95",
+                sortBy === 'latest' 
+                  ? "bg-gradient-to-br from-indigo-600 to-violet-700 text-white border-indigo-500 shadow-indigo-200" 
+                  : "bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600"
+              )}
+            >
+              <TrendingUp className={cn("h-4 w-4", sortBy === 'latest' ? "text-white" : "text-indigo-600")} />
+              {sortBy === 'latest' ? 'LATEST FIRST' : 'SCORE FIRST'}
+            </button>
 
             {/* Total Count */}
-            <div className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 shadow-sm">
-              <span className="text-xs font-bold text-slate-600">Total: {feedbacks.length}</span>
+            <div className="flex flex-col items-end rounded-xl bg-slate-900 px-4 py-2 text-white shadow-xl border border-slate-800">
+              <span className="text-[9px] font-black uppercase tracking-tighter text-slate-400 leading-none mb-1">Feedback</span>
+              <span className="text-lg font-black leading-none">{feedbacks.length}</span>
             </div>
           </div>
         </div>
       </div>
+
+
 
       <div className="overflow-x-auto">
         <Table>
