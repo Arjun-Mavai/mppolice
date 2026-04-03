@@ -17,7 +17,7 @@ interface GuestResultData {
 
 interface GuestResultStore {
   result: GuestResultData | null;
-  setResult: (data: GuestResultData) => void;
+  setResult: (data: Omit<GuestResultData, 'timestamp'>) => void;
   clearResult: () => void;
   clearOldResults: () => void; // Cleanup old results
 }
