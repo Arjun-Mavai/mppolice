@@ -411,6 +411,8 @@ export function QuizInterface(props: QuizInterfaceProps) {
         title={title}
         testId={testId} // Leaderboard ke liye chahiye
         userId={userId} // User ki ranking dikhane ke liye
+        userName={undefined} // No userName available in this context
+        showFeedbackModal={true}  // Always show feedback modal
       />
     );
   }

@@ -91,6 +91,7 @@ async function AttemptContent({ attemptId }: { attemptId: string }) {
         title={meta.testTitle ?? undefined}
         testId={meta.testId ?? undefined}
         userId={meta.userId ?? undefined}
+        userName={undefined}  // No userName available in analytics history
         disableRetry={true}
         showFeedbackModal={false}
       />

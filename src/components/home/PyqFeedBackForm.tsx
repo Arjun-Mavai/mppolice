@@ -51,6 +51,7 @@ export default function Home() {
           onClose={() => setFeedbackOpen(false)}
           onSubmit={handleFeedbackSubmit}
           testSeriesId="demo-series"
+          userName="Demo User"  // Demo name for testing
         />
 
         {/* SUBMITTED DATA DISPLAY */}

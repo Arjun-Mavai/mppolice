@@ -136,6 +136,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
         testId={`practice-${subject}-${offset}`}
         title={seriesTitle}
         userId={user?.id || null}
+        userName={user?.name || undefined}
         maxRetries={null} // Unlimited
         userAttempts={userAttempts}
         isPro={!!isProUI}
@@ -228,6 +229,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
       testId={testId}
       title={testData.title}
       userId={user?.id || null}
+      userName={user?.name || undefined}
       maxRetries={maxRetries}
       userAttempts={userAttemptsCount}
       isPro={hasPaidPlan}

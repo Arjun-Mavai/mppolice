@@ -27,6 +27,7 @@ interface QuizInterfaceProps {
   testId: string;
   title?: string;
   userId: string | null;
+  userName?: string;
   onExit: () => void;
   onRetry?: () => void;
   isInstantMode?: boolean;
@@ -44,6 +45,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
     disablePalette = false,
     testId,
     userId,
+    userName,
   } = props;
 
   const {
@@ -308,6 +310,8 @@ export function QuizInterface(props: QuizInterfaceProps) {
         title={title}
         testId={testId}
         userId={userId}
+        userName={userName}
+        showFeedbackModal={true}  // Always show feedback modal
       />
     );
   }
@@ -433,8 +437,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
       />
 
       {/* Submission overlay */}
-      {isSubmitting && <PYQFactsLoader variant="overlay" label="Submitting test..." />
-      }
+      {isSubmitting && <PYQFactsLoader variant="overlay" label="Submitting test..." />}
     </div>
   );
 }

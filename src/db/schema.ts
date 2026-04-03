@@ -170,7 +170,9 @@ export const pyqFactBank = sqliteTable(
       .$type<{ testId?: string; questionId?: string; year?: number }[]>()
       .default(sql`'[]'`)
       .notNull(),
-    tags: text('tags', { mode: 'json' }).$type<string[]>().default(sql`'[]'`),
+    tags: text('tags', { mode: 'json' })
+      .$type<string[]>()
+      .default(sql`'[]'`),
     status: text('status', { enum: ['draft', 'published', 'archived'] }).default('draft'),
     source: text('source', { enum: ['manual', 'ai'] }).default('manual'),
     createdBy: text('created_by'),
@@ -236,7 +238,9 @@ export const pyqRepeatedCache = sqliteTable(
     unitTitle: text('unit_title'),
     repeatCount: integer('repeat_count').default(1).notNull(),
     years: text('years', { mode: 'json' }).$type<number[]>().notNull(), // [2020, 2021, 2023]
-    occurrences: text('occurrences', { mode: 'json' }).$type<{ year: number; qNo: number; testId: string }[]>().notNull(),
+    occurrences: text('occurrences', { mode: 'json' })
+      .$type<{ year: number; qNo: number; testId: string }[]>()
+      .notNull(),
     relatedQuestionIds: text('related_question_ids', { mode: 'json' }).$type<string[]>().notNull(), // All question IDs in this cluster
     computedAt: integer('computed_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   },
@@ -357,7 +361,9 @@ export const syllabusTopics = sqliteTable(
 // Test Attempt Limits — category wise max attempts (source of truth)
 // null maxAttempts = unlimited
 export const testAttemptLimits = sqliteTable('test_attempt_limits', {
-  testType: text('test_type', { enum: ['FLT', 'UNIT', 'CSAT', 'PYQ', 'TOPIC', 'MISC'] }).primaryKey(),
+  testType: text('test_type', {
+    enum: ['FLT', 'UNIT', 'CSAT', 'PYQ', 'TOPIC', 'MISC'],
+  }).primaryKey(),
   maxAttempts: integer('max_attempts'), // null = unlimited
 });
 
@@ -495,7 +501,9 @@ export const freeQuizAttempts = sqliteTable(
     totalQuestions: integer('total_questions'),
     percentage: real('percentage'),
     timeTakenSeconds: integer('time_taken_seconds'),
-    completedAt: integer('completed_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+    completedAt: integer('completed_at', { mode: 'timestamp' }).default(
+      sql`(strftime('%s', 'now'))`
+    ),
   },
   (table) => [
     index('idx_free_attempts_test').on(table.testId),
@@ -646,20 +654,27 @@ export const testFeedback = sqliteTable('test_feedback', {
   testId: text('test_id').notNull(),
   userId: text('user_id'), // Optional for guest users
   testType: text('test_type', { enum: ['free', 'premium', 'pyq'] }).notNull(),
-  
+  testName: text('test_name'), // Identifies the test title (e.g., 'Modern History Quiz')
+
   // Feedback ratings
   overallRating: integer('overall_rating').notNull(), // 1-5 stars
-  difficultyLevel: text('difficulty_level', { enum: ['too_easy', 'just_right', 'too_hard'] }).notNull(),
-  questionQuality: text('question_quality', { enum: ['excellent', 'good', 'average', 'poor'] }).notNull(),
-  wouldRecommend: text('would_recommend', { enum: ['definitely', 'probably', 'maybe', 'no'] }).notNull(),
-  
+  difficultyLevel: text('difficulty_level', {
+    enum: ['too_easy', 'just_right', 'too_hard'],
+  }).notNull(),
+  questionQuality: text('question_quality', {
+    enum: ['excellent', 'good', 'average', 'poor'],
+  }).notNull(),
+  wouldRecommend: text('would_recommend', {
+    enum: ['definitely', 'probably', 'maybe', 'no'],
+  }).notNull(),
+
   // Optional text feedback
   comments: text('comments'),
-  
+
   // User Info (Added to identify guest/logged-in users easily)
   userName: text('user_name'),
   userEmail: text('user_email'),
-  
+
   // Metadata
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),

@@ -65,6 +65,7 @@ interface QuizResultProps {
   title?: string;
   testId?: string;
   userId?: string;
+  userName?: string; // Add user name for personalization
   disableRetry?: boolean;
   isGuest?: boolean;
   showFeedbackModal?: boolean;
@@ -81,6 +82,7 @@ export function QuizResult({
   title,
   testId,
   userId,
+  userName,
   disableRetry = false,
   isGuest = false,
   showFeedbackModal = true,
@@ -144,95 +146,9 @@ export function QuizResult({
   const [showSimulatorLogic, setShowSimulatorLogic] = useState(false);
   const [isNavigatingToIntelligence, setIsNavigatingToIntelligence] = useState(false);
 
-  const [showFeedback, setShowFeedback] = useState(false);
-
-  // Ensure ?completed=true is in the URL whenever the result screen is shown.
-  // This means a hard refresh will hit the server with completed=true and redirect
-  // to /syllabus/quiz/pyq instead of reloading the test from scratch.
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    if (url.searchParams.get('completed') !== 'true') {
-      url.searchParams.set('completed', 'true');
-      window.history.replaceState(window.history.state, '', url.toString());
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!showFeedbackModal) return;
-
-    const checkFeedbackStatus = async () => {
-      // 1. Check LocalStorage (Global for both guests and logged-in users)
-      const hasFeedbackStorage =
-        typeof window !== 'undefined' ? localStorage.getItem('mppsc_feedback_given') : null;
-      if (hasFeedbackStorage) {
-        setShowFeedback(false);
-        return;
-      }
-
-      // 2. Check SessionStorage (Legacy/Fallback)
-      const currentTestId = testId || 'guest-test-result';
-      const hasSeenSession =
-        typeof window !== 'undefined'
-          ? sessionStorage.getItem(`feedback_shown_${currentTestId}`)
-          : null;
-      if (hasSeenSession) {
-        setShowFeedback(false);
-        return;
-      }
-
-      // 3. For logged-in users, check database
-      if (userId) {
-        const submitted = await hasUserSubmittedFeedback();
-        if (submitted) {
-          setShowFeedback(false);
-          // Sync with localStorage
-          if (typeof window !== 'undefined') localStorage.setItem('mppsc_feedback_given', 'true');
-          return;
-        }
-      }
-
-      // If no feedback found anywhere, show it
-      setShowFeedback(true);
-      // Mark as shown in session to prevent flicker on re-renders,
-      // but only set final 'given' status on actual submission
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(`feedback_shown_${currentTestId}`, 'true');
-      }
-    };
-
-    checkFeedbackStatus();
-  }, [testId, userId, showFeedbackModal]);
-
-  const handleFeedbackSubmit = async (data: FeedbackFormType) => {
-    console.log('QuizResult Feedback submitted:', data);
-
-    try {
-      // Get guest name from localStorage if active
-      const guestName =
-        typeof window !== 'undefined' ? localStorage.getItem('mppsc_guest_name') : null;
-
-      const currentTestId = testId || 'guest-test-result';
-      const testType = mode === 'pyq' ? 'pyq' : mode === 'full' ? 'premium' : 'free';
-
-      const response = await submitTestFeedback({
-        testId: currentTestId,
-        testType,
-        data,
-        userName: guestName,
-      });
-
-      if (response.success) {
-        // Sync with localStorage on success
-        if (typeof window !== 'undefined') localStorage.setItem('mppsc_feedback_given', 'true');
-      } else {
-        console.error('Failed to submit feedback:', response.error);
-      }
-    } catch (error) {
-      console.error('Error submitting feedback:', error);
-    }
-
-    setShowFeedback(false);
-  };
+  // Feedback Modal State
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [hasSubmittedFeedback, setHasSubmittedFeedback] = useState(false);
 
   // Score Calculations
   let correctCount = 0;
@@ -308,6 +224,34 @@ export function QuizResult({
         .finally(() => setIsFetchingInsights(false));
     }
   }, [mode, questions, answers, wrongCount]);
+
+  // Show feedback modal immediately when QuizResult loads (guaranteed)
+  useEffect(() => {
+    // Show immediately and unconditionally for better UX
+    if (showFeedbackModal) {
+      setFeedbackOpen(true);
+    }
+  }, [showFeedbackModal]);
+
+  // Feedback submission handler
+  const handleFeedbackSubmit = async (data: FeedbackFormType) => {
+    try {
+      await submitTestFeedback({
+        testId: testId || 'unknown', // Fallback if testId is missing
+        testType: mode === 'pyq' ? 'pyq' : 'free',
+        testName: title || `${mode.toUpperCase()} Test`,
+        data,
+        userName: userName || (isGuest ? 'Guest User' : undefined),
+        userEmail: undefined, // We don't collect email in current feedback form
+      });
+
+      setHasSubmittedFeedback(true);
+      toast.success('Thank you for your feedback! 🙏');
+    } catch (error) {
+      logger.error('Failed to submit feedback', error);
+      toast.error('Failed to submit feedback. Please try again.');
+    }
+  };
 
   const feedbackMessage = React.useMemo(
     () => getRandomFeedback(scorePercentage, language),
@@ -562,20 +506,18 @@ export function QuizResult({
 
           <div className="relative z-10">
             <div className="mb-2 flex items-center justify-between">
-              <div className="text-sm font-bold text-slate-400 capitalize">
-                {title || 'Test Result'}
-              </div>
+              <div className="text-sm font-bold text-slate-400 capitalize"></div>
 
               {isGuest && (
                 <Link
                   href="/"
-                  className="group relative flex items-center gap-2 overflow-hidden rounded-full border border-amber-400/30 bg-slate-950 px-4 py-1.5 text-[10px] font-black tracking-wider text-white uppercase shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all hover:scale-105 hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] active:scale-95"
+                  className="group relative flex items-center gap-2 overflow-hidden rounded-full border border-amber-400/30 bg-slate-950 p-4 px-4 py-1.5 text-[10px] font-black tracking-wider text-white uppercase shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all hover:scale-105 hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] active:scale-95"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-amber-500/20 opacity-0 transition-opacity group-hover:opacity-100" />
-                  <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)] bg-[length:250%_250%] animate-[shimmer_3s_infinite]" />
+                  <div className="absolute inset-0 animate-[shimmer_3s_infinite] bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)] bg-[length:250%_250%]" />
                   <span className="relative flex items-center gap-1.5">
-                    <Sparkles className="h-3 w-3 text-amber-400 animate-pulse" />
-                    <span>Explore MPPSC 2026 Pro Platform 🚀</span>
+                    <Sparkles className="h-3 w-3 animate-pulse text-amber-400" />
+                    <span className="p-4">Explore MPPSC 2026 Pro Platform 🚀</span>
                     <ArrowRight className="h-3 w-3 text-amber-400 transition-transform group-hover:translate-x-1" />
                   </span>
                 </Link>
@@ -802,7 +744,7 @@ export function QuizResult({
           <div className="mb-4 flex items-center gap-2">
             <h3 className="text-lg font-bold text-slate-900">Question Summary</h3>
           </div>
-          <div className="sticky top-[72px] z-30 mb-6 max-w-full overflow-x-auto rounded-xl border border-slate-200 bg-white/80 p-2 shadow-sm backdrop-blur-md">
+          <div className="sticky top-[200px] z-30 mb-6 max-w-full overflow-x-auto rounded-xl border border-slate-200 bg-white/90 p-2 shadow-sm backdrop-blur-md">
             <div className="flex min-w-max items-center gap-2">
               <Button
                 variant={activeQuestionTab === 'all' ? 'default' : 'ghost'}
@@ -1283,7 +1225,7 @@ export function QuizResult({
     <div className="min-h-screen bg-slate-50">
       {/* ── Header: Unified Light Look for All Users ───────────────── */}
       <div className="sticky top-14 z-40 border-b border-slate-200 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto max-w-3xl px-4 pb-4 pt-4 sm:px-6">
+        <div className="mx-auto max-w-3xl px-4 pt-4 pb-4 sm:px-6">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div className="flex items-center gap-3">
               {/* If auth user, show Home button to navigate back, else Sparkles */}
@@ -1306,7 +1248,11 @@ export function QuizResult({
               )}
               <div>
                 <h1 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">
-                  {title || (isHindi ? 'क्विज़ रिजल्ट' : 'Quiz Result')}
+                  {userName
+                    ? isHindi
+                      ? `बहुत बढ़िया ${userName.split(' ')[0]}!`
+                      : `Great Job ${userName.split(' ')[0]}!`
+                    : title || (isHindi ? 'परीक्षा पूर्ण!' : 'Test Complete!')}
                 </h1>
                 <p className="text-xs font-medium text-slate-500">
                   {isHindi
@@ -1318,7 +1264,15 @@ export function QuizResult({
 
             {/* ── Connect Socials + Retry Button ────────── */}
             <div className="flex w-full items-center justify-between gap-3 sm:w-auto">
-              <ConnectSocials className="flex-1 sm:w-auto" />
+              <ConnectSocials
+                className="flex-1 sm:w-auto"
+                title={userName ? `${userName.split(' ')[0]}, Join Pro!` : '🚀 Join Pro Platform'}
+                titleHi={
+                  userName
+                    ? `${userName.split(' ')[0]}, प्रो जॉइन करें!`
+                    : '🚀 प्रो प्लेटफॉर्म जॉइन करें'
+                }
+              />
               {!disableRetry && !isGuest && (
                 <Button
                   onClick={onRetry}
@@ -1335,30 +1289,29 @@ export function QuizResult({
       </div>
 
       <Tabs defaultValue="result" className="mx-auto w-full max-w-3xl px-4 md:px-0">
-        <div className="sticky top-[140px] z-40 border-b border-slate-200/60 bg-slate-50 pt-4 pb-2 shadow-sm/50 sm:top-[118px]">
+        <div className="sticky top-[148px] z-30 border-b border-slate-200 bg-white px-3 py-2 shadow-sm">
           <TabsList
             className={cn(
-
               'grid w-full rounded-xl bg-slate-200/50 p-1',
               mode === 'pyq' ? 'grid-cols-3' : 'grid-cols-2'
             )}
           >
             <TabsTrigger
               value="result"
-              className="rounded-lg py-2.5 text-sm font-bold text-slate-500 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+              className="rounded-lg py-2 text-sm font-bold text-slate-500 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
             >
               Result
             </TabsTrigger>
             <TabsTrigger
               value="strategy"
-              className="rounded-lg py-2.5 text-sm font-bold text-slate-500 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+              className="rounded-lg py-2 text-sm font-bold text-slate-500 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
             >
               Strategy
             </TabsTrigger>
             {mode === 'pyq' && (
               <TabsTrigger
                 value="pyq-analysis"
-                className="rounded-lg py-2.5 text-sm font-bold text-slate-500 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+                className="rounded-lg py-3 text-sm font-bold text-slate-500 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
               >
                 PYQ Analysis
               </TabsTrigger>
@@ -1397,11 +1350,13 @@ export function QuizResult({
         )}
       </Tabs>
 
+      {/* Feedback Modal */}
       <TestSeriesFeedbackModal
-        isOpen={showFeedback}
-        onClose={() => setShowFeedback(false)}
+        isOpen={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
         onSubmit={handleFeedbackSubmit}
         testSeriesId={testId}
+        userName={userName}
       />
     </div>
   );
