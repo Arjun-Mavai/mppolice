@@ -4,26 +4,14 @@ import { verifyAuth } from '@/lib/auth';
 import { getUserTier, hasAccessToContent } from '@/lib/access-control';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 import { Suspense } from 'react';
-import { QuizListSkeleton } from '@/components/QuizListSkeleton';
+import { PYQFactsLoader } from '@/components/ui/PYQFactsLoader';
 
 export default async function CSATPage() {
   return (
     <div className="relative min-h-screen bg-[#fafbfc] pb-20 font-sans">
-      <Suspense fallback={<QuizListFallback />}>
+      <Suspense fallback={<PYQFactsLoader label="Loading CSAT Tests..." theme="dark" />}>
         <CSATPageData />
       </Suspense>
-    </div>
-  );
-}
-
-function QuizListFallback() {
-  return (
-    <div className="relative z-10 mx-auto max-w-5xl px-6 pt-32">
-      <div className="mb-12 space-y-2 text-center">
-        <div className="mx-auto mb-4 h-12 w-64 animate-pulse rounded-xl bg-slate-200" />
-        <div className="mx-auto h-4 w-96 animate-pulse rounded-lg bg-slate-100" />
-      </div>
-      <QuizListSkeleton />
     </div>
   );
 }

@@ -281,7 +281,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
         wrongCount,
         skippedCount,
         timeTaken: timeLimitInMinutes * 60 - timeLeft,
-        // Don't store questions array - causes memory leaks
+        questions, // Store questions for proper result display
         answers,
         testId, // Pass testId from props
         title, // Pass title from props

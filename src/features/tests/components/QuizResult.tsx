@@ -479,11 +479,13 @@ export function QuizResult({
                   <AlertCircle className="h-4 w-4" /> Explanation
                 </div>
 
-                <PremiumExplanation
-                  explanation={q.explanation || 'No explanation available.'}
-                  explanationEn={q.explanationEn}
-                  explanationHi={q.explanation_hi}
-                />
+                <Suspense fallback={<div className="h-8 bg-muted animate-pulse rounded" />}>
+                  <PremiumExplanation
+                    explanation={q.explanation || 'No explanation available.'}
+                    explanationEn={q.explanationEn}
+                    explanationHi={q.explanation_hi}
+                  />
+                </Suspense>
               </div>
             </motion.div>
           )}
