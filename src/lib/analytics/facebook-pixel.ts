@@ -20,7 +20,7 @@ type StandardEvent =
 // Ensure the fbq function is available on the window object
 declare global {
   interface Window {
-    fbq: any;
+    fbq?: (...args: any[]) => void;
   }
 }
 
