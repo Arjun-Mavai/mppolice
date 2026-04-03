@@ -36,6 +36,7 @@ interface QuizPlayClientProps {
   testId: string;
   title?: string;
   userId: string | null;
+  userName?: string;
   maxRetries?: number | null;
   userAttempts?: number;
   isPro?: boolean;
@@ -48,6 +49,7 @@ export function QuizPlayClient({
   testId,
   title,
   userId,
+  userName,
   maxRetries = null,
   userAttempts = 0,
   isPro = false,
@@ -189,6 +191,7 @@ export function QuizPlayClient({
       testId={testId}
       title={title}
       userId={userId}
+      userName={userName}
       timeLimitInMinutes={Math.ceil(questions.length * QUIZ_CONSTANTS.TIME_PER_QUESTION_MINUTES)}
       onExit={() => router.push('/syllabus/quiz')}
       onRetry={() => {

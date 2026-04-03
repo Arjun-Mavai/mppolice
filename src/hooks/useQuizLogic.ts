@@ -165,6 +165,11 @@ export function useQuizLogic({
   // 🎬 ACTION HANDLERS (User interactions)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+  // ───────────────────────────────────────────────────────────────
+  // 🏁 FEEDBACK STATE (Does user need to give feedback?)
+  // ───────────────────────────────────────────────────────────────
+  const [needsFeedback, setNeedsFeedback] = useState(false);
+
   /**
    * handleSubmit
    * ─────────────────────────────────────────────────────────────
@@ -173,18 +178,44 @@ export function useQuizLogic({
    * Flow:
    * 1. Mark test as submitted (UI updates)
    * 2. Save last question's time
-   * 3. Format answers for database (number → string)
-   * 4. Call API to save attempt
+   * 3. CHECK FEEDBACK: Has user given feedback on this device?
+   * 4. For logged-in users, call API to save attempt
    * 5. Handle errors gracefully
-   *
-   * Guest users:
-   * - Unki attempt DB me save nahi hoti
-   * - Bas local results dikhate hain
    */
   const handleSubmit = useCallback(async () => {
     if (isSubmitting || isSubmitted) return;
 
     setIsSubmitting(true);
+
+    // ───────────────────────────────────────────────────────
+    // 🛡️ PRINCIPAL CHECK: Should we show feedback?
+    // ───────────────────────────────────────────────────────
+    const checkFeedback = async () => {
+      try {
+        const { safeStorage } = await import('@/lib/utils/persistence');
+        const { hasUserSubmittedFeedback } = await import('@/app/actions/feedback');
+        
+        // 1. Check LocalStorage (Global for device)
+        if (safeStorage.getItem('mppsc_feedback_given') === 'true') return false;
+
+        // 2. For logged-in users, check database
+        if (userId) {
+          const submitted = await hasUserSubmittedFeedback();
+          if (submitted) {
+            safeStorage.setItem('mppsc_feedback_given', 'true');
+            return false;
+          }
+        }
+        return true; // Feedback required
+      } catch (e) {
+        return true; // Default to showing if error
+      }
+    };
+
+    const feedbackRequired = await checkFeedback();
+    if (feedbackRequired) {
+      setNeedsFeedback(true);
+    }
 
     // Guest user? No DB save, just show results
     if (!userId) {
@@ -199,8 +230,6 @@ export function useQuizLogic({
       // ───────────────────────────────────────────────────────
       // 📝 FORMAT ANSWERS (NUMBER → STRING for database)
       // ───────────────────────────────────────────────────────
-      // Frontend: answers = { "q-001": 2 }  (number)
-      // Database expects: { "q-001": "2" }  (string)
       const formattedAnswers: Record<string, string> = {};
       Object.entries(answers).forEach(([qId, optIdx]) => {
         formattedAnswers[qId] = String(optIdx);
@@ -233,7 +262,6 @@ export function useQuizLogic({
         category: 'ui',
         metadata: { testId, userId, questionsCount: questions.length },
       });
-      // Note: We don't revert isSubmitted=false because partial save might have happened
     } finally {
       setIsSubmitting(false);
       setIsSubmitted(true);
@@ -519,6 +547,8 @@ export function useQuizLogic({
     instantModeEnabled, // Is instant feedback ON?
     language, // Current language (hi/en)
     questionTimes, // ⏱️ Time spent per question { questionId: seconds }
+    needsFeedback, // Feedback requirement
+    setNeedsFeedback, // Manual control for feedback modal
 
     // ───────────────────────────────────────────────────────────
     // 🎮 ACTION HANDLERS

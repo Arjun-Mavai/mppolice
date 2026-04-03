@@ -145,7 +145,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -198,6 +198,13 @@ export function GuestEntryDialog({
   }, [open]);
 
   const isNameValid = guestName.trim().length > 0;
+  const isMobileValid = guestMobile.trim().length >= 10; // At least 10 digits
+  const isFormValid = isNameValid && isMobileValid;
+
+  // ✅ Memoize style calculation for performance
+  const dialogStyle = useMemo(() => ({
+    paddingBottom: keyboardHeight > 0 ? `${Math.max(16, keyboardHeight - 20)}px` : '1rem',
+  }), [keyboardHeight]);
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
@@ -208,9 +215,7 @@ export function GuestEntryDialog({
       >
         <div
           className="flex flex-col bg-white"
-          style={{
-            paddingBottom: keyboardHeight > 0 ? `${Math.max(16, keyboardHeight - 20)}px` : '1rem',
-          }}
+          style={dialogStyle}
         >
           {/* Header */}
           <DialogHeader className="relative overflow-hidden border-b border-slate-100 bg-gradient-to-b from-slate-50/80 to-white px-6 py-6 sm:px-6">
@@ -236,7 +241,7 @@ export function GuestEntryDialog({
                 </DialogTitle>
               </div>
               <DialogDescription className="text-left text-sm font-medium leading-relaxed text-slate-500">
-                Enter your name to start the quiz. Email and mobile are optional.
+                Name and mobile help us show your detailed results.
               </DialogDescription>
             </div>
           </DialogHeader>
@@ -259,13 +264,28 @@ export function GuestEntryDialog({
               />
             </div>
 
-            {/* Optional Fields - Collapsed by Default */}
+            {/* Optional Fields - Show when name is valid */}
             {isNameValid && (
               <div className="animate-in fade-in-50 space-y-3 duration-200">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-1 text-sm font-semibold text-slate-900">
+                      Mobile Number <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="tel"
+                      placeholder="Enter your mobile number"
+                      value={guestMobile}
+                      onChange={(e) => onMobileChange(e.target.value)}
+                      disabled={isSubmitting}
+                      className="h-11 border-slate-200 bg-white text-base font-medium shadow-sm transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                      autoComplete="tel"
+                    />
+                  </div>
+                  
                   <div className="space-y-2">
                     <label className="text-xs font-semibold tracking-wide text-slate-700 uppercase">
-                      Email
+                      Email (Optional)
                     </label>
                     <Input
                       type="email"
@@ -277,32 +297,17 @@ export function GuestEntryDialog({
                       autoComplete="email"
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold tracking-wide text-slate-700 uppercase">
-                      Mobile
-                    </label>
-                    <Input
-                      type="tel"
-                      placeholder="Optional"
-                      value={guestMobile}
-                      onChange={(e) => onMobileChange(e.target.value)}
-                      disabled={isSubmitting}
-                      className="h-10 border-slate-200 bg-slate-50 text-sm transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-200"
-                      autoComplete="tel"
-                    />
-                  </div>
                 </div>
               </div>
             )}
           </div>
 
           {/* Sticky Action Button - Always Visible Above Keyboard */}
-          {isNameValid && (
+          {isFormValid && (
             <div className="animate-in slide-in-from-bottom-3 border-t border-slate-100 bg-white px-6 py-4 duration-200 sm:px-6">
               <Button
                 onClick={onSubmit}
-                disabled={!isNameValid || isSubmitting}
+                disabled={!isFormValid || isSubmitting}
                 className="h-12 w-full rounded-xl bg-slate-900 text-lg font-bold text-white shadow-lg shadow-slate-900/20 transition-all hover:bg-slate-800 hover:shadow-xl hover:shadow-slate-900/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting ? (

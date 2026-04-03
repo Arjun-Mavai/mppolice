@@ -278,8 +278,10 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
         wrongCount,
         skippedCount,
         timeTaken: timeLimitInMinutes * 60 - timeLeft,
-        questions,
+        // Don't store questions array - causes memory leaks
         answers,
+        testId, // Pass testId from props
+        title, // Pass title from props
       });
 
       // Prefetch results page for even faster transition

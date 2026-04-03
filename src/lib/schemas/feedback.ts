@@ -20,12 +20,17 @@ import { z } from 'zod';
 export const feedbackFormSchema = z.object({
   overallRating: z
     .number()
-    .min(1, 'Please provide a rating')
+    .min(1, 'Please provide a rating (1-5 stars)')
     .max(5),
 
   difficultyLevel: z.enum(['too_easy', 'just_right', 'too_hard'] as const),
 
   wouldRecommend: z.enum(['yes', 'no', 'definitely', 'probably', 'maybe'] as const),
+
+  comment: z
+    .string()
+    .min(3, 'Please tell us why you selected this rating...')
+    .max(500, 'Comment too long (max 500 chars)'),
 });
 
 export type FeedbackFormType = z.infer<typeof feedbackFormSchema>;
@@ -58,5 +63,12 @@ export const feedbackQuestions = [
       { value: 'yes', label: 'Yes! 👍' },
       { value: 'no', label: 'Not really 👎' },
     ],
+  },
+  {
+    id: 'comment',
+    name: 'comment' as const,
+    label: 'Your Detailed Feedback',
+    type: 'textarea' as const,
+    placeholder: 'Tell us more about your experience...',
   },
 ];

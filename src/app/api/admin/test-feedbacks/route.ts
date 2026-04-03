@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { testFeedback, tests, mppscUsers } from '@/db/schema';
 import { cookies } from 'next/headers';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 
 export async function GET(request: Request) {
   try {
@@ -27,12 +27,19 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Fetch Test Feedbacks joined with Test Titles
+    // Extract pagination params
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100); // Max 100
+    const offset = (page - 1) * limit;
+
+    // Fetch Test Feedbacks joined with Test Titles (with pagination)
     const data = await db
       .select({
         id: testFeedback.id,
         testId: testFeedback.testId,
         testTitle: tests.title,
+        testName: testFeedback.testName, // Fallback title stored with feedback
         userName: testFeedback.userName,
         userEmail: testFeedback.userEmail,
         overallRating: testFeedback.overallRating,
@@ -44,9 +51,30 @@ export async function GET(request: Request) {
       })
       .from(testFeedback)
       .leftJoin(tests, eq(testFeedback.testId, tests.id))
-      .orderBy(desc(testFeedback.createdAt));
+      .orderBy(desc(testFeedback.createdAt))
+      .limit(limit)
+      .offset(offset);
 
-    return NextResponse.json({ feedbacks: data });
+    // Get total count for pagination
+    const totalCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(testFeedback);
+
+    // Use testName as fallback when testTitle is null (for practice tests without real test IDs)
+    const transformedData = data.map(item => ({
+      ...item,
+      testTitle: item.testTitle || item.testName || 'Unknown Test'
+    }));
+
+    return NextResponse.json({ 
+      feedbacks: transformedData,
+      pagination: {
+        page,
+        limit,
+        total: totalCount[0].count,
+        pages: Math.ceil(totalCount[0].count / limit)
+      }
+    });
   } catch (error) {
     console.error('Test Feedback API Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
