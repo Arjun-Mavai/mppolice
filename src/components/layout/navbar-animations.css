@@ -1,0 +1,20 @@
+/* ✅ PERFORMANCE: CSS-only animations to replace Framer Motion */
+/* This saves ~30KB bundle size and improves performance */
+
+.tap-scale-96:active {
+  transform: scale(0.96);
+  transition: transform 0.1s ease-out;
+}
+
+.tap-scale-98:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease-out;
+}
+
+/* GPU acceleration for smooth animations */
+.tap-scale-96,
+.tap-scale-98 {
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}

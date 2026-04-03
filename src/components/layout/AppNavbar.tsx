@@ -2,35 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  Menu,
-  User,
-  LogOut,
-  LayoutDashboard,
-  BookOpen,
-  BarChart2,
-  Sparkles,
-  Settings,
-  Languages,
-  Send,
-  GraduationCap,
-  Crown,
-  Info,
-  History,
-  Download,
-  Zap,
-} from 'lucide-react';
-import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Sheet,
   SheetContent,
@@ -41,12 +14,37 @@ import {
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSettingsStore, User as StoreUser } from '@/store/useSettingsStore';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { logger } from '@/lib/logger';
 import { toast } from 'sonner';
 import { usePwa } from '@/hooks/usePwa';
 import { useQuery } from '@tanstack/react-query';
 import { getCurrentUser } from '@/actions/auth-actions';
+
+import './navbar-animations.css';
+
+// Optimized imports - tree-shakeable
+import {
+  Menu,
+  Send,
+  Crown,
+  Sparkles,
+  RefreshCw,
+  Download,
+  LogOut,
+  LayoutDashboard,
+  BookOpen,
+  GraduationCap,
+  Zap,
+  History,
+  Info,
+} from './icons';
+
+// Import optimized sub-components
+import { NavbarLogo } from './NavbarLogo';
+import { DesktopNavigation } from './DesktopNavigation';
+import { LanguageSwitcher } from './LanguageSwitcher';
+import { UserSection } from './UserSection';
 
 interface PropUser {
   name?: string | null;
@@ -64,14 +62,29 @@ interface AppNavbarProps {
 // Helper type to handle both Store (camelCase) and API/Prop (snake_case) user shapes
 type UnifiedUser = StoreUser & PropUser;
 
+// ✅ PERFORMANCE: Utility function to normalize user object (extracted from inline)
+const normalizeUser = (rawUser: UnifiedUser | null) => {
+  return rawUser
+    ? {
+        ...rawUser,
+        isSubscribed: rawUser.isSubscribed ?? rawUser.is_subscribed,
+        planTier: rawUser.planTier ?? rawUser.plan_tier,
+      }
+    : null;
+};
+
+// ✅ PERFORMANCE: Utility function to convert user to store format
+const createUserToStore = (user: any) => ({
+  ...user,
+  role: user.role ?? undefined,
+  isSubscribed: user.isSubscribed ?? user.is_subscribed ?? undefined,
+  planTier: user.planTier ?? user.plan_tier ?? undefined,
+});
+
 export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   // Use Global Store
   const {
@@ -87,15 +100,28 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
 
   // Create a merged user object (prop + global), favoring global if updated
   const rawUser = (globalUser || initialUser) as UnifiedUser | null;
+  const user = normalizeUser(rawUser);
 
-  // Helper to normalize user object to store format (camelCase)
-  const user = rawUser
-    ? {
-        ...rawUser,
-        isSubscribed: rawUser.isSubscribed ?? rawUser.is_subscribed,
-        planTier: rawUser.planTier ?? rawUser.plan_tier,
-      }
-    : null;
+  // ✅ PERFORMANCE: Memoized navigation items
+  const navItems = useMemo(() => [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, color: 'text-slate-700' },
+    { name: 'Syllabus', href: '/syllabus', icon: BookOpen, color: 'text-emerald-600' },
+    {
+      name: 'Test Series',
+      href: '/syllabus/quiz/pyq',
+      icon: GraduationCap,
+      color: 'text-amber-600',
+    },
+    { name: 'Free Daily Quiz', href: '/free-quiz', icon: Zap, color: 'text-orange-500' },
+    { name: 'Blogs', href: '/blogs', icon: BookOpen, color: 'text-sky-600' },
+    {
+      name: 'Test History',
+      href: '/syllabus/test-history',
+      icon: History,
+      color: 'text-violet-600',
+    },
+    { name: 'About Us', href: '/', icon: Info, color: 'text-slate-500' },
+  ], []);
 
   // ------------------------------------------------------------------
   // QUERY: SESSION RESTORATION (The "Hydration") - NOW WITH SERVER ACTION!
@@ -126,9 +152,30 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     retry: false,
   });
 
-  // Sync React Query result to Zustand Store
+  // ✅ OPTIMIZED: Split complex useEffect into focused effects
+  
+  // Effect 1: Handle mounting state
   useEffect(() => {
-    // 🛑 Prevent infinite loop: If user is already set, stop syncing
+    setIsMounted(true);
+  }, []);
+
+  // Effect 2: Handle initial user sync from props
+  useEffect(() => {
+    if (initialUser && authCheckStatus === 'idle' && !globalUser) {
+      const userToStore = createUserToStore(initialUser);
+      setUser(userToStore, true); // This sets authStatus to 'checked'
+    }
+  }, [initialUser, authCheckStatus, globalUser, setUser]);
+
+  // Effect 3: Handle global user auth status
+  useEffect(() => {
+    if (globalUser && authCheckStatus === 'idle') {
+      setAuthCheckStatus('checked');
+    }
+  }, [globalUser, authCheckStatus, setAuthCheckStatus]);
+
+  // Effect 4: Handle session data from React Query
+  useEffect(() => {
     if (globalUser) return;
 
     if (sessionData) {
@@ -137,13 +184,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
           category: 'auth',
           user: sessionData.user,
         });
-        // Fix TypeScript: Convert null to undefined for role, isSubscribed, planTier
-        const userToStore = {
-          ...sessionData.user,
-          role: sessionData.user.role ?? undefined,
-          isSubscribed: sessionData.user.isSubscribed ?? undefined,
-          planTier: sessionData.user.planTier ?? undefined,
-        };
+        const userToStore = createUserToStore(sessionData.user);
         setUser(userToStore, true);
       } else {
         logger.debug('No active session found during hydration.');
@@ -157,17 +198,10 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     if (isSessionLoading) {
       setAuthCheckStatus('loading');
     }
-  }, [
-    sessionData,
-    isSessionLoading,
-    authCheckStatus,
-    initialUser,
-    globalUser,
-    setUser,
-    setAuthCheckStatus,
-  ]);
+  }, [sessionData, isSessionLoading, authCheckStatus, initialUser, globalUser, setUser, setAuthCheckStatus]);
 
-  const handleLogout = async () => {
+  // ✅ OPTIMIZED: Extracted to useCallback to prevent re-renders
+  const handleLogout = useCallback(async () => {
     try {
       // 1. Clear Zustand store + localStorage immediately
       setUser(null, false);
@@ -204,27 +238,37 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
       }
       window.location.href = '/';
     }
-  };
+  }, [setUser, setAuthCheckStatus]);
 
-  const navItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, color: 'text-slate-700' },
-    { name: 'Syllabus', href: '/syllabus', icon: BookOpen, color: 'text-emerald-600' },
-    {
-      name: 'Test Series',
-      href: '/syllabus/quiz/pyq',
-      icon: GraduationCap,
-      color: 'text-amber-600',
-    },
-    { name: 'Free Daily Quiz', href: '/free-quiz', icon: Zap, color: 'text-orange-500' },
-    { name: 'Blogs', href: '/blogs', icon: BookOpen, color: 'text-sky-600' },
-    {
-      name: 'Test History',
-      href: '/syllabus/test-history',
-      icon: History,
-      color: 'text-violet-600',
-    },
-    { name: 'About Us', href: '/', icon: Info, color: 'text-slate-500' },
-  ];
+  const handleManualRefresh = useCallback(async () => {
+    try {
+      toast.loading('Refreshing app...', { description: 'Clearing cache and reloading...' });
+
+      // 1. Unregister Service Worker
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+        }
+      }
+
+      // 2. Clear Caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map((name) => caches.delete(name)));
+      }
+
+      // 3. Clear transient storage but KEEP user auth if possible (handled by standard persistence)
+      // 4. Hard Reload
+      window.location.reload();
+    } catch (error) {
+      window.location.reload();
+    }
+  }, []);
+
+  const handleAdminDashboard = useCallback(() => {
+    router.push('/admin/dashboard');
+  }, [router]);
 
   // Quiz play pe navbar nahi dikhana — full immersive experience
   if (pathname.includes('/quiz/play') || pathname.includes('/free-quiz/play')) return null;
@@ -233,200 +277,34 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     <header className="fixed top-0 right-0 left-0 z-50 [animation:navbar-scroll_linear_both] border-b border-slate-200 bg-white/80 shadow-sm backdrop-blur-md transition-all duration-300 [animation-range:0px_50px] [animation-timeline:scroll()]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between">
-          {/* Logo — logged in users go to quiz, others go home */}
-          <div
-            onClick={() => {
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              router.push(user ? '/syllabus/quiz/pyq' : '/');
-            }}
-            className="group flex cursor-pointer items-center gap-2"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white shadow-lg shadow-slate-900/20 transition-transform group-hover:scale-105">
-              <span className="text-xs font-bold tracking-tighter">MP</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="font-display text-lg leading-none font-bold text-slate-900">
-                MPPSC<span className="text-slate-500">26</span>
-              </span>
-              <span className="text-[10px] font-medium tracking-wider text-slate-500 uppercase">
-                Mindful Prep
-              </span>
-            </div>
-          </div>
+          {/* ✅ OPTIMIZED: Logo Component */}
+          <NavbarLogo user={user} />
 
-          {/* Desktop Navigation */}
-          <nav className="hidden items-center gap-1 rounded-full border border-slate-200/50 bg-slate-100/50 p-1.5 backdrop-blur-md md:flex">
-            {navItems
-              .filter((item) => {
-                // Hide Dashboard if user is not logged in
-                if (item.name === 'Dashboard') return !!user;
-                // Test History & About Us — sidebar only, not in desktop top nav
-                if (item.name === 'Test History' || item.name === 'About Us') return false;
-                return true;
-              })
-              .map((item) => {
-                const isActive = pathname === item.href;
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    prefetch={false}
-                    className={cn(
-                      'flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200',
-                      isActive
-                        ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200'
-                        : 'text-slate-600 hover:bg-white/50 hover:text-slate-900'
-                    )}
-                  >
-                    <Icon size={16} className={cn(isActive && 'fill-slate-600/10')} />
-                    {item.name}
-                  </Link>
-                );
-              })}
-            {user && user.isSubscribed && user.planTier === 'pro' ? (
-              /* Pro Badge — Premium Gold/Amber Gradient style */
-              <div className="group relative overflow-hidden rounded-full p-[1px]">
-                {/* Animated Gradient Border */}
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600" />
-                <div className="relative flex cursor-default items-center gap-2 rounded-full bg-slate-900 px-4 py-1.5 text-sm font-bold text-white transition-colors group-hover:bg-slate-800">
-                  {/* Glossy overlay effect */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-50" />
-                  <Sparkles size={12} className="relative z-10 fill-amber-400 text-amber-400" />
-                  <span className="relative z-10 text-[10px] font-black tracking-widest uppercase">
-                    Pro
-                  </span>
-                </div>
-              </div>
-            ) : user && user.isSubscribed && user.planTier === 'lite' ? (
-              /* Lite Badge — Seamless Pink/Purple gradient */
-              <div className="relative overflow-hidden rounded-full p-[1.5px]">
-                {/* Static Gradient Border for Performance */}
-                <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500" />
-                <div className="relative flex cursor-default items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white">
-                  <Sparkles size={12} className="fill-pink-500 text-pink-500" />
-                  <span className="text-[10px] font-black tracking-wide uppercase">Lite</span>
-                </div>
-              </div>
-            ) : user ? (
-              /* Free user — "Upgrade" Button with Premium Seamless Rainbow Border */
-              <div className="group relative overflow-hidden rounded-full p-[1.5px]">
-                {/* Static Rainbow Gradient for 'Award Winning' look - Only animate opacity/scale on hover if needed */}
-                <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 opacity-80 transition-opacity duration-300 group-hover:opacity-100" />
-                <Link
-                  href="/upgrade"
-                  className="relative flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-sm font-bold text-white transition-all duration-200 hover:bg-slate-800 hover:shadow-lg hover:shadow-purple-500/20"
-                >
-                  <Sparkles size={14} className="fill-white/20 text-yellow-400" />
-                  <span className="tracking-wide">Upgrade</span>
-                </Link>
-              </div>
-            ) : null}
-          </nav>
+          {/* ✅ OPTIMIZED: Desktop Navigation Component */}
+          <DesktopNavigation 
+            navItems={navItems}
+            pathname={pathname}
+            user={user}
+          />
 
           {/* Right Section */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Global Language Toggle - Visible on All Screens */}
-            {/* Optimized for mobile: larger touch targets, smooth layout animation */}
-            <div className="relative flex items-center rounded-full border border-slate-200 bg-slate-100 p-1 select-none">
-              {/* Animated Background Pill */}
-              <div
-                className={cn(
-                  'ease-[var(--ease-spring-smooth)] absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full bg-white shadow-sm transition-transform duration-300',
-                  language === 'hi' ? 'translate-x-[calc(100%+4px)]' : 'translate-x-0'
-                )}
-              />
-
-              <button
-                type="button"
-                onClick={() => setLanguage('en')}
-                className={cn(
-                  'relative z-10 flex-1 rounded-full px-3 py-1.5 text-xs font-bold transition-colors duration-200 sm:px-4',
-                  language === 'en' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
-                )}
-                aria-label="Switch to English"
-                aria-pressed={language === 'en'}
-              >
-                EN
-              </button>
-              <button
-                type="button"
-                onClick={() => setLanguage('hi')}
-                className={cn(
-                  'relative z-10 flex-1 rounded-full px-3 py-1.5 text-xs font-bold transition-colors duration-200 sm:px-4',
-                  language === 'hi' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
-                )}
-                aria-label="Switch to Hindi"
-                aria-pressed={language === 'hi'}
-              >
-                HI
-              </button>
-            </div>
+            {/* ✅ OPTIMIZED: Language Switcher Component */}
+            <LanguageSwitcher 
+              language={language}
+              setLanguage={setLanguage}
+            />
 
             <div className="hidden h-6 w-px bg-slate-200 sm:block"></div>
 
-            {/* LOADING STATE FIX: Don't show login button while checking auth */}
-            {!isMounted ||
-            ((authCheckStatus === 'idle' || authCheckStatus === 'loading') && !user) ? (
-              // Show skeleton while checking auth or hydrating to prevent flash/mismatch
-              <div className="hidden h-10 w-10 animate-pulse rounded-full bg-slate-100 md:flex" />
-            ) : user ? (
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="relative hidden h-10 w-10 rounded-full p-0 ring-2 ring-slate-100 transition-all hover:ring-slate-200 md:flex"
-                  >
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={user.image || ''} alt={user.name || 'User'} />
-                      <AvatarFallback className="border border-slate-100 bg-slate-50 font-bold text-slate-700">
-                        {user.name?.charAt(0).toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm leading-none font-medium">{user.name}</p>
-                      <p className="text-muted-foreground truncate text-xs leading-none">
-                        {user.email}
-                      </p>
-                    </div>
-                  </DropdownMenuLabel>
-
-                  {user && user.role === 'admin' && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => router.push('/admin/dashboard')}>
-                        <LayoutDashboard className="mr-2 h-4 w-4" />
-                        <span>Admin Dashboard</span>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-red-600 focus:text-red-600"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <div className="flex gap-2">
-                <Button
-                  asChild
-                  className="hidden rounded-full bg-slate-900 px-6 font-bold text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800 sm:flex"
-                >
-                  <Link href="/login" prefetch={false}>
-                    Log in
-                  </Link>
-                </Button>
-              </div>
-            )}
+            {/* ✅ OPTIMIZED: User Section Component */}
+            <UserSection 
+              user={user}
+              authCheckStatus={authCheckStatus}
+              isMounted={isMounted}
+              onLogout={handleLogout}
+              onAdminDashboard={handleAdminDashboard}
+            />
 
             {/* Mobile Menu */}
             {isMounted ? (
@@ -470,7 +348,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                               </div>
                             )}
                           </div>
-                          <div className="flex flex-col">
+                          <div className="flex flex-col flex-1">
                             <div className="flex items-center gap-2">
                               <span className="text-sm leading-none font-bold text-slate-900">
                                 {user.name}
@@ -485,14 +363,42 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                               {user.email}
                             </span>
                           </div>
-                          <SheetTitle className="sr-only">Menu</SheetTitle>
+                          
+                          {/* ✅ UX EXPERT: Top-right corner utility button for logged-in users */}
+                          <div className="flex items-center gap-2">
+                            <SheetTitle className="sr-only">Menu</SheetTitle>
+                            <button
+                              onClick={handleManualRefresh}
+                              className="group flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 transition-all hover:bg-orange-100 hover:border-orange-300 active:scale-95"
+                              title={language === 'hi' ? 'ऐप रिफ्रेश करें / लोडिंग समस्या ठीक करें' : 'Refresh App / Fix Loading Issues'}
+                            >
+                              <RefreshCw size={14} className="transition-transform group-hover:rotate-180 duration-300" />
+                              <span className="font-bold">
+                                {language === 'hi' ? 'रिफ्रेश ऐप' : 'Fix App'}
+                              </span>
+                            </button>
+                          </div>
                         </>
                       ) : (
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white">
-                            <span className="text-xs font-bold">MP</span>
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white">
+                              <span className="text-xs font-bold">MP</span>
+                            </div>
+                            <SheetTitle className="font-display text-lg font-bold">Menu</SheetTitle>
                           </div>
-                          <SheetTitle className="font-display text-lg font-bold">Menu</SheetTitle>
+                          
+                          {/* ✅ UX EXPERT: Positioned like a utility action in top-right */}
+                          <button
+                            onClick={handleManualRefresh}
+                            className="group flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 transition-all hover:bg-orange-100 hover:border-orange-300 active:scale-95"
+                            title={language === 'hi' ? 'ऐप रिफ्रेश करें / लोडिंग समस्या ठीक करें' : 'Refresh App / Fix Loading Issues'}
+                          >
+                            <RefreshCw size={14} className="transition-transform group-hover:rotate-180 duration-300" />
+                            <span className="font-bold">
+                              {language === 'hi' ? 'रिफ्रेश ऐप' : 'Fix App'}
+                            </span>
+                          </button>
                         </div>
                       )}
                     </div>
@@ -512,11 +418,10 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                         const isActive = pathname === item.href;
                         const Icon = item.icon;
                         return (
-                          <motion.div whileTap={{ scale: 0.96 }} key={item.href}>
+                          <div key={item.href} className="tap-scale-96">
                             <SheetClose asChild>
                               <Link
                                 href={item.href}
-                                onMouseEnter={() => router.prefetch(item.href)}
                                 className={cn(
                                   'flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-200',
                                   isActive
@@ -531,11 +436,11 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                                 {item.name}
                               </Link>
                             </SheetClose>
-                          </motion.div>
+                          </div>
                         );
                       })}
 
-                    <motion.div whileTap={{ scale: 0.96 }}>
+                    <div className="tap-scale-96">
                       <SheetClose asChild>
                         <a
                           href="https://t.me/MPPSC2026_Mission"
@@ -547,7 +452,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                           Join Telegram
                         </a>
                       </SheetClose>
-                    </motion.div>
+                    </div>
 
                     <div className="pt-3">
                       {user?.isSubscribed && user.planTier === 'pro' ? (
@@ -582,11 +487,11 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                               </div>
                             </div>
                           </div>
-                          {/* Animated Upgrade button — red/pink spinning border */}
+                          {/* ✅ PERFORMANCE: Static gradient instead of conic spin for better performance */}
                           <SheetClose asChild>
                             <Link href="/pricing" className="mt-2 block">
                               <div className="relative overflow-hidden rounded-xl p-[1.5px]">
-                                <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#ec4899,#ef4444,#f59e0b,#8b5cf6,#3b82f6,#ec4899,#ef4444,#f59e0b,#ec4899)]" />
+                                <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-red-500 to-purple-500" />
                                 <div className="relative flex items-center gap-3 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white">
                                   <Sparkles size={18} className="text-pink-400" />
                                   Upgrade to Pro
@@ -609,7 +514,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                           <SheetClose asChild>
                             <Link
                               href="/pricing"
-                              className="flex items-center gap-3 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-slate-900/20 transition-all duration-200 active:scale-[0.98]"
+                              className="flex items-center gap-3 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-slate-900/20 transition-all duration-200 tap-scale-98"
                             >
                               <Crown size={18} className="text-yellow-400" />
                               Become Premium Member
@@ -640,7 +545,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
 
                     {/* Install App Button */}
                     {isInstallable && (
-                      <div className="mt-4 border-t border-slate-100 pt-4">
+                      <div className="mt-1 border-t-0 pt-0">
                         <SheetClose asChild>
                           <button
                             onClick={() => {
@@ -658,6 +563,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                         </SheetClose>
                       </div>
                     )}
+
                   </div>
 
                   <div className="border-t border-slate-100 bg-slate-50/50 p-4">
@@ -700,4 +606,3 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     </header>
   );
 }
-// trigger rebuild
