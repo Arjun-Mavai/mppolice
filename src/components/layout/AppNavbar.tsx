@@ -319,68 +319,73 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                   className="z-[150] flex w-[300px] flex-col p-0 sm:w-[360px]"
                 >
                   <SheetHeader className="border-b border-slate-100 bg-slate-50/50 p-6 text-left">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-4">
                       {/* LOADING STATE FIX: Show skeleton in mobile menu too */}
                       {(authCheckStatus === 'idle' || authCheckStatus === 'loading') && !user ? (
-                        <>
-                          <div className="h-10 w-10 animate-pulse rounded-full bg-slate-200" />
-                          <div className="flex flex-1 flex-col gap-2">
-                            <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
-                            <div className="h-3 w-32 animate-pulse rounded bg-slate-200" />
+                        <div className="flex flex-col gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 animate-pulse rounded-full bg-slate-200" />
+                            <div className="flex flex-1 flex-col gap-2">
+                              <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
+                              <div className="h-3 w-32 animate-pulse rounded bg-slate-200" />
+                            </div>
                           </div>
+                          <div className="h-9 w-full animate-pulse rounded-xl bg-slate-200" />
                           <SheetTitle className="sr-only">Loading...</SheetTitle>
-                        </>
+                        </div>
                       ) : user ? (
                         <>
-                          <div className="relative">
-                            <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
-                              <AvatarImage src={user.image || ''} />
-                              <AvatarFallback className="bg-slate-900 font-bold text-white">
-                                {user.name?.charAt(0).toUpperCase() || 'U'}
-                              </AvatarFallback>
-                            </Avatar>
-                            {user.isPro && (
-                              <div
-                                className="absolute -right-1 -bottom-1 rounded-full border-2 border-white bg-amber-400 p-0.5 text-white"
-                                title="Premium"
-                              >
-                                <Sparkles size={10} className="fill-white" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex flex-col flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm leading-none font-bold text-slate-900">
-                                {user.name}
-                              </span>
+                          <div className="flex items-center gap-3">
+                            <div className="relative">
+                              <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
+                                <AvatarImage src={user.image || ''} />
+                                <AvatarFallback className="bg-slate-900 font-bold text-white">
+                                  {user.name?.charAt(0).toUpperCase() || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
                               {user.isPro && (
-                                <span className="rounded border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-amber-700 uppercase">
-                                  Pro
-                                </span>
+                                <div
+                                  className="absolute -right-1 -bottom-1 rounded-full border-2 border-white bg-amber-400 p-0.5 text-white"
+                                  title="Premium"
+                                >
+                                  <Sparkles size={10} className="fill-white" />
+                                </div>
                               )}
                             </div>
-                            <span className="mt-1 max-w-[180px] truncate text-xs text-slate-500">
-                              {user.email}
-                            </span>
+                            <div className="flex flex-1 flex-col">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm leading-none font-bold text-slate-900">
+                                  {user.name}
+                                </span>
+                                {user.isPro && (
+                                  <span className="rounded border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-amber-700 uppercase">
+                                    Pro
+                                  </span>
+                                )}
+                              </div>
+                              <span className="mt-1 max-w-[180px] truncate text-xs text-slate-500">
+                                {user.email}
+                              </span>
+                            </div>
                           </div>
-                          
-                          {/* ✅ UX EXPERT: Top-right corner utility button for logged-in users */}
-                          <div className="flex items-center gap-2">
-                            <SheetTitle className="sr-only">Menu</SheetTitle>
+
+                          {/* ✅ UX EXPERT: Dedicated Refresh Button Row below name */}
+                          <div className="w-full">
                             <button
                               onClick={handleManualRefresh}
-                              className="group flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 transition-all hover:bg-orange-100 hover:border-orange-300 active:scale-95"
+                              className="group flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50/50 py-2.5 text-xs font-bold text-orange-700 transition-all hover:bg-orange-100 hover:border-orange-300 active:scale-95"
                               title={language === 'hi' ? 'ऐप रिफ्रेश करें / लोडिंग समस्या ठीक करें' : 'Refresh App / Fix Loading Issues'}
                             >
                               <RefreshCw size={14} className="transition-transform group-hover:rotate-180 duration-300" />
-                              <span className="font-bold">
-                                {language === 'hi' ? 'रिफ्रेश ऐप' : 'Fix App'}
+                              <span>
+                                {language === 'hi' ? 'ऐप रिफ्रेश करें (लोडिंग समस्या ठीक करें)' : 'Refresh App / Fix Loading'}
                               </span>
                             </button>
                           </div>
+                          <SheetTitle className="sr-only">Menu</SheetTitle>
                         </>
                       ) : (
-                        <div className="flex items-center justify-between w-full">
+                        <div className="flex flex-col gap-4">
                           <div className="flex items-center gap-2">
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white">
                               <span className="text-xs font-bold">MP</span>
@@ -388,21 +393,22 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                             <SheetTitle className="font-display text-lg font-bold">Menu</SheetTitle>
                           </div>
                           
-                          {/* ✅ UX EXPERT: Positioned like a utility action in top-right */}
+                          {/* ✅ UX EXPERT: Positioned as a dedicated utility block below title */}
                           <button
                             onClick={handleManualRefresh}
-                            className="group flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 transition-all hover:bg-orange-100 hover:border-orange-300 active:scale-95"
+                            className="group flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50/50 py-2.5 text-xs font-bold text-orange-700 transition-all hover:bg-orange-100 hover:border-orange-300 active:scale-95"
                             title={language === 'hi' ? 'ऐप रिफ्रेश करें / लोडिंग समस्या ठीक करें' : 'Refresh App / Fix Loading Issues'}
                           >
                             <RefreshCw size={14} className="transition-transform group-hover:rotate-180 duration-300" />
-                            <span className="font-bold">
-                              {language === 'hi' ? 'रिफ्रेश ऐप' : 'Fix App'}
+                            <span>
+                              {language === 'hi' ? 'ऐप रिफ्रेश करें (लोडिंग समस्या ठीक करें)' : 'Refresh App / Fix Loading'}
                             </span>
                           </button>
                         </div>
                       )}
                     </div>
                   </SheetHeader>
+
 
                   <div className="flex-1 space-y-1 overflow-y-auto px-4 py-5">
                     {navItems
