@@ -144,8 +144,8 @@ export function QuizPaletteMobile(props: QuizPaletteProps) {
       </SheetTrigger>
       <SheetContent
         side="right"
-        className="!z-[9999] flex w-[85vw] flex-col p-0 sm:w-[400px]"
-        overlayClassName="!z-[9998]"
+        className="!z-[50] flex w-[85vw] flex-col p-0 sm:w-[400px]"
+        overlayClassName="!z-[49]"
       >
         <SheetHeader className="border-b border-slate-100 bg-slate-50/50 p-6">
           <SheetTitle className="sr-only">{props.translations.questionPalette}</SheetTitle>

@@ -20,24 +20,36 @@ export function GuestResultClient({ userId }: { userId?: string }) {
 
   if (!result) return null;
 
-  const { answers } = result;
+  const { questions, answers } = result;
 
-  // For guest results, we don't need full question data to reduce memory usage
-  // Create minimal question objects for basic result display
-  const mappedQuestions = Object.keys(answers).map((questionId, index) => ({
-    id: questionId,
-    question: `Question ${index + 1}`, // Simplified for guest view  
-    questionEn: undefined,
-    options: ['Option A', 'Option B', 'Option C', 'Option D'], // Generic options
-    correctAnswer: 0, // Will be calculated properly by QuizResult
-    explanation: undefined,
-    explanationEn: undefined,
-    marks: 1,
-    negativeMarks: 0.33,
-    type: 'standard' as const,
-    matchPairs: undefined,
-    subject: 'General',
-  }));
+  // Map store questions to QuizResult Question type
+  // @ts-ignore
+  const mappedQuestions = questions.map((q: any) => {
+    let questionText = '';
+    let questionEn = undefined;
+
+    if (typeof q.question === 'string') {
+      questionText = q.question;
+    } else if (q.question && typeof q.question === 'object') {
+      questionText = q.question.text || q.question.textEn || '';
+      questionEn = q.question.textEn;
+    }
+
+    return {
+      id: q.id,
+      question: questionText,
+      questionEn: questionEn,
+      options: q.options,
+      correctAnswer: q.correctAnswer,
+      explanation: q.explanation,
+      explanationEn: q.explanationEn,
+      marks: q.marks,
+      negativeMarks: q.negativeMarks,
+      type: q.type || 'standard',
+      matchPairs: q.matchPairs,
+      subject: q.subject,
+    };
+  });
 
   const mappedAnswers: Record<string, number> = {};
   Object.keys(answers).forEach((qId) => {

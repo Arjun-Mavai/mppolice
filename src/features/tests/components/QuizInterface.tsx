@@ -314,7 +314,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
         testId={testId}
         userId={userId}
         userName={userName}
-        showFeedbackModal={true}  // Always show feedback modal
+        showFeedbackModal={false}  // Don't show feedback for logged-in users
       />
     );
   }
