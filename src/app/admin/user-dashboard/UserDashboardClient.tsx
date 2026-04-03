@@ -401,7 +401,7 @@ export default function UserDashboardClient({ users }: Props) {
                           </span>
                         </div>
 
-                        <div className="max-h-[320px] overflow-y-auto p-2">
+                        <div className="max-h-[320px] overflow-y-auto p-2 md:p-3">
                           {isLoading ? (
                             <div className="flex items-center justify-center py-8 text-slate-400">
                               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -412,7 +412,7 @@ export default function UserDashboardClient({ users }: Props) {
                               No tests attempted yet
                             </div>
                           ) : (
-                            <div className="space-y-1.5">
+                            <div className="space-y-2 md:space-y-1.5">
                               {userHistory.map((test) => (
                                 <TestHistoryRow key={test.id} test={test} />
                               ))}
@@ -452,82 +452,146 @@ function TestHistoryRow({ test }: { test: TestAttemptDetail }) {
   const startDate = new Date(test.startTime);
 
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-slate-100 bg-white p-2.5 transition-colors hover:border-slate-200 md:gap-3 md:p-3">
-      {/* Status */}
-      <div className="shrink-0">
-        {test.isCompleted ? (
-          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-        ) : (
-          <XCircle className="h-4 w-4 text-slate-300" />
-        )}
-      </div>
-
-      {/* Test Info */}
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-bold text-slate-800 md:text-sm" title={test.testTitle}>
-          {test.testTitle}
-        </p>
-        <div className="mt-0.5 flex items-center gap-1.5">
-          <Badge className={cn('h-4 text-[8px] md:text-[9px]', TEST_TYPE_COLORS[test.testType])}>
-            {test.testType}
-          </Badge>
-          <span
-            className="text-[9px] text-slate-400 md:text-[10px]"
-            title={`testId: ${test.testId} • attemptId: ${test.id} • userId: ${test.userId}`}
-          >
-            {test.totalQuestions} Qs
-          </span>
-          {test.isCompleted && test.endTime && (
-            <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-slate-500">
-              ⏱️ {Math.floor((new Date(test.endTime).getTime() - new Date(test.startTime).getTime()) / 60000)}m{' '}
-              {Math.floor(((new Date(test.endTime).getTime() - new Date(test.startTime).getTime()) % 60000) / 1000)}s
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Correct/Wrong/Skipped */}
-      <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
-        <span className="flex items-center gap-0.5 rounded bg-emerald-50 px-1 py-0.5 text-[9px] font-bold text-emerald-700 sm:px-1.5 sm:text-[10px]">
-          ✓{test.correctAnswers}
-        </span>
-        <span className="flex items-center gap-0.5 rounded bg-rose-50 px-1 py-0.5 text-[9px] font-bold text-rose-700 sm:px-1.5 sm:text-[10px]">
-          ✗{test.wrongAnswers}
-        </span>
-        <span className="hidden sm:flex items-center gap-0.5 rounded bg-slate-100 px-1 py-0.5 text-[9px] font-bold text-slate-500 sm:px-1.5 sm:text-[10px]">
-          ⊘{test.skippedAnswers}
-        </span>
-      </div>
-
-      {/* Net Score */}
-      <div className="shrink-0">
-        <div
-          className={cn(
-            'flex flex-col items-end rounded-lg px-2 py-1 text-[10px] font-black shadow-sm md:text-xs',
-            test.netScore >= 0
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-              : 'bg-rose-50 text-rose-700 border border-rose-100'
-          )}
-        >
-          <div className="flex items-center gap-1">
-            <span className="text-slate-400 opacity-60">Score:</span>
-            <span>{test.netScore >= 0 ? '+' : ''}{test.netScore}</span>
-            <span className="text-slate-400 opacity-60">/ {test.maxMarks}</span>
+    <div className="rounded-lg border border-slate-100 bg-white p-3 transition-colors hover:border-slate-200 sm:p-3">
+      {/* Mobile Layout - Stacked */}
+      <div className="flex flex-col gap-2 sm:hidden">
+        {/* Test Title & Status */}
+        <div className="flex items-start gap-2">
+          <div className="shrink-0 mt-0.5">
+            {test.isCompleted ? (
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            ) : (
+              <XCircle className="h-4 w-4 text-slate-300" />
+            )}
           </div>
-          <span className="text-[9px] opacity-80">{test.scorePercentage}% Accuracy</span>
+          <div className="min-w-0 flex-1">
+            <p className="font-bold text-slate-800 text-sm leading-tight mb-1" title={test.testTitle}>
+              {test.testTitle}
+            </p>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Badge className={cn('h-4 text-[9px]', TEST_TYPE_COLORS[test.testType])}>
+                {test.testType}
+              </Badge>
+              <span className="text-[10px] text-slate-400">
+                {test.totalQuestions} Questions
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Row */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-0.5 rounded bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700">
+              ✓ {test.correctAnswers}
+            </span>
+            <span className="flex items-center gap-0.5 rounded bg-rose-50 px-2 py-1 text-[10px] font-bold text-rose-700">
+              ✗ {test.wrongAnswers}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className={cn(
+              'px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1',
+              test.netScore > 0
+                ? 'bg-emerald-50 text-emerald-700'
+                : test.netScore < 0
+                ? 'bg-rose-50 text-rose-700' 
+                : 'bg-slate-100 text-slate-600'
+            )}
+            title={`Score calculation: (${test.correctAnswers} × 3) - (${test.wrongAnswers} × 1) = ${test.netScore} marks`}
+            >
+              <span className="text-[9px] opacity-60">Score:</span>
+              <span>{test.netScore > 0 ? '+' : ''}{test.netScore}</span>
+              <span className="opacity-60">/{test.maxMarks}</span>
+            </div>
+            <span className="text-[10px] text-slate-400">
+              {test.dayOfWeek}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Date & Day */}
-      <div className="shrink-0 text-right">
-        <div className="flex items-center justify-end gap-1 text-[9px] font-bold text-slate-600 sm:text-[11px]">
-          {test.dayOfWeek}
+      {/* Desktop Layout - Horizontal */}
+      <div className="hidden sm:flex items-center gap-3">
+        {/* Status */}
+        <div className="shrink-0">
+          {test.isCompleted ? (
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+          ) : (
+            <XCircle className="h-4 w-4 text-slate-300" />
+          )}
         </div>
-        <div className="text-[8px] text-slate-400 sm:text-[10px]">
-          {startDate.toLocaleDateString('en-IN', {
-            day: 'numeric',
-            month: 'short',
-          })}
+
+        {/* Test Info */}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-bold text-slate-800 mb-1" title={test.testTitle}>
+            {test.testTitle}
+          </p>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge className={cn('h-4 text-[9px]', TEST_TYPE_COLORS[test.testType])}>
+              {test.testType}
+            </Badge>
+            <span
+              className="text-[10px] text-slate-400"
+              title={`testId: ${test.testId} • attemptId: ${test.id} • userId: ${test.userId}`}
+            >
+              {test.totalQuestions} Qs
+            </span>
+            {test.isCompleted && test.endTime && (
+              <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-slate-500">
+                ⏱️ {Math.floor((new Date(test.endTime).getTime() - new Date(test.startTime).getTime()) / 60000)}m{' '}
+                {Math.floor(((new Date(test.endTime).getTime() - new Date(test.startTime).getTime()) % 60000) / 1000)}s
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Correct/Wrong/Skipped */}
+        <div className="flex shrink-0 items-center gap-1.5">
+          <span className="flex items-center gap-0.5 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+            ✓{test.correctAnswers}
+          </span>
+          <span className="flex items-center gap-0.5 rounded bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold text-rose-700">
+            ✗{test.wrongAnswers}
+          </span>
+          <span className="flex items-center gap-0.5 rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-500">
+            ⊘{test.skippedAnswers}
+          </span>
+        </div>
+
+        {/* Net Score */}
+        <div className="shrink-0">
+          <div
+            className={cn(
+              'flex flex-col items-end rounded-lg px-2 py-1.5 text-[11px] font-black shadow-sm border',
+              test.netScore > 0
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                : test.netScore < 0
+                ? 'bg-rose-50 text-rose-700 border-rose-100'
+                : 'bg-slate-100 text-slate-600 border-slate-200'
+            )}
+            title={`Score breakdown: Correct: ${test.correctAnswers} × 3 marks = +${test.correctAnswers * 3} | Wrong: ${test.wrongAnswers} × 1 mark = -${test.wrongAnswers} | Final: ${test.netScore}/${test.maxMarks}`}
+          >
+            <div className="flex items-center gap-1">
+              <span className="text-slate-400 opacity-60">Score:</span>
+              <span>{test.netScore > 0 ? '+' : ''}{test.netScore}</span>
+              <span className="text-slate-400 opacity-60">/ {test.maxMarks}</span>
+            </div>
+            <span className="text-[9px] opacity-80">{test.scorePercentage}% Accuracy</span>
+          </div>
+        </div>
+
+        {/* Date & Day */}
+        <div className="shrink-0 text-right">
+          <div className="flex items-center justify-end gap-1 text-[10px] font-bold text-slate-600">
+            {test.dayOfWeek}
+          </div>
+          <div className="text-[9px] text-slate-400">
+            {startDate.toLocaleDateString('en-IN', {
+              day: 'numeric',
+              month: 'short',
+            })}
+          </div>
         </div>
       </div>
     </div>
