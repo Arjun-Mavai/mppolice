@@ -1268,15 +1268,18 @@ export function QuizResult({
 
             {/* ── Connect Socials + Retry Button ────────── */}
             <div className="flex w-full items-center justify-between gap-3 sm:w-auto">
-              <ConnectSocials
-                className="flex-1 sm:w-auto"
-                title={userName ? `${userName.split(' ')[0]}, Join Pro!` : '🚀 Join Pro Platform'}
-                titleHi={
-                  userName
-                    ? `${userName.split(' ')[0]}, प्रो जॉइन करें!`
-                    : '🚀 प्रो प्लेटफॉर्म जॉइन करें'
-                }
-              />
+              {isGuest && (
+                <ConnectSocials
+                  className="flex-1 sm:w-auto"
+                  title={userName ? `${userName.split(' ')[0]}, Join Pro!` : '🚀 Join Pro Platform'}
+                  titleHi={
+                    userName
+                      ? `${userName.split(' ')[0]}, प्रो जॉइन करें!`
+                      : '🚀 प्रो प्लेटफॉर्म जॉइन करें'
+                  }
+                />
+              )}
+
               {!disableRetry && !isGuest && (
                 <Button
                   onClick={onRetry}

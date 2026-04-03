@@ -11,6 +11,8 @@ import {
   feedbackQuestions,
   type FeedbackFormType,
 } from '@/lib/schemas/feedback';
+import { useSettingsStore } from '@/store/useSettingsStore';
+
 
 interface TestSeriesFeedbackModalProps {
   isOpen: boolean;
@@ -27,8 +29,10 @@ export function TestSeriesFeedbackModal({
   userName,
 }: TestSeriesFeedbackModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { language } = useSettingsStore();
 
   const {
+
     control,
     handleSubmit,
     watch,
@@ -161,9 +165,19 @@ export function TestSeriesFeedbackModal({
               <div className="space-y-6">
                 {feedbackQuestions.map((question) => (
                   <div key={question.id} className="space-y-3">
-                    <label className="block text-[9px] font-black tracking-[0.25em] text-slate-500 uppercase">
-                      {question.label}
-                    </label>
+                    <AnimatePresence mode="wait">
+                      {!(question.type === 'textarea' && rating > 0) && (
+                        <motion.label
+                          initial={{ opacity: 0, x: -5 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 5 }}
+                          className="block text-[9px] font-black tracking-[0.25em] text-slate-500 uppercase"
+                        >
+                          {question.label}
+                        </motion.label>
+                      )}
+                    </AnimatePresence>
+
 
                     {/* STARS */}
                     {question.type === 'stars' && (
@@ -240,21 +254,94 @@ export function TestSeriesFeedbackModal({
                         name={question.name}
                         control={control}
                         render={({ field }) => (
-                          <div className="relative">
+                          <div className="group relative">
+                            {/* 💡 UX EXPERT: Appears after a rating is selected - Larger and more Intuitive */}
+                            <AnimatePresence>
+                              {rating > 0 && (
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                                  className="pointer-events-none absolute -top-8 right-0 z-10 flex w-full justify-end"
+                                >
+                                  <div className="flex items-center gap-2 pr-2">
+
+                                    <span className="text-[13px] font-black tracking-tight text-emerald-400">
+                                      {language === 'hi' ? 'अपना अनुभव साझा करें' : 'Describe your experience'}
+                                    </span>
+                                    <motion.span
+                                      animate={{ 
+                                        rotate: [0, -20, 0, -20, 0],
+                                        scale: [1, 1.2, 1, 1.2, 1]
+                                      }}
+                                      transition={{ 
+                                        duration: 2, 
+                                        repeat: Infinity,
+                                        repeatDelay: 1
+                                      }}
+                                      className="text-lg inline-block"
+                                    >
+                                      ✍️
+                                    </motion.span>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+
+
+                            {/* 🌀 MOVING BORDER / BREATHING GLOW EFFECT */}
+                            <motion.div
+                              animate={
+                                rating > 0
+                                  ? {
+                                      opacity: [0.1, 0.5, 0.1],
+                                      borderColor: [
+                                        'rgba(16, 185, 129, 0.2)',
+                                        'rgba(245, 158, 11, 0.4)',
+                                        'rgba(16, 185, 129, 0.2)',
+                                      ],
+                                      boxShadow: [
+                                        '0 0 0px rgba(16, 185, 129, 0)',
+                                        '0 0 20px rgba(16, 185, 129, 0.15)',
+                                        '0 0 0px rgba(16, 185, 129, 0)',
+                                      ],
+                                    }
+                                  : {}
+                              }
+                              transition={{
+                                duration: 3,
+                                repeat: Infinity,
+                                ease: 'easeInOut',
+                              }}
+                              className="absolute -inset-[2px] rounded-[1.25rem] border border-transparent"
+                            />
+
                             <textarea
                               {...field}
                               placeholder={question.placeholder}
+                              onFocus={(e) => {
+                                // Scroll to ensure visible on mobile keyboards
+                                if (window.innerWidth < 768) {
+                                  e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }
+                              }}
                               className={cn(
-                                'min-h-[100px] w-full resize-none rounded-2xl border bg-white/[0.02] p-4 text-xs text-white transition-all placeholder:text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none',
+                                'relative z-10 min-h-[100px] w-full resize-none rounded-2xl border bg-white/[0.02] p-4 text-[13px] leading-relaxed text-white transition-all placeholder:text-slate-600 focus:outline-none',
                                 errors.comment
                                   ? 'border-rose-500/50'
-                                  : 'border-white/[0.05] focus:border-emerald-500/30'
+                                  : rating > 0
+                                    ? 'border-white/10 bg-white/[0.04] shadow-2xl focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10'
+                                    : 'border-white/[0.05] focus:border-emerald-500/30 focus:ring-4 focus:ring-emerald-500/10'
                               )}
+
                             />
+
+                            {/* Subtle Glow Pulse for Focus */}
+                            <div className="pointer-events-none absolute inset-0 z-0 rounded-2xl bg-gradient-to-br from-emerald-500/5 to-amber-500/5 opacity-0 transition-opacity duration-500 group-focus-within:opacity-100" />
                           </div>
                         )}
                       />
                     )}
+
 
                     {errors[question.name as keyof typeof errors] && (
                       <p className="px-1 text-[10px] font-bold text-rose-500">
@@ -273,8 +360,9 @@ export function TestSeriesFeedbackModal({
                     'group relative w-full overflow-hidden rounded-2xl py-4 transition-all duration-500 active:scale-95',
                     isValid && !isSubmitting
                       ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_20px_40px_-12px_rgba(16,185,129,0.3)]'
-                      : 'cursor-not-allowed bg-white/[0.05] opacity-50'
+                      : 'cursor-not-allowed border border-white/[0.08] bg-white/[0.02] opacity-40 shadow-inner'
                   )}
+
                 >
                   <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent,rgba(255,255,255,0.1),transparent)] transition-transform duration-1000 group-hover:translate-x-full" />
                   <span className="flex items-center justify-center gap-2 text-sm font-black tracking-widest text-white uppercase">
