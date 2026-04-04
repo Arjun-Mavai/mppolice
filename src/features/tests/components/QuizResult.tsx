@@ -69,6 +69,7 @@ interface QuizResultProps {
   isGuest?: boolean;
   showFeedbackModal?: boolean;
   questionTimes?: Record<string, number>;
+  userName?: string;
 }
 
 export function QuizResult({
@@ -81,6 +82,7 @@ export function QuizResult({
   title,
   testId,
   userId,
+  userName,
   disableRetry = false,
   isGuest = false,
   showFeedbackModal = true,
@@ -218,7 +220,7 @@ export function QuizResult({
         testId: currentTestId,
         testType,
         data,
-        userName: guestName,
+        userName: userName || guestName,
       });
 
       if (response.success) {
