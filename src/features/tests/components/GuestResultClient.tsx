@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGuestResultStore } from '../store/guestResultStore';
 import { QuizResult } from './QuizResult';
+import { Question } from '@/types/quiz';
 
 export function GuestResultClient({ userId }: { userId?: string }) {
   const router = useRouter();
@@ -23,16 +24,16 @@ export function GuestResultClient({ userId }: { userId?: string }) {
   const { questions, answers } = result;
 
   // Map store questions to QuizResult Question type
-  // @ts-ignore
-  const mappedQuestions = questions.map((q: any) => {
+  const mappedQuestions: Question[] = questions.map((q) => {
     let questionText = '';
-    let questionEn = undefined;
+    let questionEn: string | undefined = undefined;
 
     if (typeof q.question === 'string') {
       questionText = q.question;
     } else if (q.question && typeof q.question === 'object') {
-      questionText = q.question.text || q.question.textEn || '';
-      questionEn = q.question.textEn;
+      const qObj = q.question as { text?: string; textEn?: string };
+      questionText = qObj.text || qObj.textEn || '';
+      questionEn = qObj.textEn;
     }
 
     return {
@@ -53,7 +54,6 @@ export function GuestResultClient({ userId }: { userId?: string }) {
 
   const mappedAnswers: Record<string, number> = {};
   Object.keys(answers).forEach((qId) => {
-    // @ts-ignore
     mappedAnswers[qId] = answers[qId];
   });
 

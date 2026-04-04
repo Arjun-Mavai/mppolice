@@ -55,6 +55,26 @@ import { submitTestFeedback, hasUserSubmittedFeedback } from '@/app/actions/feed
 import { TestSeriesFeedbackModal } from '@/components/test-series-feedback-modal';
 import type { FeedbackFormType } from '@/lib/schemas/feedback';
 
+interface LeaderboardEntry {
+  id: string;
+  testId: string;
+  userId: string | null;
+  displayName: string;
+  score: number;
+  percentage: number | null;
+  timeTakenSeconds: number | null;
+  rank: number | null;
+  isFake?: number | null;
+  createdAt?: Date | null;
+}
+
+interface LeaderboardData {
+  leaderboard: LeaderboardEntry[];
+  userRank: number | null;
+  userEntry: LeaderboardEntry | null;
+  totalParticipants: number;
+}
+
 interface QuizResultProps {
   questions: Question[];
   answers: Record<string, number>;
@@ -139,7 +159,7 @@ export function QuizResult({
     </div>
   );
 
-  const [leaderboard, setLeaderboard] = useState<any>(null);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardData | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [pyqInsights, setPyqInsights] = useState<PYQWrongTopicInsight[]>([]);
   const [isFetchingInsights, setIsFetchingInsights] = useState(false);
@@ -171,17 +191,6 @@ export function QuizResult({
         return;
       }
 
-      // 2. Check SessionStorage (Legacy/Fallback)
-      const currentTestId = testId || 'guest-test-result';
-      const hasSeenSession =
-        typeof window !== 'undefined'
-          ? sessionStorage.getItem(`feedback_shown_${currentTestId}`)
-          : null;
-      if (hasSeenSession) {
-        setShowFeedback(false);
-        return;
-      }
-
       // 3. For logged-in users, check database
       if (userId) {
         const submitted = await hasUserSubmittedFeedback();
@@ -195,11 +204,6 @@ export function QuizResult({
 
       // If no feedback found anywhere, show it
       setShowFeedback(true);
-      // Mark as shown in session to prevent flicker on re-renders,
-      // but only set final 'given' status on actual submission
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(`feedback_shown_${currentTestId}`, 'true');
-      }
     };
 
     checkFeedbackStatus();
@@ -714,7 +718,7 @@ export function QuizResult({
               <div className="text-xs font-medium text-slate-500">Only Top 10 shown</div>
             </div>
             <div className="divide-y divide-slate-100">
-              {leaderboard.leaderboard.map((entry: any, index: number) => {
+              {leaderboard.leaderboard.map((entry: LeaderboardEntry, index: number) => {
                 const isCurrentUser = entry.userId === userId;
                 return (
                   <div
@@ -752,7 +756,7 @@ export function QuizResult({
                           )}
                         </div>
                         <div className="text-[10px] text-slate-400">
-                          {Math.floor(entry.timeTakenSeconds / 60)}m {entry.timeTakenSeconds % 60}s
+                          {Math.floor((entry.timeTakenSeconds || 0) / 60)}m {(entry.timeTakenSeconds || 0) % 60}s
                         </div>
                       </div>
                     </div>
@@ -765,7 +769,7 @@ export function QuizResult({
               })}
 
               {/* Current user at bottom if out of top 10 */}
-              {leaderboard.userRank > 10 && leaderboard.userEntry && (
+              {(leaderboard.userRank ?? 0) > 10 && leaderboard.userEntry && (
                 <>
                   <div className="border-y border-slate-100 bg-slate-50 p-2 text-center text-xs text-slate-400">
                     ...
@@ -773,7 +777,7 @@ export function QuizResult({
                   <div className="flex items-center justify-between border-l-4 border-amber-400 bg-amber-50 p-3">
                     <div className="flex items-center gap-4">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-slate-500">
-                        {leaderboard.userRank}
+                        {leaderboard.userRank || '-'}
                       </div>
                       <div>
                         <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
@@ -783,8 +787,8 @@ export function QuizResult({
                           </span>
                         </div>
                         <div className="text-[10px] text-slate-400">
-                          {Math.floor(leaderboard.userEntry.timeTakenSeconds / 60)}m{' '}
-                          {leaderboard.userEntry.timeTakenSeconds % 60}s
+                          {Math.floor((leaderboard.userEntry.timeTakenSeconds || 0) / 60)}m{' '}
+                          {(leaderboard.userEntry.timeTakenSeconds || 0) % 60}s
                         </div>
                       </div>
                     </div>

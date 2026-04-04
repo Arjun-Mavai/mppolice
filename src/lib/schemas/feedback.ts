@@ -1,33 +1,16 @@
 import { z } from 'zod';
 
-/**
- * FEEDBACK FORM SCHEMA
- *
- * HOW TO ADD NEW FIELDS:
- * 1. Add the field to the schema below (e.g., z.string(), z.number(), z.enum([...]))
- * 2. Add the field to FeedbackFormType (TypeScript interface will auto-generate)
- * 3. Add the field to the form in TestSeriesFeedbackModal component
- * 4. Update the API endpoint to save the new field to your database
- *
- * FIELD TYPES:
- * - z.string() → text input
- * - z.number() → numeric input (for ratings)
- * - z.enum([...]) → radio buttons or select
- * - z.boolean() → checkbox or toggle
- * - z.number().min(1).max(5) → rating scale (1-5 stars)
- */
-
 export const feedbackFormSchema = z.object({
   overallRating: z.number().min(1, 'Please provide a rating (1-5 stars)').max(5),
 
   difficultyLevel: z.enum(['too_easy', 'just_right', 'too_hard'] as const),
 
-  wouldRecommend: z.enum(['yes', 'no', 'definitely', 'probably', 'maybe'] as const),
+  wouldRecommend: z.enum(['yes', 'no', 'definitely', 'probably', 'maybe'] as const).optional(),
 
   comment: z
     .string()
-    .min(3, 'Please tell us why you selected this rating...')
-    .max(500, 'Comment too long (max 500 chars)'),
+    .max(500, 'Comment too long (max 500 chars)')
+    .optional(),
 });
 
 export type FeedbackFormType = z.infer<typeof feedbackFormSchema>;

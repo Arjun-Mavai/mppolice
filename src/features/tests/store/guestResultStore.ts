@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { Question } from '@/types/quiz';
 
 interface GuestResultData {
   score: number;
@@ -8,7 +9,7 @@ interface GuestResultData {
   wrongCount: number;
   skippedCount: number;
   timeTaken: number; // in seconds
-  questions: any[]; // Store questions for result display
+  questions: Question[]; // Store questions for result display
   answers: Record<string, number>;
   testId?: string; // Add testId for feedback submission
   title?: string; // Add title for display
