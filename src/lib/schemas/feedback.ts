@@ -18,10 +18,7 @@ import { z } from 'zod';
  */
 
 export const feedbackFormSchema = z.object({
-  overallRating: z
-    .number()
-    .min(1, 'Please provide a rating (1-5 stars)')
-    .max(5),
+  overallRating: z.number().min(1, 'Please provide a rating (1-5 stars)').max(5),
 
   difficultyLevel: z.enum(['too_easy', 'just_right', 'too_hard'] as const),
 
