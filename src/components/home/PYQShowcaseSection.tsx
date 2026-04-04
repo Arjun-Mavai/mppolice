@@ -102,13 +102,21 @@ export function PYQShowcaseSection() {
   const [activeCard, setActiveCard] = useState(0); 
   const [isHovered, setIsHovered] = useState(false);
 
+  const TABS = [
+    { labelEn: 'Year-wise', labelHi: 'वर्ष', id: 0 },
+    { labelEn: 'Overall', labelHi: 'वेटेज', id: 1, badge: 'New' },
+    { labelEn: 'Subjects', labelHi: 'विषय', id: 2 },
+    { labelEn: 'Instant', labelHi: 'इंस्टेंट', id: 3 },
+    { labelEn: 'Logic', labelHi: 'प्रीमियम', id: 4 },
+  ];
+
   useEffect(() => {
     if (isHovered) return;
     const timer = setInterval(() => {
-      setActiveCard((prev) => (prev + 1) % 5);
+      setActiveCard((prev) => (prev + 1) % TABS.length);
     }, 7000);
     return () => clearInterval(timer);
-  }, [isHovered]);
+  }, [isHovered, TABS.length]);
 
   const handleManualSwitch = (index: number) => {
     setActiveCard(index);
@@ -176,39 +184,36 @@ export function PYQShowcaseSection() {
                 transition={{ delay: 0.3 }}
                 className="flex items-center justify-center lg:justify-start"
               >
-                <div className="flex gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-2 mask-linear-r max-w-full">
-                  {[
-                    { label: isHindi ? 'वर्ष' : 'Year-wise', id: 0 },
-                    { label: isHindi ? 'वेटेज' : 'Overall', id: 1, badge: 'New' },
-                    { label: isHindi ? 'विषय' : 'Subjects', id: 2 },
-                    { label: isHindi ? 'इंस्टेंट' : 'Instant', id: 3 },
-                    { label: isHindi ? 'प्रीमियम' : 'Logic', id: 4 },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => handleManualSwitch(tab.id)}
-                      className={cn(
-                        "group relative flex shrink-0 items-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl px-3 py-2 sm:px-4 sm:py-2.5 text-[9px] sm:text-[10px] font-black tracking-widest uppercase transition-all active:scale-95",
-                        activeCard === tab.id 
-                          ? "bg-slate-900 text-white shadow-xl" 
-                          : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                      )}
-                    >
-                      <span className="relative z-10">{tab.label}</span>
-                      {tab.badge && (
-                        <span className="relative z-10 rounded bg-emerald-500 px-1 py-0.5 text-[7px] font-black leading-none text-white ml-0.5">
-                          {tab.badge}
-                        </span>
-                      )}
-                      {activeCard === tab.id && (
-                        <m.div 
-                          layoutId="nav-bg"
-                          className="absolute inset-0 bg-slate-900 rounded-lg sm:rounded-xl" 
-                          transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                        />
-                      )}
-                    </button>
-                  ))}
+                <div className="relative w-full overflow-hidden">
+                  <div className="flex gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-2 max-w-full">
+                    {TABS.map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => handleManualSwitch(tab.id)}
+                        className={cn(
+                          "group relative flex shrink-0 items-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl px-3 py-2 sm:px-4 sm:py-2.5 text-[9px] sm:text-[10px] font-black tracking-widest uppercase transition-all active:scale-95",
+                          activeCard === tab.id 
+                            ? "bg-slate-900 text-white shadow-xl" 
+                            : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                        )}
+                      >
+                        <span className="relative z-10">{isHindi ? tab.labelHi : tab.labelEn}</span>
+                        {tab.badge && (
+                          <span className="relative z-10 rounded bg-emerald-500 px-1 py-0.5 text-[7px] font-black leading-none text-white ml-0.5">
+                            {tab.badge}
+                          </span>
+                        )}
+                        {activeCard === tab.id && (
+                          <m.div 
+                            layoutId="nav-bg"
+                            className="absolute inset-0 bg-slate-900 rounded-lg sm:rounded-xl" 
+                            transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                          />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-white/90 to-transparent lg:hidden" />
                 </div>
               </m.div>
 
@@ -234,7 +239,7 @@ export function PYQShowcaseSection() {
 
             {/* RIGHT COLUMN: Visual Showcase Cards */}
             <div 
-              className="relative flex flex-col items-center lg:items-end"
+              className="group relative flex flex-col items-center lg:items-end"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
             >
@@ -362,7 +367,7 @@ export function PYQShowcaseSection() {
                               <div className="rounded-lg sm:rounded-xl bg-slate-50 border border-slate-100 p-3 sm:p-4 space-y-1.5 sm:space-y-2">
                                 <Badge className="bg-slate-800 text-white border-none text-[7px] sm:text-[8px] font-black px-1.5 py-0.5 rounded">EXPLANATION</Badge>
                                 <p className="text-[9px] sm:text-[10px] font-medium leading-relaxed text-slate-600">
-                                    The **Rigveda** contains the earliest reference to the Chedi kingdom (Danastuti hymn).
+                                    The <strong>Rigveda</strong> contains the earliest reference to the Chedi kingdom (Danastuti hymn).
                                 </p>
                               </div>
                           </div>
@@ -400,9 +405,8 @@ export function PYQShowcaseSection() {
                     </AnimatePresence>
                   </div>
 
-                  {/* PAGINATION */}
                   <div className="absolute bottom-5 sm:bottom-6 left-1/2 flex -translate-x-1/2 gap-1.5 sm:gap-2">
-                    {[0, 1, 2, 3, 4].map((i) => (
+                    {TABS.map((_, i) => (
                         <button key={i} onClick={() => handleManualSwitch(i)} aria-label={`Slide ${i + 1}`} className={cn("h-1 transition-all duration-300 rounded-full", activeCard === i ? "w-6 sm:w-8 bg-pink-600" : "w-1 sm:w-1.5 bg-white/10")} />
                     ))}
                   </div>
