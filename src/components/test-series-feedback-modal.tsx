@@ -57,29 +57,6 @@ export function TestSeriesFeedbackModal({
 
   const ratingInfo = getRatingEmoji(rating);
 
-  // Auto-submit logic: When all required fields (2 clicks) are filled, submit automatically
-  useEffect(() => {
-    const isReady =
-      formData.overallRating > 0 &&
-      formData.difficultyLevel &&
-      formData.wouldRecommend &&
-      !isSubmitting &&
-      !isCompleted;
-
-    if (isReady) {
-      const timer = setTimeout(() => {
-        handleSubmit(handleFormSubmit)();
-      }, 400); 
-      return () => clearTimeout(timer);
-    }
-  }, [
-    formData.overallRating,
-    formData.difficultyLevel,
-    isSubmitting,
-    isCompleted,
-    handleSubmit,
-  ]);
-
   const handleFormSubmit = async (data: FeedbackFormType) => {
     setIsSubmitting(true);
     try {
@@ -101,6 +78,11 @@ export function TestSeriesFeedbackModal({
       setIsSubmitting(false);
     }
   };
+
+  const isReadyToSubmit = 
+    formData.overallRating > 0 && 
+    formData.difficultyLevel && 
+    formData.wouldRecommend;
 
   if (!isOpen) return null;
 
@@ -153,11 +135,11 @@ export function TestSeriesFeedbackModal({
                   {userName ? `Thanks ${userName.split(' ')[0]}!` : 'Quick Feedback'}
                 </h2>
                 <p className="text-xs font-bold tracking-wide text-slate-400 uppercase">
-                  Helps us improve in 3 clicks
+                   improvement in 3 clicks
                 </p>
               </div>
 
-              <form className="space-y-8">
+              <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
                 {feedbackQuestions.slice(0, 3).map((question) => (
                   <div key={question.id} className="space-y-4">
                     <label className="block text-center text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase">
@@ -236,17 +218,49 @@ export function TestSeriesFeedbackModal({
                   </div>
                 ))}
 
-                {isSubmitting && (
-                  <div className="flex justify-center pt-2">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                      className="h-6 w-6 rounded-full border-2 border-emerald-500 border-t-transparent"
-                    />
-                  </div>
-                )}
+                <button
+                  type="submit"
+                  disabled={!isReadyToSubmit || isSubmitting}
+                  className={cn(
+                    "group relative h-14 w-full overflow-hidden rounded-[1.25rem] font-black transition-all duration-300 active:scale-95 disabled:pointer-events-none",
+                    isReadyToSubmit 
+                      ? "bg-white text-slate-900 shadow-[0_20px_40px_-12px_rgba(255,255,255,0.2)]" 
+                      : "bg-white/5 text-slate-600 border border-white/5"
+                  )}
+                >
+                  <AnimatePresence mode="wait">
+                    {isSubmitting ? (
+                      <motion.div
+                        key="loading"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex items-center justify-center gap-2"
+                      >
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                          className="h-5 w-5 rounded-full border-2 border-slate-900 border-t-transparent"
+                        />
+                        <span>Submitting...</span>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="ready"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex items-center justify-center gap-2"
+                      >
+                        <span>Submit Feedback</span>
+                        <CheckCircle2 size={18} className={cn(isReadyToSubmit ? "text-emerald-500" : "text-slate-600")} />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </button>
               </form>
             </motion.div>
+
           ) : (
             <motion.div
               key="success"
