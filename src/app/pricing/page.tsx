@@ -252,6 +252,10 @@ export default function PricingPage() {
                   icon: History,
                   label: hi ? '5+ साल के PYQ' : '5+ Years PYQs',
                   sub: hi ? 'विस्तृत उत्तर सहित' : 'With Explanations',
+                  badges: hi 
+                    ? ['वर्ष-वार', 'विषय-वार', 'यूनिट-वार'] 
+                    : ['Year-wise', 'Subject-wise', 'Unit-wise'],
+                  highlight: true
                 },
                 {
                   icon: Newspaper,
@@ -264,26 +268,54 @@ export default function PricingPage() {
                   sub: hi ? 'विस्तृत व्याख्या और शॉर्ट-कट' : 'Structured Breakdowns & Shortcuts',
                   highlight: true
                 },
-              ].map(({ icon: Icon, label, sub, highlight }) => (
-                <div
-                  key={label}
-                  className={cn(
-                    "group rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-1 shadow-sm",
-                    highlight 
-                      ? "border-amber-200 bg-amber-50/50 shadow-amber-500/5 hover:shadow-amber-500/10 hover:border-amber-300" 
-                      : "border-slate-100 bg-white hover:border-amber-100 hover:shadow-lg"
-                  )}
-                >
-                  <div className={cn(
-                    "mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-colors",
-                    highlight ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-700 group-hover:bg-amber-100 group-hover:text-amber-600"
-                  )}>
-                    <Icon className="h-6 w-6" />
+              ].map((item) => {
+                const { icon: Icon, label, sub, highlight } = item;
+                const badges = (item as any).badges as string[] | undefined;
+                
+                return (
+                  <div
+                    key={label}
+                    className={cn(
+                      "group relative rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-1 shadow-sm",
+                      highlight 
+                        ? "border-amber-200 bg-amber-50/20 shadow-amber-500/5 hover:shadow-amber-500/10 hover:border-amber-300" 
+                        : "border-slate-100 bg-white hover:border-amber-100 hover:shadow-lg"
+                    )}
+                  >
+                    {/* Unique Sparkle for Highlighted PYQ Card */}
+                    {badges && (
+                      <div className="absolute -top-1.5 -right-1.5 flex h-7 w-7 animate-bounce items-center justify-center rounded-full bg-amber-400 text-white shadow-lg">
+                        <Sparkles size={14} className="animate-pulse" />
+                      </div>
+                    )}
+
+                    <div className={cn(
+                      "mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-colors",
+                      highlight ? "bg-amber-500 text-white shadow-xl shadow-amber-500/20" : "bg-slate-100 text-slate-700 group-hover:bg-amber-100 group-hover:text-amber-600"
+                    )}>
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    
+                    <p className="mb-1 text-sm font-black text-slate-900 md:text-base tracking-tight">{label}</p>
+                    
+                    {/* Badges Organized Flow */}
+                    {badges && (
+                      <div className="mb-3 flex flex-wrap gap-1.5">
+                        {badges.map((badge: string) => (
+                          <span 
+                            key={badge} 
+                            className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[8px] font-black tracking-widest text-emerald-700 uppercase"
+                          >
+                            {badge}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{sub}</p>
                   </div>
-                  <p className="mb-1 text-sm font-black text-slate-900 md:text-base tracking-tight">{label}</p>
-                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{sub}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
