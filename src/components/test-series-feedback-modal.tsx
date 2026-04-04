@@ -37,26 +37,34 @@ export function TestSeriesFeedbackModal({
     mode: 'onChange',
     defaultValues: {
       overallRating: 0,
-    }
+    },
   });
 
   const formData = watch();
 
   // Auto-submit logic: When all required fields are filled, submit automatically
   useEffect(() => {
-    const isReady = formData.overallRating > 0 && 
-                  formData.difficultyLevel && 
-                  formData.wouldRecommend && 
-                  !isSubmitting && 
-                  !isCompleted;
+    const isReady =
+      formData.overallRating > 0 &&
+      formData.difficultyLevel &&
+      formData.wouldRecommend &&
+      !isSubmitting &&
+      !isCompleted;
 
     if (isReady) {
       const timer = setTimeout(() => {
         handleSubmit(handleFormSubmit)();
-      }, 600); // 600ms delay to give user time to react if they misclicked
+      }, 500); // 600ms delay to give user time to react if they misclicked
       return () => clearTimeout(timer);
     }
-  }, [formData.overallRating, formData.difficultyLevel, formData.wouldRecommend, isSubmitting, isCompleted, handleSubmit]);
+  }, [
+    formData.overallRating,
+    formData.difficultyLevel,
+    formData.wouldRecommend,
+    isSubmitting,
+    isCompleted,
+    handleSubmit,
+  ]);
 
   const handleFormSubmit = async (data: FeedbackFormType) => {
     setIsSubmitting(true);
@@ -102,9 +110,7 @@ export function TestSeriesFeedbackModal({
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500">
                   <Zap className="h-6 w-6 fill-emerald-500" />
                 </div>
-                <h2 className="text-xl font-black tracking-tight text-white">
-                  Quick Feedback
-                </h2>
+                <h2 className="text-xl font-black tracking-tight text-white">Quick Feedback</h2>
                 <p className="text-xs font-bold tracking-wide text-slate-400 uppercase">
                   Helps us improve in 2 clicks
                 </p>
@@ -134,16 +140,16 @@ export function TestSeriesFeedbackModal({
                                 {star <= field.value && (
                                   <motion.div
                                     layoutId="star-glow"
-                                    className="absolute inset-0 bg-amber-400/20 blur-md rounded-full"
+                                    className="absolute inset-0 rounded-full bg-amber-400/20 blur-md"
                                   />
                                 )}
                                 <Star
                                   size={32}
                                   className={cn(
-                                    "transition-all duration-300",
+                                    'transition-all duration-300',
                                     star <= field.value
-                                      ? "fill-amber-400 text-amber-400 scale-110"
-                                      : "text-slate-700 group-hover:text-slate-500"
+                                      ? 'scale-110 fill-amber-400 text-amber-400'
+                                      : 'text-slate-700 group-hover:text-slate-500'
                                   )}
                                 />
                               </button>
@@ -166,10 +172,10 @@ export function TestSeriesFeedbackModal({
                                 type="button"
                                 onClick={() => field.onChange(option.value)}
                                 className={cn(
-                                  "relative flex h-11 items-center justify-center rounded-2xl border px-4 text-xs font-black transition-all duration-300 active:scale-95",
+                                  'relative flex h-11 items-center justify-center rounded-2xl border px-4 text-xs font-black transition-all duration-300 active:scale-95',
                                   field.value === option.value
-                                    ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
-                                    : "border-white/5 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
+                                    ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                                    : 'border-white/5 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
                                 )}
                               >
                                 {option.label}
@@ -177,7 +183,7 @@ export function TestSeriesFeedbackModal({
                                   <motion.div
                                     layoutId={`${question.id}-active`}
                                     className="absolute inset-0 rounded-2xl border-2 border-emerald-500/50"
-                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                                   />
                                 )}
                               </button>
@@ -193,7 +199,7 @@ export function TestSeriesFeedbackModal({
                   <div className="flex justify-center pt-2">
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                       className="h-6 w-6 rounded-full border-2 border-emerald-500 border-t-transparent"
                     />
                   </div>
@@ -210,9 +216,7 @@ export function TestSeriesFeedbackModal({
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[2.5rem] bg-emerald-500/20 text-emerald-500">
                 <CheckCircle2 size={48} className="fill-emerald-500/20" />
               </div>
-              <h3 className="text-2xl font-black tracking-tight text-white">
-                Awesome!
-              </h3>
+              <h3 className="text-2xl font-black tracking-tight text-white">Awesome!</h3>
               <p className="mt-2 text-sm font-bold tracking-widest text-emerald-500/60 uppercase">
                 Feedback Captured
               </p>
