@@ -90,7 +90,6 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
   const [guestEmail, setGuestEmail] = useState('');
   const [guestMobile, setGuestMobile] = useState('');
   const [showGuestEntryDialog, setShowGuestEntryDialog] = useState(false);
-  const [isSubmittingGuest, setIsSubmittingGuest] = useState(false);
 
   // Custom Guest Submit State (to trigger storing and redirect)
   const [isProcessingResult, setIsProcessingResult] = useState(false);
@@ -175,22 +174,23 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     }
   }, [user]);
 
-  const handleGuestEntrySubmit = async () => {
+  const handleGuestEntrySubmit = () => {
     if (!guestName.trim()) return;
-    setIsSubmittingGuest(true);
-    try {
-      localStorage.setItem('mppsc_guest_name', guestName.trim());
-      await createGuestUser({ name: guestName, email: guestEmail, mobile: guestMobile });
-      setShowGuestEntryDialog(false);
-    } catch (error) {
-      logger.error('Guest entry creation failed', error, {
-        category: 'auth',
-        metadata: { guestName, guestEmail },
+    
+    // ⚡ INSTANT START: Save to localStorage and close dialog immediately
+    localStorage.setItem('mppsc_guest_name', guestName.trim());
+    setShowGuestEntryDialog(false);
+    
+    // 🔥 FIRE-AND-FORGET: DB write happens in background - no waiting!
+    // This is non-blocking - user can start quiz immediately
+    createGuestUser({ name: guestName, email: guestEmail, mobile: guestMobile })
+      .catch((error) => {
+        // Silent fail - localStorage backup is already saved
+        logger.error('Guest entry creation failed (background)', error, {
+          category: 'auth',
+          metadata: { guestName, guestEmail },
+        });
       });
-      // Optionally show an alert or toast here
-    } finally {
-      setIsSubmittingGuest(false);
-    }
   };
 
   // ── Auto-fullscreen on mount ──
@@ -413,7 +413,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
         guestName={guestName}
         guestEmail={guestEmail}
         guestMobile={guestMobile}
-        isSubmitting={isSubmittingGuest}
+        isSubmitting={false}
         onNameChange={setGuestName}
         onEmailChange={setGuestEmail}
         onMobileChange={setGuestMobile}

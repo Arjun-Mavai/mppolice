@@ -222,6 +222,7 @@ export function QuizResult({
 
       const response = await submitTestFeedback({
         testId: currentTestId,
+        testName: title,
         testType,
         data,
         userName: userName || guestName,
