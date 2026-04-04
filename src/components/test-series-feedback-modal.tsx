@@ -17,12 +17,15 @@ interface TestSeriesFeedbackModalProps {
   onClose: () => void;
   onSubmit?: (data: FeedbackFormType) => Promise<void>;
   testSeriesId?: string;
+  userName?: string;
 }
 
 export function TestSeriesFeedbackModal({
   isOpen,
   onClose,
   onSubmit,
+  testSeriesId,
+  userName,
 }: TestSeriesFeedbackModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
