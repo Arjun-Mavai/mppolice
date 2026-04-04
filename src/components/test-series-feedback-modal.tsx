@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Star, CheckCircle2, ThumbsUp, ThumbsDown, Zap } from 'lucide-react';
+import { Star, CheckCircle2, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import {
@@ -24,7 +24,6 @@ export function TestSeriesFeedbackModal({
   isOpen,
   onClose,
   onSubmit,
-  testSeriesId,
   userName,
 }: TestSeriesFeedbackModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,7 +33,6 @@ export function TestSeriesFeedbackModal({
     control,
     handleSubmit,
     watch,
-    formState: { isValid },
   } = useForm<FeedbackFormType>({
     resolver: zodResolver(feedbackFormSchema),
     mode: 'onChange',
@@ -44,8 +42,22 @@ export function TestSeriesFeedbackModal({
   });
 
   const formData = watch();
+  const rating = formData.overallRating;
 
-  // Auto-submit logic: When all required fields are filled, submit automatically
+  const getRatingEmoji = (val: number) => {
+    switch (val) {
+      case 1: return { emoji: '😞', color: 'text-rose-400' };
+      case 2: return { emoji: '😐', color: 'text-amber-400' };
+      case 3: return { emoji: '😊', color: 'text-emerald-400' };
+      case 4: return { emoji: '🌟', color: 'text-blue-400' };
+      case 5: return { emoji: '🔥', color: 'text-orange-400' };
+      default: return null;
+    }
+  };
+
+  const ratingInfo = getRatingEmoji(rating);
+
+  // Auto-submit logic: When all required fields (2 clicks) are filled, submit automatically
   useEffect(() => {
     const isReady =
       formData.overallRating > 0 &&
@@ -57,13 +69,12 @@ export function TestSeriesFeedbackModal({
     if (isReady) {
       const timer = setTimeout(() => {
         handleSubmit(handleFormSubmit)();
-      }, 500); // 600ms delay to give user time to react if they misclicked
+      }, 400); 
       return () => clearTimeout(timer);
     }
   }, [
     formData.overallRating,
     formData.difficultyLevel,
-    formData.wouldRecommend,
     isSubmitting,
     isCompleted,
     handleSubmit,
@@ -79,7 +90,11 @@ export function TestSeriesFeedbackModal({
       // Auto-close after 2 seconds
       setTimeout(() => {
         onClose();
-      }, 2500);
+        // Reset state for next time
+        setTimeout(() => {
+          setIsCompleted(false);
+        }, 500);
+      }, 2000);
     } catch (error) {
       console.error('Error submitting feedback:', error);
     } finally {
@@ -96,6 +111,27 @@ export function TestSeriesFeedbackModal({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className="relative w-full max-w-[380px] overflow-hidden rounded-[2.5rem] border border-white/10 bg-slate-900/80 p-8 shadow-2xl backdrop-blur-2xl"
       >
+        {/* TOP RIGHT EMOJI EXPERIENCE */}
+        <AnimatePresence>
+          {ratingInfo && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5, x: 20, y: -20 }}
+              animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              className="absolute top-6 right-8 z-20 flex flex-col items-center"
+            >
+              <span className="text-3xl filter drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
+                {ratingInfo.emoji}
+              </span>
+              <motion.div 
+                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className={cn("mt-1 h-1 w-4 rounded-full bg-current opacity-40 blur-[2px]", ratingInfo.color)}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Glow Effects */}
         <div className="pointer-events-none absolute -top-24 -right-24 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-amber-500/10 blur-3xl" />
@@ -113,14 +149,16 @@ export function TestSeriesFeedbackModal({
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500">
                   <Zap className="h-6 w-6 fill-emerald-500" />
                 </div>
-                <h2 className="text-xl font-black tracking-tight text-white">Quick Feedback</h2>
+                <h2 className="text-xl font-black tracking-tight text-white">
+                  {userName ? `Thanks ${userName.split(' ')[0]}!` : 'Quick Feedback'}
+                </h2>
                 <p className="text-xs font-bold tracking-wide text-slate-400 uppercase">
-                  Helps us improve in 2 clicks
+                  Helps us improve in 3 clicks
                 </p>
               </div>
 
               <form className="space-y-8">
-                {feedbackQuestions.map((question) => (
+                {feedbackQuestions.slice(0, 3).map((question) => (
                   <div key={question.id} className="space-y-4">
                     <label className="block text-center text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase">
                       {question.label}
@@ -230,22 +268,3 @@ export function TestSeriesFeedbackModal({
     </div>
   );
 }
-
-/**
- * HOW TO USE IN YOUR COMPONENT:
- *
- * const [feedbackOpen, setFeedbackOpen] = useState(false)
- *
- * <TestSeriesFeedbackModal
- *   isOpen={feedbackOpen}
- *   onClose={() => setFeedbackOpen(false)}
- *   onSubmit={async (data) => {
- *     const response = await fetch('/api/feedback', {
- *       method: 'POST',
- *       headers: { 'Content-Type': 'application/json' },
- *       body: JSON.stringify(data)
- *     })
- *     if (!response.ok) throw new Error('Failed to submit')
- *   }}
- * />
- */
