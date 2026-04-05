@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Star, CheckCircle2, Zap } from 'lucide-react';
@@ -62,10 +61,20 @@ export function TestSeriesFeedbackModal({
     
     // 2. Perform submission in background using a toast for status
     if (onSubmit) {
-      toast.promise(onSubmit(data), {
+      // Create a wrapper to ensure toast.promise catches non-throwing errors (e.g. { success: false })
+      const wrappedSubmit = async () => {
+        const result = await onSubmit(data);
+        // Check for common error patterns in returned objects
+        if (result && typeof result === 'object' && 'success' in result && result.success === false) {
+          throw new Error(result.message || result.error || 'Submission failed');
+        }
+        return result;
+      };
+
+      toast.promise(wrappedSubmit(), {
         loading: 'Sharing your feedback...',
         success: 'Feedback sent! Thank you.',
-        error: 'Failed to send feedback',
+        error: (err) => err instanceof Error ? err.message : 'Failed to send feedback',
       });
     }
   };
