@@ -178,7 +178,14 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     if (!guestName.trim()) return;
     
     // ⚡ INSTANT START: Save to localStorage and close dialog immediately
-    localStorage.setItem('mppsc_guest_name', guestName.trim());
+    try {
+      localStorage.setItem('mppsc_guest_name', guestName.trim());
+    } catch (error) {
+      logger.error('Failed to persist guest name to localStorage', error, {
+        category: 'auth',
+        metadata: { guestName },
+      });
+    }
     setShowGuestEntryDialog(false);
     
     // 🔥 FIRE-AND-FORGET: DB write happens in background - no waiting!

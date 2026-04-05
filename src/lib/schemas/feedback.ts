@@ -11,6 +11,14 @@ export const feedbackFormSchema = z.object({
     .string()
     .max(500, 'Comment too long (max 500 chars)')
     .optional(),
+}).superRefine((data, ctx) => {
+  if (data.overallRating === 1 && (!data.comment || data.comment.trim() === '')) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Please provide a reason for the 1-star rating',
+      path: ['comment'],
+    });
+  }
 });
 
 export type FeedbackFormType = z.infer<typeof feedbackFormSchema>;

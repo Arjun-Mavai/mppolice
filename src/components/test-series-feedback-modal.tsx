@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Star, CheckCircle2, Zap } from 'lucide-react';
@@ -11,6 +10,7 @@ import {
   feedbackQuestions,
   type FeedbackFormType,
 } from '@/lib/schemas/feedback';
+import { toast } from 'sonner';
 
 interface TestSeriesFeedbackModalProps {
   isOpen: boolean;
@@ -26,8 +26,6 @@ export function TestSeriesFeedbackModal({
   onSubmit,
   userName,
 }: TestSeriesFeedbackModalProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
 
   const {
     control,
@@ -58,31 +56,34 @@ export function TestSeriesFeedbackModal({
   const ratingInfo = getRatingEmoji(rating);
 
   const handleFormSubmit = async (data: FeedbackFormType) => {
-    setIsSubmitting(true);
-    try {
-      if (onSubmit) {
-        await onSubmit(data);
-      }
-      setIsCompleted(true);
-      // Auto-close after 2 seconds
-      setTimeout(() => {
-        onClose();
-        // Reset state for next time
-        setTimeout(() => {
-          setIsCompleted(false);
-        }, 500);
-      }, 2000);
-    } catch (error) {
-      console.error('Error submitting feedback:', error);
-    } finally {
-      setIsSubmitting(false);
+    // 1. Immediately close the modal for a snappy UX
+    onClose();
+    
+    // 2. Perform submission in background using a toast for status
+    if (onSubmit) {
+      // Create a wrapper to ensure toast.promise catches non-throwing errors (e.g. { success: false })
+      const wrappedSubmit = async () => {
+        const result = await onSubmit(data);
+        // Check for common error patterns in returned objects
+        if (result && typeof result === 'object' && 'success' in result && result.success === false) {
+          throw new Error(result.message || result.error || 'Submission failed');
+        }
+        return result;
+      };
+
+      toast.promise(wrappedSubmit(), {
+        loading: 'Sharing your feedback...',
+        success: 'Feedback sent! Thank you.',
+        error: (err) => err instanceof Error ? err.message : 'Failed to send feedback',
+      });
     }
   };
 
   const isReadyToSubmit = 
     formData.overallRating > 0 && 
     formData.difficultyLevel && 
-    formData.wouldRecommend;
+    formData.wouldRecommend &&
+    (formData.overallRating !== 1 || (formData.comment && formData.comment.trim() !== ''));
 
   if (!isOpen) return null;
 
@@ -118,28 +119,20 @@ export function TestSeriesFeedbackModal({
         <div className="pointer-events-none absolute -top-24 -right-24 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-amber-500/10 blur-3xl" />
 
-        <AnimatePresence mode="wait">
-          {!isCompleted ? (
-            <motion.div
-              key="form"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="space-y-8"
-            >
-              <div className="space-y-2 text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500">
-                  <Zap className="h-6 w-6 fill-emerald-500" />
-                </div>
-                <h2 className="text-xl font-black tracking-tight text-white">
-                  {userName ? `Thanks ${userName.split(' ')[0]}!` : 'Quick Feedback'}
-                </h2>
-                <p className="text-xs font-bold tracking-wide text-slate-400 uppercase">
-                   improvement in 3 clicks
-                </p>
-              </div>
+        <div className="space-y-8">
+          <div className="space-y-2 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500">
+              <Zap className="h-6 w-6 fill-emerald-500" />
+            </div>
+            <h2 className="text-xl font-black tracking-tight text-white">
+              {userName ? `Thanks ${userName.split(' ')[0]}!` : 'Quick Feedback'}
+            </h2>
+            <p className="text-xs font-bold tracking-wide text-slate-400 uppercase">
+               improvement in 3 clicks
+            </p>
+          </div>
 
-              <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
+          <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
                 {feedbackQuestions.slice(0, 3).map((question) => (
                   <div key={question.id} className="space-y-4">
                     <label className="block text-center text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase">
@@ -218,9 +211,42 @@ export function TestSeriesFeedbackModal({
                   </div>
                 ))}
 
+                {/* CONDITIONAL COMMENT FOR 1 STAR */}
+                <AnimatePresence>
+                  {rating === 1 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, height: 'auto', scale: 1 }}
+                      exit={{ opacity: 0, height: 0, scale: 0.95 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="space-y-4 py-2 border-t border-white/5 mt-4">
+                        <label className="block text-center text-[10px] font-black tracking-[0.2em] text-rose-500 uppercase">
+                          How can we improve? (Required)
+                        </label>
+                        <Controller
+                          name="comment"
+                          control={control}
+                          render={({ field }) => (
+                            <div className="group relative">
+                              <textarea
+                                {...field}
+                                value={field.value || ''}
+                                placeholder="Please share what went wrong or how we can improve your experience..."
+                                className="w-full min-h-[100px] resize-none rounded-[1.5rem] border border-white/10 bg-white/5 p-4 text-[13px] leading-relaxed text-white placeholder:text-slate-600 focus:border-rose-500/50 focus:bg-white/[0.07] focus:outline-none transition-all duration-300 font-bold"
+                              />
+                              <div className="absolute inset-0 pointer-events-none rounded-[1.5rem] bg-gradient-to-b from-rose-500/10 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+                            </div>
+                          )}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <button
                   type="submit"
-                  disabled={!isReadyToSubmit || isSubmitting}
+                  disabled={!isReadyToSubmit}
                   className={cn(
                     "group relative h-14 w-full overflow-hidden rounded-[1.25rem] font-black transition-all duration-300 active:scale-95 disabled:pointer-events-none",
                     isReadyToSubmit 
@@ -228,56 +254,13 @@ export function TestSeriesFeedbackModal({
                       : "bg-white/5 text-slate-600 border border-white/5"
                   )}
                 >
-                  <AnimatePresence mode="wait">
-                    {isSubmitting ? (
-                      <motion.div
-                        key="loading"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="flex items-center justify-center gap-2"
-                      >
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                          className="h-5 w-5 rounded-full border-2 border-slate-900 border-t-transparent"
-                        />
-                        <span>Submitting...</span>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="ready"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="flex items-center justify-center gap-2"
-                      >
-                        <span>Submit Feedback</span>
-                        <CheckCircle2 size={18} className={cn(isReadyToSubmit ? "text-emerald-500" : "text-slate-600")} />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  <div className="flex items-center justify-center gap-2">
+                    <span>Submit Feedback</span>
+                    <CheckCircle2 size={18} className={cn(isReadyToSubmit ? "text-emerald-500" : "text-slate-600")} />
+                  </div>
                 </button>
               </form>
-            </motion.div>
-
-          ) : (
-            <motion.div
-              key="success"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="py-12 text-center"
-            >
-              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[2.5rem] bg-emerald-500/20 text-emerald-500">
-                <CheckCircle2 size={48} className="fill-emerald-500/20" />
-              </div>
-              <h3 className="text-2xl font-black tracking-tight text-white">Awesome!</h3>
-              <p className="mt-2 text-sm font-bold tracking-widest text-emerald-500/60 uppercase">
-                Feedback Captured
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        </div>
       </motion.div>
     </div>
   );
