@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { testFeedback, mppscUsers } from '@/db/schema';
-import { type FeedbackFormType, feedbackFormSchema } from '@/lib/schemas/feedback';
+import { type FeedbackFormType, type FeedbackResponse, feedbackFormSchema } from '@/lib/schemas/feedback';
 import { randomUUID } from 'crypto';
 import { verifyAuth } from '@/lib/auth';
 import { eq } from 'drizzle-orm';
@@ -16,7 +16,7 @@ interface SubmitFeedbackParams {
   userEmail?: string | null;
 }
 
-export async function submitTestFeedback(params: SubmitFeedbackParams) {
+export async function submitTestFeedback(params: SubmitFeedbackParams): Promise<FeedbackResponse> {
   try {
     const { testId, testType, testName, data, userName, userEmail } = params;
     
