@@ -234,11 +234,14 @@ export function QuizResult({
       } else {
         console.error('Failed to submit feedback:', response.error);
       }
+
+      setShowFeedback(false);
+      return response; // Return result for the modal's toast logic
     } catch (error) {
       console.error('Error submitting feedback:', error);
+      setShowFeedback(false);
+      throw error; // Let the modal's toast handler catch the error
     }
-
-    setShowFeedback(false);
   };
 
   // Score Calculations
