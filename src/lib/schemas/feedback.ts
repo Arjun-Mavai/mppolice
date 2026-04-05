@@ -23,6 +23,12 @@ export const feedbackFormSchema = z.object({
 
 export type FeedbackFormType = z.infer<typeof feedbackFormSchema>;
 
+export interface FeedbackResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
+
 export const feedbackQuestions = [
   {
     id: 'overallRating',

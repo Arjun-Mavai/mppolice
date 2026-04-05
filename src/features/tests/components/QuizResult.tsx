@@ -53,7 +53,7 @@ import {
 } from '@/actions/pyq-intelligence';
 import { submitTestFeedback, hasUserSubmittedFeedback } from '@/app/actions/feedback';
 import { TestSeriesFeedbackModal } from '@/components/test-series-feedback-modal';
-import type { FeedbackFormType } from '@/lib/schemas/feedback';
+import type { FeedbackFormType, FeedbackResponse } from '@/lib/schemas/feedback';
 
 interface LeaderboardEntry {
   id: string;
@@ -209,7 +209,7 @@ export function QuizResult({
     checkFeedbackStatus();
   }, [testId, userId, showFeedbackModal]);
 
-  const handleFeedbackSubmit = async (data: FeedbackFormType) => {
+  const handleFeedbackSubmit = async (data: FeedbackFormType): Promise<FeedbackResponse> => {
     console.log('QuizResult Feedback submitted:', data);
 
     try {

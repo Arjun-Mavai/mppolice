@@ -9,13 +9,14 @@ import {
   feedbackFormSchema,
   feedbackQuestions,
   type FeedbackFormType,
+  type FeedbackResponse,
 } from '@/lib/schemas/feedback';
 import { toast } from 'sonner';
 
 interface TestSeriesFeedbackModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit?: (data: FeedbackFormType) => Promise<any>;
+  onSubmit?: (data: FeedbackFormType) => Promise<FeedbackResponse | void>;
   testSeriesId?: string;
   userName?: string;
 }
@@ -63,7 +64,7 @@ export function TestSeriesFeedbackModal({
     if (onSubmit) {
       // Create a wrapper to ensure toast.promise catches non-throwing errors (e.g. { success: false })
       const wrappedSubmit = async () => {
-        const result = (await onSubmit(data)) as any;
+        const result = await onSubmit(data);
         // Check for common error patterns in returned objects
         if (result && typeof result === 'object' && 'success' in result && result.success === false) {
           throw new Error(result.message || result.error || 'Submission failed');
