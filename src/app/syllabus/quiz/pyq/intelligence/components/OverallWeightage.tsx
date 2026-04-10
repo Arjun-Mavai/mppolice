@@ -17,12 +17,14 @@ interface OverallWeightageProps {
   simpleSubjectStats: Record<string, number>;
   subjectQuestionsData: OverallWeightageSubjectData[];
   isHindi: boolean;
+  theme?: 'light' | 'dark';
 }
 
 export function OverallWeightage({
   simpleSubjectStats,
   subjectQuestionsData,
   isHindi,
+  theme = 'dark',
 }: OverallWeightageProps) {
   const router = useRouter();
   const [isMainExpanded, setIsMainExpanded] = useState(false);
@@ -68,32 +70,48 @@ export function OverallWeightage({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3 px-1">
-        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-        <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">
+        <div className={cn(
+          "h-1.5 w-1.5 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]",
+          theme === 'light' ? "bg-indigo-500" : "bg-emerald-500"
+        )} />
+        <h2 className={cn("text-xl font-black tracking-tight sm:text-2xl", theme === 'light' ? "text-[#1D1D1F]" : "text-white")}>
           {isHindi ? 'कुल महत्व (2020-2025)' : 'Overall Weightage (2020-2025)'}
         </h2>
       </div>
 
       {/* Main Overall Weightage Section - Same style as Paper Analysis */}
       <div className="relative">
-        <div className="absolute -inset-1 rounded-[2rem] bg-gradient-to-r from-emerald-600/20 to-teal-500/10 opacity-20 blur-xl" />
+        <div className={cn(
+          "absolute -inset-1 rounded-[2rem] opacity-20 blur-xl",
+          theme === 'light' ? "bg-indigo-500/10" : "bg-gradient-to-r from-emerald-600/20 to-teal-500/10"
+        )} />
 
-        <Card className="relative z-10 overflow-hidden rounded-[2rem] border-white/[0.03] bg-[#080510]/80 shadow-2xl backdrop-blur-xl">
+        <Card className={cn(
+          "relative z-10 overflow-hidden rounded-[2rem] shadow-2xl transition-all duration-300",
+          theme === 'light' 
+            ? "border-[#E5E5EA] bg-white backdrop-blur-none" 
+            : "border-white/[0.03] bg-[#080510]/80 backdrop-blur-xl"
+        )}>
           {/* Main Header - Same style as Paper Analysis year header */}
           <div
             className="flex cursor-pointer items-center justify-between border-b border-white/[0.05] bg-transparent px-6 py-6"
             onClick={toggleMainSection}
           >
             <div className="flex flex-col gap-1">
-              <div className="mb-1 flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase">
-                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <div className={cn("mb-1 flex items-center gap-2 text-[10px] font-black tracking-[0.2em] uppercase", theme === 'light' ? "text-[#86868B]" : "text-slate-500")}>
+                <div className={cn("h-1.5 w-1.5 rounded-full", theme === 'light' ? "bg-indigo-500" : "bg-emerald-500")} />
                 {isHindi ? 'MPPSC प्रिलिम्स' : 'MPPSC Prelims'}
               </div>
-              <h3 className="flex items-center gap-3 text-2xl font-black tracking-tight text-amber-500 sm:text-3xl">
+              <h3 className={cn("flex items-center gap-3 text-2xl font-black tracking-tight sm:text-3xl", theme === 'light' ? "text-indigo-600" : "text-amber-500")}>
                 {isHindi ? 'कुल वेटेज' : 'Overall Weightage'}
                 <Badge
                   variant="outline"
-                  className="hidden rounded-full border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-black text-emerald-500 sm:inline-flex"
+                  className={cn(
+                    "hidden rounded-full px-3 py-1 text-[10px] font-black sm:inline-flex",
+                    theme === 'light' 
+                      ? "border-indigo-100 bg-indigo-50 text-indigo-600" 
+                      : "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
+                  )}
                 >
                   {totalQuestions} {isHindi ? 'प्रश्न' : 'Questions'}
                 </Badge>
@@ -103,7 +121,12 @@ export function OverallWeightage({
             <div className="flex items-center gap-4">
               <Badge
                 variant="secondary"
-                className="h-8 border border-white/[0.05] bg-white/[0.03] px-3 text-[10px] font-black text-slate-400 sm:inline-flex"
+                className={cn(
+                  "h-8 px-3 text-[10px] font-black sm:inline-flex",
+                  theme === 'light' 
+                    ? "border-[#E5E5EA] bg-[#F5F5F7] text-[#1D1D1F]" 
+                    : "border-white/[0.05] bg-white/[0.03] text-slate-400"
+                )}
               >
                 {subjectsWithCounts.length} {isHindi ? 'विषय' : 'Subjects'}
               </Badge>
@@ -112,8 +135,8 @@ export function OverallWeightage({
                 className={cn(
                   'flex h-10 w-10 items-center justify-center rounded-full border transition-all',
                   isMainExpanded
-                    ? 'border-emerald-400 bg-emerald-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]'
-                    : 'border-white/5 bg-white/5 text-slate-500'
+                    ? (theme === 'light' ? 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'border-emerald-400 bg-emerald-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]')
+                    : (theme === 'light' ? 'border-[#E5E5EA] bg-white text-[#86868B]' : 'border-white/5 bg-white/5 text-slate-500')
                 )}
               >
                 {isMainExpanded ? (
@@ -148,9 +171,9 @@ export function OverallWeightage({
                           key={sub.name}
                           className={cn(
                             'rounded-[1.5rem] border transition-all duration-300',
-                            isSubjectExpanded
-                              ? 'border-white/10 bg-white/[0.05]'
-                              : 'border-white/[0.03] bg-white/[0.02] hover:bg-white/[0.04]'
+                            theme === 'light'
+                              ? (isSubjectExpanded ? 'border-indigo-100 bg-indigo-50/30' : 'border-[#E5E5EA] bg-white hover:bg-[#F5F5F7]')
+                              : (isSubjectExpanded ? 'border-white/10 bg-white/[0.05]' : 'border-white/[0.03] bg-white/[0.02] hover:bg-white/[0.04]')
                           )}
                         >
                           {/* Subject Header */}
@@ -171,14 +194,14 @@ export function OverallWeightage({
 
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2">
-                                <h4 className="truncate text-sm font-black tracking-tight text-white">
+                                <h4 className={cn("truncate text-sm font-black tracking-tight", theme === 'light' ? "text-[#1D1D1F]" : "text-white")}>
                                   {isHindi ? sub.nameHi : sub.name}
                                 </h4>
-                                <span className="font-mono text-[10px] font-black text-emerald-500/60">
+                                <span className={cn("font-mono text-[10px] font-black", theme === 'light' ? "text-indigo-500" : "text-emerald-500/60")}>
                                   {sub.count}
                                 </span>
                               </div>
-                              <p className="mt-0.5 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                              <p className={cn("mt-0.5 text-[10px] font-bold tracking-wider uppercase", theme === 'light' ? "text-[#86868B]" : "text-slate-500")}>
                                 {sub.percentage}%{' '}
                                 {isHindi ? 'कुल प्रश्नों का' : 'of total questions'}
                               </p>
@@ -189,7 +212,12 @@ export function OverallWeightage({
                                 href={`/syllabus/quiz/pyq/intelligence/questions?subject=${encodeURIComponent(sub.name)}&source=subject`}
                                 onClick={(e) => e.stopPropagation()}
                                 transitionTypes={['slide']}
-                                className="inline-flex h-8 items-center gap-1.5 rounded-xl bg-emerald-500/10 px-4 text-[10px] font-black tracking-widest text-emerald-500 uppercase transition-all hover:bg-emerald-500/20 active:scale-95"
+                                className={cn(
+                                  "inline-flex h-8 items-center gap-1.5 rounded-xl px-4 text-[10px] font-black tracking-widest uppercase transition-all active:scale-95",
+                                  theme === 'light'
+                                    ? "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                                    : "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20"
+                                )}
                               >
                                 {isHindi ? 'देखें' : 'View'}
                                 <ExternalLink className="h-3 w-3" />
@@ -199,8 +227,8 @@ export function OverallWeightage({
                                 className={cn(
                                   'flex h-8 w-8 items-center justify-center rounded-full transition-all',
                                   isSubjectExpanded
-                                    ? 'bg-emerald-500/20 text-emerald-400'
-                                    : 'text-slate-600'
+                                    ? (theme === 'light' ? 'bg-indigo-100 text-indigo-600' : 'bg-emerald-500/20 text-emerald-400')
+                                    : (theme === 'light' ? 'text-[#86868B]' : 'text-slate-600')
                                 )}
                               >
                                 <ChevronDown
@@ -222,7 +250,7 @@ export function OverallWeightage({
                                 exit={{ height: 0, opacity: 0 }}
                                 className="overflow-hidden"
                               >
-                                <div className="space-y-3 border-t border-white/[0.05] p-0">
+                                <div className={cn("space-y-3 border-t p-0", theme === 'light' ? "border-[#E5E5EA]" : "border-white/[0.05]")}>
                                   {(() => {
                                     // Find questions for this subject
                                     const subjectData = subjectQuestionsData.find(
@@ -247,8 +275,9 @@ export function OverallWeightage({
                                         questions={mappedQuestions}
                                         isHindi={isHindi}
                                         maxVisible={5}
-                                        variant="card"
+                                        variant={theme === 'light' ? 'compact' : 'card'}
                                         showYears={true}
+                                        theme={theme}
                                       />
                                     ) : (
                                       <div className="rounded-xl border border-dashed border-white/5 bg-white/[0.02] py-8 text-center mx-4 my-4">
@@ -273,7 +302,6 @@ export function OverallWeightage({
         </Card>
       </div>
 
-      {/* Overall View All Button */}
       <div className="flex justify-center pt-8">
         <TransitionLink
           href="/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject"
@@ -282,7 +310,12 @@ export function OverallWeightage({
           <Button
             variant="outline"
             size="lg"
-            className="h-14 w-full rounded-2xl border-emerald-500/20 bg-emerald-500/10 px-10 text-xs font-black tracking-[0.1em] text-emerald-500 uppercase transition-all hover:bg-emerald-500/20 hover:text-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] active:scale-95 sm:w-fit sm:min-w-[360px]"
+            className={cn(
+              "h-14 w-full rounded-2xl px-10 text-xs font-black tracking-[0.1em] uppercase transition-all active:scale-95 sm:w-fit sm:min-w-[360px]",
+              theme === 'light'
+                ? "border-indigo-100 bg-white text-indigo-600 hover:bg-[#F5F5F7] hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)]"
+                : "border-emerald-500/20 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 hover:text-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]"
+            )}
           >
             <Eye className="mr-3 h-4 w-4" />
             {isHindi ? 'सभी विषय प्रश्न देखें' : 'View All Subject Questions'}

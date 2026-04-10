@@ -25,7 +25,8 @@ interface SettingsState {
   authCheckStatus: 'idle' | 'loading' | 'checked';
   setAuthCheckStatus: (status: 'idle' | 'loading' | 'checked') => void;
   setUser: (user: User | null, isSubscribed: boolean) => void;
-  // We can add more settings here like 'theme'
+  uiMode: 'classic' | 'modern';
+  setUiMode: (mode: 'classic' | 'modern') => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -42,6 +43,8 @@ export const useSettingsStore = create<SettingsState>()(
       // On logout: caller must also localStorage.removeItem('settings-storage')
       // to trigger cross-tab sync via the 'storage' event in AppNavbar
       setUser: (user, isSubscribed) => set({ user, isSubscribed, authCheckStatus: 'checked' }),
+      uiMode: 'modern',
+      setUiMode: (mode) => set({ uiMode: mode }),
     }),
     {
       name: 'settings-storage', // localStorage key — removing this key triggers cross-tab logout

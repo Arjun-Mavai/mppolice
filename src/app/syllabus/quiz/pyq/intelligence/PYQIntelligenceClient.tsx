@@ -2,87 +2,93 @@
 
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { UnitDistributionStats, RepeatedQuestion, TopicStat, SubjectDistributionStats, OverallWeightageSubjectData } from '@/actions/pyq-analytics';
-import {
-  PYQHeader,
-  PYQMenu,
-  OverallWeightage,
-  PaperAnalysis,
-  // MostRepeatedTopics, // Temporarily hidden
-} from './components';
+import PYQIntelligenceClassic from './PYQIntelligenceClassic';
+import ModernIntelligenceClient from './components/modern/ModernIntelligenceClient';
+import { Moon, Sun, Sparkles, LayoutGrid } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
+import { useEffect, useState } from 'react';
 
 interface PYQIntelligenceClientProps {
   subjectStats: SubjectDistributionStats[];
   stats: UnitDistributionStats[];
   repeatedQuestions: RepeatedQuestion[];
   topicStats: Record<string, TopicStat[]>;
-  simpleSubjectStats: Record<string, number>; // Same as PYQ page
+  simpleSubjectStats: Record<string, number>;
   subjectQuestionsData: OverallWeightageSubjectData[];
 }
 
-export default function PYQIntelligenceClient({
-  subjectStats,
-  stats,
-  repeatedQuestions,
-  topicStats,
-  simpleSubjectStats,
-  subjectQuestionsData,
-}: PYQIntelligenceClientProps) {
-  const { language } = useSettingsStore();
-  const isHindi = language === 'hi';
+export default function PYQIntelligenceClient(props: PYQIntelligenceClientProps) {
+  const { uiMode, setUiMode } = useSettingsStore();
+  const [mounted, setMounted] = useState(false);
 
-  // Compute combined stats for MostRepeatedTopics - Temporarily disabled
-  /*
-  const combinedStats = stats.reduce((acc, curr) => {
-    if (!acc[curr.unitId]) {
-      acc[curr.unitId] = {
-        unitTitle: curr.unitTitle,
-      };
-    }
-    return acc;
-  }, {} as Record<string, { unitTitle: string }>);
-  */
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-slate-950 pb-20 text-white selection:bg-indigo-500/30">
-      {/* Background Effects */}
-      <div className="pointer-events-none fixed inset-0">
-        <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[100px]" />
-        <div className="absolute right-[-10%] bottom-[-10%] h-[500px] w-[500px] rounded-full bg-teal-500/10 blur-[100px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
+    <div className="relative">
+      {/* Universal Floating Toggle */}
+      <div className="fixed top-24 right-6 z-[100] sm:top-28">
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="relative flex items-center gap-2 rounded-full border border-white/10 bg-black/40 p-1 backdrop-blur-xl shadow-2xl"
+        >
+          <button
+            onClick={() => setUiMode('classic')}
+            className={cn(
+              "flex h-8 w-12 items-center justify-center rounded-full transition-all duration-300",
+              uiMode === 'classic' 
+                ? "bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]" 
+                : "text-slate-400 hover:text-white"
+            )}
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setUiMode('modern')}
+            className={cn(
+              "flex h-8 w-12 items-center justify-center rounded-full transition-all duration-300",
+              uiMode === 'modern' 
+                ? "bg-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)]" 
+                : "text-slate-400 hover:text-white"
+            )}
+          >
+            <Sparkles className="h-4 w-4" />
+          </button>
+        </motion.div>
       </div>
 
-      {/* Header */}
-      <PYQHeader
-        title={isHindi ? 'प्रीमियम इंटेलिजेंस' : 'Premium Intelligence'}
-        subtitle={isHindi ? 'PYQ के हर रहस्य का विश्लेषण' : 'Extracting Every Secret of PYQs'}
-      />
-
-      {/* Main Content */}
-      <div className="relative mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
-        {/* PYQ Analysis Menu - Restored on all screen sizes per User Request */}
-        <PYQMenu isHindi={isHindi} currentPage="intelligence" />
-
-        {/* Overall Weightage (Subject-wise 2020-2025) */}
-        <OverallWeightage
-          simpleSubjectStats={simpleSubjectStats}
-          subjectQuestionsData={subjectQuestionsData}
-          isHindi={isHindi}
-        />
-
-        {/* Most Repeated Topics - Temporarily Hidden */}
-        {/* <MostRepeatedTopics
-          topicStats={topicStats}
-          combinedStats={combinedStats}
-          isHindi={isHindi}
-        /> */}
-
-        {/* Paper-wise Analysis (Year by Year) */}
-        <PaperAnalysis
-          stats={stats}
-          repeatedQuestions={repeatedQuestions}
-          isHindi={isHindi}
-        />
-      </div>
+      <AnimatePresence mode="wait">
+        {uiMode === 'modern' ? (
+          <motion.div
+            key="modern"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ModernIntelligenceClient {...props} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="classic"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <PYQIntelligenceClassic {...props} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

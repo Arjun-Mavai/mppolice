@@ -30,6 +30,7 @@ interface QuestionItemProps {
   showYear?: boolean;
   variant?: 'compact' | 'full' | 'card';
   defaultExpanded?: boolean;
+  theme?: 'light' | 'dark';
 }
 
 export function QuestionItem({
@@ -40,6 +41,7 @@ export function QuestionItem({
   showYear = true,
   variant = 'compact',
   defaultExpanded = false,
+  theme = 'dark',
 }: QuestionItemProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const displayText = isHindi ? question.text : question.textEn || question.text;
@@ -104,8 +106,11 @@ export function QuestionItem({
     return (
       <div
         className={cn(
-          'rounded-xl border border-white/[0.03] bg-black/20 p-4 transition-all hover:bg-black/30',
-          isExpanded && 'bg-black/40 ring-1 ring-emerald-500/20'
+          'rounded-xl border transition-all',
+          theme === 'light' 
+            ? 'border-[#E5E5EA] bg-white hover:bg-[#F5F5F7]' 
+            : 'border-white/[0.03] bg-black/20 hover:bg-black/30',
+          isExpanded && (theme === 'light' ? 'bg-[#F2F8FF] ring-1 ring-blue-500/20' : 'bg-black/40 ring-1 ring-emerald-500/20')
         )}
       >
         <div
@@ -113,7 +118,12 @@ export function QuestionItem({
           onClick={() => setIsExpanded(!isExpanded)}
         >
           {/* Question Number */}
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-[10px] font-black text-emerald-500">
+          <div className={cn(
+            "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[10px] font-black",
+            theme === 'light'
+              ? "border-blue-500/20 bg-blue-50 text-blue-600"
+              : "border-emerald-500/20 bg-emerald-500/10 text-emerald-500"
+          )}>
             {index + 1}
           </div>
 
@@ -121,8 +131,10 @@ export function QuestionItem({
           <div className="min-w-0 flex-1">
             <p
               className={cn(
-                'mb-2 text-xs leading-relaxed font-medium text-slate-300 transition-colors',
-                isExpanded ? 'text-white' : 'line-clamp-2'
+                'mb-2 text-xs leading-relaxed font-medium transition-colors',
+                theme === 'light'
+                  ? (isExpanded ? 'text-[#1D1D1F]' : 'text-[#86868B]')
+                  : (isExpanded ? 'text-white' : 'text-slate-300')
               )}
             >
               {displayText}
@@ -213,20 +225,29 @@ export function QuestionItem({
 
   if (variant === 'compact') {
     return (
-      <div className="group/question relative">
+      <div className={cn("group/question relative transition-colors", theme === 'light' ? "bg-white" : "")}>
         <div
-          className="flex cursor-pointer items-start gap-3 p-4 transition-all hover:bg-slate-800/40 sm:p-5"
+          className={cn(
+            "flex cursor-pointer items-start gap-3 p-4 transition-all sm:p-5",
+            theme === 'light' ? "hover:bg-[#F5F5F7]" : "hover:bg-slate-800/40"
+          )}
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-800 font-mono text-[10px] text-slate-500">
+          <span className={cn(
+            "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-mono text-[10px]",
+            theme === 'light' ? "bg-[#F5F5F7] text-[#86868B]" : "bg-slate-800 text-slate-500"
+          )}>
             {index + 1}
           </span>
 
           <div className="min-w-0 flex-1">
             <p
               className={cn(
-                'text-sm leading-relaxed text-slate-300 transition-colors',
-                isExpanded ? 'text-white' : 'line-clamp-2'
+                'text-sm leading-relaxed transition-colors',
+                theme === 'light'
+                  ? (isExpanded ? 'text-[#1D1D1F]' : 'text-[#86868B]')
+                  : (isExpanded ? 'text-white' : 'text-slate-300'),
+                !isExpanded && 'line-clamp-2'
               )}
             >
               {displayText}
@@ -369,6 +390,7 @@ interface QuestionListProps {
   maxVisible?: number;
   variant?: 'compact' | 'full' | 'card';
   showAllExpanded?: boolean;
+  theme?: 'light' | 'dark';
 }
 
 export function QuestionList({
@@ -380,6 +402,7 @@ export function QuestionList({
   maxVisible,
   variant = 'compact',
   showAllExpanded = false,
+  theme = 'dark',
 }: QuestionListProps) {
   const [showAll, setShowAll] = useState(false);
 
@@ -434,6 +457,7 @@ export function QuestionList({
                   showYear={false}
                   variant={variant}
                   defaultExpanded={showAllExpanded}
+                  theme={theme}
                 />
               ))}
             </div>
@@ -464,6 +488,7 @@ export function QuestionList({
             showYear={showYears}
             variant={variant}
             defaultExpanded={showAllExpanded}
+            theme={theme}
           />
         ))}
       </div>

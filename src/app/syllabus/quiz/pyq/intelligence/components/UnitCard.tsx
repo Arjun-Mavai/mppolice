@@ -25,6 +25,7 @@ interface UnitCardProps {
   showPercentage?: boolean;
   groupQuestionsByYear?: boolean;
   year?: number;
+  theme?: 'light' | 'dark';
 }
 
 export function UnitCard({
@@ -40,6 +41,7 @@ export function UnitCard({
   showPercentage = true,
   groupQuestionsByYear = false,
   year,
+  theme = 'dark',
 }: UnitCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
@@ -50,7 +52,12 @@ export function UnitCard({
   const viewAllUrl = `/syllabus/quiz/pyq/intelligence/questions?unit=${unitId}&source=${variant}${year ? `&year=${year}` : ''}`;
 
   return (
-    <div className="rounded-xl border border-slate-800/50 bg-slate-800/30 transition-colors hover:bg-slate-800/50">
+    <div className={cn(
+      "rounded-xl border transition-colors",
+      theme === 'light' 
+        ? "border-[#E5E5EA] bg-white hover:bg-[#F5F5F7]" 
+        : "border-slate-800/50 bg-slate-800/30 hover:bg-slate-800/50"
+    )}>
       {/* Header */}
       <div
         className="flex cursor-pointer items-center gap-4 p-4 sm:p-5"
@@ -60,17 +67,22 @@ export function UnitCard({
         
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-bold text-white truncate">
+            <h4 className={cn("text-sm font-bold truncate", theme === 'light' ? "text-[#1D1D1F]" : "text-white")}>
               {formatUnitTitle(unitId, isHindi)}
             </h4>
             <Badge
               variant="secondary"
-              className="h-5 shrink-0 border border-slate-700 bg-slate-900 px-2 font-mono text-[10px] text-slate-400"
+              className={cn(
+                "h-5 shrink-0 px-2 font-mono text-[10px]",
+                theme === 'light' 
+                  ? "border-[#E5E5EA] bg-[#F5F5F7] text-[#86868B]" 
+                  : "border-slate-700 bg-slate-900 text-slate-400"
+              )}
             >
               {questionCount}
             </Badge>
           </div>
-          <p className="mt-0.5 text-xs text-slate-500 truncate">
+          <p className={cn("mt-0.5 text-xs truncate", theme === 'light' ? "text-[#86868B]" : "text-slate-500")}>
             {unitTitle}
           </p>
           
@@ -78,9 +90,9 @@ export function UnitCard({
             <div className="mt-2 flex items-center gap-2">
               <Progress
                 value={percentage}
-                className={cn('h-1.5 flex-1 bg-slate-800', `[&>div]:${colorClass}`)}
+                className={cn('h-1.5 flex-1', theme === 'light' ? 'bg-[#F5F5F7]' : 'bg-slate-800', `[&>div]:${colorClass}`)}
               />
-              <span className="text-xs font-medium text-slate-400 tabular-nums">
+              <span className={cn("text-xs font-medium tabular-nums", theme === 'light' ? "text-[#86868B]" : "text-slate-400")}>
                 {percentage}%
               </span>
             </div>
@@ -89,9 +101,9 @@ export function UnitCard({
 
         <div className="shrink-0">
           {isExpanded ? (
-            <ChevronUp className="h-5 w-5 text-emerald-400" />
+            <ChevronUp className={cn("h-5 w-5", theme === 'light' ? "text-indigo-500" : "text-emerald-400")} />
           ) : (
-            <ChevronDown className="h-5 w-5 text-slate-600" />
+            <ChevronDown className={cn("h-5 w-5", theme === 'light' ? "text-[#86868B]" : "text-slate-600")} />
           )}
         </div>
       </div>
@@ -105,7 +117,7 @@ export function UnitCard({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="border-t border-slate-800/50">
+            <div className={cn("border-t", theme === 'light' ? "border-[#E5E5EA]" : "border-slate-800/50")}>
               {/* Header with View All button */}
               <div className="flex items-center justify-between px-4 py-3 sm:px-5">
                 <span className="text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
@@ -119,7 +131,12 @@ export function UnitCard({
                       e.stopPropagation();
                       setShowAllQuestions(!showAllQuestions);
                     }}
-                    className="h-7 gap-1.5 px-2 text-xs text-slate-400 hover:bg-white/10 hover:text-white"
+                    className={cn(
+                      "h-7 gap-1.5 px-2 text-xs transition-all",
+                      theme === 'light' 
+                        ? "text-[#86868B] hover:bg-[#F5F5F7] hover:text-[#1D1D1F]" 
+                        : "text-slate-400 hover:bg-white/10 hover:text-white"
+                    )}
                   >
                     <Eye className="h-3.5 w-3.5" />
                     {showAllQuestions 
@@ -130,7 +147,12 @@ export function UnitCard({
                     href={viewAllUrl}
                     onClick={(e) => e.stopPropagation()}
                     transitionTypes={['slide']}
-                    className="inline-flex h-7 items-center gap-1.5 rounded-md bg-emerald-500/10 px-3 text-xs font-bold text-emerald-400 transition-colors hover:bg-emerald-500/20 hover:text-emerald-300"
+                    className={cn(
+                      "inline-flex h-7 items-center gap-1.5 rounded-md px-3 text-xs font-bold transition-colors",
+                      theme === 'light'
+                        ? "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                        : "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300"
+                    )}
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                     {isHindi ? 'सभी देखें' : 'View All'}
@@ -148,8 +170,9 @@ export function UnitCard({
                   getRepeatCount={getRepeatCount}
                   showYears={true}
                   groupByYear={groupQuestionsByYear}
-                  variant="card"
+                  variant={theme === 'light' ? 'compact' : 'card'}
                   showAllExpanded={showAllQuestions}
+                  theme={theme}
                 />
               </div>
             </div>

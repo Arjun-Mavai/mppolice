@@ -4,6 +4,7 @@ import { feedbacks } from '@/db/schema';
 import { randomUUID } from 'crypto';
 import { logger } from '@/lib/logger';
 import { feedbackLimiter, checkRateLimit } from '@/lib/rate-limit';
+import { sendTelegramNotification } from '@/lib/telegram';
 
 export async function POST(request: Request) {
   try {
@@ -57,6 +58,17 @@ export async function POST(request: Request) {
       role: role || null,
       location: location || null,
     });
+
+    // 🚀 Notify Admin via Telegram
+    const stars = '⭐'.repeat(numRating);
+    await sendTelegramNotification(
+      `🌟 <b>General App Feedback</b>\n\n` +
+      `<b>User:</b> ${name.trim()}\n` +
+      `<b>Rating:</b> ${stars} (${numRating}/5)\n` +
+      `<b>Category:</b> ${safeCategory}\n` +
+      `<b>Message:</b> ${message.trim()}\n` +
+      `<b>Contact:</b> ${phone || email || 'N/A'}`
+    );
 
     logger.info('Feedback received from:', name);
 
