@@ -1,13 +1,14 @@
 'use server';
 
 import { db } from '@/db';
-import { tests, userAttempts, questions, attemptAnswers, syllabusTopics } from '@/db/schema';
+import { tests, userAttempts, questions, attemptAnswers, questionsRelations, syllabusTopics } from '@/db/schema';
 import { eq, asc, desc, and, inArray, sql } from 'drizzle-orm';
 import { unstable_cache, revalidateTag } from 'next/cache';
 import { verifyAuth } from '@/lib/auth';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { logger } from '@/lib/logger';
 import { insertUserToLeaderboard } from '@/actions/leaderboard-actions';
+import { sendTelegramNotification } from '@/lib/telegram';
 
 // --- Generic Cached Fetchers ---
 
@@ -393,6 +394,18 @@ export async function submitTestAttempt(
 
     // Run all tasks in parallel
     await Promise.allSettled(postSubmissionTasks);
+
+    // 🚀 Notify Admin via Telegram
+    const accuracy = ((correctCount / (correctCount + incorrectCount)) * 100).toFixed(0);
+    const totalMarks = testQuestions.reduce((s, q) => s + (q.marks ?? 3), 0);
+    
+    await sendTelegramNotification(
+      `🏆 <b>Test Completed</b>\n\n` +
+      `<b>Test:</b> ${test?.title || 'N/A'}\n` +
+      `<b>User:</b> ${session?.name || 'Student'}\n` +
+      `<b>Score:</b> ${totalScore}/${totalMarks} (${accuracy}% accuracy)\n` +
+      `<b>Stats:</b> ✅${correctCount} | ❌${incorrectCount} | ⏱️${Math.floor(validDuration / 60)}m`
+    );
 
     return { success: true, attemptId, score: parseFloat(totalScore.toFixed(2)) };
   } catch (error) {

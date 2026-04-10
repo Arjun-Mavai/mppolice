@@ -1,8 +1,8 @@
 'use server';
 
 import { db } from '@/db';
-import { mppscUsers, userAttempts, tests, attemptAnswers, questions } from '@/db/schema';
-import { eq, sql, desc, and, isNull, inArray } from 'drizzle-orm';
+import { mppscUsers, userAttempts, tests, attemptAnswers, questions, syllabusTopics } from '@/db/schema';
+import { eq, sql, desc, and, isNull, inArray, leftJoin } from 'drizzle-orm';
 import { requireAdmin } from '@/lib/auth-admin';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 
@@ -46,6 +46,8 @@ export interface TestAttemptDetail {
   endTime: Date | null;
   dayOfWeek: string;
   maxMarks: number;
+  unitId?: string | null;
+  topicTitle?: string | null;
 }
 
 /**
@@ -109,7 +111,7 @@ export async function getUserDashboardData(): Promise<UserWithStats[]> {
 export async function getUserTestHistory(userId: string): Promise<TestAttemptDetail[]> {
   await requireAdmin();
 
-  // First get the attempts with test info
+  // First get the attempts with test info and syllabus info if it's a topic test
   const rows = await db
     .select({
       id: userAttempts.id,
@@ -122,9 +124,13 @@ export async function getUserTestHistory(userId: string): Promise<TestAttemptDet
       isCompleted: userAttempts.isCompleted,
       startTime: userAttempts.startTime,
       endTime: userAttempts.endTime,
+      unitId: tests.unitId,
+      topicId: tests.topicId,
+      syllabusTopicTitle: syllabusTopics.title,
     })
     .from(userAttempts)
     .innerJoin(tests, eq(userAttempts.testId, tests.id))
+    .leftJoin(syllabusTopics, eq(tests.topicId, syllabusTopics.id))
     .where(
       and(
         eq(userAttempts.userId, userId),
@@ -216,16 +222,29 @@ export async function getUserTestHistory(userId: string): Promise<TestAttemptDet
         wrong * SCORING_CONFIG.NEGATIVE_MARKING
       ).toFixed(2)
     );
-    const finalScore = r.score != null ? Number(r.score) : computedScore;
+    
+    // Always use computedScore for consistency in admin dashboard as requested
+    const finalScore = computedScore;
     const maxMarks = total * SCORING_CONFIG.MARKS_PER_QUESTION;
     const scorePercentage = maxMarks > 0 ? Math.round((finalScore / maxMarks) * 100) : 0;
     const startDate = new Date(r.startTime);
+
+    // Format title if it's a topic test to be more descriptive
+    let finalTitle = r.testTitle || 'Unknown Test';
+    if (r.testType === 'TOPIC' && r.unitId) {
+        const unitNum = r.unitId.replace('unit_', '');
+        if (r.syllabusTopicTitle) {
+            finalTitle = `Unit ${unitNum}: ${r.syllabusTopicTitle}`;
+        } else if (r.unitId) {
+            finalTitle = `Unit ${unitNum} Practice Test`;
+        }
+    }
 
     return {
       id: r.id,
       userId: r.userId,
       testId: r.testId,
-      testTitle: r.testTitle || 'Unknown Test',
+      testTitle: finalTitle,
       testType: r.testType || 'MISC',
       totalQuestions: total,
       sourceQuestionsCount: testQuestions.length,
@@ -241,6 +260,8 @@ export async function getUserTestHistory(userId: string): Promise<TestAttemptDet
       endTime: r.endTime,
       dayOfWeek: DAYS[startDate.getDay()],
       maxMarks: maxMarks,
+      unitId: r.unitId,
+      topicTitle: r.syllabusTopicTitle
     };
   });
 }
