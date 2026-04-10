@@ -60,10 +60,16 @@ export function QuizQuestion({
           <div className="text-sm font-bold tracking-wider text-slate-400 uppercase sm:text-base">
             {t.question} {questionIndex + 1}/{totalQuestions}
           </div>
-          {/* 🏷️ YEAR / SUBJECT TAG */}
+          {/* 🏷️ YEAR / SUBJECT TAG + MARKING */}
           {question.subject && (
-            <div className="rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-bold text-indigo-700 sm:text-sm">
-              {question.subject}
+            <div className="flex items-center gap-1.5">
+              <div className="rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 sm:text-xs">
+                {question.subject}
+              </div>
+              <div className="flex items-center overflow-hidden rounded-md border border-slate-100 font-mono text-[9px] font-black sm:text-[10px]">
+                <span className="bg-emerald-50 px-1.5 py-0.5 text-emerald-600">+3</span>
+                <span className="bg-rose-50 px-1.5 py-0.5 text-rose-600">-1</span>
+              </div>
             </div>
           )}
         </div>

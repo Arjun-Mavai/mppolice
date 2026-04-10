@@ -20,6 +20,7 @@ import { QuizPaletteMobile, QuizPaletteDesktop } from './quiz/QuizPalette';
 import { QuizExitDialog } from './quiz/QuizExitDialog';
 import { GuestEntryDialog } from './quiz/GuestEntryDialog';
 import { QuizExplanation } from './quiz/QuizExplanation';
+import { QuizSubmitDialog } from './quiz/QuizSubmitDialog';
 
 
 interface GuestQuizInterfaceProps {
@@ -90,6 +91,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
   const [guestEmail, setGuestEmail] = useState('');
   const [guestMobile, setGuestMobile] = useState('');
   const [showGuestEntryDialog, setShowGuestEntryDialog] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   // Custom Guest Submit State (to trigger storing and redirect)
   const [isProcessingResult, setIsProcessingResult] = useState(false);
@@ -244,6 +246,15 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
   }, [isSubmitted]);
 
   // ── Submit handler (GUEST SPECIFIC) ──
+  const handleQuizSubmitAction = useCallback(() => {
+    setShowSubmitConfirm(true);
+  }, []);
+
+  const handleConfirmSubmit = useCallback(() => {
+    setShowSubmitConfirm(false);
+    handleSubmit();
+  }, [handleSubmit]);
+
   useEffect(() => {
     // Watch for isSubmitted change from useQuizLogic
     // When isSubmitted becomes true, we process and redirect
@@ -317,7 +328,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     currentIndex: currentQuestionIndex,
     totalQuestions,
     onJump: handleJump,
-    onSubmit: handleSubmit, // Triggers useQuizLogic's submit -> sets isSubmitted -> triggers useEffect
+    onSubmit: handleQuizSubmitAction,
     translations: {
       questionPalette: t.questionPalette,
       attempted: t.attempted,
@@ -394,7 +405,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
             totalQuestions={totalQuestions}
             onPrev={handlePrev}
             onNext={handleNext}
-            onSubmit={handleSubmit}
+            onSubmit={handleQuizSubmitAction}
             translations={{ prev: t.prev, next: t.next, submit: t.submit }}
           />
         </main>
@@ -426,6 +437,18 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
         onMobileChange={setGuestMobile}
         onSubmit={handleGuestEntrySubmit}
         onExit={showExitModal}
+      />
+
+      <QuizSubmitDialog
+        open={showSubmitConfirm}
+        onOpenChange={setShowSubmitConfirm}
+        onConfirm={handleConfirmSubmit}
+        stats={{
+          attempted: Object.keys(answers).length,
+          skipped: totalQuestions - Object.keys(answers).length,
+          total: totalQuestions,
+        }}
+        language={language}
       />
     </div>
   );

@@ -18,6 +18,7 @@ import { QuizPaletteMobile, QuizPaletteDesktop } from './quiz/QuizPalette';
 import { QuizExitDialog } from './quiz/QuizExitDialog';
 import { GuestEntryDialog } from './quiz/GuestEntryDialog';
 import { QuizExplanation } from './quiz/QuizExplanation';
+import { QuizSubmitDialog } from './quiz/QuizSubmitDialog';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { PYQFactsLoader } from '@/components/ui/PYQFactsLoader';
 
@@ -87,6 +88,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
   const [guestMobile, setGuestMobile] = useState('');
   const [showGuestEntryDialog, setShowGuestEntryDialog] = useState(false);
   const [isSubmittingGuest, setIsSubmittingGuest] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   // No local facts state needed — PYQFactsLoader bundles facts internally
 
@@ -233,6 +235,11 @@ export function QuizInterface(props: QuizInterfaceProps) {
 
   // ── Submit handler (guest vs logged-in) ──
   const handleQuizSubmitAction = useCallback(() => {
+    setShowSubmitConfirm(true);
+  }, []);
+
+  const handleConfirmSubmit = useCallback(() => {
+    setShowSubmitConfirm(false);
     if (!userId) setShowGuestTeaser(true);
     else handleSubmit();
   }, [userId, handleSubmit]);
@@ -437,6 +444,18 @@ export function QuizInterface(props: QuizInterfaceProps) {
         onMobileChange={setGuestMobile}
         onSubmit={handleGuestEntrySubmit}
         onExit={showExitModal}
+      />
+
+      <QuizSubmitDialog
+        open={showSubmitConfirm}
+        onOpenChange={setShowSubmitConfirm}
+        onConfirm={handleConfirmSubmit}
+        stats={{
+          attempted: Object.keys(answers).length,
+          skipped: totalQuestions - Object.keys(answers).length,
+          total: totalQuestions,
+        }}
+        language={language}
       />
 
       {/* Submission overlay */}
