@@ -293,9 +293,11 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
       earnedScore = parseFloat(earnedScore.toFixed(2));
 
       // 💾 Save to DB & Send Notification
+      const savedGuestName = localStorage.getItem('mppsc_guest_name') || 'Guest User';
+      
       recordGuestAttempt({
         testId,
-        guestName: guestName || 'Guest User',
+        guestName: savedGuestName,
         score: earnedScore,
         totalQuestions: questions.length,
         correctCount,

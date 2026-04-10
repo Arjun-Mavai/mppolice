@@ -75,13 +75,20 @@ export async function submitTestFeedback(params: SubmitFeedbackParams): Promise<
 
     // Notify via Telegram
     const stars = '⭐'.repeat(data.overallRating);
+    const difficultyIcon = data.difficultyLevel === 'hard' ? '🔥' : data.difficultyLevel === 'easy' ? '✅' : '⚖️';
+    
     await sendTelegramNotification(
-      `📝 <b>New Test Feedback</b>\n\n` +
-      `<b>Test:</b> ${testName || 'N/A'}\n` +
-      `<b>Rating:</b> ${stars} (${data.overallRating}/5)\n` +
-      `<b>User:</b> ${effectiveName || 'Anonymous'}\n` +
-      `<b>Comment:</b> ${data.comment || 'No comment'}\n` +
-      `<b>Difficulty:</b> ${data.difficultyLevel}`
+      `📝 <b>NEW TEST FEEDBACK</b>\n\n` +
+      `<b>👤 Student:</b> ${effectiveName || 'Anonymous'}\n` +
+      `<b>📧 Contact:</b> ${effectiveEmail || 'N/A'}\n` +
+      `<b>📝 Test:</b> ${testName || 'Practice Test'}\n\n` +
+      `<b>📊 Review Details:</b>\n` +
+      `━━━━━━━━━━━━━━━━\n` +
+      `• <b>Rating:</b> ${stars} (${data.overallRating}/5)\n` +
+      `• <b>Difficulty:</b> ${difficultyIcon} ${data.difficultyLevel.toUpperCase()}\n` +
+      `• <b>Comment:</b> "${data.comment || 'No comment provided'}"\n` +
+      `━━━━━━━━━━━━━━━━\n\n` +
+      `#Feedback #TestReview`
     );
 
     return { success: true };

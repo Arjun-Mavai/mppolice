@@ -50,12 +50,23 @@ export async function recordGuestAttempt(data: {
 
     // 3. Send Telegram Notification
     const accuracy = ((data.correctCount / data.totalQuestions) * 100).toFixed(0);
+    const timeStr = data.timeTaken > 60 
+      ? `${Math.floor(data.timeTaken / 60)}m ${data.timeTaken % 60}s` 
+      : `${data.timeTaken}s`;
+
     await sendTelegramNotification(
-      `🆓 <b>Free Quiz Completed</b>\n\n` +
-      `<b>Test:</b> ${test?.title || 'N/A'}\n` +
-      `<b>Guest:</b> ${data.guestName}\n` +
-      `<b>Score:</b> ${data.score} (${accuracy}% accuracy)\n` +
-      `<b>Stats:</b> ✅${data.correctCount} | ❌${data.wrongCount} | ⏱️${Math.floor(data.timeTaken / 60)}m`
+      `📊 <b>FREE QUIZ RESULT</b>\n\n` +
+      `<b>👤 Student:</b> ${data.guestName}\n` +
+      `<b>📝 Test:</b> ${test?.title || 'Practice Test'}\n\n` +
+      `<b>🏆 Performance Card:</b>\n` +
+      `━━━━━━━━━━━━━━━━\n` +
+      `• <b>Score:</b> ${data.score} / ${data.totalQuestions * 3}\n` +
+      `• <b>Accuracy:</b> ${accuracy}%\n` +
+      `• <b>Correct:</b> ✅ ${data.correctCount}\n` +
+      `• <b>Wrong:</b> ❌ ${data.wrongCount}\n` +
+      `• <b>Time Taken:</b> ⏱️ ${timeStr}\n` +
+      `━━━━━━━━━━━━━━━━\n\n` +
+      `#FreeQuiz #LeadGenerated`
     );
 
     return { success: true, attemptId };
