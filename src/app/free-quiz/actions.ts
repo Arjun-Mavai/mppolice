@@ -83,21 +83,33 @@ export async function recordGuestAttempt(data: {
  */
 export const getCachedFreeQuizzes = unstable_cache(
   async () => {
-    return await db
-      .select({
-        id: tests.id,
-        title: tests.title,
-        titleEn: tests.titleEn,
-        slug: tests.slug,
-        description: tests.description,
-        totalQuestions: tests.totalQuestions,
-        unitId: tests.unitId,
-        tags: tests.tags,
-        createdAt: tests.createdAt,
-      })
-      .from(tests)
-      .where(and(eq(tests.type, 'MISC'), eq(tests.isFreeAccess, true), eq(tests.isHidden, false)))
-      .orderBy(desc(tests.createdAt));
+    try {
+      return await db
+        .select({
+          id: tests.id,
+          title: tests.title,
+          titleEn: tests.titleEn,
+          slug: tests.slug,
+          description: tests.description,
+          totalQuestions: tests.totalQuestions,
+          unitId: tests.unitId,
+          tags: tests.tags,
+          createdAt: tests.createdAt,
+        })
+        .from(tests)
+        .where(and(eq(tests.type, 'MISC'), eq(tests.isFreeAccess, true), eq(tests.isHidden, false)))
+        .orderBy(desc(tests.createdAt));
+    } catch (error) {
+      console.error('CRITICAL DB ERROR in getCachedFreeQuizzes:', error);
+      // Log more details if it's a Drizzle/LibSQL error
+      if (error instanceof Error) {
+        logger.error('Free Quiz Fetch Failed:', {
+          message: error.message,
+          stack: error.stack,
+        });
+      }
+      return [];
+    }
   },
   ['free-tests-list'],
   { revalidate: 60, tags: ['tests'] }
