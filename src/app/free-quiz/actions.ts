@@ -12,10 +12,58 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import { db } from '@/db';
-import { tests, questions } from '@/db/schema';
+import { tests, questions, freeQuizAttempts } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { logger } from '@/lib/logger';
+import { sendTelegramNotification } from '@/lib/telegram';
+
+/**
+ * recordGuestAttempt — Saves guest score to DB and notifies admin
+ */
+export async function recordGuestAttempt(data: {
+  testId: string;
+  guestName: string;
+  score: number;
+  totalQuestions: number;
+  correctCount: number;
+  wrongCount: number;
+  timeTaken: number;
+}) {
+  try {
+    const attemptId = crypto.randomUUID();
+    
+    // 1. Save to DB
+    await db.insert(freeQuizAttempts).values({
+      id: attemptId,
+      testId: data.testId,
+      guestId: 'guest_session', // Placeholder
+      score: data.score,
+      completedAt: new Date(),
+    });
+
+    // 2. Fetch Test Title for better notification
+    const test = await db.query.tests.findFirst({
+      where: eq(tests.id, data.testId),
+      columns: { title: true }
+    });
+
+    // 3. Send Telegram Notification
+    const accuracy = ((data.correctCount / data.totalQuestions) * 100).toFixed(0);
+    await sendTelegramNotification(
+      `🆓 <b>Free Quiz Completed</b>\n\n` +
+      `<b>Test:</b> ${test?.title || 'N/A'}\n` +
+      `<b>Guest:</b> ${data.guestName}\n` +
+      `<b>Score:</b> ${data.score} (${accuracy}% accuracy)\n` +
+      `<b>Stats:</b> ✅${data.correctCount} | ❌${data.wrongCount} | ⏱️${Math.floor(data.timeTaken / 60)}m`
+    );
+
+    return { success: true, attemptId };
+  } catch (error) {
+    logger.error('Failed to record guest attempt:', error);
+    return { success: false };
+  }
+}
 
 /**
  * getCachedFreeQuizzes — unstable_cache se cached MISC tests

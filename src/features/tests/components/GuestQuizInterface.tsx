@@ -21,6 +21,7 @@ import { QuizExitDialog } from './quiz/QuizExitDialog';
 import { GuestEntryDialog } from './quiz/GuestEntryDialog';
 import { QuizExplanation } from './quiz/QuizExplanation';
 import { QuizSubmitDialog } from './quiz/QuizSubmitDialog';
+import { recordGuestAttempt } from '@/app/free-quiz/actions';
 
 
 interface GuestQuizInterfaceProps {
@@ -290,6 +291,17 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
 
       // Fix float precision
       earnedScore = parseFloat(earnedScore.toFixed(2));
+
+      // 💾 Save to DB & Send Notification
+      recordGuestAttempt({
+        testId,
+        guestName: guestName || 'Guest User',
+        score: earnedScore,
+        totalQuestions: questions.length,
+        correctCount,
+        wrongCount,
+        timeTaken: timeLimitInMinutes * 60 - timeLeft,
+      });
 
       // Save to store
       useGuestResultStore.getState().setResult({
