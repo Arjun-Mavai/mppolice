@@ -129,7 +129,7 @@ export function SmartQuizResult({
             </div>
             
             <div className="flex items-center gap-3">
-                <ConnectSocials className="flex-1 sm:flex-none" />
+                <ConnectSocials minimal className="flex-1 sm:flex-none" />
             </div>
           </div>
         </div>

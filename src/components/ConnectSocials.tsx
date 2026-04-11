@@ -34,7 +34,7 @@ export function ConnectSocials({
 
   if (minimal) {
     return (
-      <div className={cn('flex items-center gap-2', className)}>
+      <div className={cn('flex items-center gap-4 py-1', className)}>
         {/* Telegram Icon Only */}
         <motion.a
           whileHover={{ scale: 1.1 }}
@@ -42,14 +42,14 @@ export function ConnectSocials({
           href="https://t.me/MPPSC2026_Mission"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500 text-white shadow-sm"
+          className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500 text-white shadow-sm transition-colors hover:bg-sky-600"
           title="Join Telegram"
         >
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">
             <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </motion.a>
-
+ 
         {/* YouTube Icon Only */}
         <motion.a
           whileHover={{ scale: 1.1 }}
@@ -57,7 +57,7 @@ export function ConnectSocials({
           href="https://youtube.com/@MPPSCZEN/shorts"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 text-white shadow-sm"
+          className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-600 text-white shadow-sm transition-colors hover:bg-red-700"
           title="Watch YouTube Shorts"
         >
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">
@@ -99,7 +99,7 @@ export function ConnectSocials({
 
 
       {/* Social Links */}
-      <div className="flex flex-col items-center justify-center gap-3 md:flex-row md:gap-4">
+      <div className="flex flex-col items-center justify-center gap-5 md:flex-row md:gap-8">
         {/* Telegram Link */}
         <motion.a
           whileHover={{ scale: 1.02, y: -2 }}
