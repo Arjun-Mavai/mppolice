@@ -10,8 +10,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, AlertCircle, Send, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { AlertCircle, Send } from 'lucide-react';
 
 interface QuizSubmitDialogProps {
   open: boolean;

@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BrainCircuit, Trophy, Lightbulb, ShieldAlert, Repeat, Lock, Clock, Target, Plus, Minus, TrendingDown, ChevronRight } from 'lucide-react';
+import {
+  BrainCircuit, Trophy, Lightbulb, ShieldAlert, Repeat, Lock, Clock, Target, Plus, Minus,
+  TrendingDown, ChevronRight, Zap, Landmark, Map, Compass, PieChart, FlaskConical,
+  Languages, Globe, BookOpen, Sparkles
+} from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -14,7 +18,14 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { cn } from '@/lib/utils';
 import { QuizHeader } from './quiz/QuizHeader';
 import { ConnectSocials } from '@/components/ConnectSocials';
-import { Sparkles } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 interface SmartQuizResultProps {
   testId?: string;

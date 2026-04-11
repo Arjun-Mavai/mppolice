@@ -241,6 +241,8 @@ export default function ProfileClient({ user }: ProfileClientProps) {
                   <button
                     type="button"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    aria-label={showCurrentPassword ? 'Hide current password' : 'Show current password'}
+                    aria-pressed={showCurrentPassword}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
                   >
                     {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -264,6 +266,8 @@ export default function ProfileClient({ user }: ProfileClientProps) {
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
+                    aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+                    aria-pressed={showNewPassword}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
                   >
                     {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -287,6 +291,8 @@ export default function ProfileClient({ user }: ProfileClientProps) {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={showConfirmPassword ? 'Hide confirmation password' : 'Show confirmation password'}
+                    aria-pressed={showConfirmPassword}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
                   >
                     {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}

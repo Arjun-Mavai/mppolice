@@ -5,6 +5,7 @@ import { CheckCircle2, X, Flag, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Question } from '@/types/quiz';
+import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { FormattedQuestionText, cleanMatchingQuestionText } from '../../utils/questionFormatter';
 
 interface QuizQuestionProps {
@@ -67,12 +68,10 @@ export function QuizQuestion({
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-400 uppercase sm:text-base">
             <span>{t.question} {questionIndex + 1}/{totalQuestions}</span>
-            {currentTimeSpent > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black tracking-tight text-slate-500 shadow-sm transition-all animate-in fade-in zoom-in duration-300">
-                <Clock className="h-2.5 w-2.5 text-indigo-500" />
-                {formatTime(currentTimeSpent)}
-              </span>
-            )}
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black tracking-tight text-slate-500 shadow-sm transition-all">
+              <Clock className="h-2.5 w-2.5 text-indigo-500" />
+              {formatTime(currentTimeSpent)}
+            </span>
           </div>
           {/* 🏷️ YEAR / SUBJECT TAG + MARKING */}
           <div className="flex items-center gap-1.5">
@@ -83,10 +82,10 @@ export function QuizQuestion({
             )}
             <div className="flex items-center overflow-hidden rounded-md border border-slate-100 font-mono text-[9px] font-black sm:text-[10px]">
               <span className="bg-emerald-50 px-1.5 py-0.5 text-emerald-600">
-                +{question.marks ?? 3}
+                +{question.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION}
               </span>
               <span className="bg-rose-50 px-1.5 py-0.5 text-rose-600">
-                -{question.negativeMarks ?? 1}
+                -{question.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING}
               </span>
             </div>
           </div>

@@ -1,14 +1,14 @@
 'use server';
 
 import { db } from '@/db';
-import { tests, userAttempts, questions, attemptAnswers, questionsRelations, syllabusTopics } from '@/db/schema';
+import { tests, userAttempts, questions, attemptAnswers, syllabusTopics } from '@/db/schema';
 import { eq, asc, desc, and, inArray, sql } from 'drizzle-orm';
 import { unstable_cache, revalidateTag } from 'next/cache';
 import { verifyAuth } from '@/lib/auth';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { logger } from '@/lib/logger';
 import { insertUserToLeaderboard } from '@/actions/leaderboard-actions';
-import { sendTelegramNotification } from '@/lib/telegram';
+import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
 
 // --- Generic Cached Fetchers ---
 
@@ -389,11 +389,12 @@ export async function submitTestAttempt(
     // Bhai, ye sab kaam parallel mein honge to user ko result 200-300ms jaldi dikhega
     const postSubmissionTasks = [];
 
+    const totalTestMarks = testQuestions.reduce(
+      (sum, q) => sum + (q.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION),
+      0
+    );
+
     if (session && session.name) {
-      const totalTestMarks = testQuestions.reduce(
-        (sum, q) => sum + (q.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION),
-        0
-      );
 
       postSubmissionTasks.push(
         insertUserToLeaderboard({
@@ -410,20 +411,20 @@ export async function submitTestAttempt(
     // Invalidate User Analytics Cache
     postSubmissionTasks.push(revalidateTag(`analytics-${userId}`, { expire: 0 }));
 
+    // 🚀 Prepare Telegram Notification data
+    const totalAttempted = correctCount + incorrectCount;
+    const accuracy = totalAttempted > 0 ? ((correctCount / totalAttempted) * 100).toFixed(0) : '0';
+    
+    const telegramMessage = `🏆 <b>Test Completed</b>\n\n` +
+      `<b>Test:</b> ${escapeHTML(testTitle || test?.title || 'N/A')}\n` +
+      `<b>User:</b> ${escapeHTML(session?.name || 'Student')}\n` +
+      `<b>Score:</b> ${totalScore}/${totalTestMarks} (${accuracy}% accuracy)\n` +
+      `<b>Stats:</b> ✅${correctCount} | ❌${incorrectCount} | ⏱️${Math.floor(validDuration / 60)}m`;
+
+    postSubmissionTasks.push(sendTelegramNotification(telegramMessage));
+
     // Run all tasks in parallel
     await Promise.allSettled(postSubmissionTasks);
-
-    // 🚀 Notify Admin via Telegram
-    const accuracy = ((correctCount / (correctCount + incorrectCount)) * 100).toFixed(0);
-    const totalMarks = testQuestions.length * SCORING_CONFIG.MARKS_PER_QUESTION;
-    
-    await sendTelegramNotification(
-      `🏆 <b>Test Completed</b>\n\n` +
-      `<b>Test:</b> ${testTitle || test?.title || 'N/A'}\n` +
-      `<b>User:</b> ${session?.name || 'Student'}\n` +
-      `<b>Score:</b> ${totalScore}/${totalMarks} (${accuracy}% accuracy)\n` +
-      `<b>Stats:</b> ✅${correctCount} | ❌${incorrectCount} | ⏱️${Math.floor(validDuration / 60)}m`
-    );
 
     return { success: true, attemptId, score: parseFloat(totalScore.toFixed(2)) };
   } catch (error) {
