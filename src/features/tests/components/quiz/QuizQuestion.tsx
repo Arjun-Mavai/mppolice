@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CheckCircle2, X, Flag } from 'lucide-react';
+import { CheckCircle2, X, Flag, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Question } from '@/types/quiz';
@@ -24,6 +24,7 @@ interface QuizQuestionProps {
     markReview: string;
     unmark: string;
   };
+  currentTimeSpent?: number;
 }
 
 export function QuizQuestion({
@@ -39,6 +40,7 @@ export function QuizQuestion({
   onToggleReview,
   getParsedOptions,
   translations: t,
+  currentTimeSpent = 0,
 }: QuizQuestionProps) {
   const showFeedback = instantModeEnabled && isAnswered;
 
@@ -52,26 +54,42 @@ export function QuizQuestion({
     language === 'en' && question.questionEn ? question.questionEn : question.question;
   const questionText = cleanMatchingQuestionText(rawQuestionText, question);
 
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div className="mx-auto max-w-3xl space-y-4 sm:space-y-5">
       {/* Question Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="text-sm font-bold tracking-wider text-slate-400 uppercase sm:text-base">
-            {t.question} {questionIndex + 1}/{totalQuestions}
+          <div className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-400 uppercase sm:text-base">
+            <span>{t.question} {questionIndex + 1}/{totalQuestions}</span>
+            {currentTimeSpent > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black tracking-tight text-slate-500 shadow-sm transition-all animate-in fade-in zoom-in duration-300">
+                <Clock className="h-2.5 w-2.5 text-indigo-500" />
+                {formatTime(currentTimeSpent)}
+              </span>
+            )}
           </div>
           {/* 🏷️ YEAR / SUBJECT TAG + MARKING */}
-          {question.subject && (
-            <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5">
+            {question.subject && (
               <div className="rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 sm:text-xs">
                 {question.subject}
               </div>
-              <div className="flex items-center overflow-hidden rounded-md border border-slate-100 font-mono text-[9px] font-black sm:text-[10px]">
-                <span className="bg-emerald-50 px-1.5 py-0.5 text-emerald-600">+3</span>
-                <span className="bg-rose-50 px-1.5 py-0.5 text-rose-600">-1</span>
-              </div>
+            )}
+            <div className="flex items-center overflow-hidden rounded-md border border-slate-100 font-mono text-[9px] font-black sm:text-[10px]">
+              <span className="bg-emerald-50 px-1.5 py-0.5 text-emerald-600">
+                +{question.marks ?? 3}
+              </span>
+              <span className="bg-rose-50 px-1.5 py-0.5 text-rose-600">
+                -{question.negativeMarks ?? 1}
+              </span>
             </div>
-          )}
+          </div>
         </div>
         <Button
           variant="ghost"

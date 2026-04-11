@@ -260,11 +260,17 @@ export function PYQFactsLoader({
     const id = setInterval(() => {
       setVisible(false);
       setTimeout(() => {
-        setFactIdx((i) => (i + 1) % FACTS.length);
+        setFactIdx((currentIdx) => {
+          let nextIdx;
+          do {
+            nextIdx = Math.floor(Math.random() * FACTS.length);
+          } while (nextIdx === currentIdx && FACTS.length > 1);
+          return nextIdx;
+        });
         setVisible(true);
         setStep((s) => Math.min(s + 1, STEPS.length - 1));
       }, 350);
-    }, 4000);
+    }, 3000);
     return () => clearInterval(id);
   }, []);
 

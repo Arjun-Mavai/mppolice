@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { QuizListItem } from '@/components/QuizListItem';
 import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
-import { ViewTransition } from 'react';
+import { Fragment } from 'react';
 import { TransitionLink } from '@/components/ui/transition-link';
 import { useQueryClient } from '@tanstack/react-query';
 import { getSubjectPartAccess } from './actions';

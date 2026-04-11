@@ -5,6 +5,7 @@ import { guests } from '@/db/schema';
 import { logger } from '@/lib/logger';
 import { eq } from 'drizzle-orm';
 import { sendTelegramNotification } from '@/lib/telegram';
+import { getTelegramStatsSummary } from '@/lib/telegram-stats-loader';
 
 /**
  * 🎯 GUEST DATA MANAGEMENT - UPSERT LOGIC
@@ -48,8 +49,17 @@ export async function createGuestEntry(data: GuestData) {
           })
           .where(eq(guests.id, existingGuest.id));
         
+        // 🔥 NEW: Fetch global stats summary
+        const statsSummary = await getTelegramStatsSummary();
+        
         // Notify about returning guest lead
-        await sendTelegramNotification(`👋 <b>Returning Guest:</b> ${name.trim()}\n📱 Mobile: ${normalizedMobile}\n📧 Email: ${email || 'N/A'}`);
+        await sendTelegramNotification(
+          `👋 <b>Returning Guest:</b> ${name.trim()}\n` +
+          `📱 Mobile: ${normalizedMobile}\n` +
+          `📧 Email: ${email || 'N/A'}\n\n` +
+          (statsSummary ? statsSummary + '\n\n' : '') +
+          `#ReturningLead`
+        );
         
         return { success: true, guestId: existingGuest.id, isReturning: true };
       }
@@ -63,8 +73,16 @@ export async function createGuestEntry(data: GuestData) {
         mobile: normalizedMobile,
       });
 
+      const statsSummary = await getTelegramStatsSummary();
+
       // Notify about new guest lead
-      await sendTelegramNotification(`🎯 <b>New Guest Lead:</b> ${name.trim()}\n📱 Mobile: ${normalizedMobile}\n📧 Email: ${email || 'N/A'}`);
+      await sendTelegramNotification(
+        `🎯 <b>New Guest Lead:</b> ${name.trim()}\n` +
+        `📱 Mobile: ${normalizedMobile}\n` +
+        `📧 Email: ${email || 'N/A'}\n\n` +
+        (statsSummary ? statsSummary + '\n\n' : '') +
+        `#NewLeadGenerated`
+      );
       
       return { success: true, guestId, isReturning: false };
     }

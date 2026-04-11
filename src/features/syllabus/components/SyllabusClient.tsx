@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Lock, ArrowRight, ChevronDown } from 'lucide-react';
@@ -9,8 +9,6 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { SyllabusTopicCard } from '@/components/SyllabusTopicCard';
 import { SyllabusData } from '@/types/syllabus';
-import { ViewTransition } from 'react';
-
 interface SyllabusClientProps {
   syllabusData: SyllabusData;
 }
@@ -49,7 +47,7 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
   if (!isMounted) return null; // Prevent hydration mismatch
 
   return (
-    <ViewTransition>
+    <Fragment>
       <div className="relative min-h-screen overflow-hidden bg-[#fafbfc] pb-20 font-sans selection:bg-slate-900 selection:text-white">
         {/* 🎭 PREMIUM BACKGROUND BLURS */}
         <div className="pointer-events-none absolute top-0 left-0 h-[600px] w-full bg-gradient-to-b from-slate-100/50 to-transparent" />
@@ -365,6 +363,6 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
         <SyllabusLockModal open={unlockModalOpen} onOpenChange={setUnlockModalOpen} />
       </div>
       </div>
-    </ViewTransition>
+    </Fragment>
   );
 }

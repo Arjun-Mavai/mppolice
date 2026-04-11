@@ -25,9 +25,10 @@ interface UseQuizLogicProps {
   mode: 'topic' | 'full' | 'pyq'; // Kis type ka quiz hai
   timeLimitInMinutes: number; // Kitne minute ka test hai
   testId: string; // Test ki unique ID
-  userId: string | null; // User ki ID (guest ho to empty/null)
+  userId: string | null; // User ki ID (guest हो to empty/null)
   onRetry?: () => void; // Retry button callback
   isInstantMode?: boolean; // Instant feedback mode (turant correct/wrong dikhana)
+  title?: string; // Test Title for notifications
 }
 
 export function useQuizLogic({
@@ -38,6 +39,7 @@ export function useQuizLogic({
   userId,
   onRetry,
   isInstantMode = false,
+  title,
 }: UseQuizLogicProps) {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 📱 STATE MANAGEMENT (Quiz ka poora state yahan hai)
@@ -95,6 +97,7 @@ export function useQuizLogic({
   // Example: { "q-001": 45, "q-002": 30 }
   //          Question 1 pe 45 seconds laga, Question 2 pe 30 seconds
   const [questionTimes, setQuestionTimes] = useState<Record<string, number>>({});
+  const [activeQuestionTime, setActiveQuestionTime] = useState(0);
 
   // ───────────────────────────────────────────────────────────────
   // 🕒 TIME REFERENCE (Jab question start hua tha)
@@ -255,7 +258,8 @@ export function useQuizLogic({
         userId,
         formattedAnswers,
         timeLimitInMinutes * 60 - timeLeft, // Total time taken
-        finalTimes
+        finalTimes,
+        title
       );
     } catch (error) {
       logger.error('Failed to save test attempt:', error, {
@@ -276,7 +280,8 @@ export function useQuizLogic({
     timeLimitInMinutes,
     timeLeft,
     isSubmitting,
-    isSubmitted
+    isSubmitted,
+    title,
   ]);
 
   /**
@@ -320,9 +325,13 @@ export function useQuizLogic({
   const handleNext = useCallback(() => {
     saveCurrentQuestionTime();
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1);
+      const nextIndex = currentQuestionIndex + 1;
+      const nextQId = questions[nextIndex]?.id;
+      // ⚡ Instant Sync: Set time for the next question immediately
+      setActiveQuestionTime(Math.round(questionTimes[nextQId] || 0));
+      setCurrentQuestionIndex(nextIndex);
     }
-  }, [currentQuestionIndex, questions.length, saveCurrentQuestionTime]);
+  }, [currentQuestionIndex, questions, saveCurrentQuestionTime, questionTimes]);
 
   /**
    * handlePrev
@@ -337,9 +346,13 @@ export function useQuizLogic({
   const handlePrev = useCallback(() => {
     saveCurrentQuestionTime();
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex((prev) => prev - 1);
+      const prevIndex = currentQuestionIndex - 1;
+      const prevQId = questions[prevIndex]?.id;
+      // ⚡ Instant Sync: Set time for the previous question immediately
+      setActiveQuestionTime(Math.round(questionTimes[prevQId] || 0));
+      setCurrentQuestionIndex(prevIndex);
     }
-  }, [currentQuestionIndex, saveCurrentQuestionTime]);
+  }, [currentQuestionIndex, questions, saveCurrentQuestionTime, questionTimes]);
 
   /**
    * handleJump
@@ -357,9 +370,12 @@ export function useQuizLogic({
   const handleJump = useCallback(
     (index: number) => {
       saveCurrentQuestionTime();
+      const targetQId = questions[index]?.id;
+      // ⚡ Instant Sync: Set time for the target question immediately
+      setActiveQuestionTime(Math.round(questionTimes[targetQId] || 0));
       setCurrentQuestionIndex(index);
     },
-    [saveCurrentQuestionTime]
+    [saveCurrentQuestionTime, questions, questionTimes]
   );
 
   /**
@@ -497,11 +513,19 @@ export function useQuizLogic({
         }
         return prev - 1; // Har second -1
       });
+
+      // ⏱️ Update Real-time Per-Question Display
+      if (questionStartTimeRef.current) {
+        const duration = (Date.now() - questionStartTimeRef.current) / 1000;
+        const qId = questions[currentQuestionIndex]?.id;
+        const previouslySpent = qId ? (questionTimes[qId] || 0) : 0;
+        setActiveQuestionTime(Math.round(previouslySpent + duration));
+      }
     }, 1000);
 
     // Cleanup: Component unmount ya isSubmitted change pe timer stop
     return () => clearInterval(timerId);
-  }, [isSubmitted]);
+  }, [isSubmitted, currentQuestionIndex, questionTimes, questions]);
 
   /**
    * EFFECT 3: Auto-Submit on Time Up
@@ -547,6 +571,7 @@ export function useQuizLogic({
     instantModeEnabled, // Is instant feedback ON?
     language, // Current language (hi/en)
     questionTimes, // ⏱️ Time spent per question { questionId: seconds }
+    activeQuestionTime, // 🕒 Real-time display for current question
     needsFeedback, // Feedback requirement
     setNeedsFeedback, // Manual control for feedback modal
 

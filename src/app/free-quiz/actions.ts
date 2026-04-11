@@ -17,6 +17,8 @@ import { eq, and, desc } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { logger } from '@/lib/logger';
 import { sendTelegramNotification } from '@/lib/telegram';
+import { getTelegramStatsSummary } from '@/lib/telegram-stats-loader';
+import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 
 /**
  * recordGuestAttempt — Saves guest score to DB and notifies admin
@@ -24,6 +26,7 @@ import { sendTelegramNotification } from '@/lib/telegram';
 export async function recordGuestAttempt(data: {
   testId: string;
   guestName: string;
+  testTitle?: string;
   score: number;
   totalQuestions: number;
   correctCount: number;
@@ -54,18 +57,22 @@ export async function recordGuestAttempt(data: {
       ? `${Math.floor(data.timeTaken / 60)}m ${data.timeTaken % 60}s` 
       : `${data.timeTaken}s`;
 
+    // 🔥 NEW: Fetch global stats summary
+    const statsSummary = await getTelegramStatsSummary();
+
     await sendTelegramNotification(
       `📊 <b>FREE QUIZ RESULT</b>\n\n` +
       `<b>👤 Student:</b> ${data.guestName}\n` +
-      `<b>📝 Test:</b> ${test?.title || 'Practice Test'}\n\n` +
+      `<b>📝 Test:</b> ${data.testTitle || test?.title || 'Practice Test'}\n\n` +
       `<b>🏆 Performance Card:</b>\n` +
       `━━━━━━━━━━━━━━━━\n` +
-      `• <b>Score:</b> ${data.score} / ${data.totalQuestions * 3}\n` +
+      `• <b>Score:</b> ${data.score} / ${data.totalQuestions * SCORING_CONFIG.MARKS_PER_QUESTION}\n` +
       `• <b>Accuracy:</b> ${accuracy}%\n` +
       `• <b>Correct:</b> ✅ ${data.correctCount}\n` +
       `• <b>Wrong:</b> ❌ ${data.wrongCount}\n` +
       `• <b>Time Taken:</b> ⏱️ ${timeStr}\n` +
       `━━━━━━━━━━━━━━━━\n\n` +
+      (statsSummary ? statsSummary + '\n\n' : '') +
       `#FreeQuiz #LeadGenerated`
     );
 
@@ -84,7 +91,8 @@ export async function recordGuestAttempt(data: {
 export const getCachedFreeQuizzes = unstable_cache(
   async () => {
     try {
-      return await db
+      console.log('--- DEBUG: Fetching Free Quizzes from DB ---');
+      const result = await db
         .select({
           id: tests.id,
           title: tests.title,
@@ -97,21 +105,26 @@ export const getCachedFreeQuizzes = unstable_cache(
           createdAt: tests.createdAt,
         })
         .from(tests)
-        .where(and(eq(tests.type, 'MISC'), eq(tests.isFreeAccess, true), eq(tests.isHidden, false)))
+        .where(
+          and(
+            eq(tests.type, 'MISC'),
+            eq(tests.isFreeAccess, true),
+            eq(tests.isHidden, false)
+            // eq(tests.examType, 'mppsc') // Temporarily commented to fix blank list
+          )
+        )
         .orderBy(desc(tests.createdAt));
+      
+      console.log(`--- DEBUG: Successfully fetched ${result.length} quizzes ---`);
+      return result;
     } catch (error) {
-      console.error('CRITICAL DB ERROR in getCachedFreeQuizzes:', error);
-      // Log more details if it's a Drizzle/LibSQL error
-      if (error instanceof Error) {
-        logger.error('Free Quiz Fetch Failed:', {
-          message: error.message,
-          stack: error.stack,
-        });
-      }
+      console.error('--- CRITICAL DB ERROR in getCachedFreeQuizzes ---');
+      console.error('Error Details:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+      
       return [];
     }
   },
-  ['free-tests-list'],
+  ['free-tests-list-v4'],
   { revalidate: 60, tags: ['tests'] }
 );
 
@@ -124,7 +137,15 @@ const fetchFreeQuizData = async (testId: string) => {
   const test = await db
     .select()
     .from(tests)
-    .where(and(eq(tests.id, testId), eq(tests.type, 'MISC'), eq(tests.isFreeAccess, true), eq(tests.isHidden, false)))
+    .where(
+      and(
+        eq(tests.id, testId),
+        eq(tests.type, 'MISC'),
+        eq(tests.isFreeAccess, true),
+        eq(tests.isHidden, false),
+        eq(tests.examType, 'mppsc')
+      )
+    )
     .get();
 
   if (!test) return null;
@@ -140,7 +161,7 @@ const fetchFreeQuizData = async (testId: string) => {
 
 export const getCachedFreeQuizWithQuestions = unstable_cache(
   fetchFreeQuizData,
-  ['free-quiz-with-questions'],
+  ['free-quiz-with-questions-v4'],
   { revalidate: 300, tags: ['tests'] }
 );
 

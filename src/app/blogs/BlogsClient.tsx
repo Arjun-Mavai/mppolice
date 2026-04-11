@@ -13,7 +13,7 @@ import { BlogSkeleton } from '@/components/skeletons/BlogSkeleton';
 import { BlogCard } from '@/components/blog/BlogCard';
 import { PromoCard } from '@/components/blog/PromoCard';
 import { SearchInput } from '@/components/blog/SearchInput';
-import { ViewTransition } from 'react';
+import { Fragment } from 'react';
 
 // 3. Internal Imports (Utils/Stores/Actions)
 import { cn } from '@/lib/utils';
@@ -43,7 +43,7 @@ interface BlogsClientProps {
 
 // Runtime guard to ensure a value conforms to the database User shape
 const isDatabaseUser = (value: unknown): value is User => {
-  return !!value && typeof value === 'object' && 'id' in value && 'isSubscribed' in value;
+  return !!value && typeof value === 'object' && ('id' in value || 'email' in value);
 };
 
 /**
@@ -147,10 +147,14 @@ export default function BlogsClient({
   // ------------------------------------------------------------------
 
   // User resolution: Server prop > Store fallback
-  // User resolution: Server prop > Store fallback (only if it matches User shape)
-  // Both sources use camelCase (Drizzle Schema & Zustand Store)
-  const effectiveUser = user || (isDatabaseUser(storeUser) ? storeUser : undefined);
+  // User resolution: Server prop > Store fallback
+  // Fallback to storeUser directly if isDatabaseUser check is too strict during initial hydration
+  const effectiveUser = user || (isDatabaseUser(storeUser) ? storeUser : (storeUser as any));
   const currentUser = effectiveUser || null; // Ensure strictly User | null (no undefined)
+  
+  // Debug log for the user
+  console.log("[BlogsClient] storeUser:", storeUser);
+  console.log("[BlogsClient] currentUser:", currentUser);
   const isGuest = !currentUser?.isSubscribed;
 
   // Flatten infinite query pages
@@ -335,7 +339,7 @@ export default function BlogsClient({
   // 🎨 MAIN RENDER
   // ------------------------------------------------------------------
   return (
-    <ViewTransition>
+    <Fragment>
       <div className="min-h-screen bg-white">
       {/* Header Section */}
       <div className="sticky top-16 z-30 border-b border-slate-200 bg-white shadow-sm">
@@ -600,7 +604,7 @@ export default function BlogsClient({
           )}
         </div>
       </div>
-    </div>
-  </ViewTransition>
-);
+      </div>
+    </Fragment>
+  );
 }

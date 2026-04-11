@@ -73,14 +73,15 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     currentQuestion,
     isAnswered,
     totalQuestions,
-    // setIsSubmitted is likely returned by useQuizLogic but not exposed in destructuring in QuizInterface?
-    // Let's check logic. useQuizLogic handles 'isSubmitted' state.
+    questionTimes,
+    activeQuestionTime,
   } = useQuizLogic({ ...props, userId: null }); // Force userId null
 
   // Effective instant mode — disableInstantMode true h to force OFF
   const effectiveInstantMode = !disableInstantMode && instantModeEnabled;
 
   const { setLanguage } = useSettingsStore();
+  const { setResult } = useGuestResultStore();
 
   // UI state
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -279,11 +280,10 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
           if (answers[q.id] === undefined) {
             skippedCount++;
           } else if (q.correctAnswer === ansIdx) {
-            earnedScore += q.marks || QUIZ_CONSTANTS.MARKS_PER_QUESTION;
+            earnedScore += QUIZ_CONSTANTS.MARKS_PER_QUESTION;
             correctCount++;
           } else {
-            earnedScore -=
-              q.negativeMarks !== undefined ? q.negativeMarks : QUIZ_CONSTANTS.NEGATIVE_MARKING;
+            earnedScore -= QUIZ_CONSTANTS.NEGATIVE_MARKING;
             wrongCount++;
           }
         }
@@ -297,6 +297,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
       
       recordGuestAttempt({
         testId,
+        testTitle: title,
         guestName: savedGuestName,
         score: earnedScore,
         totalQuestions: questions.length,
@@ -306,15 +307,16 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
       });
 
       // Save to store
-      useGuestResultStore.getState().setResult({
+      setResult({
         score: earnedScore,
-        totalQuestions: questions.length,
         correctCount,
         wrongCount,
         skippedCount,
+        totalQuestions: questions.length,
         timeTaken: timeLimitInMinutes * 60 - timeLeft,
         questions, // Store questions for proper result display
         answers,
+        questionTimes, // Store per-question timing
         testId, // Pass testId from props
         title, // Pass title from props
       });
@@ -325,7 +327,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
       // Navigate instantly
       router.replace('/guest-result');
     }
-  }, [isSubmitted, answers, questions, timeLimitInMinutes, timeLeft, router]);
+  }, [isSubmitted, answers, questions, timeLimitInMinutes, timeLeft, router, questionTimes, setResult, testId, title]);
 
   // No local facts state needed — PYQFactsLoader bundles facts internally
 
@@ -352,6 +354,8 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
       current: t.current,
       submitTest: t.submitTest,
     },
+    timeLeft,
+    language,
   };
 
   return (
@@ -401,6 +405,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
               onToggleReview={toggleMarkForReview}
               getParsedOptions={getParsedOptions}
               translations={{ question: t.question, markReview: t.markReview, unmark: t.unmark }}
+              currentTimeSpent={activeQuestionTime}
             />
 
             {effectiveInstantMode && isAnswered && (
@@ -460,6 +465,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
         stats={{
           attempted: Object.keys(answers).length,
           skipped: totalQuestions - Object.keys(answers).length,
+          marked: markedforReview.length,
           total: totalQuestions,
         }}
         language={language}

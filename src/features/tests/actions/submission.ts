@@ -15,7 +15,24 @@ import { sendTelegramNotification } from '@/lib/telegram';
 export const getCachedPYQTests = unstable_cache(
   async () => {
     const pyqTests = await db
-      .select()
+      .select({
+        id: tests.id,
+        title: tests.title,
+        titleEn: tests.titleEn,
+        description: tests.description,
+        slug: tests.slug,
+        durationMinutes: tests.durationMinutes,
+        totalQuestions: tests.totalQuestions,
+        totalMarks: tests.totalMarks,
+        type: tests.type,
+        isPro: tests.isPro,
+        isFreeAccess: tests.isFreeAccess,
+        isLiteAccess: tests.isLiteAccess,
+        isProAccess: tests.isProAccess,
+        displayOrder: tests.displayOrder,
+        isHidden: tests.isHidden,
+        createdAt: tests.createdAt,
+      })
       .from(tests)
       .where(and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false)))
       .orderBy(asc(tests.displayOrder), desc(tests.createdAt));
@@ -25,7 +42,7 @@ export const getCachedPYQTests = unstable_cache(
       year: test.title.match(/\d{4}/)?.[0] || new Date(test.createdAt!).getFullYear().toString(),
     }));
   },
-  ['pyq-tests-list'],
+  ['pyq-tests-list-v4'],
   { revalidate: 60, tags: ['tests'] }
 );
 
@@ -200,7 +217,8 @@ export async function submitTestAttempt(
   userId: string,
   answers: Record<string, string>,
   durationSeconds: number,
-  questionTimes: Record<string, number>
+  questionTimes: Record<string, number>,
+  testTitle?: string
 ) {
   try {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -286,14 +304,14 @@ export async function submitTestAttempt(
 
         if (isCorrect) {
           // Strict Scoring as per User Request ("Global Standard")
-          // Use per-question marks if available, fallback to global config
-          const marks = q.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION;
+          // Enforce Global Pattern (+3)
+          const marks = SCORING_CONFIG.MARKS_PER_QUESTION;
           totalScore += marks;
           correctCount++;
         } else {
           // Strict Negative Marking
-          // Use per-question negative marks if available
-          const deduction = q.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING;
+          // Enforce Global Pattern (-1)
+          const deduction = SCORING_CONFIG.NEGATIVE_MARKING;
           totalScore -= deduction;
           incorrectCount++;
         }
@@ -397,11 +415,11 @@ export async function submitTestAttempt(
 
     // 🚀 Notify Admin via Telegram
     const accuracy = ((correctCount / (correctCount + incorrectCount)) * 100).toFixed(0);
-    const totalMarks = testQuestions.reduce((s, q) => s + (q.marks ?? 3), 0);
+    const totalMarks = testQuestions.length * SCORING_CONFIG.MARKS_PER_QUESTION;
     
     await sendTelegramNotification(
       `🏆 <b>Test Completed</b>\n\n` +
-      `<b>Test:</b> ${test?.title || 'N/A'}\n` +
+      `<b>Test:</b> ${testTitle || test?.title || 'N/A'}\n` +
       `<b>User:</b> ${session?.name || 'Student'}\n` +
       `<b>Score:</b> ${totalScore}/${totalMarks} (${accuracy}% accuracy)\n` +
       `<b>Stats:</b> ✅${correctCount} | ❌${incorrectCount} | ⏱️${Math.floor(validDuration / 60)}m`

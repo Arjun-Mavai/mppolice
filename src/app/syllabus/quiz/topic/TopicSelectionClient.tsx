@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { toast } from 'sonner';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
-import { ViewTransition } from 'react';
+import { Fragment } from 'react';
 
 import { getUserTier } from '@/lib/access-control';
 import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
@@ -166,7 +166,7 @@ export default function TopicSelectionClient({ initialDbData }: TopicSelectionCl
   }
 
   return (
-    <ViewTransition>
+    <Fragment>
       <div className="relative min-h-screen overflow-hidden bg-[#fafbfc] pb-20 font-sans">
         {/* 🎭 PREMIUM BACKGROUND BLURS */}
         <div className="pointer-events-none absolute top-0 left-0 h-[500px] w-full bg-gradient-to-b from-slate-100/30 to-transparent" />
@@ -343,6 +343,6 @@ export default function TopicSelectionClient({ initialDbData }: TopicSelectionCl
 
       <SyllabusLockModal open={paywallOpen} onOpenChange={setPaywallOpen} />
     </div>
-    </ViewTransition>
+    </Fragment>
   );
 }

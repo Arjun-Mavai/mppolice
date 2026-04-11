@@ -38,7 +38,7 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
           <div className="flex-1 space-y-1">
             <div className="flex items-center gap-2">
               <h3 className="font-display text-lg font-black tracking-tight text-white">
-                {user ? 'Master Prep' : 'Ace MPPSC'}
+                {user ? 'Start Practice' : 'Ace MPPSC'}
               </h3>
               {isPro && (
                 <span className="flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold tracking-wider text-amber-300 uppercase">
@@ -53,10 +53,12 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
             </div>
             <p className="line-clamp-1 text-xs font-medium text-slate-400">
               {isPro
-                ? 'Full access enabled.'
+                ? 'Premium access active.'
                 : isLite
                   ? 'Upgrade for full mocks.'
-                  : '2026 High-Yield PYQs.'}
+                  : user 
+                    ? 'Continue your journey.'
+                    : '2026 High-Yield PYQs.'}
             </p>
           </div>
 
@@ -68,7 +70,7 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
               className="relative flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition-all hover:bg-slate-900/90"
             >
               <Sparkles size={12} className={user ? 'text-emerald-400' : 'text-yellow-400'} />
-              {user ? 'Practice' : 'Upgrade'}
+              {user ? 'Start Practicing' : 'Upgrade'}
             </Link>
           </div>
         </div>
@@ -143,7 +145,7 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
               className="relative flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white transition-all hover:bg-slate-900/90"
             >
               <Sparkles size={16} className="text-purple-400" />
-              {user ? 'Start Practice' : 'Upgrade to Pro'}
+              {user ? 'Start Practicing' : 'Upgrade to Pro'}
             </Link>
           </div>
         </>
@@ -152,7 +154,7 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
           <p className="relative z-10 mb-6 text-sm leading-relaxed text-slate-300">
             {user ? (
               <>
-                Hi <span className="font-bold text-white">{user.name?.split(' ')[0] || 'Aspirant'}</span>! Ready to jump back in? Access high-yield PYQs and start your daily practice.
+                Hi <span className="font-bold text-white">{user.name?.split(' ')[0] || 'Aspirant'}</span>! Jump back in and master high-yield topics with your daily practice sessions.
               </>
             ) : (
               'Unlock premium mock tests, detailed analytics, and exclusive content.'
@@ -166,7 +168,7 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
               className="relative flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white transition-all hover:bg-slate-900/90"
             >
               <Sparkles size={16} className="fill-white/20 text-yellow-400" />
-              {user ? 'Start Practice' : 'Get Premium Access'}
+              {user ? 'Start Practicing' : 'Get Premium Access'}
             </Link>
           </div>
         </>

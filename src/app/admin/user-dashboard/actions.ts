@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { mppscUsers, userAttempts, tests, attemptAnswers, questions, syllabusTopics } from '@/db/schema';
-import { eq, sql, desc, and, isNull, inArray, leftJoin } from 'drizzle-orm';
+import { eq, sql, desc, and, isNull, inArray } from 'drizzle-orm';
 import { requireAdmin } from '@/lib/auth-admin';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 

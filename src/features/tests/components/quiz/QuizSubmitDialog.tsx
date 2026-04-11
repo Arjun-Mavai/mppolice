@@ -20,6 +20,7 @@ interface QuizSubmitDialogProps {
   stats: {
     attempted: number;
     skipped: number;
+    marked: number;
     total: number;
   };
   language: string;
@@ -41,6 +42,7 @@ export function QuizSubmitDialog({
       : 'You will not be able to change your answers after submission.',
     attempted: isHindi ? 'हल किए गए' : 'Attempted',
     skipped: isHindi ? 'छोड़े गए' : 'Skipped',
+    marked: isHindi ? 'समीक्षा के लिए' : 'Marked',
     total: isHindi ? 'कुल प्रश्न' : 'Total Questions',
     cancel: isHindi ? 'वापस जाएं' : 'Back to Test',
     confirm: isHindi ? 'हाँ, जमा करें' : 'Yes, Submit Now',
@@ -87,6 +89,17 @@ export function QuizSubmitDialog({
               <div className="flex items-baseline gap-1">
                 <span className="text-2xl font-black text-slate-700">{stats.skipped}</span>
                 <span className="text-xs font-bold text-slate-400">/ {stats.total}</span>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 transition-all col-span-2">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="h-2 w-2 rounded-full bg-amber-500" />
+                <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider">{t.marked}</span>
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-black text-amber-700">{stats.marked}</span>
+                <span className="text-xs font-bold text-amber-600/60">questions flagged</span>
               </div>
             </div>
           </div>

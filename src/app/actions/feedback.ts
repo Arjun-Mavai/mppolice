@@ -7,6 +7,7 @@ import { randomUUID } from 'crypto';
 import { verifyAuth } from '@/lib/auth';
 import { eq } from 'drizzle-orm';
 import { sendTelegramNotification } from '@/lib/telegram';
+import { getTelegramStatsSummary } from '@/lib/telegram-stats-loader';
 
 interface SubmitFeedbackParams {
   testId: string;
@@ -75,7 +76,12 @@ export async function submitTestFeedback(params: SubmitFeedbackParams): Promise<
 
     // Notify via Telegram
     const stars = '⭐'.repeat(data.overallRating);
-    const difficultyIcon = data.difficultyLevel === 'hard' ? '🔥' : data.difficultyLevel === 'easy' ? '✅' : '⚖️';
+    let difficultyIcon = '⚖️';
+    if (data.difficultyLevel === 'too_easy') difficultyIcon = '✅';
+    else if (data.difficultyLevel === 'too_hard') difficultyIcon = '🔥';
+    
+    // 🔥 NEW: Fetch global stats summary
+    const statsSummary = await getTelegramStatsSummary();
     
     await sendTelegramNotification(
       `📝 <b>NEW TEST FEEDBACK</b>\n\n` +
@@ -88,6 +94,7 @@ export async function submitTestFeedback(params: SubmitFeedbackParams): Promise<
       `• <b>Difficulty:</b> ${difficultyIcon} ${data.difficultyLevel.toUpperCase()}\n` +
       `• <b>Comment:</b> "${data.comment || 'No comment provided'}"\n` +
       `━━━━━━━━━━━━━━━━\n\n` +
+      (statsSummary ? statsSummary + '\n\n' : '') +
       `#Feedback #TestReview`
     );
 

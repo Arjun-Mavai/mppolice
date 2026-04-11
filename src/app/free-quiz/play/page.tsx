@@ -7,27 +7,15 @@ import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { ProductionErrorBoundary } from '@/components/ProductionErrorBoundary';
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🆓 FREE QUIZ PLAY — GuestQuizInterface reuse karo
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// No auth needed — seedha test start hoga
-// GuestResultTeaser dikhega end me — lead capture ke liye
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import { PYQFactsLoader } from '@/components/ui/PYQFactsLoader';
 
 interface PageProps {
   searchParams: Promise<{ testId?: string }>;
 }
 
+// Global loading state for this page
 function LoadingSkeleton() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50">
-      <div className="flex flex-col items-center gap-2">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-700" />
-        <p className="font-medium text-slate-500">Loading Quiz...</p>
-      </div>
-    </div>
-  );
+  return <PYQFactsLoader variant="page" label="Preparing your quiz..." theme="light" />;
 }
 
 async function FreeQuizDataFetcher({ searchParams }: { searchParams: Promise<{ testId?: string }> }) {

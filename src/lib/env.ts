@@ -5,6 +5,7 @@ const envSchema = z.object({
   TURSO_AUTH_TOKEN: z.string().min(1),
   JWT_SECRET: z.string().min(32),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  USE_PROD_DB: z.string().optional().default('false'),
 });
 
 // "Bhai, agar env variables nahi mile toh yahi fat jayega"
