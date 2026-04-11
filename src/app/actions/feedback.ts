@@ -6,6 +6,8 @@ import { type FeedbackFormType, type FeedbackResponse, feedbackFormSchema } from
 import { randomUUID } from 'crypto';
 import { verifyAuth } from '@/lib/auth';
 import { eq } from 'drizzle-orm';
+import { sendTelegramNotification } from '@/lib/telegram';
+import { getTelegramStatsSummary } from '@/lib/telegram-stats-loader';
 
 interface SubmitFeedbackParams {
   testId: string;
@@ -71,6 +73,30 @@ export async function submitTestFeedback(params: SubmitFeedbackParams): Promise<
     };
 
     await db.insert(testFeedback).values(newFeedback);
+
+    // Notify via Telegram
+    const stars = '⭐'.repeat(data.overallRating);
+    let difficultyIcon = '⚖️';
+    if (data.difficultyLevel === 'too_easy') difficultyIcon = '✅';
+    else if (data.difficultyLevel === 'too_hard') difficultyIcon = '🔥';
+    
+    // 🔥 NEW: Fetch global stats summary
+    const statsSummary = await getTelegramStatsSummary();
+    
+    await sendTelegramNotification(
+      `📝 <b>NEW TEST FEEDBACK</b>\n\n` +
+      `<b>👤 Student:</b> ${effectiveName || 'Anonymous'}\n` +
+      `<b>📧 Contact:</b> ${effectiveEmail || 'N/A'}\n` +
+      `<b>📝 Test:</b> ${testName || 'Practice Test'}\n\n` +
+      `<b>📊 Review Details:</b>\n` +
+      `━━━━━━━━━━━━━━━━\n` +
+      `• <b>Rating:</b> ${stars} (${data.overallRating}/5)\n` +
+      `• <b>Difficulty:</b> ${difficultyIcon} ${data.difficultyLevel.toUpperCase()}\n` +
+      `• <b>Comment:</b> "${data.comment || 'No comment provided'}"\n` +
+      `━━━━━━━━━━━━━━━━\n\n` +
+      (statsSummary ? statsSummary + '\n\n' : '') +
+      `#Feedback #TestReview`
+    );
 
     return { success: true };
   } catch (error) {

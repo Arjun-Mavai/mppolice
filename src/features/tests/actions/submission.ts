@@ -8,13 +8,31 @@ import { verifyAuth } from '@/lib/auth';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { logger } from '@/lib/logger';
 import { insertUserToLeaderboard } from '@/actions/leaderboard-actions';
+import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
 
 // --- Generic Cached Fetchers ---
 
 export const getCachedPYQTests = unstable_cache(
   async () => {
     const pyqTests = await db
-      .select()
+      .select({
+        id: tests.id,
+        title: tests.title,
+        titleEn: tests.titleEn,
+        description: tests.description,
+        slug: tests.slug,
+        durationMinutes: tests.durationMinutes,
+        totalQuestions: tests.totalQuestions,
+        totalMarks: tests.totalMarks,
+        type: tests.type,
+        isPro: tests.isPro,
+        isFreeAccess: tests.isFreeAccess,
+        isLiteAccess: tests.isLiteAccess,
+        isProAccess: tests.isProAccess,
+        displayOrder: tests.displayOrder,
+        isHidden: tests.isHidden,
+        createdAt: tests.createdAt,
+      })
       .from(tests)
       .where(and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false)))
       .orderBy(asc(tests.displayOrder), desc(tests.createdAt));
@@ -24,7 +42,7 @@ export const getCachedPYQTests = unstable_cache(
       year: test.title.match(/\d{4}/)?.[0] || new Date(test.createdAt!).getFullYear().toString(),
     }));
   },
-  ['pyq-tests-list'],
+  ['pyq-tests-list-v4'],
   { revalidate: 60, tags: ['tests'] }
 );
 
@@ -199,7 +217,8 @@ export async function submitTestAttempt(
   userId: string,
   answers: Record<string, string>,
   durationSeconds: number,
-  questionTimes: Record<string, number>
+  questionTimes: Record<string, number>,
+  testTitle?: string
 ) {
   try {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -285,14 +304,14 @@ export async function submitTestAttempt(
 
         if (isCorrect) {
           // Strict Scoring as per User Request ("Global Standard")
-          // Use per-question marks if available, fallback to global config
-          const marks = q.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION;
+          // Enforce Global Pattern (+3)
+          const marks = SCORING_CONFIG.MARKS_PER_QUESTION;
           totalScore += marks;
           correctCount++;
         } else {
           // Strict Negative Marking
-          // Use per-question negative marks if available
-          const deduction = q.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING;
+          // Enforce Global Pattern (-1)
+          const deduction = SCORING_CONFIG.NEGATIVE_MARKING;
           totalScore -= deduction;
           incorrectCount++;
         }
@@ -370,11 +389,12 @@ export async function submitTestAttempt(
     // Bhai, ye sab kaam parallel mein honge to user ko result 200-300ms jaldi dikhega
     const postSubmissionTasks = [];
 
+    const totalTestMarks = testQuestions.reduce(
+      (sum, q) => sum + (q.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION),
+      0
+    );
+
     if (session && session.name) {
-      const totalTestMarks = testQuestions.reduce(
-        (sum, q) => sum + (q.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION),
-        0
-      );
 
       postSubmissionTasks.push(
         insertUserToLeaderboard({
@@ -390,6 +410,18 @@ export async function submitTestAttempt(
 
     // Invalidate User Analytics Cache
     postSubmissionTasks.push(revalidateTag(`analytics-${userId}`, { expire: 0 }));
+
+    // 🚀 Prepare Telegram Notification data
+    const totalAttempted = correctCount + incorrectCount;
+    const accuracy = totalAttempted > 0 ? ((correctCount / totalAttempted) * 100).toFixed(0) : '0';
+    
+    const telegramMessage = `🏆 <b>Test Completed</b>\n\n` +
+      `<b>Test:</b> ${escapeHTML(testTitle || test?.title || 'N/A')}\n` +
+      `<b>User:</b> ${escapeHTML(session?.name || 'Student')}\n` +
+      `<b>Score:</b> ${totalScore}/${totalTestMarks} (${accuracy}% accuracy)\n` +
+      `<b>Stats:</b> ✅${correctCount} | ❌${incorrectCount} | ⏱️${Math.floor(validDuration / 60)}m`;
+
+    postSubmissionTasks.push(sendTelegramNotification(telegramMessage));
 
     // Run all tasks in parallel
     await Promise.allSettled(postSubmissionTasks);

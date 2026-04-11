@@ -18,6 +18,7 @@ import { QuizPaletteMobile, QuizPaletteDesktop } from './quiz/QuizPalette';
 import { QuizExitDialog } from './quiz/QuizExitDialog';
 import { GuestEntryDialog } from './quiz/GuestEntryDialog';
 import { QuizExplanation } from './quiz/QuizExplanation';
+import { QuizSubmitDialog } from './quiz/QuizSubmitDialog';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { PYQFactsLoader } from '@/components/ui/PYQFactsLoader';
 
@@ -71,6 +72,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
     isAnswered,
     totalQuestions,
     questionTimes,
+    activeQuestionTime,
   } = useQuizLogic(props);
 
   const { setLanguage } = useSettingsStore();
@@ -87,6 +89,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
   const [guestMobile, setGuestMobile] = useState('');
   const [showGuestEntryDialog, setShowGuestEntryDialog] = useState(false);
   const [isSubmittingGuest, setIsSubmittingGuest] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   // No local facts state needed — PYQFactsLoader bundles facts internally
 
@@ -148,10 +151,20 @@ export function QuizInterface(props: QuizInterfaceProps) {
 
   const handleExitCancel = useCallback(() => {
     setShowExitConfirm(false);
+    // 🔧 GUEST FLOW FIX: If exit is cancelled, show guest entry dialog if it was active
+    if (!userId && !localStorage.getItem('mppsc_guest_name')) {
+      setShowGuestEntryDialog(true);
+    }
+
     if (!isFullscreenActive() && !isSubmitted) {
       requestFullscreen();
     }
-  }, [isSubmitted, requestFullscreen]);
+  }, [isSubmitted, requestFullscreen, userId]);
+
+  const handleGuestExitAttempt = useCallback(() => {
+    setShowGuestEntryDialog(false);
+    setShowExitConfirm(true);
+  }, []);
 
   // ── Guest entry ──
   useEffect(() => {
@@ -233,6 +246,11 @@ export function QuizInterface(props: QuizInterfaceProps) {
 
   // ── Submit handler (guest vs logged-in) ──
   const handleQuizSubmitAction = useCallback(() => {
+    setShowSubmitConfirm(true);
+  }, []);
+
+  const handleConfirmSubmit = useCallback(() => {
+    setShowSubmitConfirm(false);
     if (!userId) setShowGuestTeaser(true);
     else handleSubmit();
   }, [userId, handleSubmit]);
@@ -271,10 +289,13 @@ export function QuizInterface(props: QuizInterfaceProps) {
     Object.entries(answers).forEach(([qId, ansIdx]) => {
       const q = questions.find((q) => q.id === qId);
       if (q) {
-        if (q.correctAnswer === ansIdx) earnedScore += q.marks || QUIZ_CONSTANTS.MARKS_PER_QUESTION;
-        else
-          earnedScore -=
-            q.negativeMarks !== undefined ? q.negativeMarks : QUIZ_CONSTANTS.NEGATIVE_MARKING;
+        if (q.correctAnswer === ansIdx) {
+          earnedScore += q.marks || QUIZ_CONSTANTS.MARKS_PER_QUESTION;
+        } else {
+          earnedScore -= q.negativeMarks !== undefined
+            ? q.negativeMarks
+            : QUIZ_CONSTANTS.NEGATIVE_MARKING;
+        }
       }
     });
     return (
@@ -289,19 +310,6 @@ export function QuizInterface(props: QuizInterfaceProps) {
   }
 
   if (isSubmitted && userId) {
-    // 🎯 Reverted Smart Result for now, back to standard ranking view
-    /* if (mode === 'pyq') {
-      return (
-        <SmartQuizResult
-          testId={testId}
-          userId={userId}
-          title={title}
-          onRetry={handleRetry}
-          onExit={onExit}
-        />
-      );
-    } */
-
     return (
       <QuizResult
         questions={questions}
@@ -337,6 +345,8 @@ export function QuizInterface(props: QuizInterfaceProps) {
       current: t.current,
       submitTest: t.submitTest,
     },
+    timeLeft,
+    language,
   };
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -383,6 +393,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
               onToggleReview={toggleMarkForReview}
               getParsedOptions={getParsedOptions}
               translations={{ question: t.question, markReview: t.markReview, unmark: t.unmark }}
+              currentTimeSpent={activeQuestionTime}
             />
 
             {/* Explanation - no scroll limit, full content */}
@@ -436,7 +447,20 @@ export function QuizInterface(props: QuizInterfaceProps) {
         onEmailChange={setGuestEmail}
         onMobileChange={setGuestMobile}
         onSubmit={handleGuestEntrySubmit}
-        onExit={showExitModal}
+        onExit={handleGuestExitAttempt}
+      />
+
+      <QuizSubmitDialog
+        open={showSubmitConfirm}
+        onOpenChange={setShowSubmitConfirm}
+        onConfirm={handleConfirmSubmit}
+        stats={{
+          attempted: Object.keys(answers).length,
+          skipped: totalQuestions - Object.keys(answers).length,
+          marked: markedforReview.length,
+          total: totalQuestions,
+        }}
+        language={language}
       />
 
       {/* Submission overlay */}

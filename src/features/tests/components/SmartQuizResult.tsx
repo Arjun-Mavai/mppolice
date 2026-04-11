@@ -2,13 +2,30 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BrainCircuit, Trophy, Lightbulb, ShieldAlert, Repeat, Lock } from 'lucide-react';
+import {
+  BrainCircuit, Trophy, Lightbulb, ShieldAlert, Repeat, Lock, Clock, Target, Plus, Minus,
+  TrendingDown, ChevronRight, Zap, Landmark, Map, Compass, PieChart, FlaskConical,
+  Languages, Globe, BookOpen, Sparkles
+} from 'lucide-react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { calculateMPPSCResult, SmartResultResponse } from '@/features/tests/actions/test-result';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { cn } from '@/lib/utils';
+import { QuizHeader } from './quiz/QuizHeader';
+import { ConnectSocials } from '@/components/ConnectSocials';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 interface SmartQuizResultProps {
   testId?: string;
@@ -32,7 +49,7 @@ export function SmartQuizResult({
   const router = useRouter();
   const [result, setResult] = useState<SmartResultResponse | null>(initialResult || null);
   const [loading, setLoading] = useState(!initialResult);
-  const { language } = useSettingsStore();
+  const { language, setLanguage } = useSettingsStore();
   const isHi = language === 'hi';
 
   useEffect(() => {
@@ -94,17 +111,28 @@ export function SmartQuizResult({
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20 font-sans">
-      {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-4 py-3 shadow-sm">
-        <div>
-          <h1 className="line-clamp-1 text-lg font-bold text-slate-900">
-            {title || 'Test Result'}
-          </h1>
-          <p className="text-xs text-slate-500">MPPSC Prelims Analysis</p>
+      <div className="pt-6">
+        <div className="mx-auto max-w-3xl px-4">
+          <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 border border-amber-100 shadow-sm">
+                <Trophy className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-lg font-black tracking-tight text-slate-900 leading-tight">
+                  {title || (isHi ? 'क्विज़ रिजल्ट' : 'Quiz Result')}
+                </h1>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Performance Intelligence Analysis
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+                <ConnectSocials minimal className="flex-1 sm:flex-none" />
+            </div>
+          </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={onExit}>
-          {isHi ? 'बाहर जाएं' : 'Exit'}
-        </Button>
       </div>
 
       {/* Main Content */}
@@ -113,47 +141,122 @@ export function SmartQuizResult({
         <Card className="relative overflow-hidden border-none bg-white shadow-md">
           <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
           <CardContent className="p-6">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                <Target className="h-3 w-3 text-amber-500" />
+                Expert Verified Result
+              </div>
+              <div className="text-[10px] font-black tracking-widest text-slate-500 uppercase">
+                ({result.total_questions || result.detailed_analysis?.length || 0} Qns)
+              </div>
+            </div>
+
             <div className="mb-6 flex items-start justify-between">
               <div>
-                <p className="mb-1 text-sm font-medium text-slate-500">Net Score (New Pattern)</p>
+                <p className="mb-1 text-sm font-medium text-slate-500">Net Score (Official Pattern)</p>
                 <div className="flex items-baseline gap-2">
-                  <h2 className="text-4xl font-bold text-slate-900">{result.net_score}</h2>
-                  <span className="text-slate-400">/ {result.max_score}</span>
+                  <h2 className="text-5xl font-black text-slate-900 tracking-tighter">{result.net_score}</h2>
+                  <span className="text-xl font-bold text-slate-400">/ {result.max_score}</span>
                 </div>
+                
+                <div className="mt-2 flex items-center gap-2">
+                   <div className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-black tracking-widest text-emerald-600 uppercase border border-emerald-500/10">
+                      <Plus className="h-2 w-2" /> 3 Correct
+                   </div>
+                   <div className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-[9px] font-black tracking-widest text-rose-600 uppercase border border-rose-500/10">
+                      <Minus className="h-2 w-2" /> 1 Penalty
+                   </div>
+                </div>
+
                 {result.qualification && (
-                  <Badge
-                    variant={
-                      result.qualification.status === 'Qualified' ? 'default' : 'destructive'
-                    }
-                    className="mt-2"
-                  >
-                    {result.qualification.status === 'Qualified' ? 'Qualified' : 'Missed Cutoff'}
-                  </Badge>
+                   <div className={cn(
+                     "mt-4 inline-flex items-center rounded-xl px-3 py-1.5 text-xs font-black shadow-sm border",
+                     result.net_score >= (result.max_score * 0.78)
+                       ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                       : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                   )}>
+                     {result.net_score >= (result.max_score * 0.78) ? (
+                       <><Trophy className="mr-1.5 h-3.5 w-3.5" /> QUALIFIED</>
+                     ) : (
+                       <><TrendingDown className="mr-1.5 h-3.5 w-3.5" /> NEEDS PUSH</>
+                     )}
+                     <span className="ml-2 opacity-60 font-medium">Target: {Math.round(result.max_score * 0.78)}</span>
+                   </div>
                 )}
               </div>
               <div className="text-right">
-                <div
-                  className={`text-2xl font-bold ${getGradeColor(result.attempt_intelligence.strategy_grade)}`}
-                >
-                  Grade {result.attempt_intelligence.strategy_grade}
+                <div className="flex items-center gap-4">
+                  <div className="flex flex-col items-center sm:items-end">
+                    <div className={`text-2xl font-black ${getGradeColor(result.attempt_intelligence.strategy_grade)}`}>
+                      Grade {result.attempt_intelligence.strategy_grade}
+                    </div>
+                    <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Strategic Audit</p>
+                  </div>
+                  <div className="h-8 w-[1px] bg-slate-100 hidden sm:block" />
+                  <div className="flex flex-col items-center sm:items-end">
+                    <div className="text-2xl font-black text-amber-500">
+                      {result.detailed_analysis?.reduce((acc: number, curr: any) => acc + (curr.timeTakenSeconds || 0), 0) > 0 
+                        ? `${Math.floor(result.detailed_analysis.reduce((acc: number, curr: any) => acc + (curr.timeTakenSeconds || 0), 0) / 60)}m ${result.detailed_analysis.reduce((acc: number, curr: any) => acc + (curr.timeTakenSeconds || 0), 0) % 60}s`
+                        : '0m 0s'}
+                    </div>
+                    <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Total Time</p>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-500">Strategy Score</p>
+              </div>
+            </div>
+
+            {/* EXPERT CUTOFF VISUALIZATION */}
+            <div className="mb-6">
+              <div className="flex justify-between text-[10px] font-black tracking-widest text-slate-400 uppercase mb-2">
+                <span>Score Scale</span>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                   <div className="flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3 py-1 text-[10px] font-black tracking-widest text-indigo-400 uppercase border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.1)]">
+                      <Zap className="h-3 w-3 fill-indigo-400" /> Elite: {Math.round(result.max_score * 0.76)}-{Math.round(result.max_score * 0.80)}
+                   </div>
+                   <div className="flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-[10px] font-black tracking-widest text-amber-400 uppercase border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]">
+                      <Target className="h-3 w-3" /> Breakeven: {Math.round(result.max_score * 0.78)}
+                   </div>
+                </div>
+              </div>
+              
+              <div className="relative flex h-3 w-full overflow-hidden rounded-full bg-slate-100 border border-slate-200">
+                {/* Elite Zone Shading */}
+                <div 
+                  className="absolute top-0 bottom-0 z-0 bg-indigo-500/10 border-x border-indigo-200/20"
+                  style={{ 
+                    left: `${76}%`, 
+                    width: `${4}%` 
+                  }}
+                />
+                
+                {/* Score Fill */}
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min((result.net_score / result.max_score) * 100, 100)}%` }}
+                  className="relative z-10 h-full bg-emerald-500"
+                />
+                
+                {/* Cutoff Tick */}
+                <div
+                  className="absolute top-0 bottom-0 z-20 w-1 bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]"
+                  style={{ left: `${78}%` }}
+                />
               </div>
             </div>
 
             {/* Stats Grid */}
             <div className="mb-6 grid grid-cols-3 gap-4">
-              <div className="rounded-lg border border-green-100 bg-green-50 p-3 text-center">
-                <div className="text-2xl font-bold text-green-700">{result.correct}</div>
-                <div className="text-xs font-medium text-green-600">Correct (+3)</div>
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 text-center transition-all hover:bg-emerald-50">
+                <div className="text-2xl font-black text-emerald-700">{result.correct}</div>
+                <div className="text-[10px] font-black tracking-widest text-emerald-600 uppercase">Correct (+3)</div>
               </div>
-              <div className="rounded-lg border border-red-100 bg-red-50 p-3 text-center">
-                <div className="text-2xl font-bold text-red-700">{result.wrong}</div>
-                <div className="text-xs font-medium text-red-600">Wrong (-1)</div>
+              <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-3 text-center transition-all hover:bg-rose-50">
+                <div className="text-2xl font-black text-rose-700">{result.wrong}</div>
+                <div className="text-[10px] font-black tracking-widest text-rose-600 uppercase">Penalty (-1)</div>
               </div>
-              <div className="rounded-lg border border-slate-100 bg-slate-50 p-3 text-center">
-                <div className="text-2xl font-bold text-slate-700">{result.skipped}</div>
-                <div className="text-xs font-medium text-slate-600">Skipped</div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 text-center transition-all hover:bg-slate-50">
+                <div className="text-2xl font-black text-slate-700">{result.skipped}</div>
+                <div className="text-[10px] font-black tracking-widest text-slate-600 uppercase">Skipped</div>
               </div>
             </div>
 
@@ -162,14 +265,14 @@ export function SmartQuizResult({
               <div className="flex items-start gap-3">
                 <BrainCircuit className="mt-1 h-5 w-5 flex-shrink-0 text-amber-600" />
                 <div>
-                  <h3 className="text-sm font-semibold text-amber-900">Attempt Intelligence</h3>
+                  <h3 className="text-sm font-semibold text-amber-900">Smart Strategic Audit</h3>
                   <p className="mt-1 text-xs leading-relaxed text-amber-800">
-                    You lost{' '}
+                    Your "Smart Intelligence" score shows a loss of{' '}
                     <span className="font-bold">
                       {result.attempt_intelligence.wasted_points} marks
                     </span>{' '}
-                    due to negative marking. If you had skipped those wrong answers, your score
-                    would be{' '}
+                    due to negative marking. If those had been skipped, your net score
+                    would have reached{' '}
                     <span className="font-bold">
                       {result.attempt_intelligence.could_have_scored}
                     </span>
@@ -182,45 +285,102 @@ export function SmartQuizResult({
         </Card>
 
         {/* Tabs for detailed view */}
-        <Tabs defaultValue="analysis" className="w-full">
-          <TabsList className="mb-4 grid w-full grid-cols-3">
-            <TabsTrigger value="analysis">Analysis</TabsTrigger>
-            <TabsTrigger value="review">Review</TabsTrigger>
-            <TabsTrigger value="facts">Flashcards</TabsTrigger>
+        <Tabs defaultValue="insights" className="w-full">
+          <TabsList className="mb-4 grid w-full grid-cols-3 rounded-xl bg-slate-100 p-1">
+            <TabsTrigger value="insights" className="rounded-lg text-[10px] font-black tracking-widest uppercase transition-all data-[state=active]:bg-indigo-500 data-[state=active]:text-white text-slate-500">{isHi ? 'स्मार्ट ऑडिट' : 'Smart Audit'}</TabsTrigger>
+            <TabsTrigger value="review" className="rounded-lg text-[10px] font-black tracking-widest uppercase transition-all data-[state=active]:bg-blue-500 data-[state=active]:text-white text-slate-500">{isHi ? 'समीक्षा' : 'Review'}</TabsTrigger>
+            <TabsTrigger value="facts" className="rounded-lg text-[10px] font-black tracking-widest uppercase transition-all data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-500">{isHi ? 'फ्लैशकार्ड' : 'Flashcards'}</TabsTrigger>
           </TabsList>
 
           {/* ANALYSIS TAB */}
-          <TabsContent value="analysis" className="relative space-y-4">
+          <TabsContent value="insights" className="relative space-y-4">
             {isGuest && <PremiumLock label="Detailed Analysis Locked" />}
-            <h3 className="mb-2 text-sm font-semibold tracking-wider text-slate-500 uppercase">
-              Subject Performance
-            </h3>
-            {result.subject_breakdown.map((sub) => (
-              <div key={sub.subject} className="rounded-xl border bg-white p-4 shadow-sm">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="font-medium text-slate-800">{sub.subject}</span>
-                  <span
-                    className={`text-sm font-bold ${sub.score >= 0 ? 'text-green-600' : 'text-red-600'}`}
-                  >
-                    {sub.score} pts
-                  </span>
-                </div>
-                <div className="flex h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    style={{ width: `${(sub.correct / sub.total) * 100}%` }}
-                    className="h-full bg-green-500"
-                  />
-                  <div
-                    style={{ width: `${(sub.wrong / sub.total) * 100}%` }}
-                    className="h-full bg-red-500"
-                  />
-                </div>
-                <div className="mt-2 flex justify-between text-xs text-slate-400">
-                  <span>{sub.correct} Correct</span>
-                  <span>{sub.wrong} Wrong</span>
-                </div>
-              </div>
-            ))}
+            
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold tracking-wider text-slate-500 uppercase">
+                {isHi ? 'विषयवार प्रदर्शन' : 'Strategic Subject Audit'}
+              </h3>
+              <Badge variant="outline" className="text-[10px] font-bold border-slate-200 text-slate-400">
+                PRO INSIGHTS ACTIVE
+              </Badge>
+            </div>
+
+            <Card className="overflow-hidden border-slate-200 shadow-sm">
+              <Table>
+                <TableHeader className="bg-slate-50/50">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="h-10 text-[10px] font-black tracking-widest text-slate-400 uppercase">{isHi ? 'विषय' : 'Topic'}</TableHead>
+                    <TableHead className="h-10 text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">{isHi ? 'प्रयास' : 'Stats'}</TableHead>
+                    <TableHead className="h-10 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">{isHi ? 'अंक (Net)' : 'Net Marks'}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {result.subject_breakdown.map((sub) => (
+                    <TableRow key={sub.subject} className="group transition-colors hover:bg-slate-50/50">
+                      <TableCell className="py-4">
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "flex h-9 w-9 items-center justify-center rounded-xl border bg-white shadow-sm transition-transform group-hover:scale-110",
+                            getSubjectColor(sub.subject)
+                          )}>
+                            {getSubjectIcon(sub.subject)}
+                          </div>
+                          <div>
+                            <div className="text-sm font-bold text-slate-900">{sub.subject}</div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-100">
+                                <div 
+                                  className="h-full bg-indigo-500 transition-all duration-1000" 
+                                  style={{ width: `${(sub.correct / sub.total) * 100}%` }} 
+                                />
+                              </div>
+                              <span className="text-[10px] font-black text-slate-400">
+                                {Math.round((sub.correct / sub.total) * 100)}%
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <span className="text-xs font-bold text-emerald-600">+{sub.correct}</span>
+                          <span className="text-[10px] text-slate-300">/</span>
+                          <span className="text-xs font-bold text-rose-500">-{sub.wrong}</span>
+                        </div>
+                        <div className="text-[9px] font-medium text-slate-400 mt-0.5">
+                          {sub.total} Total
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className={cn(
+                          "text-base font-black tracking-tight",
+                          sub.score > 0 ? "text-slate-900" : "text-rose-600"
+                        )}>
+                          {sub.score > 0 ? `+${sub.score}` : sub.score}
+                        </div>
+                        <Badge variant="secondary" className="mt-1 h-5 rounded-md px-1.5 text-[9px] font-bold">
+                          {sub.correct / sub.total > 0.7 ? (isHi ? 'मजबूत' : 'High') : (isHi ? 'सुधारें' : 'Check')}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+
+            <div className="rounded-2xl border border-indigo-100 bg-indigo-50/30 p-4">
+               <div className="flex gap-3">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <Sparkles className="h-4 w-4 text-indigo-500" />
+                  </div>
+                  <p className="text-xs leading-relaxed text-indigo-900 font-medium">
+                    {isHi 
+                      ? "यह Smart Audit आपके प्रयासों का सटीक डेटा है। लाल रंग के अंक नेगेटिव मार्किंग के प्रभाव को दर्शाते हैं।"
+                      : "This strategic audit identifies precisely where you lost marks to negative marking. High accuracy in certain topics indicates strong core concepts."
+                    }
+                  </p>
+               </div>
+            </div>
           </TabsContent>
 
           {/* REVIEW TAB (All Questions) */}
@@ -279,6 +439,12 @@ export function SmartQuizResult({
                     <p className="mb-3 text-sm font-medium text-slate-800">
                       <span className="mr-2 text-slate-400">Q{idx + 1}.</span>
                       {q.questionText || q.question || 'Question Text'}
+                      {q.timeTakenSeconds !== undefined && q.timeTakenSeconds !== null && (
+                        <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-indigo-100 bg-indigo-50/50 px-2 py-0.5 text-[10px] font-black tracking-tight text-indigo-600 shadow-sm ring-1 ring-indigo-100/50">
+                          <Clock className="h-2.5 w-2.5" />
+                          {q.timeTakenSeconds}s
+                        </span>
+                      )}
                     </p>
 
                     <div className="space-y-1 rounded bg-slate-50 p-3 text-xs text-slate-600">
@@ -306,68 +472,81 @@ export function SmartQuizResult({
             })}
           </TabsContent>
 
-          {/* FACTS TAB (Flashcards) */}
           <TabsContent value="facts" className="relative min-h-[200px] space-y-4">
             {isGuest && <PremiumLock label="Flashcards Locked" />}
             {result.pyq_facts.length === 0 ? (
-              <div className="py-10 text-center text-slate-500">
-                No high-yield facts linked to your mistakes.
+              <div className="py-20 text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-50 text-amber-500">
+                  <Lightbulb size={32} />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">
+                   {isHi ? 'कोई फ्लैशकार्ड नहीं मिला' : 'No Flashcards Found'}
+                </h3>
+                <p className="text-sm text-slate-500">
+                  {isHi 
+                    ? 'अपनी गलतियों को सुधारने के लिए और अधिक अभ्यास करें।' 
+                    : 'Practice more and analyze mistakes to unlock high-yield facts.'}
+                </p>
               </div>
             ) : (
-              <div className="grid gap-4">
+              <div className="grid gap-6">
                 {result.pyq_facts.map((fact: any) => (
-                  <Card
+                  <div
                     key={fact.id}
-                    className="overflow-hidden border-l-4 border-l-amber-400 shadow-sm"
+                    className="group relative overflow-hidden rounded-[2rem] border-b-4 border-amber-500/20 bg-white p-6 shadow-sm transition-all hover:bg-slate-50 hover:shadow-md"
                   >
-                    <CardContent className="p-5">
-                      <div className="mb-3 flex items-center gap-2">
-                        <Badge
-                          variant="secondary"
-                          className="bg-amber-100 text-amber-800 hover:bg-amber-200"
-                        >
-                          {fact.subject}
-                        </Badge>
-                        {fact.importanceScore > 8 && (
-                          <span className="flex items-center gap-1 text-xs font-bold text-red-600">
-                            <Trophy className="h-3 w-3" /> High Yield
-                          </span>
-                        )}
+                    <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 opacity-20" />
+                    
+                    <div className="mb-4 flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+                            <Zap className="h-4 w-4 fill-amber-600" />
+                         </div>
+                         <span className="text-[10px] font-black tracking-widest text-amber-600 uppercase">
+                           {fact.subject}
+                         </span>
                       </div>
-
-                      <p className="mb-4 text-sm leading-relaxed font-medium text-slate-800">
-                        {isHi && fact.factText ? fact.factText : fact.factTextEn || fact.factText}
-                      </p>
-
-                      {(fact.memoryTip || fact.memoryTipEn) && (
-                        <div className="mb-3 rounded-lg border border-blue-100 bg-blue-50 p-3">
-                          <div className="mb-1 flex items-center gap-2 text-blue-800">
-                            <Lightbulb className="h-4 w-4" />
-                            <span className="text-xs font-bold uppercase">Memory Tip</span>
-                          </div>
-                          <p className="text-xs text-blue-700">
-                            {isHi && fact.memoryTip
-                              ? fact.memoryTip
-                              : fact.memoryTipEn || fact.memoryTip}
-                          </p>
+                      {fact.importanceScore > 8 && (
+                        <div className="flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 text-[9px] font-black tracking-widest text-rose-600 uppercase border border-rose-100 shadow-sm animate-pulse">
+                          <Trophy className="h-3 w-3" /> High Yield
                         </div>
                       )}
+                    </div>
 
-                      {(fact.scamAlert || fact.scamAlertEn) && (
-                        <div className="rounded-lg border border-red-100 bg-red-50 p-3">
-                          <div className="mb-1 flex items-center gap-2 text-red-800">
-                            <ShieldAlert className="h-4 w-4" />
-                            <span className="text-xs font-bold uppercase">Scam Alert</span>
-                          </div>
-                          <p className="text-xs text-red-700">
-                            {isHi && fact.scamAlert
-                              ? fact.scamAlert
-                              : fact.scamAlertEn || fact.scamAlert}
-                          </p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                    <p className="mb-6 text-sm leading-relaxed font-bold text-slate-800 md:text-base">
+                      {isHi && fact.factText ? fact.factText : fact.factTextEn || fact.factText}
+                    </p>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                       {(fact.memoryTip || fact.memoryTipEn) && (
+                         <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4 transition-colors hover:bg-blue-50">
+                            <div className="mb-2 flex items-center gap-2 text-blue-800">
+                              <Lightbulb className="h-4 w-4" />
+                              <span className="text-[10px] font-black uppercase tracking-widest">Memory Tip</span>
+                            </div>
+                            <p className="text-xs font-medium leading-relaxed text-blue-700">
+                              {isHi && fact.memoryTip
+                                ? fact.memoryTip
+                                : fact.memoryTipEn || fact.memoryTip}
+                            </p>
+                         </div>
+                       )}
+
+                       {(fact.scamAlert || fact.scamAlertEn) && (
+                         <div className="rounded-2xl border border-rose-100 bg-rose-50/50 p-4 transition-colors hover:bg-rose-50">
+                            <div className="mb-2 flex items-center gap-2 text-rose-800">
+                              <ShieldAlert className="h-4 w-4" />
+                              <span className="text-[10px] font-black uppercase tracking-widest">Scam Alert</span>
+                            </div>
+                            <p className="text-xs font-medium leading-relaxed text-rose-700">
+                              {isHi && fact.scamAlert
+                                ? fact.scamAlert
+                                : fact.scamAlertEn || fact.scamAlert}
+                            </p>
+                         </div>
+                       )}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
@@ -399,4 +578,25 @@ function getGradeColor(grade: string) {
     default:
       return 'text-red-600';
   }
+}
+
+function getSubjectIcon(subject: string) {
+  const s = subject.toLowerCase();
+  if (s.includes('history') || s.includes('itihar')) return <Landmark className="h-4 w-4" />;
+  if (s.includes('geography') || s.includes('bhugol')) return <Map className="h-4 w-4" />;
+  if (s.includes('polity') || s.includes('rajniti')) return <Compass className="h-4 w-4" />;
+  if (s.includes('economy') || s.includes('arthshastra')) return <PieChart className="h-4 w-4" />;
+  if (s.includes('science') || s.includes('vigyan')) return <FlaskConical className="h-4 w-4" />;
+  if (s.includes('hindi') || s.includes('english')) return <Languages className="h-4 w-4" />;
+  if (s.includes('mp') || s.includes('madhya')) return <Globe className="h-4 w-4" />;
+  return <BookOpen className="h-4 w-4" />;
+}
+
+function getSubjectColor(subject: string) {
+  const s = subject.toLowerCase();
+  if (s.includes('history')) return 'border-amber-100 text-amber-600';
+  if (s.includes('geography')) return 'border-emerald-100 text-emerald-600';
+  if (s.includes('polity')) return 'border-blue-100 text-blue-600';
+  if (s.includes('economy')) return 'border-indigo-100 text-indigo-600';
+  return 'border-slate-100 text-slate-600';
 }

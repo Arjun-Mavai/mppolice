@@ -8,7 +8,7 @@ import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockMo
 import { QuizListItem } from '@/components/QuizListItem';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
-import { ViewTransition } from 'react';
+import { Fragment } from 'react';
 
 interface Test {
   id: string;
@@ -63,7 +63,7 @@ export default function CSATPageClient({ initialTests }: CSATPageClientProps) {
   const hi = language === 'hi';
 
   return (
-    <ViewTransition>
+    <Fragment>
       <div className="relative min-h-screen overflow-hidden bg-[#fafbfc] pb-20 font-sans">
         {/* 🎭 PREMIUM BACKGROUND BLURS */}
         <div className="pointer-events-none absolute top-0 left-0 h-[500px] w-full bg-gradient-to-b from-slate-100/30 to-transparent" />
@@ -132,6 +132,6 @@ export default function CSATPageClient({ initialTests }: CSATPageClientProps) {
 
         <SyllabusLockModal open={paywallOpen} onOpenChange={setPaywallOpen} />
       </div>
-    </ViewTransition>
+    </Fragment>
   );
 }

@@ -107,12 +107,13 @@ export default async function RootLayout({
   // 2. Transform for Navbar
   const navbarUser = user
     ? {
+        id: user.id,
         name: user.name,
         email: user.email,
-        image: null, // Add image if in DB
+        image: null,
         role: user.role || undefined,
-        is_subscribed: user.isSubscribed || undefined,
-        plan_tier: user.planTier || undefined,
+        is_subscribed: user.isSubscribed ?? false,
+        plan_tier: user.planTier ?? 'free',
       }
     : null;
 

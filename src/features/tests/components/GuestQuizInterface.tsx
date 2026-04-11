@@ -20,6 +20,8 @@ import { QuizPaletteMobile, QuizPaletteDesktop } from './quiz/QuizPalette';
 import { QuizExitDialog } from './quiz/QuizExitDialog';
 import { GuestEntryDialog } from './quiz/GuestEntryDialog';
 import { QuizExplanation } from './quiz/QuizExplanation';
+import { QuizSubmitDialog } from './quiz/QuizSubmitDialog';
+import { recordGuestAttempt } from '@/app/free-quiz/actions';
 
 
 interface GuestQuizInterfaceProps {
@@ -71,14 +73,15 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     currentQuestion,
     isAnswered,
     totalQuestions,
-    // setIsSubmitted is likely returned by useQuizLogic but not exposed in destructuring in QuizInterface?
-    // Let's check logic. useQuizLogic handles 'isSubmitted' state.
+    questionTimes,
+    activeQuestionTime,
   } = useQuizLogic({ ...props, userId: null }); // Force userId null
 
   // Effective instant mode — disableInstantMode true h to force OFF
   const effectiveInstantMode = !disableInstantMode && instantModeEnabled;
 
   const { setLanguage } = useSettingsStore();
+  const { setResult } = useGuestResultStore();
 
   // UI state
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -90,6 +93,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
   const [guestEmail, setGuestEmail] = useState('');
   const [guestMobile, setGuestMobile] = useState('');
   const [showGuestEntryDialog, setShowGuestEntryDialog] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   // Custom Guest Submit State (to trigger storing and redirect)
   const [isProcessingResult, setIsProcessingResult] = useState(false);
@@ -244,6 +248,15 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
   }, [isSubmitted]);
 
   // ── Submit handler (GUEST SPECIFIC) ──
+  const handleQuizSubmitAction = useCallback(() => {
+    setShowSubmitConfirm(true);
+  }, []);
+
+  const handleConfirmSubmit = useCallback(() => {
+    setShowSubmitConfirm(false);
+    handleSubmit();
+  }, [handleSubmit]);
+
   useEffect(() => {
     // Watch for isSubmitted change from useQuizLogic
     // When isSubmitted becomes true, we process and redirect
@@ -267,11 +280,10 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
           if (answers[q.id] === undefined) {
             skippedCount++;
           } else if (q.correctAnswer === ansIdx) {
-            earnedScore += q.marks || QUIZ_CONSTANTS.MARKS_PER_QUESTION;
+            earnedScore += QUIZ_CONSTANTS.MARKS_PER_QUESTION;
             correctCount++;
           } else {
-            earnedScore -=
-              q.negativeMarks !== undefined ? q.negativeMarks : QUIZ_CONSTANTS.NEGATIVE_MARKING;
+            earnedScore -= QUIZ_CONSTANTS.NEGATIVE_MARKING;
             wrongCount++;
           }
         }
@@ -280,16 +292,31 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
       // Fix float precision
       earnedScore = parseFloat(earnedScore.toFixed(2));
 
-      // Save to store
-      useGuestResultStore.getState().setResult({
+      // 💾 Save to DB & Send Notification
+      const savedGuestName = localStorage.getItem('mppsc_guest_name') || 'Guest User';
+      
+      recordGuestAttempt({
+        testId,
+        testTitle: title,
+        guestName: savedGuestName,
         score: earnedScore,
         totalQuestions: questions.length,
         correctCount,
         wrongCount,
+        timeTaken: timeLimitInMinutes * 60 - timeLeft,
+      });
+
+      // Save to store
+      setResult({
+        score: earnedScore,
+        correctCount,
+        wrongCount,
         skippedCount,
+        totalQuestions: questions.length,
         timeTaken: timeLimitInMinutes * 60 - timeLeft,
         questions, // Store questions for proper result display
         answers,
+        questionTimes, // Store per-question timing
         testId, // Pass testId from props
         title, // Pass title from props
       });
@@ -300,7 +327,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
       // Navigate instantly
       router.replace('/guest-result');
     }
-  }, [isSubmitted, answers, questions, timeLimitInMinutes, timeLeft, router]);
+  }, [isSubmitted, answers, questions, timeLimitInMinutes, timeLeft, router, questionTimes, setResult, testId, title]);
 
   // No local facts state needed — PYQFactsLoader bundles facts internally
 
@@ -317,7 +344,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     currentIndex: currentQuestionIndex,
     totalQuestions,
     onJump: handleJump,
-    onSubmit: handleSubmit, // Triggers useQuizLogic's submit -> sets isSubmitted -> triggers useEffect
+    onSubmit: handleQuizSubmitAction,
     translations: {
       questionPalette: t.questionPalette,
       attempted: t.attempted,
@@ -327,6 +354,8 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
       current: t.current,
       submitTest: t.submitTest,
     },
+    timeLeft,
+    language,
   };
 
   return (
@@ -376,6 +405,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
               onToggleReview={toggleMarkForReview}
               getParsedOptions={getParsedOptions}
               translations={{ question: t.question, markReview: t.markReview, unmark: t.unmark }}
+              currentTimeSpent={activeQuestionTime}
             />
 
             {effectiveInstantMode && isAnswered && (
@@ -394,7 +424,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
             totalQuestions={totalQuestions}
             onPrev={handlePrev}
             onNext={handleNext}
-            onSubmit={handleSubmit}
+            onSubmit={handleQuizSubmitAction}
             translations={{ prev: t.prev, next: t.next, submit: t.submit }}
           />
         </main>
@@ -426,6 +456,19 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
         onMobileChange={setGuestMobile}
         onSubmit={handleGuestEntrySubmit}
         onExit={showExitModal}
+      />
+
+      <QuizSubmitDialog
+        open={showSubmitConfirm}
+        onOpenChange={setShowSubmitConfirm}
+        onConfirm={handleConfirmSubmit}
+        stats={{
+          attempted: Object.keys(answers).length,
+          skipped: totalQuestions - Object.keys(answers).length,
+          marked: markedforReview.length,
+          total: totalQuestions,
+        }}
+        language={language}
       />
     </div>
   );

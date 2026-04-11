@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Lock, ArrowLeft, Crown } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useSettingsStore } from '@/store/useSettingsStore';
 
 export function BlogAccessDenied() {
   const router = useRouter();
+  const { user } = useSettingsStore();
 
   return (
     <div className="animate-in fade-in zoom-in flex min-h-[60vh] flex-col items-center justify-center px-6 py-20 text-center duration-500">
@@ -31,10 +33,10 @@ export function BlogAccessDenied() {
         <div className="flex flex-col items-center justify-center gap-4 pt-6 sm:flex-row">
           <Button
             size="lg"
-            onClick={() => router.push('/pricing')}
+            onClick={() => router.push(user ? '/syllabus/quiz/pyq' : '/pricing')}
             className="h-12 w-full rounded-xl bg-slate-900 px-8 font-bold text-white shadow-xl shadow-slate-200 hover:bg-slate-800 sm:w-auto"
           >
-            Learn More & Upgrade
+            {user ? 'Start Practicing' : 'Learn More & Upgrade'}
           </Button>
           <Button variant="ghost" asChild className="font-bold text-slate-500 hover:text-slate-900">
             <Link href="/blogs">

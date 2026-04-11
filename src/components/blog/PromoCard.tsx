@@ -38,7 +38,7 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
           <div className="flex-1 space-y-1">
             <div className="flex items-center gap-2">
               <h3 className="font-display text-lg font-black tracking-tight text-white">
-                Ace MPPSC
+                {user ? 'Start Practice' : 'Ace MPPSC'}
               </h3>
               {isPro && (
                 <span className="flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold tracking-wider text-amber-300 uppercase">
@@ -53,10 +53,12 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
             </div>
             <p className="line-clamp-1 text-xs font-medium text-slate-400">
               {isPro
-                ? 'Full access enabled.'
+                ? 'Premium access active.'
                 : isLite
                   ? 'Upgrade for full mocks.'
-                  : '2026 High-Yield PYQs.'}
+                  : user 
+                    ? 'Continue your journey.'
+                    : '2026 High-Yield PYQs.'}
             </p>
           </div>
 
@@ -64,11 +66,11 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
           <div className="relative shrink-0 overflow-hidden rounded-xl p-[1px] shadow-lg shadow-indigo-500/20 transition-transform active:scale-95">
             <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#d946ef,#f43f5e,#fbbf24,#8b5cf6,#3b82f6,#d946ef)]" />
             <Link
-              href={isPro ? '/syllabus/quiz/pyq' : '/pricing'}
+              href={user ? '/syllabus/quiz/pyq' : '/pricing'}
               className="relative flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition-all hover:bg-slate-900/90"
             >
-              <Sparkles size={12} className={isPro ? 'text-emerald-400' : 'text-yellow-400'} />
-              {isPro ? 'Practice' : 'Upgrade'}
+              <Sparkles size={12} className={user ? 'text-emerald-400' : 'text-yellow-400'} />
+              {user ? 'Start Practicing' : 'Upgrade'}
             </Link>
           </div>
         </div>
@@ -109,7 +111,7 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
       </div>
 
       <h3 className="font-display relative z-10 mb-2 text-xl font-bold tracking-tight">
-        {user ? 'Unlock More Content' : 'Ace MPPSC 2026'}
+        {user ? 'Ready to Practice?' : 'Ace MPPSC 2026'}
       </h3>
 
       {isPro ? (
@@ -139,11 +141,11 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
           <div className="relative overflow-hidden rounded-xl p-[1.5px] shadow-lg shadow-purple-500/20 transition-all hover:scale-[1.02] hover:shadow-purple-500/40">
             <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#d946ef,#f43f5e,#fbbf24,#8b5cf6,#3b82f6,#d946ef)]" />
             <Link
-              href="/pricing"
+              href={user ? '/syllabus/quiz/pyq' : '/pricing'}
               className="relative flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white transition-all hover:bg-slate-900/90"
             >
               <Sparkles size={16} className="text-purple-400" />
-              Upgrade to Pro
+              {user ? 'Start Practicing' : 'Upgrade to Pro'}
             </Link>
           </div>
         </>
@@ -152,7 +154,7 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
           <p className="relative z-10 mb-6 text-sm leading-relaxed text-slate-300">
             {user ? (
               <>
-                Hi <span className="font-bold text-white">{user.name?.split(' ')[0] || 'Aspirant'}</span>! Ready to level up? Unlock premium mock tests, detailed analytics, and exclusive content.
+                Hi <span className="font-bold text-white">{user.name?.split(' ')[0] || 'Aspirant'}</span>! Jump back in and master high-yield topics with your daily practice sessions.
               </>
             ) : (
               'Unlock premium mock tests, detailed analytics, and exclusive content.'
@@ -162,11 +164,11 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
           <div className="relative overflow-hidden rounded-xl p-[1.5px] shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40">
             <div className="animate-spin-slow absolute inset-0 bg-[conic-gradient(from_0deg,#d946ef,#f43f5e,#fbbf24,#8b5cf6,#3b82f6,#d946ef)]" />
             <Link
-              href="/pricing"
+              href={user ? '/syllabus/quiz/pyq' : '/pricing'}
               className="relative flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white transition-all hover:bg-slate-900/90"
             >
               <Sparkles size={16} className="fill-white/20 text-yellow-400" />
-              {user ? 'Explore Premium' : 'Get Premium Access'}
+              {user ? 'Start Practicing' : 'Get Premium Access'}
             </Link>
           </div>
         </>

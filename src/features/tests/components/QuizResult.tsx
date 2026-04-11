@@ -17,6 +17,7 @@ import {
   TrendingDown,
   TrendingUp,
   Minus,
+  Plus,
   Lightbulb,
   AlertTriangle,
   Zap,
@@ -25,6 +26,10 @@ import {
   Target,
   Trophy,
   Lock,
+  Clock,
+  ChevronRight,
+  ShieldAlert,
+  ArrowLeft,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -49,8 +54,10 @@ import { logger } from '@/lib/logger';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   getPYQIntelligenceForWrongQuestions,
-  PYQWrongTopicInsight,
+  type PYQWrongTopicInsight,
 } from '@/actions/pyq-intelligence';
+import { QuizHeader } from './quiz/QuizHeader';
+import { calculateMPPSCResult, getHighYieldFactsForQuestions } from '@/features/tests/actions/test-result';
 import { submitTestFeedback, hasUserSubmittedFeedback } from '@/app/actions/feedback';
 import { TestSeriesFeedbackModal } from '@/components/test-series-feedback-modal';
 import type { FeedbackFormType, FeedbackResponse } from '@/lib/schemas/feedback';
@@ -92,6 +99,18 @@ interface QuizResultProps {
   userName?: string;
 }
 
+interface PyqFactCard {
+  id: string;
+  subject?: string | null;
+  importanceScore?: number | null;
+  factText?: string | null;
+  factTextEn?: string | null;
+  memoryTip?: string | null;
+  memoryTipEn?: string | null;
+  scamAlert?: string | null;
+  scamAlertEn?: string | null;
+}
+
 export function QuizResult({
   questions,
   answers,
@@ -109,7 +128,7 @@ export function QuizResult({
   questionTimes = {},
 }: QuizResultProps) {
   const router = useRouter();
-  const { language } = useSettingsStore();
+  const { language, setLanguage } = useSettingsStore();
   const isHindi = language === 'hi';
 
   const isGuestLocked = isGuest && !userId;
@@ -162,6 +181,7 @@ export function QuizResult({
   const [leaderboard, setLeaderboard] = useState<LeaderboardData | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [pyqInsights, setPyqInsights] = useState<PYQWrongTopicInsight[]>([]);
+  const [pyqFacts, setPyqFacts] = useState<PyqFactCard[]>([]);
   const [isFetchingInsights, setIsFetchingInsights] = useState(false);
   const [showSimulatorLogic, setShowSimulatorLogic] = useState(false);
   const [isNavigatingToIntelligence, setIsNavigatingToIntelligence] = useState(false);
@@ -210,7 +230,7 @@ export function QuizResult({
   }, [testId, userId, showFeedbackModal]);
 
   const handleFeedbackSubmit = async (data: FeedbackFormType): Promise<FeedbackResponse> => {
-    console.log('QuizResult Feedback submitted:', data);
+    logger.info('QuizResult Feedback submitted', { category: 'ui', metadata: { data } });
 
     try {
       // Get guest name from localStorage if active
@@ -232,13 +252,13 @@ export function QuizResult({
         // Sync with localStorage on success
         if (typeof window !== 'undefined') localStorage.setItem('mppsc_feedback_given', 'true');
       } else {
-        console.error('Failed to submit feedback:', response.error);
+        logger.error('Failed to submit feedback', new Error(response.error), { category: 'ui' });
       }
 
       setShowFeedback(false);
       return response; // Return result for the modal's toast logic
     } catch (error) {
-      console.error('Error submitting feedback:', error);
+      logger.error('Error submitting feedback', error, { category: 'ui' });
       setShowFeedback(false);
       throw error; // Let the modal's toast handler catch the error
     }
@@ -305,19 +325,35 @@ export function QuizResult({
   }, [router, testId, userId]);
 
   useEffect(() => {
-    if (mode === 'pyq' && wrongCount > 0) {
-      setIsFetchingInsights(true);
-      const wrongQIds = questions
-        .filter((q) => answers[q.id] !== undefined && answers[q.id] !== q.correctAnswer)
-        .map((q) => q.id);
+    // 🔧 UNIVERSAL FLASHCARDS FIX: Removed 'pyq' mode guard to allow Topic & Full tests
+    const wrongQIds = questions
+      .filter((q) => answers[q.id] !== undefined && answers[q.id] !== q.correctAnswer)
+      .map((q) => q.id);
 
-      getPYQIntelligenceForWrongQuestions(wrongQIds)
-        .then((insights) => {
-          setPyqInsights(insights);
-        })
-        .finally(() => setIsFetchingInsights(false));
+    if (wrongQIds.length === 0 && !testId) {
+      setPyqInsights([]);
+      setPyqFacts([]);
+      return;
     }
-  }, [mode, questions, answers, wrongCount]);
+
+    setIsFetchingInsights(true);
+    Promise.all([
+      typeof getPYQIntelligenceForWrongQuestions === 'function' 
+        ? getPYQIntelligenceForWrongQuestions(wrongQIds)
+        : Promise.resolve([]),
+      typeof getHighYieldFactsForQuestions === 'function'
+        ? getHighYieldFactsForQuestions(wrongQIds, testId)
+        : Promise.resolve([]),
+    ])
+      .then(([insights, facts]) => {
+        setPyqInsights(insights || []);
+        setPyqFacts((facts || []) as PyqFactCard[]);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch universal facts:', err);
+      })
+      .finally(() => setIsFetchingInsights(false));
+  }, [questions, answers, mode, testId]);
 
   const feedbackMessage = React.useMemo(
     () => getRandomFeedback(scorePercentage, language),
@@ -329,8 +365,27 @@ export function QuizResult({
     'all' | 'correct' | 'wrong' | 'skipped'
   >('all');
 
-  const CUTOFF_PERCENTAGE = 0.76; // Updated to 76% for 300 marks exam (approx 228/300)
-  const CUTOFF_ESTIMATE = Math.round(maxMarks * CUTOFF_PERCENTAGE);
+  const filteredQuestionsCount = React.useMemo(() => {
+    return questions.filter((q) => {
+      if (activeQuestionTab === 'all') return true;
+      const userAnswer = answers[q.id];
+      const isSkipped = userAnswer === undefined;
+      const isCorrect = userAnswer === q.correctAnswer;
+      if (activeQuestionTab === 'skipped') return isSkipped;
+      if (activeQuestionTab === 'correct') return isCorrect;
+      if (activeQuestionTab === 'wrong') return !isSkipped && !isCorrect;
+      return true;
+    }).length;
+  }, [questions, answers, activeQuestionTab]);
+
+  const CUTOFF_PASS_PERCENTAGE = 0.78; // 78% is the official breakeven
+  const ELITE_ZONE_START = 0.76;
+  const ELITE_ZONE_END = 0.80;
+
+  const CUTOFF_ESTIMATE = Math.round(maxMarks * CUTOFF_PASS_PERCENTAGE);
+  const ELITE_START_EST = Math.round(maxMarks * ELITE_ZONE_START);
+  const ELITE_END_EST = Math.round(maxMarks * ELITE_ZONE_END);
+  
   const isCutoffCleared = totalScore >= CUTOFF_ESTIMATE;
 
   // Render the detailed question analysis list
@@ -355,7 +410,7 @@ export function QuizResult({
           <Filter className="mb-4 h-12 w-12 text-slate-300" />
           <h3 className="text-lg font-bold text-slate-900">No {activeQuestionTab} questions</h3>
           <p className="mt-1 text-sm text-slate-500">
-            You didn't have any {activeQuestionTab} answers in this quiz.
+            You didn&apos;t have any {activeQuestionTab} answers in this quiz.
           </p>
         </div>
       );
@@ -373,12 +428,12 @@ export function QuizResult({
         <Card
           key={q.id}
           className={cn(
-            'relative mb-4 overflow-hidden border-l-4',
+            'relative mb-4 overflow-hidden border-l-8 shadow-sm transition-shadow hover:shadow-md md:mb-6',
             isCorrect
               ? 'border-l-emerald-500'
               : isSkipped
-                ? 'border-l-slate-300'
-                : 'border-l-rose-500' // Better red
+                ? 'border-l-slate-200'
+                : 'border-l-rose-500'
           )}
         >
           <div
@@ -396,32 +451,55 @@ export function QuizResult({
               setExpandedQuestion(isExpanded ? null : q.id);
             }}
             className={cn(
-              'cursor-pointer p-4 transition-colors hover:bg-slate-50',
+              'cursor-pointer p-4 transition-colors hover:bg-slate-50 md:p-6',
               isLocked && 'cursor-not-allowed'
             )}
           >
-            <div className="flex gap-4">
-              <div className="mt-1">
-                {isCorrect ? (
-                  <CheckCircle2 className="h-6 w-6 text-emerald-500" />
-                ) : isSkipped ? (
-                  <AlertCircle className="h-6 w-6 text-slate-300" />
-                ) : (
-                  <XCircle className="h-6 w-6 text-rose-500" />
-                )}
+            <div className="flex flex-col gap-3">
+              {/* Top Status Bar */}
+              <div className="flex items-center justify-between">
+                 <div className="flex items-center gap-2">
+                    <span className="inline-flex h-6 w-10 items-center justify-center rounded bg-slate-100 text-[10px] font-black tracking-tight text-slate-500">
+                      Q{idx + 1}
+                    </span>
+                    {isCorrect ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-600 ring-1 ring-emerald-500/20">
+                        <CheckCircle2 className="h-3 w-3" /> {isHindi ? 'सही उत्तर' : 'Correct'}
+                      </span>
+                    ) : isSkipped ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2 py-0.5 text-[10px] font-black text-slate-500 ring-1 ring-slate-500/20">
+                        <AlertCircle className="h-3 w-3" /> {isHindi ? 'छोड़ा गया' : 'Skipped'}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-black text-rose-600 ring-1 ring-rose-500/20">
+                        <XCircle className="h-3 w-3" /> {isHindi ? 'गलत उत्तर' : 'Incorrect'}
+                      </span>
+                    )}
+                 </div>
+                 <div className="text-slate-400">
+                    {isLocked ? (
+                      <Lock className="h-4 w-4 text-amber-500" />
+                    ) : isExpanded ? (
+                      <ChevronUp className="h-5 w-5" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5" />
+                    )}
+                 </div>
               </div>
+
+              {/* Question Text - Full Width */}
               <div className="flex-1">
-                <div className="text-sm leading-snug font-bold text-slate-900 md:text-base">
-                  <span className="mr-2 text-slate-400">Q{idx + 1}.</span>
+                <div className="text-base leading-relaxed font-bold text-slate-900 md:text-lg lg:text-xl">
                   <FormattedQuestionText
                     text={cleanMatchingQuestionText(q.question, q)}
-                    className="inline"
+                    className="block"
                   />
 
                   {/* Time Taken Per Question */}
                   {questionTimes[q.id] !== undefined && (
-                    <div className="ml-2 inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
-                      ⏱️ {Math.round(questionTimes[q.id])}s
+                    <div className="mt-2 inline-flex items-center gap-1 rounded-full border border-indigo-100 bg-indigo-50/50 px-2 py-0.5 text-[10px] font-black tracking-tight text-indigo-600 shadow-sm ring-1 ring-indigo-100/50">
+                      <Clock className="h-2.5 w-2.5" />
+                      {Math.round(questionTimes[q.id])}s
                     </div>
                   )}
 
@@ -430,13 +508,13 @@ export function QuizResult({
                       text={q.question}
                       matchPairs={q.matchPairs}
                       language="hi"
-                      className="mt-2"
+                      className="mt-3 w-full"
                     />
                   )}
                 </div>
 
                 {q.questionEn && (
-                  <div className="mt-2 text-sm text-slate-500">
+                  <div className="mt-2 text-sm text-slate-500 md:text-base">
                     <FormattedQuestionText text={cleanMatchingQuestionText(q.questionEn, q)} />
 
                     {q.type === 'matching' && (
@@ -444,19 +522,10 @@ export function QuizResult({
                         text={q.questionEn}
                         matchPairs={q.matchPairs}
                         language="en"
-                        className="mt-2 border-slate-300"
+                        className="mt-3 border-slate-300 w-full"
                       />
                     )}
                   </div>
-                )}
-              </div>
-              <div className="text-slate-400">
-                {isLocked ? (
-                  <Lock className="h-5 w-5 text-amber-500" />
-                ) : isExpanded ? (
-                  <ChevronUp className="h-5 w-5" />
-                ) : (
-                  <ChevronDown className="h-5 w-5" />
                 )}
               </div>
             </div>
@@ -466,24 +535,24 @@ export function QuizResult({
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
-              className="space-y-4 border-t border-slate-100 bg-slate-50/50 p-4"
+              className="space-y-6 border-t border-slate-100 bg-slate-50/30 p-2 md:p-8"
             >
               {q.type === 'matching' && (
                 <div className="mb-2 text-xs font-bold tracking-widest text-slate-400 uppercase">
                   Select the correct code:
                 </div>
               )}
-              <div className="space-y-2">
+              <div className="grid gap-3">
                 {q.options.map((opt, optIdx) => {
                   const isSelected = userAnswer === optIdx;
                   const isCorrectOpt = q.correctAnswer === optIdx;
 
-                  let styleClass = 'border-slate-200 bg-white text-slate-600';
+                  let styleClass = 'border-slate-200 bg-white text-slate-600 shadow-sm';
                   if (isCorrectOpt)
-                    styleClass = 'border-emerald-500 bg-emerald-50 text-emerald-800 font-bold';
+                    styleClass = 'border-emerald-500 bg-emerald-50 text-emerald-900 font-bold ring-1 ring-emerald-500/10';
                   else if (isSelected && !isCorrectOpt)
                     styleClass =
-                      'border-rose-500 bg-rose-50 text-rose-800 line-through decoration-rose-500/50';
+                      'border-rose-500 bg-rose-50 text-rose-900 line-through decoration-rose-500/50 ring-1 ring-rose-500/10';
 
                   let optionText: string;
                   if (typeof opt === 'string') {
@@ -499,13 +568,18 @@ export function QuizResult({
                     <div
                       key={optIdx}
                       className={cn(
-                        'flex items-center justify-between rounded-lg border p-3 text-sm',
+                        'flex items-center justify-between rounded-xl border p-4 text-sm md:text-base lg:text-lg transition-all',
                         styleClass
                       )}
                     >
-                      <span>{optionText}</span>
-                      {isCorrectOpt && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
-                      {isSelected && !isCorrectOpt && <XCircle className="h-4 w-4 text-rose-600" />}
+                      <div className="flex items-center gap-3">
+                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-inherit text-[10px] font-bold">
+                            {String.fromCharCode(65 + optIdx)}
+                         </span>
+                         <span>{optionText}</span>
+                      </div>
+                      {isCorrectOpt && <CheckCircle2 className="h-5 w-5 text-emerald-600" />}
+                      {isSelected && !isCorrectOpt && <XCircle className="h-5 w-5 text-rose-600" />}
                     </div>
                   );
                 })}
@@ -513,41 +587,43 @@ export function QuizResult({
 
               <div
                 className={cn(
-                  'flex items-center gap-2 rounded-lg p-3 text-sm font-bold',
+                  'flex items-center gap-3 rounded-xl p-4 text-sm font-bold md:text-base',
                   isCorrect
-                    ? 'bg-emerald-100 text-emerald-800'
+                    ? 'bg-emerald-100/50 text-emerald-800 border border-emerald-200'
                     : isSkipped
-                      ? 'bg-slate-100 text-slate-600'
-                      : 'bg-rose-100 text-rose-800'
+                      ? 'bg-slate-100/50 text-slate-600 border border-slate-200'
+                      : 'bg-rose-100/50 text-rose-800 border border-rose-200'
                 )}
               >
                 {isCorrect ? (
-                  <CheckCircle2 className="h-5 w-5" />
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600" />
                 ) : isSkipped ? (
-                  <AlertCircle className="h-5 w-5" />
+                  <AlertCircle className="h-6 w-6 text-slate-400" />
                 ) : (
-                  <XCircle className="h-5 w-5" />
+                  <XCircle className="h-6 w-6 text-rose-600" />
                 )}
 
                 <span>
                   {isCorrect
-                    ? 'You answered correctly!'
+                    ? (isHindi ? 'आपका उत्तर सही है!' : 'You answered correctly!')
                     : isSkipped
-                      ? 'You skipped this question.'
-                      : 'You answered incorrectly.'}
+                      ? (isHindi ? 'आपने यह प्रश्न छोड़ दिया था।' : 'You skipped this question.')
+                      : (isHindi ? 'आपका उत्तर गलत है।' : 'You answered incorrectly.')}
                 </span>
               </div>
 
-              <div className="rounded-xl border border-slate-100 bg-white p-4 text-sm shadow-sm">
-                <div className="mb-2 flex items-center gap-1.5 text-xs font-bold tracking-wide text-slate-800 uppercase">
-                  <AlertCircle className="h-4 w-4" /> Explanation
+              <div className="pt-2">
+                <div className="mb-4 flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
+                  <AlertCircle className="h-4 w-4" /> Comprehensive Explanation
                 </div>
 
-                <PremiumExplanation
-                  explanation={q.explanation || 'No explanation available.'}
-                  explanationEn={q.explanationEn}
-                  explanationHi={q.explanation_hi}
-                />
+                <div className="px-1">
+                  <PremiumExplanation
+                    explanation={q.explanation || 'No explanation available.'}
+                    explanationEn={q.explanationEn}
+                    explanationHi={q.explanation_hi}
+                  />
+                </div>
               </div>
             </motion.div>
           )}
@@ -564,7 +640,7 @@ export function QuizResult({
     // Green = Score, Space = Skipped/Margin, Red = Penalty
 
     return (
-      <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6 pt-6 pb-12 duration-500">
+      <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-4 space-y-6 pt-1 pb-12 duration-500">
         {/* Score Card Banner */}
         <div className="relative overflow-hidden rounded-3xl bg-slate-900 p-6 text-white shadow-xl">
           <div className="absolute top-0 right-0 -mt-20 -mr-20 h-64 w-64 rounded-full bg-slate-700/20 blur-3xl"></div>
@@ -572,7 +648,8 @@ export function QuizResult({
 
           <div className="relative z-10">
             <div className="mb-2 flex items-center justify-between">
-              <div className="text-sm font-bold text-slate-400 capitalize">
+              <div className="text-sm font-bold text-slate-400 capitalize flex items-center gap-2">
+                <Target className="h-4 w-4 text-amber-500" />
                 {title || 'Test Result'}
               </div>
 
@@ -594,120 +671,111 @@ export function QuizResult({
 
             <div className="mt-4 mb-8 flex flex-col items-center justify-between gap-6 sm:flex-row">
               <div>
-                <div className="font-display flex items-baseline gap-1 text-6xl font-black">
+                <div className="font-display flex items-baseline justify-center gap-1 text-6xl font-black sm:justify-start">
                   {totalScore}
-                  <span className="text-2xl font-bold text-slate-500">/{maxMarks}</span>
+                  <span className="text-2xl font-bold text-slate-400">/{maxMarks}</span>
+                  <span className="ml-2 text-lg font-black text-slate-500 bg-white/5 px-2 py-0.5 rounded-lg border border-white/5 tracking-tighter">({totalQuestions} Qn)</span>
                 </div>
-                {SCORING_CONFIG.NEGATIVE_MARKING > 0 && wrongCount > 0 && (
-                  <div className="mt-1 inline-flex rounded-full border border-rose-500/20 bg-rose-500/10 px-2 py-0.5 text-sm font-medium text-rose-400">
-                    Includes penalty
-                  </div>
-                )}
+                <div className="mt-2 flex items-center justify-center gap-3 sm:justify-start">
+                   <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-black tracking-widest text-emerald-400 uppercase border border-emerald-500/10">
+                      <Plus className="h-3 w-3" /> {SCORING_CONFIG.MARKS_PER_QUESTION} Correct
+                   </div>
+                   <div className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 px-2.5 py-1 text-[10px] font-black tracking-widest text-rose-400 uppercase border border-rose-500/10">
+                      <Minus className="h-3 w-3" /> {SCORING_CONFIG.NEGATIVE_MARKING} Penalty
+                   </div>
+                </div>
               </div>
 
               <div className="flex flex-col items-center sm:items-end">
-                <div className="text-4xl font-bold">{scorePercentage}%</div>
                 {isCutoffCleared ? (
-                  <div className="mt-2 inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/20 px-3 py-1.5 text-xs font-bold text-emerald-400 shadow-inner">
-                    <TrendingUp className="mr-1.5 h-3 w-3" /> Est. Cleared (~{CUTOFF_ESTIMATE})
+                  <div className="mt-3 inline-flex items-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-black text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                    <Trophy className="mr-2 h-4 w-4 animate-bounce" /> {isHindi ? 'चयन निश्चित' : 'QUALIFIED'} (~{CUTOFF_ESTIMATE})
                   </div>
                 ) : (
-                  <div className="mt-2 inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/20 px-3 py-1.5 text-xs font-bold text-amber-400 shadow-inner">
-                    <TrendingDown className="mr-1.5 h-3 w-3" /> Needs Push (~{CUTOFF_ESTIMATE})
+                  <div className="mt-3 inline-flex items-center rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-black text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
+                    <TrendingDown className="mr-2 h-4 w-4" /> {isHindi ? 'मेहनत चाहिए' : 'NEEDS PUSH'} (~{CUTOFF_ESTIMATE})
                   </div>
                 )}
               </div>
             </div>
 
-            {/* CUTOFF PROGRESS BAR - Refined */}
+            {/* CUTOFF PROGRESS BAR - Restored Premium Style */}
             <div className="mb-8 w-full space-y-2.5">
-              <div className="flex justify-between text-xs font-bold text-slate-400">
-                <span>0</span>
-                <span
-                  className={cn(
-                    'pr-12 transition-colors',
-                    isCutoffCleared ? 'text-emerald-400' : 'text-amber-400'
-                  )}
-                >
-                  Cutoff est. ~{CUTOFF_ESTIMATE}
-                </span>
-                <span>{maxMarks}</span>
+              <div className="flex justify-between text-[11px] font-black tracking-wider text-slate-500 uppercase">
+                <span>0 Marks</span>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                   <div className="flex min-w-[200px] items-center justify-center gap-1.5 rounded-full bg-indigo-500/10 px-4 py-1.5 text-[10px] font-black tracking-widest text-indigo-400 uppercase border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.1)] transition-all hover:bg-indigo-500/15">
+                      <Zap className="h-3 w-3 fill-indigo-400" /> 
+                      {isHindi ? 'टॉपर्स:' : 'Toppers:'} {ELITE_START_EST}-{ELITE_END_EST} 
+                      <span className="ml-1 opacity-60">({Math.round(ELITE_START_EST / SCORING_CONFIG.MARKS_PER_QUESTION)}-{Math.round(ELITE_END_EST / SCORING_CONFIG.MARKS_PER_QUESTION)}Q)</span>
+                   </div>
+                   <div className="flex min-w-[200px] items-center justify-center gap-1.5 rounded-full bg-amber-500/10 px-4 py-1.5 text-[10px] font-black tracking-widest text-amber-400 uppercase border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)] transition-all hover:bg-amber-500/15">
+                      <Target className="h-3 w-3" /> 
+                      {isHindi ? 'सुरक्षित:' : 'Safe:'} {CUTOFF_ESTIMATE} 
+                      <span className="ml-1 opacity-60">({Math.round(CUTOFF_ESTIMATE / SCORING_CONFIG.MARKS_PER_QUESTION)}Q)</span>
+                   </div>
+                </div>
+                <span>{maxMarks} Max</span>
               </div>
 
-              <div className="relative flex h-4 w-full overflow-hidden rounded-full border border-slate-700/50 bg-slate-800/80 shadow-inner">
-                {/* Visualizer: Score Segment */}
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min((progressPositive / maxMarks) * 100, 100)}%` }}
-                  className="relative z-10 h-full bg-emerald-500"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/0 to-white/20"></div>
-                </motion.div>
-
-                {/* Visualizer: Negative Marking Segment (Red at the end of the green) */}
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min((progressNegative / maxMarks) * 100, 100)}%` }}
-                  className="relative z-10 h-full bg-rose-500/90"
-                  style={{
-                    backgroundImage:
-                      'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.1) 5px, rgba(0,0,0,0.1) 10px)',
-                  }}
-                />
-
-                {/* Cutoff Tick */}
-                <div
-                  className="absolute top-0 bottom-0 z-20 w-1 bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]"
-                  style={{ left: `${(CUTOFF_ESTIMATE / maxMarks) * 100}%` }}
-                />
+              <div className="relative flex h-5 w-full overflow-hidden rounded-full border-2 border-slate-700/30 bg-slate-800 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
+                 {/* Elite Zone */}
+                 <div 
+                   className="absolute top-0 bottom-0 z-0 bg-indigo-500/20 border-x border-white/5"
+                   style={{ 
+                     left: `${(ELITE_START_EST / maxMarks) * 100}%`,
+                     width: `${((ELITE_END_EST - ELITE_START_EST) / maxMarks) * 100}%`
+                   }}
+                 />
+                 {/* Score Progress */}
+                 <motion.div
+                   initial={{ width: 0 }}
+                   animate={{ width: `${Math.min((progressPositive / maxMarks) * 100, 100)}%` }}
+                   className="relative z-10 h-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+                 />
+                 {/* Cutoff Marker */}
+                 <div
+                   className="absolute top-0 bottom-0 z-20 w-1.5 bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.8)]"
+                   style={{ left: `${(CUTOFF_ESTIMATE / maxMarks) * 100}%` }}
+                 />
               </div>
 
               <div className="mt-2 flex justify-between text-xs font-bold">
-                <span className="flex items-center gap-1.5 text-emerald-400">
-                  <div className="h-2 w-2 rounded-full bg-emerald-500"></div> Net Score (
-                  {totalScore})
+                <span className="flex items-center gap-1.5 text-emerald-500">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500" /> {isHindi ? 'कुल प्राप्त अंक' : 'Your Marks'} ({totalScore})
+                </span>
+                <span className="flex items-center gap-1.5 text-slate-500">
+                  <div className="h-2 w-2 rounded-full bg-slate-500 opacity-50" /> {isHindi ? 'चयन कट-ऑफ' : 'Target Cutoff'} ({CUTOFF_ESTIMATE})
                 </span>
                 <span className="flex items-center gap-1.5 text-rose-400">
-                  <div className="h-2 w-2 rounded-full bg-rose-500"></div> Penalty (-
-                  {progressNegative})
+                  <div className="h-2 w-2 rounded-full bg-rose-500" /> Penalty (-{progressNegative})
                 </span>
               </div>
             </div>
 
-            {/* Quick Stats Grid */}
+            {/* Quick Stats Grid - Restored Original Structure but Cleaned */}
             <div className="grid grid-cols-4 gap-2 border-t border-slate-700/50 pt-5">
-              <div className="group text-center">
-                <div className="text-2xl font-black text-emerald-400 transition-transform group-hover:scale-110">
-                  {correctCount}
-                </div>
-                <div className="mt-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                  Correct
-                </div>
+              <div className="text-center">
+                <div className="text-2xl font-black text-emerald-400">{correctCount}</div>
+                <div className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Correct</div>
               </div>
-              <div className="group border-l border-slate-700/50 text-center">
-                <div className="text-2xl font-black text-rose-400 transition-transform group-hover:scale-110">
-                  {wrongCount}
-                </div>
-                <div className="mt-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                  Wrong
-                </div>
+              <div className="border-l border-slate-700/50 text-center">
+                <div className="text-2xl font-black text-rose-500">{wrongCount}</div>
+                <div className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Wrong</div>
               </div>
-              <div className="group border-l border-slate-700/50 text-center">
-                <div className="text-2xl font-black text-slate-300 transition-transform group-hover:scale-110">
-                  {skippedCount}
-                </div>
-                <div className="mt-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                  Skipped
-                </div>
+              <div className="border-l border-slate-700/50 text-center">
+                <div className="text-2xl font-black text-slate-400">{skippedCount}</div>
+                <div className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Skipped</div>
               </div>
-              <div className="group border-l border-slate-700/50 text-center">
-                <div className="text-2xl font-black text-white transition-transform group-hover:scale-110">
-                  {totalScore}
-                </div>
-                <div className="mt-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                  Net Score
-                </div>
+              <div className="border-l border-slate-700/50 text-center">
+                <div className="text-2xl font-black text-white">{totalScore}</div>
+                <div className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Score</div>
               </div>
+            </div>
+            
+            {/* Minimal Socials Subtle Footer */}
+            <div className="mt-4 flex justify-center pt-2 border-t border-slate-800/10">
+               <ConnectSocials minimal />
             </div>
           </div>
         </div>
@@ -807,73 +875,104 @@ export function QuizResult({
           </div>
         )}
 
-        {/* Question Details Controller */}
-        <div className="mt-8">
-          <div className="mb-4 flex items-center gap-2">
-            <h3 className="text-lg font-bold text-slate-900">Question Summary</h3>
-          </div>
-          <div className="sticky top-[72px] z-30 mb-6 max-w-full overflow-x-auto rounded-xl border border-slate-200 bg-white/80 p-2 shadow-sm backdrop-blur-md">
-            <div className="flex min-w-max items-center gap-2">
-              <Button
-                variant={activeQuestionTab === 'all' ? 'default' : 'ghost'}
-                onClick={() => setActiveQuestionTab('all')}
-                className={cn(
-                  'rounded-full px-4 text-sm font-bold transition-all',
-                  activeQuestionTab === 'all'
-                    ? 'bg-slate-800 text-white shadow-md hover:bg-slate-700'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                )}
-              >
-                All ({questions.length})
-              </Button>
-              <Button
-                variant={activeQuestionTab === 'correct' ? 'default' : 'ghost'}
-                onClick={() => setActiveQuestionTab('correct')}
-                className={cn(
-                  'rounded-full px-4 text-sm font-bold transition-all',
-                  activeQuestionTab === 'correct'
-                    ? 'bg-emerald-500 text-white shadow-md hover:bg-emerald-600'
-                    : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-600'
-                )}
-              >
-                <CheckCircle2 className="mr-1.5 h-4 w-4" /> Correct ({correctCount})
-              </Button>
-              <Button
-                variant={activeQuestionTab === 'wrong' ? 'default' : 'ghost'}
-                onClick={() => setActiveQuestionTab('wrong')}
-                className={cn(
-                  'rounded-full px-4 text-sm font-bold transition-all',
-                  activeQuestionTab === 'wrong'
-                    ? 'bg-rose-500 text-white shadow-md hover:bg-rose-600'
-                    : 'text-slate-600 hover:bg-rose-50 hover:text-rose-600'
-                )}
-              >
-                <XCircle className="mr-1.5 h-4 w-4" /> Wrong ({wrongCount})
-              </Button>
-              <Button
-                variant={activeQuestionTab === 'skipped' ? 'default' : 'ghost'}
-                onClick={() => setActiveQuestionTab('skipped')}
-                className={cn(
-                  'rounded-full px-4 text-sm font-bold transition-all',
-                  activeQuestionTab === 'skipped'
-                    ? 'bg-slate-500 text-white shadow-md hover:bg-slate-600'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-600'
-                )}
-              >
-                <AlertCircle className="mr-1.5 h-4 w-4" /> Skipped ({skippedCount})
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-4">{renderQuestionList()}</div>
         </div>
-      </div>
     );
   };
 
+  // Content for Review Tab
+  const renderReviewContent = () => {
+    return (
+      <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-4 pt-1 pb-20 duration-500">
+        <div className="mb-8 text-center">
+          <h2 className="text-3xl font-black tracking-tight text-slate-900">
+            {isHindi ? 'प्रश्न समीक्षा' : 'Question Review'}
+          </h2>
+          <p className="mt-2 text-sm font-medium text-slate-500">
+            {isHindi
+              ? 'प्रत्येक प्रश्न का विस्तृत विश्लेषण और सही उत्तर देखें।'
+              : 'Detailed analysis and correct solutions for every question.'}
+          </p>
+        </div>
+
+        {/* Question Details Controller */}
+        <div className="sticky top-[116px] z-30 mb-10 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl backdrop-blur-md sm:top-[128px]">
+          <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-4 py-3">
+             <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Filter Questions</span>
+             <span className="text-[10px] font-bold text-slate-400">{filteredQuestionsCount} / {questions.length} Shown</span>
+          </div>
+          <div className="flex items-center gap-1 p-2 overflow-x-auto no-scrollbar">
+            <Button
+              variant={activeQuestionTab === 'all' ? 'default' : 'ghost'}
+              onClick={() => setActiveQuestionTab('all')}
+              className={cn(
+                'flex-1 rounded-xl px-4 py-6 text-xs font-black tracking-widest uppercase transition-all',
+                activeQuestionTab === 'all'
+                  ? 'bg-slate-900 text-white shadow-lg'
+                  : 'text-slate-500 hover:bg-slate-100'
+              )}
+            >
+              All ({questions.length})
+            </Button>
+            <Button
+              variant={activeQuestionTab === 'correct' ? 'default' : 'ghost'}
+              onClick={() => setActiveQuestionTab('correct')}
+              className={cn(
+                'flex-1 rounded-xl px-4 py-6 text-xs font-black tracking-widest uppercase transition-all',
+                activeQuestionTab === 'correct'
+                  ? 'bg-emerald-500 text-white shadow-lg'
+                  : 'text-slate-500 hover:bg-emerald-50 hover:text-emerald-600'
+              )}
+            >
+              Correct ({correctCount})
+            </Button>
+            <Button
+              variant={activeQuestionTab === 'wrong' ? 'default' : 'ghost'}
+              onClick={() => setActiveQuestionTab('wrong')}
+              className={cn(
+                'flex-1 rounded-xl px-4 py-6 text-xs font-black tracking-widest uppercase transition-all',
+                activeQuestionTab === 'wrong'
+                  ? 'bg-rose-500 text-white shadow-lg'
+                  : 'text-slate-500 hover:bg-rose-50 hover:text-rose-600'
+              )}
+            >
+              Wrong ({wrongCount})
+            </Button>
+            <Button
+              variant={activeQuestionTab === 'skipped' ? 'default' : 'ghost'}
+              onClick={() => setActiveQuestionTab('skipped')}
+              className={cn(
+                'flex-1 rounded-xl px-4 py-6 text-xs font-black tracking-widest uppercase transition-all',
+                activeQuestionTab === 'skipped'
+                  ? 'bg-slate-500 text-white shadow-lg'
+                  : 'text-slate-500 hover:bg-slate-100'
+              )}
+            >
+              Skipped ({skippedCount})
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-6">{renderQuestionList()}</div>
+      </div>
+    );
+  };
   // Content for Strategy Tab
   const renderStrategyContent = () => {
-    // Strategy AI analysis logic
+    // 🛡️ GUEST LOCK FOR AUDIT TAB
+    if (isGuestLocked) {
+      return (
+        <div className="relative min-h-[400px] pt-10">
+          <PremiumLock label={isHindi ? 'स्मार्ट ऑडिट लॉक है' : 'Smart Audit Locked'} />
+          <div className="flex flex-col gap-6 opacity-5">
+            <div className="h-20 rounded-3xl bg-slate-200 animate-pulse" />
+            <div className="h-64 rounded-3xl bg-slate-200 animate-pulse" />
+            <div className="h-40 rounded-3xl bg-slate-200 animate-pulse" />
+          </div>
+        </div>
+      );
+    }
+
+    // Smart Strategic Intelligence logic
     const isOverAttempting = wrongCount > totalQuestions * 0.15; // >15% wrong is dangerous
     const isUnderAttempting = attemptedCount < totalQuestions * 0.75; // <75% attempt is low
 
@@ -892,7 +991,7 @@ export function QuizResult({
     const sim75score = calculateSimulatedScore(0.75, 0.9); // Attempt 75%, 90% precision
 
     return (
-      <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6 pt-6 pb-12 duration-500">
+      <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-4 space-y-6 pt-1 pb-12 duration-500">
         <div>
           <h2 className="mb-1 text-2xl font-black tracking-tight text-slate-900">
             {isHindi ? 'प्रयास विश्लेषण' : 'Attempt Intelligence'}
@@ -978,12 +1077,12 @@ export function QuizResult({
               <span
                 className={cn(
                   'flex items-center gap-2 font-bold',
-                  accuracy >= 80 ? 'text-emerald-500' : 'text-amber-500'
+                  accuracy >= 78 ? 'text-emerald-500' : accuracy >= 75 ? 'text-amber-500' : 'text-rose-500'
                 )}
               >
                 {accuracy.toFixed(1)}%{' '}
                 <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 opacity-70">
-                  ({isHindi ? 'लक्ष्य' : 'Target'}: ≥80%)
+                  ({isHindi ? 'लक्ष्य' : 'Expert Target'}: ≥78%)
                 </span>
               </span>
             </div>
@@ -1008,18 +1107,18 @@ export function QuizResult({
           </div>
         </Card>
 
-        {/* Strategy Gaps Box */}
-        {(isOverAttempting || isUnderAttempting || accuracy < 80) && (
+        {/* Smart Strategy Gaps Box */}
+        {(isOverAttempting || isUnderAttempting || accuracy < 78) && (
           <Card className="overflow-hidden border border-amber-500/30 bg-amber-50/60 shadow-sm">
-            <div className="flex items-start gap-4 p-4">
+            <div className="flex items-start gap-3 p-4">
               <div className="shrink-0 rounded-full bg-amber-100 p-2">
                 <AlertTriangle className="h-5 w-5 text-amber-600" />
               </div>
-              <div>
+              <div className="flex-1">
                 <h3 className="mb-3 text-sm font-bold tracking-wide text-amber-900 uppercase">
-                  {isHindi ? 'रणनीति में कमियां पाई गईं' : 'Strategy Gaps Identified'}
+                  {isHindi ? 'स्मार्ट इंटेलिजेंस ऑडिट' : 'Smart Intelligence Audit'}
                 </h3>
-                <ul className="test-sm list-disc space-y-3 pl-4 font-medium text-amber-800 marker:text-amber-400">
+                <ul className="list-disc space-y-3 pl-2 text-sm font-medium text-amber-800 marker:text-amber-400">
                   {isOverAttempting && (
                     <li className="pl-1">
                       {isHindi ? (
@@ -1031,25 +1130,27 @@ export function QuizResult({
                       ) : (
                         <>
                           You got <span className="font-bold">{wrongCount} wrong answers</span>.
-                          That's {wrongCount * SCORING_CONFIG.NEGATIVE_MARKING} points lost to
-                          negative marking. If not confident, it's better to skip.
+                          That&apos;s {wrongCount * SCORING_CONFIG.NEGATIVE_MARKING} points lost to
+                          negative marking. If not confident, it&apos;s better to skip.
                         </>
                       )}
                     </li>
                   )}
-                  {accuracy < 80 && (
+                  {accuracy < 78 && (
                     <li className="pl-1">
                       {isHindi ? (
                         <>
-                          आपकी सटीकता <span className="font-bold">{accuracy.toFixed(0)}%</span> है।{' '}
-                          {CUTOFF_ESTIMATE}+ कटऑफ को लगातार पास करने के लिए, सटीकता 80% से अधिक होनी
-                          चाहिए।
+                          आपकी सटीकता <span className="font-bold">{accuracy.toFixed(2)}%</span> है।{' '}
+                          {accuracy >= 75 
+                            ? "आप बिल्कुल सीमा पर हैं! बस थोड़ा सा सुधार आपको सुरक्षित श्रेणी (Elite Zone) में डाल देगा।"
+                            : `${CUTOFF_ESTIMATE}+ स्कोर के लिए अपनी सटीकता को 78% से ऊपर ले जाने का लक्ष्य रखें।`}
                         </>
                       ) : (
                         <>
-                          Your accuracy is <span className="font-bold">{accuracy.toFixed(0)}%</span>
-                          . To consistently clear {CUTOFF_ESTIMATE}+ cutoffs, accuracy must exceed
-                          80%.
+                          Your accuracy is <span className="font-bold">{accuracy.toFixed(2)}%</span>.
+                          {accuracy >= 75
+                            ? " You are on the critical boundary! A marginal improvement puts you in the Elite Zone."
+                            : ` Aim to push accuracy above 78% for a safe ${CUTOFF_ESTIMATE}+ score.`}
                         </>
                       )}
                     </li>
@@ -1088,7 +1189,7 @@ export function QuizResult({
           <div className="border-b border-slate-800 bg-slate-900 p-4">
             <h3 className="flex items-center gap-2 text-sm font-bold tracking-wide text-white uppercase">
               <Target className="h-4 w-4 text-emerald-400" />{' '}
-              {isHindi ? 'इष्टतम प्रयास सिम्युलेटर' : 'Optimal Attempt Simulator'}
+              {isHindi ? 'स्मार्ट स्कोर प्रोजेक्टर' : 'Smart Score Projector'}
             </h3>
           </div>
           <div className="border-b border-slate-100 bg-slate-50 p-4 text-xs font-bold tracking-widest text-slate-500 uppercase">
@@ -1210,200 +1311,191 @@ export function QuizResult({
     );
   };
 
-  // Content for PYQ Analysis Tab
+  // Content for Flashcards Tab
   const renderPYQAnalysisContent = () => {
-    return (
-      <div className="animate-in fade-in slide-in-from-bottom-4 flex flex-col items-center justify-center space-y-8 pt-16 pb-20 text-center duration-500">
-        <div className="max-w-sm space-y-3">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-amber-100 text-amber-600 shadow-sm">
-            <Sparkles size={32} />
+    if (isGuestLocked) {
+      return (
+        <div className="relative min-h-[300px]">
+          <PremiumLock label={isHindi ? 'फ्लैशकार्ड लॉक है' : 'Flashcards Locked'} />
+          <div className="flex flex-col gap-4 opacity-10">
+            {[1, 2].map((i) => (
+              <div key={i} className="h-32 rounded-3xl bg-slate-100 animate-pulse" />
+            ))}
           </div>
-          <h2 className="text-2xl font-black tracking-tight text-slate-900">
-            {isHindi ? 'विस्तृत PYQ इंटेलिजेंस' : 'Explore PYQ Intelligence'}
-          </h2>
-          <p className="text-sm leading-relaxed font-medium text-slate-500">
-            {isHindi
-              ? 'सभी 6 वर्षों के पेपर्स का गहरा विश्लेषण, रिपीटेड टॉपिक्स और ट्रेंड्स देखने के लिए नीचे बटन पर क्लिक करें।'
-              : 'Dive deep into 6 years of paper analysis, see repeated topics, unit-wise weightage and emerging trends.'}
+        </div>
+      );
+    }
+
+    if (pyqFacts.length === 0) {
+      return (
+        <div className="py-20 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-50 text-amber-500">
+            <Lightbulb size={32} />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900">
+             {isHindi ? 'कोई फ्लैशकार्ड नहीं मिला' : 'No Flashcards Found'}
+          </h3>
+          <p className="text-sm text-slate-500">
+            {isHindi 
+              ? 'अपनी गलतियों को सुधारने के लिए और अधिक अभ्यास करें।' 
+              : 'Practice more and analyze mistakes to unlock high-yield facts.'}
           </p>
         </div>
+      );
+    }
 
-        <div className="group relative">
-          <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 opacity-25 blur transition duration-1000 group-hover:opacity-50 group-hover:duration-200"></div>
-          <Button
-            asChild
-            disabled={isNavigatingToIntelligence}
-            onMouseEnter={() => router.prefetch('/syllabus/quiz/pyq/intelligence')}
-            className="relative flex h-14 items-center gap-3 rounded-full bg-slate-950 px-10 font-black text-white shadow-2xl transition-all hover:scale-105 hover:bg-slate-900 active:scale-95 disabled:opacity-80"
+    return (
+      <div className="grid gap-6">
+        {pyqFacts.map((fact) => (
+          <div
+            key={fact.id}
+            className="group relative overflow-hidden rounded-[2rem] border-b-4 border-amber-500/20 bg-white p-6 shadow-sm transition-all hover:bg-slate-50 hover:shadow-md"
           >
-            <Link
-              href="/syllabus/quiz/pyq/intelligence"
-              onClick={() => setIsNavigatingToIntelligence(true)}
-            >
-              {isNavigatingToIntelligence ? (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
-              ) : (
-                <Sparkles className="h-5 w-5 animate-pulse text-amber-500" />
+            <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 opacity-20" />
+            
+            <div className="mb-4 flex items-start justify-between">
+              <div className="flex items-center gap-2">
+                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+                    <Zap className="h-4 w-4 fill-amber-600" />
+                 </div>
+                 <span className="text-[10px] font-black tracking-widest text-amber-600 uppercase">
+                   {fact.subject || (isHindi ? 'विषय' : 'Subject')}
+                 </span>
+              </div>
+              {(fact.importanceScore || 0) > 8 && (
+                <div className="flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 text-[9px] font-black tracking-widest text-rose-600 uppercase border border-rose-100 shadow-sm animate-pulse">
+                  <Trophy className="h-3 w-3" /> High Yield
+                </div>
               )}
+            </div>
 
-              <span className="text-lg">
-                {isNavigatingToIntelligence
-                  ? isHindi
-                    ? 'खुल रहा है...'
-                    : 'Loading...'
-                  : isHindi
-                    ? 'एक्सपर्ट इनसाइट्स खोलें'
-                    : 'Open Expert Insights'}
-              </span>
-              {!isNavigatingToIntelligence && (
-                <ArrowRight className="h-5 w-5 opacity-70 transition-transform group-hover:translate-x-1" />
-              )}
-            </Link>
-          </Button>
-        </div>
+            <p className="mb-6 text-sm leading-relaxed font-bold text-slate-800 md:text-base">
+              {isHindi && fact.factText ? fact.factText : fact.factTextEn || fact.factText}
+            </p>
 
-        <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-slate-100/50 p-6">
-          <div className="mb-4 text-[10px] font-black tracking-widest text-slate-400 uppercase">
-            What you get inside
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1 text-left">
-              <div className="text-xs font-bold text-slate-800">Unit Distribution</div>
-              <div className="text-[10px] text-slate-500">Weightage of each unit</div>
-            </div>
-            <div className="space-y-1 text-left">
-              <div className="text-xs font-bold text-slate-800">Repeated Topics</div>
-              <div className="text-[10px] text-slate-500">Most frequent patterns</div>
-            </div>
-            <div className="space-y-1 text-left">
-              <div className="text-xs font-bold text-slate-800">Trend Analysis</div>
-              <div className="text-[10px] text-slate-500">Recent vs Old trends</div>
-            </div>
-            <div className="space-y-1 text-left">
-              <div className="text-xs font-bold text-slate-800">Paper Wise</div>
-              <div className="text-[10px] text-slate-500">Yearly subject mix</div>
+            <div className="grid gap-3 sm:grid-cols-2">
+               {(fact.memoryTip || fact.memoryTipEn) && (
+                 <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4 transition-colors hover:bg-blue-50">
+                    <div className="mb-2 flex items-center gap-2 text-blue-800">
+                      <Lightbulb className="h-4 w-4" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Memory Tip</span>
+                    </div>
+                    <p className="text-xs font-medium leading-relaxed text-blue-700">
+                      {isHindi && fact.memoryTip
+                        ? fact.memoryTip
+                        : fact.memoryTipEn || fact.memoryTip}
+                    </p>
+                 </div>
+               )}
+
+               {(fact.scamAlert || fact.scamAlertEn) && (
+                 <div className="rounded-2xl border border-rose-100 bg-rose-50/50 p-4 transition-colors hover:bg-rose-50">
+                    <div className="mb-2 flex items-center gap-2 text-rose-800">
+                      <ShieldAlert className="h-4 w-4" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Scam Alert</span>
+                    </div>
+                    <p className="text-xs font-medium leading-relaxed text-rose-700">
+                      {isHindi && fact.scamAlert
+                        ? fact.scamAlert
+                        : fact.scamAlertEn || fact.scamAlert}
+                    </p>
+                 </div>
+               )}
             </div>
           </div>
-        </div>
+        ))}
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* ── Header: Unified Light Look for All Users ───────────────── */}
-      <div className="sticky top-14 z-40 border-b border-slate-200 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto max-w-3xl px-4 pt-4 pb-4 sm:px-6">
-          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+    <div className="min-h-screen bg-white">
+      {/* 🚀 PREMIUM STICKY HEADER (Responsive & Clean) */}
+      <div className="sticky top-14 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-4 py-4 md:px-6">
+          <div className="flex items-center justify-between">
+            {/* Breadcrumbs & Title */}
             <div className="flex items-center gap-3">
-              {/* If auth user, show Home button to navigate back, else Sparkles */}
-              {!isGuest ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    if (onExit) onExit();
-                    else router.push('/syllabus/quiz');
-                  }}
-                  className="h-10 w-10 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
-                >
-                  <Home className="h-5 w-5" />
-                </Button>
-              ) : (
-                <div className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 sm:h-10 sm:w-10">
-                  <Sparkles className="h-4 w-4" />
+              {/* Mobile Back Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="-ml-2 text-slate-500 md:hidden"
+                onClick={() => router.back()}
+              >
+                <ArrowLeft size={20} />
+              </Button>
+
+              <div className="flex flex-col">
+                {/* Desktop Breadcrumbs */}
+                <div className="hidden items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase md:flex">
+                  <Link href="/dashboard" className="hover:text-slate-900">Dashboard</Link>
+                  <ChevronRight size={10} />
+                  <Link href="/syllabus/quiz/pyq" className="hover:text-slate-900">Test Series</Link>
+                  <ChevronRight size={10} />
+                  <span className="text-slate-600">Performance Intelligence</span>
                 </div>
-              )}
-              <div>
-                <h1 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">
-                  {title || (isHindi ? 'क्विज़ रिजल्ट' : 'Quiz Result')}
+                
+                <h1 className="mt-1 flex items-center gap-2 text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
+                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600 border border-amber-100 sm:h-9 sm:w-9">
+                     <Trophy className="h-4 w-4 sm:h-5 sm:w-5" />
+                   </div>
+                   {isHindi ? 'परफॉरमेंस इंटेलिजेंस' : 'Performance Intelligence'}
                 </h1>
-                <p className="text-xs font-medium text-slate-500">
-                  {isHindi
-                    ? 'अपनी तैयारी को अगले स्तर पर ले जाएं'
-                    : 'Take your preparation to the next level'}
-                </p>
               </div>
             </div>
 
-            {/* ── Connect Socials + Retry Button ────────── */}
-            <div className="flex w-full items-center justify-between gap-3 sm:w-auto">
-              <ConnectSocials className="flex-1 sm:w-auto" />
-              {!disableRetry && !isGuest && (
-                <Button
-                  onClick={onRetry}
-                  variant="outline"
-                  size="sm"
-                  className="hidden h-9 font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 sm:flex"
-                >
-                  <RefreshCw className="mr-2 h-4 w-4" /> Retry
-                </Button>
-              )}
+            {/* Subtle Close/More (Optional) */}
+            <div className="flex items-center gap-2">
+                 {/* Place minimal social icons here for desktop if desired, but user wants them smaller and discrete */}
             </div>
           </div>
         </div>
       </div>
 
-      <Tabs defaultValue="result" className="mx-auto w-full max-w-3xl px-4 md:px-0">
-        <div className="sticky top-[140px] z-40 border-b border-slate-200/60 bg-slate-50 pt-4 pb-2 shadow-sm/50 sm:top-[118px]">
-          <TabsList
-            className={cn(
-              'grid w-full rounded-xl bg-slate-200/50 p-1',
-              mode === 'pyq' ? 'grid-cols-3' : 'grid-cols-2'
-            )}
-          >
-            <TabsTrigger
-              value="result"
-              className="rounded-lg py-2.5 text-sm font-bold text-slate-500 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
-            >
-              Result
+      <div className="mx-auto max-w-7xl px-2 pt-4 pb-20 md:px-0">
+
+      <Tabs defaultValue="result" className="w-full">
+        <div className="sticky top-[56px] sm:top-[64px] z-40 border-b border-slate-200/60 bg-white/95 backdrop-blur-sm py-3">
+          <TabsList className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 rounded-2xl bg-slate-100 p-1.5 shadow-sm sm:gap-4">
+            <TabsTrigger value="result" className="flex-1 rounded-xl py-2.5 text-xs font-black tracking-widest uppercase transition-all data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md">
+              {isHindi ? 'रिजल्ट' : 'Result'}
             </TabsTrigger>
-            <TabsTrigger
-              value="strategy"
-              className="rounded-lg py-2.5 text-sm font-bold text-slate-500 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
-            >
-              Strategy
+            <TabsTrigger value="audit" className="flex-1 rounded-xl py-2.5 text-xs font-black tracking-widest uppercase transition-all data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+              {isHindi ? 'स्मार्ट ऑडिट' : 'Audit'}
             </TabsTrigger>
-            {mode === 'pyq' && (
-              <TabsTrigger
-                value="pyq-analysis"
-                className="rounded-lg py-2.5 text-sm font-bold text-slate-500 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
-              >
-                PYQ Analysis
-              </TabsTrigger>
-            )}
+            <TabsTrigger value="review" className="flex-1 rounded-xl py-2.5 text-xs font-black tracking-widest uppercase transition-all data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-md">
+              {isHindi ? 'रिव्यू' : 'Review'}
+            </TabsTrigger>
+            <TabsTrigger value="pyq" className="flex-1 rounded-xl py-2.5 text-xs font-black tracking-widest uppercase transition-all data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-md">
+              {isHindi ? 'फ्लैशकार्ड' : 'Flashcards'}
+            </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="result" className="m-0 focus-visible:outline-none">
-          {renderResultContent()}
+        <TabsContent value="result" className="mt-0 text-slate-100">
+          <div className="mx-auto max-w-7xl px-2 md:px-0">
+            {renderResultContent()}
+          </div>
         </TabsContent>
-        <TabsContent
-          value="strategy"
-          className={cn(
-            'relative m-0 focus-visible:outline-none',
-            isGuestLocked ? 'max-h-[500px] min-h-[300px] overflow-hidden' : 'min-h-[400px]'
-          )}
-        >
-          {isGuestLocked && <PremiumLock label="Strategy Analysis Locked" />}
-          <div className={isGuestLocked ? 'pointer-events-none blur-[6px] select-none' : ''}>
+
+        <TabsContent value="audit" className="mt-0">
+          <div className="mx-auto max-w-7xl px-2 md:px-0">
             {renderStrategyContent()}
           </div>
         </TabsContent>
-        {mode === 'pyq' && (
-          <TabsContent
-            value="pyq-analysis"
-            className={cn(
-              'relative m-0 focus-visible:outline-none',
-              isGuestLocked ? 'max-h-[500px] min-h-[300px] overflow-hidden' : 'min-h-[400px]'
-            )}
-          >
-            {isGuestLocked && <PremiumLock label="PYQ Intelligence Locked" />}
-            <div className={isGuestLocked ? 'pointer-events-none blur-[6px] select-none' : ''}>
-              {renderPYQAnalysisContent()}
-            </div>
-          </TabsContent>
-        )}
+
+        <TabsContent value="review" className="mt-0">
+          <div className="mx-auto max-w-7xl px-2 md:px-0">
+            {renderReviewContent()}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="pyq" className="mt-0">
+          <div className="mx-auto max-w-7xl px-2 md:px-0">
+            {renderPYQAnalysisContent()}
+          </div>
+        </TabsContent>
       </Tabs>
 
       <TestSeriesFeedbackModal
@@ -1412,6 +1504,7 @@ export function QuizResult({
         onSubmit={handleFeedbackSubmit}
         testSeriesId={testId}
       />
+      </div>
     </div>
   );
 }

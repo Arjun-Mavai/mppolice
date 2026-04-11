@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Quote, Loader2, ArrowLeft } from 'lucide-react';
+import { Quote, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { logger } from '@/lib/logger';
 import { loginUserAction } from '@/actions/auth-actions';
@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -145,14 +146,25 @@ export default function LoginPage() {
 
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-slate-700">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="h-11 w-full rounded-lg border border-slate-200 px-4 text-slate-900 transition-all outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="h-11 w-full rounded-lg border border-slate-200 px-4 pr-10 text-slate-900 transition-all outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             {error && (

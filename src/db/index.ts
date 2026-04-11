@@ -9,7 +9,12 @@ const globalForDb = globalThis as unknown as {
 };
 
 // Determine connection URL based on environment
-const isDev = process.env.NODE_ENV === 'development' && process.env.USE_PROD_DB !== 'true';
+console.log('--- DEBUG DB CONNECTION ---');
+console.log('process.env.USE_PROD_DB:', process.env.USE_PROD_DB);
+console.log('env.USE_PROD_DB:', env.USE_PROD_DB);
+console.log('env.NODE_ENV:', env.NODE_ENV);
+
+const isDev = env.NODE_ENV === 'development' && env.USE_PROD_DB.trim() !== 'true';
 const connectionUrl = isDev 
   ? 'file:mppsc_local_dev.db' 
   : env.TURSO_DATABASE_URL;

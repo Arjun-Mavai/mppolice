@@ -62,7 +62,8 @@ export function GuestResultClient({ userId }: { userId?: string }) {
       questions={mappedQuestions}
       answers={mappedAnswers}
       mode="full" // Treat as full test for now
-      timeTaken={0} // Time tracking not fully implemented for guest yet
+      timeTaken={result.timeTaken || 0}
+      questionTimes={result.questionTimes}
       onRetry={() => {
         clearResult();
         router.push('/syllabus/quiz');

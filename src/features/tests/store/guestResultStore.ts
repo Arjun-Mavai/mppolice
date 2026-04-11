@@ -11,6 +11,7 @@ interface GuestResultData {
   timeTaken: number; // in seconds
   questions: Question[]; // Store questions for result display
   answers: Record<string, number>;
+  questionTimes?: Record<string, number>; // Time spent per question
   testId?: string; // Add testId for feedback submission
   title?: string; // Add title for display
   timestamp: number; // When the test was completed

@@ -13,7 +13,7 @@ import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockMo
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { getUserTier } from '@/lib/access-control';
 import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
-import { ViewTransition } from 'react';
+import { Fragment } from 'react';
 
 interface QuizUnitSelectionClientProps {
   availableTests: {
@@ -91,7 +91,7 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
   }
 
   return (
-    <ViewTransition>
+    <Fragment>
       <div className="relative min-h-screen overflow-hidden bg-[#fafbfc] pb-20 font-sans">
         {/* 🎭 PREMIUM BACKGROUND BLURS */}
         <div className="pointer-events-none absolute top-0 left-0 h-[500px] w-full bg-gradient-to-b from-slate-100/30 to-transparent" />
@@ -193,6 +193,6 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
 
       <SyllabusLockModal open={unlockModalOpen} onOpenChange={setUnlockModalOpen} />
     </div>
-    </ViewTransition>
+    </Fragment>
   );
 }

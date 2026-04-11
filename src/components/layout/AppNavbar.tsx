@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,6 +47,7 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import { UserSection } from './UserSection';
 
 interface PropUser {
+  id?: string;
   name?: string | null;
   email?: string | null;
   image?: string | null;
@@ -83,6 +84,7 @@ const createUserToStore = (user: any) => ({
 
 export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -161,7 +163,12 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
 
   // Effect 2: Handle initial user sync from props
   useEffect(() => {
-    if (initialUser && authCheckStatus === 'idle' && !globalUser) {
+    // Sync if we have an initial user and:
+    // 1. We haven't checked auth yet, OR
+    // 2. We have a store user but it's missing the ID (that we now have from server)
+    const needsSync = initialUser && (authCheckStatus === 'idle' || (initialUser.id && !globalUser?.id));
+    
+    if (needsSync) {
       const userToStore = createUserToStore(initialUser);
       setUser(userToStore, true); // This sets authStatus to 'checked'
     }
@@ -271,7 +278,11 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   }, [router]);
 
   // Quiz play pe navbar nahi dikhana — full immersive experience
-  if (pathname.includes('/quiz/play') || pathname.includes('/free-quiz/play')) return null;
+  // Lekin agar result page h (url me completed=true), to navbar dikhana h
+  const isCompleted = searchParams.get('completed') === 'true';
+  const isQuizPlay = (pathname.includes('/quiz/play') || pathname.includes('/free-quiz/play')) && !isCompleted;
+  
+  if (isQuizPlay) return null;
 
   return (
     <header className="fixed top-0 right-0 left-0 z-50 [animation:navbar-scroll_linear_both] border-b border-slate-200 bg-white/80 shadow-sm backdrop-blur-md transition-all duration-300 [animation-range:0px_50px] [animation-timeline:scroll()]">
@@ -446,19 +457,21 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                         );
                       })}
 
-                    <div className="tap-scale-96">
-                      <SheetClose asChild>
-                        <a
-                          href="https://t.me/MPPSC2026_Mission"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-sky-50 hover:text-sky-600"
-                        >
-                          <Send size={18} />
-                          Join Telegram
-                        </a>
-                      </SheetClose>
-                    </div>
+                    {!user && (
+                      <div className="tap-scale-96">
+                        <SheetClose asChild>
+                          <a
+                            href="https://t.me/MPPSC2026_Mission"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-sky-50 hover:text-sky-600"
+                          >
+                            <Send size={18} />
+                            Join Telegram
+                          </a>
+                        </SheetClose>
+                      </div>
+                    )}
 
                     <div className="pt-3">
                       {user?.isSubscribed && user.planTier === 'pro' ? (
