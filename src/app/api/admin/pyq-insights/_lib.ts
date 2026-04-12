@@ -19,7 +19,7 @@ const isAdminTokenPayload = (value: unknown): value is AdminTokenPayload => {
 
 export async function getAdminUserFromRequest() {
   const cookieStore = await cookies();
-  const token = cookieStore.get('mppsc_token')?.value;
+  const token = cookieStore.get('mppolice_token')?.value;
   if (!token) return null;
 
   const decoded = verifyToken(token);

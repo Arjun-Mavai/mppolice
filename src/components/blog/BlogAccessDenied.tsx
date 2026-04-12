@@ -33,10 +33,10 @@ export function BlogAccessDenied() {
         <div className="flex flex-col items-center justify-center gap-4 pt-6 sm:flex-row">
           <Button
             size="lg"
-            onClick={() => router.push(user ? '/syllabus/quiz/pyq' : '/pricing')}
+            onClick={() => router.push(user ? '/dashboard' : '/pricing')}
             className="h-12 w-full rounded-xl bg-slate-900 px-8 font-bold text-white shadow-xl shadow-slate-200 hover:bg-slate-800 sm:w-auto"
           >
-            {user ? 'Start Practicing' : 'Learn More & Upgrade'}
+            {user ? 'Go to Dashboard' : 'Learn More & Upgrade'}
           </Button>
           <Button variant="ghost" asChild className="font-bold text-slate-500 hover:text-slate-900">
             <Link href="/blogs">
@@ -52,7 +52,7 @@ export function BlogAccessDenied() {
         </p>
         <ul className="space-y-2">
           {[
-            'Complete MPPSC Pre + Mains Strategies',
+            'Complete MP Police Pre + Mains Strategies',
             'High-Yield Bilingual Test Series',
             'Mnemonic-based learning for better recall',
           ].map((item, i) => (

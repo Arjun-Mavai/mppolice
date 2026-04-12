@@ -11,7 +11,7 @@ export interface Fact {
   category?: string;
 }
 
-// 🎓 Hardcoded high-quality MPPSC / Current Affairs / Geography facts (fallback + supplement)
+// 🎓 Hardcoded high-quality MP Police / Current Affairs / Geography facts (fallback + supplement)
 const CURATED_FACTS: Fact[] = [
   {
     id: 'cf-bafta-2026',

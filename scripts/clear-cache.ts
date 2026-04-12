@@ -2,7 +2,7 @@ import 'dotenv/config';
 
 async function clearCache() {
   const secret = process.env.ADMIN_SECRET_;
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppsc.zenscroll.app';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppolice.zenscroll.app';
 
   if (!secret) {
     console.error('❌ Error: ADMIN_SECRET is not defined in .env');

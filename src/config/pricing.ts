@@ -24,7 +24,7 @@ export interface PricingData {
 export const PRICING_DEFAULTS: PricingData = {
   litePrice: 99,
   liteOriginalPrice: 299,
-  liteValidityText: 'Valid till MPPSC 2026 Prelims',
+  liteValidityText: 'Valid till MP Police 2026 Prelims',
   liteMonths: 8,
   proPrice: 199,
   proOriginalPrice: 999,

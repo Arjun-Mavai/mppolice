@@ -133,7 +133,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
       const success = await requestFullscreenSafely();
       if (success) {
         setIsFullscreen(true);
-        localStorage.setItem('mppsc_quiz_fullscreen', 'true');
+        localStorage.setItem('mppolice_quiz_fullscreen', 'true');
       } else {
         // Fullscreen failed or not supported - continue without it
         console.info('Fullscreen not available on this device');
@@ -146,7 +146,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
       const success = await exitFullscreenSafely();
       if (success) {
         setIsFullscreen(false);
-        localStorage.removeItem('mppsc_quiz_fullscreen');
+        localStorage.removeItem('mppolice_quiz_fullscreen');
       }
     }
     onExit();
@@ -172,7 +172,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     }
 
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('mppsc_guest_name');
+      const saved = localStorage.getItem('mppolice_guest_name');
       if (saved) setGuestName(saved);
       else setShowGuestEntryDialog(true);
     }
@@ -183,7 +183,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     
     // ⚡ INSTANT START: Save to localStorage and close dialog immediately
     try {
-      localStorage.setItem('mppsc_guest_name', guestName.trim());
+      localStorage.setItem('mppolice_guest_name', guestName.trim());
     } catch (error) {
       logger.error('Failed to persist guest name to localStorage', error, {
         category: 'auth',
@@ -293,7 +293,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
       earnedScore = parseFloat(earnedScore.toFixed(2));
 
       // 💾 Save to DB & Send Notification
-      const savedGuestName = localStorage.getItem('mppsc_guest_name') || 'Guest User';
+      const savedGuestName = localStorage.getItem('mppolice_guest_name') || 'Guest User';
       
       recordGuestAttempt({
         testId,

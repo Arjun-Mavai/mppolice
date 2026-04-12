@@ -29,7 +29,7 @@ const getRepeatedQuestionsWithDetails = unstable_cache(
       .innerJoin(tests, eq(questions.testId, tests.id))
       .where(
         and(
-          sql`${tests.title} LIKE '%MPPSC%'`,
+          sql`${tests.title} LIKE '%MP Police%'`,
           sql`${tests.title} LIKE '%State Service%'`,
           sql`${tests.title} LIKE '%Prelims%'`,
           sql`${tests.title} LIKE '%Paper-1%'`,

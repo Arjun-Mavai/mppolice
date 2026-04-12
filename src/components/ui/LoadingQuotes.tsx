@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Bhai ye MPPSC related facts + motivation h - loading ke time user ko engage rakho
+// Bhai ye MP Police related facts + motivation h - loading ke time user ko engage rakho
 const QUOTES = [
   // --- Geography & Map Updates ---
   '🗺️ Update: MP me ab **55 Districts** hain! (Mauganj, Pandhurna, Maihar jud gaye)',
@@ -15,7 +15,7 @@ const QUOTES = [
   '🎼 Music Capital: **Maihar**, Summer Capital: **Pachmarhi**.',
 
   // --- Exam Strategy (Strategic Value) ---
-  '💡 Pro Tip: MPPSC Prelims me **Negative Marking nahi hoti** (GS Paper 1) — Saare attempt karna!',
+  '💡 Pro Tip: MP Police Prelims me **Negative Marking nahi hoti** (GS Paper 1) — Saare attempt karna!',
   '📚 Unit 10 par focus rakho: **MP ki Janjatiya (Tribes)** ab game-changer h.',
   '⏳ Loading... Tab tak socho: **Article 164** me Tribal Welfare Minister ka zikr kyu h?',
 

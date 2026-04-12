@@ -6,15 +6,15 @@ import { SyllabusClient } from '@/features/syllabus/components/SyllabusClient';
 import { SyllabusData } from '@/types/syllabus';
 
 export const metadata: Metadata = {
-  title: 'MPPSC 2026 Complete Syllabus — All 17 Units with Mnemonics',
+  title: 'MP Police 2026 Complete Syllabus — All 17 Units with Mnemonics',
   description:
-    'Complete MPPSC 2026 syllabus in Hindi & English. All 10 units with topic-wise mnemonics, tests, cards for syllabus, and quizzes. Start free preparation today!',
+    'Complete MP Police 2026 syllabus in Hindi & English. All 10 units with topic-wise mnemonics, tests, cards for syllabus, and quizzes. Start free preparation today!',
   keywords: [
-    'MPPSC Syllabus 2026',
-    'MPPSC Syllabus Hindi',
-    'MPPSC Units',
-    'MPPSC Topics',
-    'MPPSC Preparation',
+    'MP Police Syllabus 2026',
+    'MP Police Syllabus Hindi',
+    'MP Police Units',
+    'MP Police Topics',
+    'MP Police Preparation',
   ],
 };
 
@@ -58,17 +58,14 @@ async function getSyllabusData(): Promise<SyllabusData> {
   }
 }
 
-export default async function SyllabusPage() {
-  console.log('DEBUG: SyllabusPage Rendering');
-  const syllabusData = await getSyllabusData();
+import { redirect } from 'next/navigation';
 
+export default async function SyllabusPage() {
+  redirect('/dashboard');
+  
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-slate-50">Loading...</div>
-      }
-    >
-      <SyllabusClient syllabusData={syllabusData} />
-    </Suspense>
+    <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <p className="text-slate-500">Redirecting to Dashboard...</p>
+    </div>
   );
 }

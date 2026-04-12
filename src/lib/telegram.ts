@@ -1,3 +1,5 @@
+import { getErrorName } from '@/lib/errors';
+
 /**
  * Simple HTML escape for Telegram messages
  * Bhai, agar user name mein '<' ya '&' ho, to Telegram API error de deta hai.
@@ -18,6 +20,9 @@ export async function sendTelegramNotification(message: string) {
     return;
   }
 
+  // Add Branding Header
+  const brandedMessage = `<b>🚨 MPPOLICE ALERT 🚨</b>\n\n${message}`;
+
   // ⏱️ AbortController to prevent hanging (5s timeout)
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -29,7 +34,7 @@ export async function sendTelegramNotification(message: string) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: CHAT_ID,
-        text: message, // Message should be escaped by the caller where appropriate
+        text: brandedMessage, // Message should be escaped by the caller where appropriate
         parse_mode: 'HTML',
       }),
       signal: controller.signal,
@@ -38,8 +43,8 @@ export async function sendTelegramNotification(message: string) {
     if (!response.ok) {
       console.error('Telegram API Error:', await response.text());
     }
-  } catch (error: any) {
-    if (error.name === 'AbortError') {
+  } catch (error: unknown) {
+    if (getErrorName(error) === 'AbortError') {
       console.error('Telegram notification timed out');
     } else {
       console.error('Failed to send Telegram notification:', error);

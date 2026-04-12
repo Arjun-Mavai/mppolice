@@ -4,7 +4,7 @@ import { ImageResponse } from 'next/og';
 export const runtime = 'edge';
 
 // Image metadata
-export const alt = 'MPPSC Prelims 2026 Test Series & Notes';
+export const alt = 'MP Police Prelims 2026 Test Series & Notes';
 export const size = {
   width: 1200,
   height: 630,
@@ -75,7 +75,7 @@ export default async function Image() {
           }}
         >
           <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '0.05em', color: 'white' }}>
-            TARGET: MPPSC 2026
+            TARGET: MP Police 2026
           </span>
         </div>
 
@@ -180,7 +180,7 @@ export default async function Image() {
         }}
       >
         <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4f46e5' }} />
-        <span style={{ fontSize: 18, color: '#71717a', fontWeight: 500 }}>Mindful MPPSC</span>
+        <span style={{ fontSize: 18, color: '#71717a', fontWeight: 500 }}>Mindful MP Police</span>
       </div>
     </div>,
     {

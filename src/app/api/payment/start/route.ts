@@ -41,7 +41,7 @@ const startSchema = z.object({
   email: z.string().email().max(255),
   phone: z.string().min(10).max(15),
   source: z.string().optional(),
-  planType: z.enum(['lite', 'pro', 'upgrade']),
+  planType: z.enum(['pro', 'upgrade']), // Only pro and upgrade allowed for MP Police
 });
 
 export async function POST(req: Request) {
@@ -109,9 +109,10 @@ export async function POST(req: Request) {
         phone: phone.trim(),
         password: tempPassword,
         isActive: false,
-        role: 'user',
+        role: 'guest',
         metadata: JSON.stringify({ source }),
         planTier: 'free',
+        examType: 'mppolice',
       });
     }
 

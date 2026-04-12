@@ -176,7 +176,7 @@ function FactCard({
             }`}
           >
             <Globe className="h-3 w-3" />
-            MPPSC Fact
+            MP Police Fact
           </div>
         </div>
       </div>

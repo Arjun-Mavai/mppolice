@@ -1,0 +1,60 @@
+[
+  {
+    "questionText": "कुछ विद्यार्थी परीक्षा पास करते हैं। रवि एक विद्यार्थी है। निम्न में से कौन सा निष्कर्ष निश्चित रूप से सही है?",
+    "questionTextEn": "Some students pass the exam. Ravi is a student. Which conclusion is necessarily true?",
+    "options": [
+      { "id": "1", "text": "रवि निश्चित रूप से पास है", "text_en": "Ravi definitely passed" },
+      { "id": "2", "text": "रवि पास हो भी सकता है और न भी", "text_en": "Ravi may or may not pass" },
+      { "id": "3", "text": "रवि फेल है", "text_en": "Ravi failed" },
+      { "id": "4", "text": "कोई विद्यार्थी नहीं पास होता", "text_en": "No student passes" }
+    ],
+    "correctAnswer": "2",
+    "subject": "Logical Reasoning",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "'कुछ' से व्यक्तिगत के बारे में निश्चित नहीं कह सकते — रवि के लिए दोनों संभव।",
+    "explanationEn": "'Some' does not tell us about a particular student; Ravi may or may not pass.",
+    "extendedData": {
+      "explanation": {
+        "stream": "reasoning",
+        "chain": [
+          "'कुछ A B हैं' ⇒ हर A के B होना ज़रूरी नहीं।",
+          "रवि एक A है — उसके पास होने का कोई निश्चित निष्कर्ष नहीं।",
+          "अतः केवल संभावनात्मक कथन सुरक्षित।"
+        ],
+        "pattern": "Particular premise — no definite conclusion about individual",
+        "elimination": "1 और 3 दोनों अनुमान बिना आधार; 4 कथन विरोधाभासी।",
+        "memoryTip": "कुछ/कुछ नहीं वाले प्रश्नों में 'निश्चित' शब्द से सावधान।"
+      }
+    }
+  },
+  {
+    "questionText": "एक पैराग्राफ: 'पढ़ाई नियमित हो तो सफलता की संभावना बढ़ती है।' — इससे निकालें:",
+    "questionTextEn": "Paragraph: 'Regular study increases the chance of success.' — Infer:",
+    "options": [
+      { "id": "1", "text": "नियमितता सहायक हो सकती है", "text_en": "Regularity may help" },
+      { "id": "2", "text": "बिना पढ़े भी सफलता निश्चित", "text_en": "Success certain without study" },
+      { "id": "3", "text": "सफलता केवल किस्मत है", "text_en": "Success is only luck" },
+      { "id": "4", "text": "पढ़ाई व्यर्थ है", "text_en": "Study is useless" }
+    ],
+    "correctAnswer": "1",
+    "subject": "Logical Reasoning",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "पैराग्राफ 'संभावना बढ़ती' कहता है — मध्यम, सहायक निष्कर्ष।",
+    "explanationEn": "The text says probability increases — only a mild supportive inference is valid.",
+    "extendedData": {
+      "explanation": {
+        "stream": "reasoning",
+        "chain": [
+          "कीवर्ड: 'संभावना' — निश्चितता नहीं।",
+          "अतः 'हो सकती है' वाला विकल्प सबसे सुरक्षित।",
+          "अन्य विकल्प विपरीत या अति।"
+        ],
+        "pattern": "Reading comprehension — scope",
+        "elimination": "2,3,4 पैराग्राफ के विपरीत।",
+        "memoryTip": "पैराग्राफ से बाहर निष्कर्ष मत लाओ।"
+      }
+    }
+  }
+]

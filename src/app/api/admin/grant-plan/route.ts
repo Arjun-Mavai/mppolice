@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
@@ -24,7 +24,7 @@ const grantSchema = z.object({
     .union([z.string().min(10).max(15), z.literal('')])
     .optional()
     .transform((v) => (v === '' ? undefined : v)),
-  planTier: z.enum(['lite', 'pro']),
+  planTier: z.enum(['pro']),
   password: z
     .string()
     .min(8, 'Min 8 characters')
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   try {
     // Admin Auth
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    const token = cookieStore.get('mppolice_token')?.value;
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     }
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
+      where: (users, { eq }) => eq(mppscUsers.id, decoded.userId),
     });
     if (!adminUser || adminUser.role !== 'admin') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
@@ -67,41 +67,51 @@ export async function POST(request: Request) {
 
     const normalizedEmail = email.toLowerCase().trim();
     const months = accessMonths || PLAN_MONTHS[planTier] || 7;
-    const accessExpiresAt = new Date();
-    accessExpiresAt.setMonth(accessExpiresAt.getMonth() + months);
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Check existing user
+    // 🔍 1. Check existing user (Case-insensitive)
     const existing = await db.query.mppscUsers.findFirst({
-      where: eq(mppscUsers.email, normalizedEmail),
+      where: sql`LOWER(${mppscUsers.email}) = ${normalizedEmail}`,
     });
+
+    // 📅 2. Calculate Expiry (Extend if already active)
+    let accessExpiresAt = new Date();
+    if (existing && existing.accessExpiresAt && existing.isActive) {
+      // If user is already active, ADD months to existing expiry
+      accessExpiresAt = new Date(existing.accessExpiresAt);
+      accessExpiresAt.setMonth(accessExpiresAt.getMonth() + months);
+    } else {
+      // New user or inactive user: Start from now
+      accessExpiresAt.setMonth(accessExpiresAt.getMonth() + months);
+    }
 
     const grantMeta = {
       grantedBy: decoded.userId,
       grantedAt: new Date().toISOString(),
       grantReason: reason || 'Admin grant (no payment)',
       previousTier: existing?.planTier || null,
+      examType: 'mppolice'
     };
 
     if (existing) {
-      // Upgrade existing user
+      // 🔄 3. Upgrade/Extend existing user
       await db
         .update(mppscUsers)
         .set({
           name: name.trim(),
-          phone: phone?.trim(),
-          password: hashedPassword,
+          phone: phone?.trim() || existing.phone,
+          // Only update password if strictly needed, but here we follow schema
+          password: hashedPassword, 
           planTier,
           isSubscribed: true,
           isActive: true,
           accessExpiresAt,
+          examType: 'mppolice', // Ensure they are mapped to mppolice
           deletedAt: null,
-          metadata: JSON.stringify({
-            ...(typeof existing.metadata === 'string'
-              ? JSON.parse(existing.metadata || '{}')
-              : existing.metadata || {}),
+          metadata: {
+            ...(existing.metadata as any || {}),
             ...grantMeta,
-          }),
+          },
         })
         .where(eq(mppscUsers.id, existing.id));
 
@@ -118,18 +128,19 @@ export async function POST(request: Request) {
           months,
           reason: grantMeta.grantReason,
           isUpgrade: true,
+          newExpiry: accessExpiresAt.toISOString(),
         },
       });
 
       return NextResponse.json({
         success: true,
-        message: `${name} upgraded to ${planTier} (${months} months) — existing user updated`,
+        message: `Plan granted! ${name}'s access extended by ${months} months (Valid till: ${accessExpiresAt.toLocaleDateString()})`,
         userId: existing.id,
         isNew: false,
       });
     }
 
-    // Create new user
+    // ✨ 4. Create new user
     const { v4: uuidv4 } = await import('uuid');
     const userId = uuidv4();
 
@@ -137,14 +148,15 @@ export async function POST(request: Request) {
       id: userId,
       email: normalizedEmail,
       name: name.trim(),
-      phone: phone?.trim(),
+      phone: phone?.trim() || null,
       password: hashedPassword,
       planTier,
       isSubscribed: true,
       isActive: true,
       role: 'guest',
+      examType: 'mppolice',
       accessExpiresAt,
-      metadata: JSON.stringify(grantMeta),
+      metadata: grantMeta,
     });
 
     // ── Log Activity ──────────────────────────────────────────────
@@ -169,7 +181,7 @@ export async function POST(request: Request) {
       userId,
       isNew: true,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.issues[0]?.message || 'Invalid input' },

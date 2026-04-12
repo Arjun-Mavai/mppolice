@@ -38,7 +38,7 @@ export default function EmailTemplate({
             letterSpacing: '-0.5px',
           }}
         >
-          MPPSC Prelims - 2026
+          MP Police Prelims - 2026
         </h1>
         <p
           style={{
@@ -78,7 +78,7 @@ export default function EmailTemplate({
 
         <p style={{ fontSize: '15px', marginBottom: '16px', color: '#374151' }}>
           Welcome aboard! Your <strong style={{ color: '#0a0a0a' }}>{planName}</strong> plan is
-          activated. You&apos;ve taken the first step towards cracking MPPSC — and that takes
+          activated. You&apos;ve taken the first step towards cracking MP Police — and that takes
           courage. 💪
         </p>
 
@@ -119,7 +119,7 @@ export default function EmailTemplate({
           }}
         >
           <p style={{ fontSize: '14px', color: '#475569', margin: '0', fontStyle: 'italic' }}>
-            &quot;सफलता उन्हीं को मिलती है जो मेहनत करते हैं।&quot; — Your MPPSC journey starts now.
+            &quot;सफलता उन्हीं को मिलती है जो मेहनत करते हैं।&quot; — Your MP Police journey starts now.
             Consistent practice is the key. We&apos;re here to help you every step of the way.
           </p>
         </div>
@@ -191,10 +191,10 @@ export default function EmailTemplate({
         }}
       >
         <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 4px 0', fontWeight: '600' }}>
-          Mindful MPPSC — Smart Test Series
+          Mindful MP Police — Smart Test Series
         </p>
         <p style={{ fontSize: '11px', color: '#9ca3af', margin: '0' }}>
-          Secure • Trusted • Built for MPPSC Aspirants
+          Secure • Trusted • Built for MP Police Aspirants
         </p>
       </div>
     </div>

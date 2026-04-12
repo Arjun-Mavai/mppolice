@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
     // ── Admin Auth Check ────────────────────────────────────────
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    const token = cookieStore.get('mppolice_token')?.value;
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized: Admin session required' }, { status: 401 });
     }
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
+      where: (u, { eq }) => eq(u.id, decoded.userId),
     });
     if (!adminUser || adminUser.role !== 'admin') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
@@ -66,13 +66,15 @@ export async function POST(request: Request) {
     }
 
     // ── Find Active User ────────────────────────────────────────
-    const users = await db
+    const dbUsers = await db
       .select({ id: mppscUsers.id, name: mppscUsers.name })
       .from(mppscUsers)
-      .where(and(eq(mppscUsers.email, email.toLowerCase().trim()), isNull(mppscUsers.deletedAt)))
+      .where(
+        and(eq(mppscUsers.email, email.toLowerCase().trim()), isNull(mppscUsers.deletedAt))
+      )
       .limit(1);
 
-    const user = users[0];
+    const user = dbUsers[0];
     if (!user) {
       return NextResponse.json({ error: 'No active user found with this email' }, { status: 404 });
     }
@@ -87,7 +89,7 @@ export async function POST(request: Request) {
       success: true,
       message: `Password reset for ${user.name || email}. User can login with new password.`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Password reset error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

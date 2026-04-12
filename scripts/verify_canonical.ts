@@ -15,8 +15,8 @@ async function main() {
   for (const row of result) {
     const title = row.title;
     // Check if matches pattern
-    if (title.includes('MPPSC State Service Prelims') && title.includes('Paper 1') || 
-        title.includes('MPPSC राज्य सेवा प्रारंभिक') && title.includes('पेपर 1')) {
+    if (title.includes('MP Police State Service Prelims') && title.includes('Paper 1') || 
+        title.includes('MP Police राज्य सेवा प्रारंभिक') && title.includes('पेपर 1')) {
       const enMatch = title.match(/20\d{2}/);
       const year = enMatch ? enMatch[0] : 'N/A';
       console.log(year + ': ' + row.id + ' - ' + title + ' (' + row.totalQuestions + ' Qs)');
@@ -25,8 +25,8 @@ async function main() {
   
   // Now verify question orders for 2025 test
   const test2025 = result.find(t => t.title.includes('2025') && 
-    (t.title.includes('MPPSC State Service Prelims') && t.title.includes('Paper 1') || 
-     t.title.includes('MPPSC राज्य सेवा प्रारंभिक') && t.title.includes('पेपर 1')));
+    (t.title.includes('MP Police State Service Prelims') && t.title.includes('Paper 1') || 
+     t.title.includes('MP Police राज्य सेवा प्रारंभिक') && t.title.includes('पेपर 1')));
   
   if (test2025) {
     console.log('\n=== Sample: 2025 Test Question Orders ===');

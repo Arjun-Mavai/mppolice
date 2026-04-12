@@ -11,7 +11,7 @@ export function GuestResultClient({ userId }: { userId?: string }) {
   const { result, clearResult } = useGuestResultStore();
   
   // Get guest name from localStorage
-  const guestName = typeof window !== 'undefined' ? localStorage.getItem('mppsc_guest_name') : null;
+  const guestName = typeof window !== 'undefined' ? localStorage.getItem('mppolice_guest_name') : null;
 
   useEffect(() => {
     if (!result) {

@@ -100,7 +100,7 @@ export function OverallWeightage({
             <div className="flex flex-col gap-1">
               <div className={cn("mb-1 flex items-center gap-2 text-[10px] font-black tracking-[0.2em] uppercase", theme === 'light' ? "text-[#86868B]" : "text-slate-500")}>
                 <div className={cn("h-1.5 w-1.5 rounded-full", theme === 'light' ? "bg-indigo-500" : "bg-emerald-500")} />
-                {isHindi ? 'MPPSC प्रिलिम्स' : 'MPPSC Prelims'}
+                {isHindi ? 'MP Police प्रिलिम्स' : 'MP Police Prelims'}
               </div>
               <h3 className={cn("flex items-center gap-3 text-2xl font-black tracking-tight sm:text-3xl", theme === 'light' ? "text-indigo-600" : "text-amber-500")}>
                 {isHindi ? 'कुल वेटेज' : 'Overall Weightage'}

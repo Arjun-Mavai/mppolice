@@ -1,10 +1,18 @@
 'use client';
 
-import React, { useEffect, useState, useTransition, useDeferredValue, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState, useTransition, useMemo, useCallback } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen, Calendar, Layers, LayoutGrid, Sparkles } from 'lucide-react';
+import {
+  ArrowLeft,
+  BookOpen,
+  Brain,
+  Calculator,
+  FlaskConical,
+  Layers,
+  Sparkles,
+} from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { PYQCard } from './PYQCard';
@@ -17,6 +25,12 @@ import { Fragment } from 'react';
 import { TransitionLink } from '@/components/ui/transition-link';
 import { useQueryClient } from '@tanstack/react-query';
 import { getSubjectPartAccess } from './actions';
+import {
+  extractCollectionsFromTests,
+  testMatchesCollection,
+  testMatchesUiBucket,
+} from '@/lib/mppolice/pyq-hub-filters';
+import type { UiBucket } from '@/lib/mppolice/syllabus-types';
 
 // --- Types ---
 interface Test {
@@ -33,83 +47,84 @@ interface Test {
   attemptsLeft?: number;
   maxRetries?: number | null;
   year?: number;
+  tags?: unknown;
 }
 
 interface PYQPageClientProps {
   initialTests: Test[];
+  initialMockTests?: Test[];
   subjectStats: Record<string, number>;
   isLoggedIn?: boolean;
   mode?: string;
+  initialTab?: string;
+  initialBucket?: string;
+  initialCollection?: string;
 }
 
-// --- Constants ---
+// --- Constants (MP Police 4-tab UI) ---
 const SUBJECTS = [
   {
-    name: 'MP GK',
+    name: 'General Knowledge',
     icon: BookOpen,
     color: 'amber' as const,
-    description: 'History, Geography, Polity & Culture of MP',
+    description: 'Static GK, polity, economy, current affairs',
   },
   {
-    name: 'History',
-    icon: Calendar,
-    color: 'pink' as const,
-    description: 'Ancient, Medieval & Modern India',
-  },
-  {
-    name: 'Geography',
-    icon: LayoutGrid,
+    name: 'General Science',
+    icon: FlaskConical,
     color: 'emerald' as const,
-    description: 'Physical, Indian & World Geography',
+    description: 'Physics, chemistry, biology',
   },
   {
-    name: 'Polity',
-    icon: Layers,
+    name: 'Logical Reasoning',
+    icon: Brain,
     color: 'blue' as const,
-    description: 'Constitution, Governance & Systems',
+    description: 'Verbal & non-verbal reasoning',
   },
   {
-    name: 'Economy',
-    icon: Layers,
-    color: 'amber' as const,
-    description: 'Indian Economy & Planning',
-  },
-  {
-    name: 'Science',
-    icon: Layers,
+    name: 'Quantitative Aptitude',
+    icon: Calculator,
     color: 'pink' as const,
-    description: 'Physics, Chemistry, Biology & Tech',
+    description: 'Mental ability & arithmetic',
   },
-  {
-    name: 'ICT',
-    icon: Layers,
-    color: 'emerald' as const,
-    description: 'Information & Communication Technology',
-  },
-  {
-    name: 'Current Affairs',
-    icon: Calendar,
-    color: 'blue' as const,
-    description: 'National & International Events',
-  },
-  {
-    name: 'Misc',
-    icon: Layers,
-    color: 'amber' as const,
-    description: 'Other topics and uncategorized questions',
-  },
+];
+
+const BUCKET_PILLS: { id: UiBucket; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'general_knowledge', label: 'General Knowledge' },
+  { id: 'general_science', label: 'General Science' },
+  { id: 'logical_reasoning', label: 'Logical Reasoning' },
+  { id: 'quantitative_aptitude', label: 'Quantitative Aptitude' },
 ];
 
 export default function PYQPageClient({
   initialTests,
+  initialMockTests = [],
   subjectStats,
   isLoggedIn,
   mode,
+  initialTab,
+  initialBucket,
+  initialCollection,
 }: PYQPageClientProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { language } = useSettingsStore();
   const [, startTransition] = useTransition();
+
+  const [primaryTab, setPrimaryTab] = useState<'mock' | 'pyq'>(
+    initialTab === 'mock' ? 'mock' : 'pyq'
+  );
+  const [uiBucket, setUiBucket] = useState<UiBucket>(() => {
+    const b = initialBucket || searchParams?.get('bucket');
+    const ok = BUCKET_PILLS.some((p) => p.id === b);
+    return ok && b ? (b as UiBucket) : 'all';
+  });
+  const [collection, setCollection] = useState(
+    initialCollection || searchParams?.get('collection') || 'all'
+  );
 
   // --- State ---
   const [viewMode, setViewMode] = useState<'year' | 'subject' | 'all-subjects'>(
@@ -119,8 +134,21 @@ export default function PYQPageClient({
   const [paywallOpen, setPaywallOpen] = useState(false);
 
   // Dialog State
-  const [selectedSubject, setSelectedSubject] = useState<string|null>(null);
-  const [isNavigatingToIntelligence, setIsNavigatingToIntelligence] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+
+  const collectionOptions = useMemo(() => {
+    const src = primaryTab === 'mock' ? initialMockTests : initialTests;
+    return ['all', ...extractCollectionsFromTests(src)];
+  }, [primaryTab, initialMockTests, initialTests]);
+
+  const filteredTests = useMemo(() => {
+    const base = primaryTab === 'mock' ? initialMockTests : initialTests;
+    return base.filter(
+      (t) =>
+        testMatchesUiBucket(t.tags, uiBucket) &&
+        testMatchesCollection(t.tags, collection === 'all' ? null : collection)
+    );
+  }, [primaryTab, initialMockTests, initialTests, uiBucket, collection]);
 
   // --- Handlers ---
   const handleYearClick = (test: Test) => {
@@ -128,13 +156,14 @@ export default function PYQPageClient({
       setPaywallOpen(true);
     } else {
       setLoadingTestId(test.id);
+      const playMode = primaryTab === 'mock' ? 'full' : 'pyq';
       trackFbCustomEvent('test_started', {
-        test_type: 'pyq_year',
+        test_type: primaryTab === 'mock' ? 'mock_series' : 'pyq_year',
         test_name: test.titleEn || test.title,
         test_id: test.id,
       });
       startTransition(() => {
-        router.push(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);
+        router.push(`/syllabus/quiz/play?mode=${playMode}&testId=${test.id}`);
       });
     }
   };
@@ -175,8 +204,30 @@ export default function PYQPageClient({
     });
   }, [router, isLoggedIn, subjectStats, queryClient]);
 
+  const syncHubQuery = useCallback(
+    (next: Partial<{ tab: string; bucket: string; collection: string }>) => {
+      const p = new URLSearchParams(searchParams?.toString() || '');
+      if (next.tab !== undefined) {
+        if (next.tab === 'pyq') p.delete('tab');
+        else p.set('tab', next.tab);
+      }
+      if (next.bucket !== undefined) {
+        if (next.bucket === 'all') p.delete('bucket');
+        else p.set('bucket', next.bucket);
+      }
+      if (next.collection !== undefined) {
+        if (next.collection === 'all') p.delete('collection');
+        else p.set('collection', next.collection);
+      }
+      const qs = p.toString();
+      const base = pathname || '/syllabus/quiz/pyq';
+      router.replace(qs ? `${base}?${qs}` : base);
+    },
+    [router, searchParams, pathname]
+  );
+
   return (
-    <div className="min-h-screen bg-slate-50 pb-32">
+    <div className="min-h-screen bg-slate-50 pb-36 md:pb-32">
       {/* Header */}
       <div className="sticky top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-md transition-all md:top-[89px]">
         <div className="mx-auto max-w-5xl px-4 pt-12 pb-4 sm:px-6 md:py-4 lg:px-8">
@@ -192,14 +243,104 @@ export default function PYQPageClient({
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">
-                  {language === 'hi' ? 'पिछले वर्ष के प्रश्न' : 'Previous Year Questions'}
-                </h1>
-                <p className="text-xs font-medium text-slate-500">
+                <h1 className="text-xl font-bold leading-snug text-slate-900 sm:text-2xl">
                   {language === 'hi'
-                    ? 'अपनी तैयारी को परखें पुराने प्रश्नों के साथ'
-                    : 'Analyze trends & practice actual exam questions'}
+                    ? 'MP Police — पेपर व टेस्ट सीरीज'
+                    : 'MP Police — Papers & test series'}
+                </h1>
+                <p className="text-xs font-medium leading-relaxed text-slate-500 sm:text-sm">
+                  {language === 'hi'
+                    ? 'PYPs: आधिकारिक / मेमोरी बेस्ड 100 प्रश्न। मॉक: फुल लेंथ अभ्यास। नीचे विषय वाइज़ अभ्यास भी।'
+                    : 'PYPs: official & memory-based 100-Q papers. Mocks: full-length practice. Subject-wise practice below.'}
                 </p>
+              </div>
+            </div>
+
+            {/* Mock vs PYP + collections + 4-tab buckets */}
+            <div className="mt-4 flex flex-col gap-3">
+              <div className="flex w-full max-w-lg rounded-xl bg-slate-100 p-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPrimaryTab('mock');
+                    setUiBucket('all');
+                    setCollection('all');
+                    syncHubQuery({ tab: 'mock', bucket: 'all', collection: 'all' });
+                  }}
+                  className={cn(
+                    'flex-1 rounded-lg py-2 text-sm font-semibold transition-all',
+                    primaryTab === 'mock'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  )}
+                >
+                  {language === 'hi' ? 'मॉक टेस्ट' : 'Mock Tests'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPrimaryTab('pyq');
+                    setUiBucket('all');
+                    setCollection('all');
+                    syncHubQuery({ tab: 'pyq', bucket: 'all', collection: 'all' });
+                  }}
+                  className={cn(
+                    'flex-1 rounded-lg py-2 text-sm font-semibold transition-all',
+                    primaryTab === 'pyq'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  )}
+                >
+                  {language === 'hi' ? 'पिछले वर्ष (PYP)' : 'PYPs'}
+                </button>
+              </div>
+
+              {collectionOptions.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {collectionOptions.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => {
+                        setCollection(c);
+                        syncHubQuery({
+                          collection: c,
+                        });
+                      }}
+                      className={cn(
+                        'shrink-0 rounded-full border px-3 py-1 text-xs font-semibold',
+                        collection === c
+                          ? 'border-blue-500 bg-blue-50 text-blue-800'
+                          : 'border-slate-200 bg-white text-slate-600'
+                      )}
+                    >
+                      {c === 'all' ? (language === 'hi' ? 'सभी' : 'All collections') : c}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-2">
+                {BUCKET_PILLS.map((b) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => {
+                      setUiBucket(b.id);
+                      syncHubQuery({ bucket: b.id });
+                    }}
+                    className={cn(
+                      'rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors',
+                      uiBucket === b.id
+                        ? 'border-slate-800 bg-slate-800 text-white'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                    )}
+                  >
+                    {language === 'hi' && b.id === 'all'
+                      ? 'सभी'
+                      : b.label}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -230,39 +371,6 @@ export default function PYQPageClient({
                 </button>
               </div>
             </div>
-
-            {/* Insights Shortcuts */}
-            {!isLoggedIn ? null : (
-              <div className="mt-4 flex flex-wrap justify-center gap-4">
-                {/* Premium Intelligence */}
-                <div 
-                  onMouseEnter={() => router.prefetch('/syllabus/quiz/pyq/intelligence')}
-                  onClick={() => setIsNavigatingToIntelligence(true)}
-                  className="rounded-xl bg-gradient-to-r from-pink-500 via-red-500 via-yellow-500 to-green-500 p-[1.5px] shadow-sm transition-transform hover:scale-[1.02]"
-                >
-                  <Button
-                    asChild
-                    disabled={isNavigatingToIntelligence}
-                    className="inline-flex h-full w-full items-center gap-2 rounded-[10px] bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 disabled:opacity-80"
-                  >
-                    <TransitionLink
-                      href="/syllabus/quiz/pyq/intelligence"
-                      transitionTypes={['slide']}
-                    >
-                      {isNavigatingToIntelligence ? (
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
-                      ) : (
-                        <Sparkles className="h-4 w-4 text-amber-500" />
-                      )}
-                      {isNavigatingToIntelligence 
-                        ? (language === 'hi' ? 'लोड हो रहा है...' : 'Loading...')
-                        : (language === 'hi' ? 'विशेषज्ञ PYQ इनसाइट्स' : 'Expert PYQ Insights')
-                      }
-                    </TransitionLink>
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -309,7 +417,7 @@ export default function PYQPageClient({
 
         {/* Year Wise View */}
         <div className={viewMode !== 'year' ? 'hidden' : 'space-y-4'}>
-          {initialTests.map((test, idx) => (
+          {filteredTests.map((test, idx) => (
             <QuizListItem
               key={test.id}
               index={idx}
@@ -339,10 +447,12 @@ export default function PYQPageClient({
               }}
             />
           ))}
-          {initialTests.length === 0 && (
+          {filteredTests.length === 0 && (
             <div className="py-20 text-center">
               <p className="font-medium text-slate-400">
-                {language === 'hi' ? 'कोई PYQ उपलब्ध नहीं।' : 'No Previous Year Papers available.'}
+                {language === 'hi'
+                  ? 'इस फ़िल्टर के लिए कोई टेस्ट नहीं।'
+                  : 'No tests for this filter.'}
               </p>
             </div>
           )}

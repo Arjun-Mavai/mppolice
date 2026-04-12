@@ -23,10 +23,10 @@ const yearMap = {
 
 // Try different possible database files
 const possibleDbs = [
-  './mppsc_local.db',
-  './local_mppsc.db', 
+  './mppolice_local.db',
+  './local_mppolice.db', 
   './local_test.db',
-  './mppsc_local_dev.db'
+  './mppolice_local_dev.db'
 ];
 
 function findDatabase() {

@@ -77,7 +77,7 @@ export async function getOverallWeightageSubjectData(limit?: number): Promise<Ov
         textEn: q.textEn,
         year: getYearFromTestId(q.testId),
         qNo: q.order,
-        testTitle: `MPPSC Prelims ${getYearFromTestId(q.testId)}`,
+        testTitle: `MP Police Prelims ${getYearFromTestId(q.testId)}`,
         testId: q.testId,
         options: q.options,
         correctAnswer: q.correctAnswer,

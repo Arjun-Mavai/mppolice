@@ -82,6 +82,8 @@ export async function getUserDashboardData(): Promise<UserWithStats[]> {
     .where(
       and(
         isNull(mppscUsers.deletedAt),
+        // 🔒 Exam Type Isolation: Only show MP Police users
+        sql`(${mppscUsers.examType} = 'mppolice' OR ${mppscUsers.examType} = 'all')`,
         // Exclude admin
         sql`${mppscUsers.role} != 'admin'`
       )

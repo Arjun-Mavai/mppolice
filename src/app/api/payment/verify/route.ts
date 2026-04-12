@@ -179,7 +179,7 @@ export async function POST(req: Request) {
     // Resend API se beautiful email bhejo jisme Magic Link ho.
     const resend = new Resend(process.env.RESEND_API_KEY);
 
-    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
+    const fromName = process.env.EMAIL_FROM_NAME || 'MP Police 2026';
     const fromAddress =
       process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
@@ -191,7 +191,7 @@ export async function POST(req: Request) {
     const { error: emailError } = await resend.emails.send({
       from: fromEmail,
       to: [user.email],
-      subject: '🎉 Welcome to MPPSC ZEN — Set Your Password',
+      subject: '🎉 Welcome to Mindful MP Police — Set Your Password',
       react: EmailTemplate({ name: user.name || 'Student', actionUrl, planName: planLabel }),
     });
 

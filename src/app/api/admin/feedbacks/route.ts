@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { feedbacks, mppscUsers } from '@/db/schema';
 import { cookies } from 'next/headers';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 
 export async function GET(request: Request) {
   try {
     // Verify Admin
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    const token = cookieStore.get('mppolice_token')?.value;
 
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
     // Check role
     const user = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
+      where: (users, { eq }) => eq(mppscUsers.id, decoded.userId),
       columns: { role: true },
     });
 
@@ -28,7 +28,11 @@ export async function GET(request: Request) {
     }
 
     // Fetch Feedbacks
-    const data = await db.select().from(feedbacks).orderBy(desc(feedbacks.createdAt));
+    const data = await db
+      .select()
+      .from(feedbacks)
+      .where(sql`(${feedbacks.examType} = 'mppolice' OR ${feedbacks.examType} = 'all')`)
+      .orderBy(desc(feedbacks.createdAt));
 
     return NextResponse.json({ feedbacks: data });
   } catch (error) {

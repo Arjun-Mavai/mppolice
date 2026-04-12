@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { tests, userAttempts, questions, attemptAnswers, syllabusTopics } from '@/db/schema';
-import { eq, asc, desc, and, inArray, sql } from 'drizzle-orm';
+import { eq, asc, desc, and, inArray, sql, or } from 'drizzle-orm';
 import { unstable_cache, revalidateTag } from 'next/cache';
 import { verifyAuth } from '@/lib/auth';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
@@ -32,9 +32,12 @@ export const getCachedPYQTests = unstable_cache(
         displayOrder: tests.displayOrder,
         isHidden: tests.isHidden,
         createdAt: tests.createdAt,
+        tags: tests.tags,
       })
       .from(tests)
-      .where(and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false)))
+      .where(
+        and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false), eq(tests.examType, 'mppolice'))
+      )
       .orderBy(asc(tests.displayOrder), desc(tests.createdAt));
 
     return pyqTests.map((test) => ({
@@ -46,12 +49,55 @@ export const getCachedPYQTests = unstable_cache(
   { revalidate: 60, tags: ['tests'] }
 );
 
+/** Mock / full-length style tests (non-PYQ) for MP Police hub */
+export const getCachedMppoliceMockTests = unstable_cache(
+  async () => {
+    const rows = await db
+      .select({
+        id: tests.id,
+        title: tests.title,
+        titleEn: tests.titleEn,
+        description: tests.description,
+        slug: tests.slug,
+        durationMinutes: tests.durationMinutes,
+        totalQuestions: tests.totalQuestions,
+        totalMarks: tests.totalMarks,
+        type: tests.type,
+        isPro: tests.isPro,
+        isFreeAccess: tests.isFreeAccess,
+        isLiteAccess: tests.isLiteAccess,
+        isProAccess: tests.isProAccess,
+        displayOrder: tests.displayOrder,
+        createdAt: tests.createdAt,
+        tags: tests.tags,
+      })
+      .from(tests)
+      .where(
+        and(
+          eq(tests.isHidden, false),
+          eq(tests.examType, 'mppolice'),
+          inArray(tests.type, ['FLT', 'POLICE_CONSTABLE', 'POLICE_SI', 'UNIT', 'TOPIC', 'CSAT'])
+        )
+      )
+      .orderBy(asc(tests.displayOrder), desc(tests.createdAt));
+
+    return rows.map((test) => ({
+      ...test,
+      year: test.title.match(/\d{4}/)?.[0] || new Date(test.createdAt!).getFullYear().toString(),
+    }));
+  },
+  ['mppolice-mock-tests-v1'],
+  { revalidate: 60, tags: ['tests'] }
+);
+
 export const getCachedFLTTests = unstable_cache(
   async () => {
     return await db
       .select()
       .from(tests)
-      .where(and(eq(tests.type, 'FLT'), eq(tests.isHidden, false)))
+      .where(
+        and(eq(tests.type, 'FLT'), eq(tests.isHidden, false), eq(tests.examType, 'mppolice'))
+      )
       .orderBy(asc(tests.displayOrder));
   },
   ['flt-tests-list'],
@@ -63,7 +109,9 @@ export const getCachedCSATTests = unstable_cache(
     return await db
       .select()
       .from(tests)
-      .where(and(eq(tests.type, 'CSAT'), eq(tests.isHidden, false)))
+      .where(
+        and(eq(tests.type, 'CSAT'), eq(tests.isHidden, false), eq(tests.examType, 'mppolice'))
+      )
       .orderBy(asc(tests.displayOrder), desc(tests.createdAt));
   },
   ['csat-tests-list'],
@@ -145,7 +193,8 @@ export async function getTestByUnitId(unitId: string) {
       eq(tests.unitId, validatedUnitId),
       // We look for 'UNIT' type tests specifically.
       // If multiple exist, we take the first one (usually there's only one "Unit Test" per unit).
-      eq(tests.type, 'UNIT')
+      eq(tests.type, 'UNIT'),
+      eq(tests.examType, 'mppolice')
     ),
     with: {
       questions: {
@@ -165,7 +214,10 @@ const fetchTestWithQuestionsData = async (testId: string) => {
 
   // Fetch Test with questions in single query
   const test = await db.query.tests.findFirst({
-    where: eq(tests.id, validatedId),
+    where: and(
+      eq(tests.id, validatedId),
+      or(eq(tests.examType, 'mppolice'), eq(tests.examType, 'all'))
+    ),
     with: {
       questions: {
         orderBy: asc(questions.order),

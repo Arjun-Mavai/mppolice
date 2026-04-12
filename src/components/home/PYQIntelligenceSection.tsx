@@ -4,7 +4,7 @@
  * PYQIntelligenceSection — Marketing showcase for PYQ Analysis & Facts features.
  * Design matches existing home sections: 2-col layout, dark slate-900 card on right.
  * NO links — pure marketing/conversion section.
- * Real MPPSC Prelims data: 2020-2025 = 6 papers × ~100 Qs each.
+ * Real MP Police Prelims data: 2020-2025 = 6 papers × ~100 Qs each.
  */
 
 import React from 'react';
@@ -13,7 +13,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useSettingsStore } from '@/store/useSettingsStore';
 
-// Real topic weight data based on MPPSC Prelims 2020-2025 pattern
+// Real topic weight data based on MP Police Prelims 2020-2025 pattern
 const TOPIC_DATA = [
   { topicHi: 'मध्यप्रदेश सामान्य ज्ञान', topicEn: 'MP General Knowledge', pct: 92, delta: '36 Qs', color: 'from-emerald-500 to-teal-400', badge: '📍' },
   { topicHi: 'पर्यावरण & जलवायु', topicEn: 'Environment & Climate', pct: 78, delta: 'High', color: 'from-green-500 to-emerald-400', badge: '🌿' },
@@ -21,7 +21,7 @@ const TOPIC_DATA = [
   { topicHi: 'विज्ञान & प्रौद्योगिकी', topicEn: 'Science & Technology', pct: 52, delta: 'Rising', color: 'from-cyan-500 to-blue-400', badge: '🔬' },
 ];
 
-// Real year-wise question counts (MPPSC Prelims Paper 1, approx 100 Qs each)
+// Real year-wise question counts (MP Police Prelims Paper 1, approx 100 Qs each)
 const YEAR_BARS = [
   { year: '2020', count: 100, pct: 82 },
   { year: '2021', count: 100, pct: 86 },
@@ -60,8 +60,8 @@ export function PYQIntelligenceSection() {
 
             <p className="text-lg leading-relaxed font-medium text-slate-600">
               {isHindi
-                ? 'MPPSC Prelims के 2020-2025 के 600+ प्रश्नों का गहरा विश्लेषण। Topic-wise trends, rising subjects और high-yield facts — सब एक जगह, ताकि आप 20% पढ़ाई से 80% सवाल cover कर सकें।'
-                : 'Deep analysis of 600+ MPPSC Prelims questions from 2020–2025. Topic trends, rising subjects, and high-yield facts — so you can cover 80% of questions with just 20% of the syllabus.'}
+                ? 'MP Police Prelims के 2020-2025 के 600+ प्रश्नों का गहरा विश्लेषण। Topic-wise trends, rising subjects और high-yield facts — सब एक जगह, ताकि आप 20% पढ़ाई से 80% सवाल cover कर सकें।'
+                : 'Deep analysis of 600+ MP Police Prelims questions from 2020–2025. Topic trends, rising subjects, and high-yield facts — so you can cover 80% of questions with just 20% of the syllabus.'}
             </p>
 
             <div className="flex flex-wrap gap-2.5">
@@ -96,7 +96,7 @@ export function PYQIntelligenceSection() {
                 <div className="relative flex items-center justify-between">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">
-                      {isHindi ? 'Smart PYQ इंटेलिजेंस · MPPSC' : 'Smart PYQ Intelligence · MPPSC'}
+                      {isHindi ? 'Smart PYQ इंटेलिजेंस · MP Police' : 'Smart PYQ Intelligence · MP Police'}
                     </p>
                     <p className="mt-1 text-xl font-black text-white">
                       {isHindi ? 'टॉप राइज़िंग टॉपिक्स 2025' : 'Top Rising Topics 2025'}

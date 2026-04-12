@@ -5,9 +5,10 @@ import { syllabusTopics } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { logger } from '@/lib/logger';
+import { getErrorMessage } from '@/lib/errors';
 
 export async function uploadSyllabusData(jsonData: string, secretKey: string) {
-  if (secretKey !== process.env.ADMIN_SECRET_KEY && secretKey !== 'mppsc_admin_2026') {
+  if (secretKey !== process.env.ADMIN_SECRET_KEY && secretKey !== 'mppolice_admin_2026') {
     return { success: false, message: 'Invalid Admin Key' };
   }
 
@@ -43,8 +44,8 @@ export async function uploadSyllabusData(jsonData: string, secretKey: string) {
       success: true,
       message: `Successfully uploaded ${topicsToInsert.length} topics for ${data.unitId}`,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Upload Error:', error);
-    return { success: false, message: 'Server Error: ' + error.message };
+    return { success: false, message: 'Server Error: ' + getErrorMessage(error) };
   }
 }

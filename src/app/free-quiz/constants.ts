@@ -1,10 +1,10 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🏛️ MPPSC UNIT CONSTANTS — 10 units ka subject mapping
+// 🏛️ MP Police UNIT CONSTANTS — 10 units ka subject mapping
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Filter modal, listing page, aur tags me use hoga
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-export const MPPSC_UNITS = [
+export const MP_Police_UNITS = [
   { id: 'unit_1', subject: 'History', subjectHi: 'भारत का इतिहास' },
   { id: 'unit_2', subject: 'MP Culture', subjectHi: 'म.प्र. इतिहास एवं संस्कृति' },
   { id: 'unit_3', subject: 'Geography', subjectHi: 'भारत का भूगोल' },

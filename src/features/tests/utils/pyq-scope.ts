@@ -6,10 +6,10 @@ const normalizeWhitespace = (value: string): string => value.replace(/\s+/g, ' '
 export function getScopedStateServiceYear(title: string): number | null {
   const normalized = normalizeWhitespace(title);
 
-  const enMatch = normalized.match(/MPPSC State Service Prelims.*? (20\d{2}).*?Paper 1/i);
+  const enMatch = normalized.match(/MP Police State Service Prelims.*? (20\d{2}).*?Paper 1/i);
   if (enMatch) return Number(enMatch[1]);
 
-  const hiMatch = normalized.match(/MPPSC राज्य सेवा प्रारंभिक.*? (20\d{2}).*?पेपर 1/);
+  const hiMatch = normalized.match(/MP Police राज्य सेवा प्रारंभिक.*? (20\d{2}).*?पेपर 1/);
   if (hiMatch) return Number(hiMatch[1]);
 
   return null;

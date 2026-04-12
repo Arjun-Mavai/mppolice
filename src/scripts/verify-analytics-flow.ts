@@ -18,8 +18,8 @@ async function main() {
     id: userId,
     name: 'Test User',
     email: userEmail,
-    password: 'mock_password_123', // Required field
-    // role is not in schema
+    password: 'mock_password_123',
+    examType: 'mppolice',
   });
   console.log(`✅ User inserted into DB.`);
 
@@ -68,9 +68,9 @@ async function main() {
     );
     // We should fix this if we want "Random Question" mode to work with persistence.
     // OR we use a testId that DOES have questions (like the seeded Unit 1 or FLT).
-    // Let's use 'mppsc-flt-mock-1' which we know has questions with subjects.
+    // Let's use 'mppolice-flt-mock-1' which we know has questions with subjects.
     const fltTest = await db.query.tests.findFirst({
-      where: (t, { eq }) => eq(t.slug, 'mppsc-flt-mock-1'),
+      where: (t, { eq }) => eq(t.slug, 'mppolice-flt-mock-1'),
     });
 
     if (fltTest) {

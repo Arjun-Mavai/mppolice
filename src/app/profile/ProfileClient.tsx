@@ -86,7 +86,7 @@ export default function ProfileClient({ user }: ProfileClientProps) {
       toast.success('Password updated! Logging out for security...');
       // Logout user after password change for security
       setTimeout(async () => {
-        await fetch('/api/auth/mppsc-logout', { method: 'POST' });
+        await fetch('/api/auth/mppolice-logout', { method: 'POST' });
         router.push('/login');
       }, 1500);
     } else {

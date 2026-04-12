@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { pricingConfig } from '@/db/schema';
+import { mppscUsers, pricingConfig } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import { revalidateTag } from 'next/cache';
@@ -50,7 +50,7 @@ export async function PUT(request: Request) {
   try {
     // Admin auth check
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    const token = cookieStore.get('mppolice_token')?.value;
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -62,7 +62,7 @@ export async function PUT(request: Request) {
     }
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
+      where: (u, { eq }) => eq(u.id, decoded.userId),
     });
     if (!adminUser || adminUser.role !== 'admin') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });

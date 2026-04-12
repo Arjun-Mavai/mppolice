@@ -11,11 +11,11 @@ import { eq } from 'drizzle-orm';
  * 2. SEO value h (Google se traffic la sake)
  * 3. Unique content h (duplicate/user-specific nahi)
  *
- * MPPSC keywords se related pages jyada priority do
- * jis se "MPPSC preparation", "MPPSC syllabus" etc search kare to mile
+ * MP Police keywords se related pages jyada priority do
+ * jis se "MP Police preparation", "MP Police syllabus" etc search kare to mile
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppsc.zenscroll.app';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppolice.zenscroll.app';
 
   // Static pages jo hamesha rahenge - ye h tumhara SEO ka backbone
   const staticPages: MetadataRoute.Sitemap = [
@@ -29,13 +29,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/syllabus`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
-      priority: 0.95, // "MPPSC syllabus" search ke liye gold mine
+      priority: 0.95, // "MP Police syllabus" search ke liye gold mine
     },
     {
       url: `${baseUrl}/syllabus/quiz`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
-      priority: 0.85, // "MPPSC test series" search ke liye
+      priority: 0.85, // "MP Police test series" search ke liye
     },
     {
       url: `${baseUrl}/blogs`,
@@ -53,7 +53,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/tests`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
-      priority: 0.85, // "MPPSC test series free" — high search volume
+      priority: 0.85, // "MP Police test series free" — high search volume
     },
     {
       url: `${baseUrl}/contact`,
@@ -70,7 +70,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    // Syllabus unit pages - "MPPSC unit 1/2/3..." search ke liye
+    // Syllabus unit pages - "MP Police unit 1/2/3..." search ke liye
     // Ye public pages h - koi bhi dekh sakta h (login ke bina bhi)
     const syllabusPages: MetadataRoute.Sitemap = Array.from({ length: 17 }, (_, i) => ({
       url: `${baseUrl}/syllabus/unit_${i + 1}`,
@@ -80,7 +80,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
     // Blog pages - ye h tumhara organic traffic ka engine
-    // "MPPSC preparation tips", "MPPSC 2026 strategy" etc search me aayega
+    // "MP Police preparation tips", "MP Police 2026 strategy" etc search me aayega
     const allBlogs = await db
       .select({
         slug: contentBlogs.slug,
@@ -108,7 +108,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: `${baseUrl}/syllabus/quiz/pyq`,
         lastModified: new Date(),
         changeFrequency: 'weekly' as const,
-        priority: 0.8, // "MPPSC previous year questions" = high value
+        priority: 0.8, // "MP Police previous year questions" = high value
       },
       {
         url: `${baseUrl}/syllabus/quiz/csat`,

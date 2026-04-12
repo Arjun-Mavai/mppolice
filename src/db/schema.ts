@@ -30,9 +30,9 @@ export const mppscUsers = sqliteTable(
     // Previous user ID — when lite→pro upgrade happens via soft-delete+recreate
     // Links to the old record for tracking migration history
     previousUserId: text('previous_user_id'),
-    // Exam type segregation - UPSC/MPPSC isolation
-    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all'] })
-      .default('mppsc')
+    // Exam type segregation - UPSC/MPPSC/MPPOLICE isolation
+    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+      .default('mppolice')
       .notNull(),
   },
   (table) => [index('idx_users_email').on(table.email)]
@@ -51,7 +51,7 @@ export const tests = sqliteTable(
     totalQuestions: integer('total_questions').default(0),
     totalMarks: integer('total_marks').notNull(),
     type: text('type', {
-      enum: ['FLT', 'UNIT', 'CSAT', 'PYQ', 'TOPIC', 'MISC', 'UPSC_PYQ', 'UPSC_FLT', 'UPSC_FREE_QUIZ'],
+      enum: ['FLT', 'UNIT', 'CSAT', 'PYQ', 'TOPIC', 'MISC', 'UPSC_PYQ', 'UPSC_FLT', 'UPSC_FREE_QUIZ', 'POLICE_CONSTABLE', 'POLICE_SI'],
     }).notNull(),
     unitId: text('unit_id'), // To link directly to a syllabus unit e.g., 'unit_1'
     topicId: text('topic_id'), // To link to specific topic ID from syllabusData
@@ -75,9 +75,9 @@ export const tests = sqliteTable(
     // Category cutoffs JSON for result analysis
     // e.g. { "UR_OPEN": 154, "UR_FEMALE": 150, "OBC_OPEN": 148, ... }
     cutoffs: text('cutoffs', { mode: 'json' }).$type<Record<string, number>>(),
-    // Exam type segregation - UPSC/MPPSC isolation
-    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all'] })
-      .default('mppsc')
+    // Exam type segregation - UPSC/MPPSC/MPPOLICE isolation
+    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+      .default('mppolice')
       .notNull(),
   },
   (table) => [
@@ -110,9 +110,9 @@ export const questions = sqliteTable(
     matchPairs: text('match_pairs', { mode: 'json' }), // JSON Array: [{ id: '1', label: 'A', match: 'B', ... }]
     extendedData: text('extended_data', { mode: 'json' }), // New flexible schema for UPSC statement/table questions
     deletedAt: integer('deleted_at', { mode: 'timestamp' }), // Soft delete support
-    // Exam type segregation - UPSC/MPPSC isolation
-    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all'] })
-      .default('mppsc')
+    // Exam type segregation - UPSC/MPPSC/MPPOLICE isolation
+    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+      .default('mppolice')
       .notNull(),
   },
   (table) => [index('idx_questions_subject').on(table.testId, table.subject)]
@@ -301,9 +301,9 @@ export const userAttempts = sqliteTable(
     isCompleted: integer('is_completed', { mode: 'boolean' }).default(false),
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
     deletedAt: integer('deleted_at', { mode: 'timestamp' }), // Soft delete support
-    // Exam type segregation - UPSC/MPPSC isolation
-    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all'] })
-      .default('mppsc')
+    // Exam type segregation - UPSC/MPPSC/MPPOLICE isolation
+    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+      .default('mppolice')
       .notNull(),
   },
   (table) => [
@@ -373,9 +373,9 @@ export const syllabusTopics = sqliteTable(
     isProAccess: integer('is_pro_access', { mode: 'boolean' }).default(true),
     imgUrl: text('img_url'), // For image support
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
-    // Exam type segregation - UPSC/MPPSC isolation
-    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all'] })
-      .default('mppsc')
+    // Exam type segregation - UPSC/MPPSC/MPPOLICE isolation
+    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+      .default('mppolice')
       .notNull(),
   },
   (table) => [index('unit_order_idx').on(table.unitId, table.order)]
@@ -385,7 +385,7 @@ export const syllabusTopics = sqliteTable(
 // null maxAttempts = unlimited
 export const testAttemptLimits = sqliteTable('test_attempt_limits', {
   testType: text('test_type', {
-    enum: ['FLT', 'UNIT', 'CSAT', 'PYQ', 'TOPIC', 'MISC', 'UPSC_PYQ', 'UPSC_FLT', 'UPSC_FREE_QUIZ'],
+    enum: ['FLT', 'UNIT', 'CSAT', 'PYQ', 'TOPIC', 'MISC', 'UPSC_PYQ', 'UPSC_FLT', 'UPSC_FREE_QUIZ', 'POLICE_CONSTABLE', 'POLICE_SI'],
   }).primaryKey(),
   maxAttempts: integer('max_attempts'), // null = unlimited
 });
@@ -399,8 +399,8 @@ export const contentBlogs = sqliteTable('content_blogs', {
   excerpt: text('excerpt'), // Auto-generated plain text summary (200-300 chars) that is SEO friendly
   content: text('content', { mode: 'json' }).notNull(), // Mixed content: text, images, etc.
   category: text('category').notNull(), // e.g., 'history', 'geography', 'current_affairs_mp'
-  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all'] })
-    .default('mppsc')
+  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+    .default('mppolice')
     .notNull(), // Blog exam type for segregation
   imageUrl: text('image_url'),
   readingTime: integer('reading_time'), // in minutes
@@ -457,9 +457,9 @@ export const supportTickets = sqliteTable('support_tickets', {
   message: text('message').notNull(),
   status: text('status', { enum: ['open', 'in_progress', 'resolved', 'closed'] }).default('open'),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
-  // Exam type segregation - UPSC/MPPSC isolation
-  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all'] })
-    .default('mppsc')
+  // Exam type segregation - UPSC/MPPSC/MPPOLICE isolation
+  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+    .default('mppolice')
     .notNull(),
 });
 
@@ -480,9 +480,9 @@ export const paymentExitReasons = sqliteTable('payment_exit_reasons', {
   reason: text('reason').notNull(),
   customReason: text('custom_reason'),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
-  // Exam type segregation - UPSC/MPPSC isolation
-  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all'] })
-    .default('mppsc')
+  // Exam type segregation - UPSC/MPPSC/MPPOLICE isolation
+  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+    .default('mppolice')
     .notNull(),
 });
 
@@ -538,9 +538,9 @@ export const freeQuizAttempts = sqliteTable(
     completedAt: integer('completed_at', { mode: 'timestamp' }).default(
       sql`(strftime('%s', 'now'))`
     ),
-    // Exam type segregation - UPSC/MPPSC isolation  
-    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all'] })
-      .default('mppsc')  // Preserve existing attempts as MPPSC
+    // Exam type segregation - UPSC/MPPSC/MPPOLICE isolation  
+    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+      .default('mppolice')  // Preserve existing attempts as MPPOLICE
       .notNull(),
   },
   (table) => [
@@ -566,9 +566,9 @@ export const feedbacks = sqliteTable(
     role: text('role'), // e.g., 'Aspirant', 'Selected Officer', 'Teacher'
     location: text('location'), // e.g., 'Indore', 'Bhopal'
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
-    // Exam type segregation - UPSC/MPPSC isolation
-    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all'] })
-      .default('mppsc')
+    // Exam type segregation - UPSC/MPPSC/MPPOLICE isolation
+    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+      .default('mppolice')
       .notNull(),
   },
   (table) => [
@@ -588,9 +588,9 @@ export const guests = sqliteTable(
     mobile: text('mobile'), // Primary identifier for upsert (last 10 digits stored)
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
     updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
-    // Exam type segregation - UPSC/MPPSC isolation  
-    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all'] })
-      .default('mppsc')  // Preserve existing guests as MPPSC
+    // Exam type segregation - UPSC/MPPSC/MPPOLICE isolation  
+    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+      .default('mppolice')  // Preserve existing guests as MPPOLICE
       .notNull(),
   },
   (table) => [
@@ -640,9 +640,9 @@ export const payments = sqliteTable(
     notes: text('notes', { mode: 'json' }),
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
     updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
-    // Exam type segregation - UPSC/MPPSC isolation
-    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all'] })
-      .default('mppsc')
+    // Exam type segregation - UPSC/MPPSC/MPPOLICE isolation
+    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+      .default('mppolice')
       .notNull(),
   },
   (table) => [
@@ -680,12 +680,12 @@ export const pricingConfig = sqliteTable('pricing_config', {
   // Lite plan pricing
   litePrice: integer('lite_price').default(99), // Current price ₹99
   liteOriginalPrice: integer('lite_original_price').default(299), // Strikethrough ₹299
-  liteValidityText: text('lite_validity_text').default('Valid till MPPSC 2026 Prelims'),
+  liteValidityText: text('lite_validity_text').default('Valid till MP Police Constable Exam'),
   liteMonths: integer('lite_months').default(8), // Shown as "~8 months"
   // Pro plan pricing
   proPrice: integer('pro_price').default(299), // Current price ₹299
   proOriginalPrice: integer('pro_original_price').default(999), // Strikethrough ₹999
-  proValidityText: text('pro_validity_text').default('Valid till MPPSC 2026 Mains'),
+  proValidityText: text('pro_validity_text').default('Valid till MP Police SI Exam'),
   proMonths: integer('pro_months').default(12), // Shown as "~12 months"
   // Upgrade pricing
   upgradePrice: integer('upgrade_price').default(199), // Lite→Pro difference
@@ -730,9 +730,9 @@ export const testFeedback = sqliteTable('test_feedback', {
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   
-  // Exam type segregation - UPSC/MPPSC isolation  
-  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all'] })
-    .default('mppsc')  // Preserve existing test feedback as MPPSC
+  // Exam type segregation - UPSC/MPPSC/MPPOLICE isolation  
+  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+    .default('mppolice')  // Preserve existing test feedback as MPPOLICE
     .notNull(),
 });
 

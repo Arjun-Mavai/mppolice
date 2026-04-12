@@ -45,8 +45,8 @@ const FAQS: QA[] = [
       hi: 'अगर एक्सेस समाप्त हो जाए या परीक्षा देरी से हो?',
     },
     answer: {
-      en: 'If MPPSC delays the exam, we extend your access — no extra charge. Admin can also extend your access anytime from the dashboard.',
-      hi: 'अगर MPPSC परीक्षा में देरी करता है, तो हम आपका एक्सेस बढ़ा देंगे — कोई अतिरिक्त शुल्क नहीं।',
+      en: 'If MP Police delays the exam, we extend your access — no extra charge. Admin can also extend your access anytime from the dashboard.',
+      hi: 'अगर MP Police परीक्षा में देरी करता है, तो हम आपका एक्सेस बढ़ा देंगे — कोई अतिरिक्त शुल्क नहीं।',
     },
   },
   {
@@ -92,7 +92,7 @@ export function SupportChat() {
       // Strategy 1: Check localStorage for guest name (from quiz)
       // This is set when guest users take tests
       if (typeof window !== 'undefined') {
-        const guestName = localStorage.getItem('mppsc_guest_name');
+        const guestName = localStorage.getItem('mppolice_guest_name');
         if (guestName && guestName.trim()) {
           // Sanitize and validate
           const sanitized = guestName.trim().slice(0, 50); // Max 50 chars
@@ -136,7 +136,7 @@ export function SupportChat() {
   if (pathname !== '/') return null;
 
   const handleWhatsApp = () => {
-    const message = 'Hi, I need help with the MPPSC App. My query is:';
+    const message = 'Hi, I need help with the MP Police App. My query is:';
     window.open(`https://wa.me/918766451748?text=${encodeURIComponent(message)}`, '_blank');
   };
 

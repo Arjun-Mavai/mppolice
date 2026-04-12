@@ -4,14 +4,14 @@ import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/jwt';
 import { db } from '@/db';
 import { payments, mppscUsers } from '@/db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 
 export async function GET(req: Request) {
   let payload: any;
   try {
     // Auth check — admin only
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    const token = cookieStore.get('mppolice_token')?.value;
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     payload = (await verifyToken(token)) as any;
@@ -38,6 +38,8 @@ export async function GET(req: Request) {
     const monthStart = new Date(todayStart);
     monthStart.setDate(monthStart.getDate() - 30);
 
+    const { and } = await import('drizzle-orm');
+
     // ── Fetch all captured payments with user info ──
     const allPayments = await db
       .select({
@@ -55,7 +57,12 @@ export async function GET(req: Request) {
       })
       .from(payments)
       .leftJoin(mppscUsers, eq(payments.userId, mppscUsers.id))
-      .where(eq(payments.status, 'captured'))
+      .where(
+        and(
+          eq(payments.status, 'captured'),
+          sql`(${mppscUsers.examType} = 'mppolice' OR ${mppscUsers.examType} = 'all')`
+        )
+      )
       .orderBy(desc(payments.createdAt));
 
     // ── Stats ──

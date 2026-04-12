@@ -91,7 +91,7 @@ export const LAST_NAMES = [
 
 // 🎯 Only MP + neighboring states: UP, Bihar, CG, Rajasthan
 export const CITIES = [
-  // Madhya Pradesh (Primary Focus - MPPSC)
+  // Madhya Pradesh (Primary Focus - MP Police)
   'Bhopal', 'Indore', 'Jabalpur', 'Gwalior', 'Ujjain', 'Sagar', 'Dewas', 'Satna',
   'Ratlam', 'Rewa', 'Chhindwara', 'Burhanpur', 'Khandwa', 'Shivpuri', 'Vidisha',
   'Morena', 'Bhind', 'Damoh', 'Hoshangabad', 'Katni', 'Neemuch', 'Mandsaur',

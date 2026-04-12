@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, KeyRound, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/errors';
 
 export default function AdminResetPasswordPage() {
   const [email, setEmail] = useState('');
@@ -24,7 +25,7 @@ export default function AdminResetPasswordPage() {
     setIsLoading(true);
     setResult(null);
     try {
-      const res = await fetch('/api/auth/mppsc-forgot-password', {
+      const res = await fetch('/api/auth/mppolice-forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, newPassword }),
@@ -36,8 +37,8 @@ export default function AdminResetPasswordPage() {
       toast.success('Password reset done!');
       setEmail('');
       setNewPassword('');
-    } catch (error: any) {
-      toast.error(error.message || 'Request failed');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error) || 'Request failed');
     } finally {
       setIsLoading(false);
     }

@@ -182,7 +182,7 @@ export function useQuizLogic({
    * 1. Mark test as submitted (UI updates)
    * 2. Save last question's time
    * 3. CHECK FEEDBACK: Has user given feedback on this device?
-   * 4. For logged-in users, call API to save attempt
+   * 4. For logged-in mppscUsers, call API to save attempt
    * 5. Handle errors gracefully
    */
   const handleSubmit = useCallback(async () => {
@@ -199,13 +199,13 @@ export function useQuizLogic({
         const { hasUserSubmittedFeedback } = await import('@/app/actions/feedback');
         
         // 1. Check LocalStorage (Global for device)
-        if (safeStorage.getItem('mppsc_feedback_given') === 'true') return false;
+        if (safeStorage.getItem('mppolice_feedback_given') === 'true') return false;
 
-        // 2. For logged-in users, check database
+        // 2. For logged-in mppscUsers, check database
         if (userId) {
           const submitted = await hasUserSubmittedFeedback();
           if (submitted) {
-            safeStorage.setItem('mppsc_feedback_given', 'true');
+            safeStorage.setItem('mppolice_feedback_given', 'true');
             return false;
           }
         }

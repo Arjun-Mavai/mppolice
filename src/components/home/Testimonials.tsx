@@ -15,7 +15,7 @@ const TESTIMONIALS = [
     role: 'Aspirant',
     location: 'Gwalior',
     comment:
-      'PYQs ke liye ek gazab ki cheez mili hai. Main abhi tak sirf ratta maar raha tha, par is website (mppsc.zenscroll.app) par explanation ka tarika ekdum alag hai',
+      'PYQs ke liye ek gazab ki cheez mili hai. Main abhi tak sirf ratta maar raha tha, par is website (mppolice.zenscroll.app) par explanation ka tarika ekdum alag hai',
     image: '/testimonials/arjun.png',
     stars: 5,
   },

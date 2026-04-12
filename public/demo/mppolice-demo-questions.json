@@ -1,0 +1,152 @@
+[
+  {
+    "questionText": "भारत की राजधानी क्या है?",
+    "questionTextEn": "What is the capital of India?",
+    "options": [
+      { "id": "1", "text": "मुंबई", "text_en": "Mumbai" },
+      { "id": "2", "text": "नई दिल्ली", "text_en": "New Delhi" },
+      { "id": "3", "text": "कोलकाता", "text_en": "Kolkata" },
+      { "id": "4", "text": "चेन्नई", "text_en": "Chennai" }
+    ],
+    "correctAnswer": "2",
+    "subject": "General Knowledge",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "नई दिल्ली भारत की राजधानी है।",
+    "explanationEn": "New Delhi is the capital of India.",
+    "extendedData": {
+      "explanation": {
+        "stream": "gk_science",
+        "facts": [
+          "नई दिल्ली: केंद्र शासित प्रदेश भी।",
+          "संसद, राष्ट्रपति भवन, सर्वोच्च न्यायालय यहीं।",
+          "वित्तीय राजधानी मुंबई अक्सर अलग पूछा जाता है।"
+        ],
+        "mnemonics": ["Delhi = D for Democracy seat (Union govt)."],
+        "related": ["भारत की राजभाषाएँ", "लोकसभा सीटें"],
+        "memoryTip": "राजधानी vs सबसे बड़ा शहर अलग हो सकते हैं।"
+      }
+    }
+  },
+  {
+    "questionText": "पानी का रासायनिक सूत्र क्या है?",
+    "questionTextEn": "What is the chemical formula of water?",
+    "options": [
+      { "id": "1", "text": "CO2", "text_en": "CO2" },
+      { "id": "2", "text": "H2O", "text_en": "H2O" },
+      { "id": "3", "text": "NaCl", "text_en": "NaCl" },
+      { "id": "4", "text": "O2", "text_en": "O2" }
+    ],
+    "correctAnswer": "2",
+    "subject": "General Science",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "पानी H2O है — दो हाइड्रोजन, एक ऑक्सीजन।",
+    "explanationEn": "Water is H2O — two hydrogen, one oxygen.",
+    "extendedData": {
+      "explanation": {
+        "stream": "gk_science",
+        "facts": [
+          "कोवेलेंट बंध H–O; द्रव जीवन के लिए अनिवार्य।",
+          "CO2 कार्बन डाइऑक्साइड; NaCl नमक।",
+          "O2 श्वसन गैस।"
+        ],
+        "mnemonics": ["H2O = 2 H + 1 O like triangle base."],
+        "related": ["वाष्पीकरण, क्वथनांक 100°C"],
+        "memoryTip": "सूत्र MCQ में सबसे छोटा सही अक्सर H2O।"
+      }
+    }
+  },
+  {
+    "questionText": "यदि सभी बिल्लियाँ कुत्ते हैं और सभी कुत्ते जानवर हैं, तो सभी बिल्लियाँ जानवर हैं। यह किस प्रकार का तर्क है?",
+    "questionTextEn": "If all cats are dogs and all dogs are animals, then all cats are animals. What kind of reasoning is this?",
+    "options": [
+      { "id": "1", "text": "अनुमान", "text_en": "Inductive" },
+      { "id": "2", "text": "घटनाक्रम", "text_en": "Sequential" },
+      { "id": "3", "text": "उपागम", "text_en": "Syllogistic" },
+      { "id": "4", "text": "काल्पनिक", "text_en": "Hypothetical" }
+    ],
+    "correctAnswer": "3",
+    "subject": "Logical Reasoning",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "दो कथनों से तीसरा निष्कर्ष — क्लासिक उपागम (syllogism)।",
+    "explanationEn": "Two premises lead to a conclusion — syllogistic reasoning.",
+    "extendedData": {
+      "explanation": {
+        "stream": "reasoning",
+        "chain": [
+          "मेजर: सभी कुत्ते जानवर।",
+          "माइनर: सभी बिल्लियाँ कुत्ते ⇒ बिल्लियाँ जानवरों के उपसमुच्चय में।",
+          "निष्कर्ष: सभी बिल्लियाँ जानवर — तार्किक श्रृंखला पूरी।"
+        ],
+        "pattern": "Categorical syllogism (transitivity-style)",
+        "elimination": "अनुमान: अनेक उदाहरणों से नियम — यहाँ सैद्धांतिक कथन दिए हैं।",
+        "memoryTip": "सभी A हैं B + सभी B हैं C ⇒ सभी A हैं C।"
+      }
+    }
+  },
+  {
+    "questionText": "15 का 20% कितना है?",
+    "questionTextEn": "What is 20% of 15?",
+    "options": [
+      { "id": "1", "text": "2", "text_en": "2" },
+      { "id": "2", "text": "3", "text_en": "3" },
+      { "id": "3", "text": "4", "text_en": "4" },
+      { "id": "4", "text": "5", "text_en": "5" }
+    ],
+    "correctAnswer": "2",
+    "subject": "Quantitative Aptitude",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "20% = एक पंचमांश; 15÷5 = 3।",
+    "explanationEn": "20% is one-fifth; 15/5 = 3.",
+    "extendedData": {
+      "explanation": {
+        "stream": "math_quant",
+        "steps": [
+          "20% = 20/100 = 1/5।",
+          "15 का पंचमांश = 15 × 1/5 = 3।",
+          "या: 15 × 0.2 = 3।"
+        ],
+        "shortcut": "20% = ÷5 जल्दी",
+        "trap": "15% of 20 भी 3 — गुणा commutative; प्रश्न पढ़ो किसका % निकालना है।",
+        "memoryTip": "10%=÷10, 20%=÷5, 25%=÷4 याद रखो।"
+      }
+    }
+  },
+  {
+    "questionType": "image",
+    "questionTextEn": "Pick the next figure in the pattern (replace image URL after upload).",
+    "question": {
+      "text": "नीचे दिए गए चित्र में अगला आकृति कौन सा होगा? (डेमो — नीचे वाला URL अपनी Uploadthing लिंक से बदलें)",
+      "image": "REPLACE_WITH_UPLOADTHING_URL_AFTER_UPLOAD"
+    },
+    "options": [
+      { "id": "1", "text": "", "image": "REPLACE_OPTION_A_URL_OPTIONAL" },
+      { "id": "2", "text": "", "image": "REPLACE_OPTION_B_URL_OPTIONAL" },
+      { "id": "3", "text": "", "image": "REPLACE_OPTION_C_URL_OPTIONAL" },
+      { "id": "4", "text": "", "image": "REPLACE_OPTION_D_URL_OPTIONAL" }
+    ],
+    "correctOption": "2",
+    "correctAnswer": "2",
+    "subject": "Logical Reasoning",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "डेमो: पैटर्न देखकर अगला आकृति चुनें — अभी URLs बदलें।",
+    "explanationEn": "Demo: choose next figure; replace placeholder URLs.",
+    "extendedData": {
+      "explanation": {
+        "stream": "reasoning",
+        "chain": [
+          "रोटेशन / मिरर / डॉट गिनती — पहले बदलाव लिखो।",
+          "एक स्टेप आगे बढ़ाओ।",
+          "विकल्प से मैच करो।"
+        ],
+        "pattern": "Non-verbal series",
+        "elimination": "एक बार में सब विकल्प मत देखो — पहले नियम।",
+        "memoryTip": "छोटे डेमो में image URL लगाओ तभी UI test पूरा होगा।"
+      }
+    }
+  }
+]

@@ -109,8 +109,8 @@ export const getCachedFreeQuizzes = unstable_cache(
           and(
             eq(tests.type, 'MISC'),
             eq(tests.isFreeAccess, true),
-            eq(tests.isHidden, false)
-            // eq(tests.examType, 'mppsc') // Temporarily commented to fix blank list
+            eq(tests.isHidden, false),
+            eq(tests.examType, 'mppolice')
           )
         )
         .orderBy(desc(tests.createdAt));
@@ -143,7 +143,7 @@ const fetchFreeQuizData = async (testId: string) => {
         eq(tests.type, 'MISC'),
         eq(tests.isFreeAccess, true),
         eq(tests.isHidden, false),
-        eq(tests.examType, 'mppsc')
+        eq(tests.examType, 'mppolice')
       )
     )
     .get();

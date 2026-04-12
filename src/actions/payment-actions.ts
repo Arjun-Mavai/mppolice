@@ -24,7 +24,7 @@ const startPaymentSchema = z.object({
   planType: z.enum(['lite', 'pro', 'upgrade']),
 });
 
-interface StartPaymentInput extends z.infer<typeof startPaymentSchema> {}
+type StartPaymentInput = z.infer<typeof startPaymentSchema>;
 
 /**
  * 💳 Start Payment (Server Action)
@@ -126,9 +126,10 @@ export async function startPayment(input: StartPaymentInput) {
         phone: phone.trim(),
         password: tempPassword,
         isActive: false,
-        role: 'user',
+        role: 'guest',
         metadata: JSON.stringify({ source }),
         planTier: 'free',
+        examType: 'mppolice',
       });
     }
 

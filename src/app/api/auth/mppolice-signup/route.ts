@@ -6,6 +6,7 @@ import { randomUUID } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
+import { getErrorCode, getErrorMessage } from '@/lib/errors';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🔐 ADMIN SIGNUP API — Sirf admin hi naya user bana sakta h
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
 
     // ── Admin Auth Check — sirf admin bana sakta h user ─────────
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    const token = cookieStore.get('mppolice_token')?.value;
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized: Admin session required' }, { status: 401 });
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
     }
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
+      where: (users, { eq }) => eq(mppscUsers.id, decoded.userId),
     });
 
     if (!adminUser || adminUser.role !== 'admin') {
@@ -161,6 +162,7 @@ export async function POST(request: Request) {
       planTier,
       isSubscribed,
       isActive: true, // New users are always active
+      examType: 'mppolice',
       accessExpiresAt,
       phone: phone?.trim() || null,
       metadata: metadata || null,
@@ -175,9 +177,10 @@ export async function POST(request: Request) {
       message: `Account created: ${name} (${planTier}) — access ${finalAccessMonths > 0 ? `${finalAccessMonths} months` : 'unlimited'}`,
       user: { id: userId, email, name, planTier, role, accessExpiresAt },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Signup error:', error);
-    if (error.code === 'SQLITE_CONSTRAINT' || error.message?.includes('UNIQUE')) {
+    const msg = getErrorMessage(error);
+    if (getErrorCode(error) === 'SQLITE_CONSTRAINT' || msg.includes('UNIQUE')) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
     }
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

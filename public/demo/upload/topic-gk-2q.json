@@ -1,0 +1,60 @@
+[
+  {
+    "questionText": "भारत की सबसे लंबी नदी कौन सी है?",
+    "questionTextEn": "Which is the longest river in India?",
+    "options": [
+      { "id": "1", "text": "गंगा", "text_en": "Ganga" },
+      { "id": "2", "text": "गोदावरी", "text_en": "Godavari" },
+      { "id": "3", "text": "कृष्णा", "text_en": "Krishna" },
+      { "id": "4", "text": "नर्मदा", "text_en": "Narmada" }
+    ],
+    "correctAnswer": "1",
+    "subject": "General Knowledge",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "भारत **भीतर** सबसे लंबी नदी गंगा मानी जाती है (कुल लंबाई के अनुसार)।",
+    "explanationEn": "Within India, the Ganga is considered the longest river by total length in the country.",
+    "extendedData": {
+      "explanation": {
+        "stream": "gk_science",
+        "facts": [
+          "गंगा: हिमालय से निकलकर बंगाल की खाड़ी में।",
+          "गोदावरी: दक्कन की 'दक्षिण गंगा' कहलाती है।",
+          "प्रश्न में 'India' शब्द पर ध्यान — सिंधु ज्यादातर Pakistan में।"
+        ],
+        "mnemonics": ["Ganga = longest in India (GK set)."],
+        "related": ["नदी घाटियाँ, डेल्टा, बांध — अक्सर PYQ में साथ आते हैं।"],
+        "memoryTip": "अगर 'peninsular longest' पूछे तो अक्सर गोदावरी — यहाँ wording 'India longest' = गंगा।"
+      }
+    }
+  },
+  {
+    "questionText": "हिमालय भारतीय उपमहाद्वीप को किस प्रकार की जलवायु से बचाता है?",
+    "questionTextEn": "The Himalayas protect the subcontinent mainly from which type of climate influence?",
+    "options": [
+      { "id": "1", "text": "उष्णकटिबंधीय मानसून", "text_en": "Tropical monsoon only" },
+      { "id": "2", "text": "मध्य एशिया की ठंडी हवाएँ", "text_en": "Cold Central Asian winds" },
+      { "id": "3", "text": "समुद्री ज्वार", "text_en": "Ocean tides" },
+      { "id": "4", "text": "रेगिस्तानी धूल", "text_en": "Desert dust only" }
+    ],
+    "correctAnswer": "2",
+    "subject": "General Knowledge",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "हिमालय उत्तर से आने वाली ठंडी मध्य एशियाई हवाओं को रोकता है।",
+    "explanationEn": "The Himalayas block cold continental air from Central Asia in winter.",
+    "extendedData": {
+      "explanation": {
+        "stream": "gk_science",
+        "facts": [
+          "हिमालय: प्राकृतिक बाधा (orographic barrier)।",
+          "सर्दियों में उत्तर-पूर्व मानसून/ठंडी लहरें — हिमालय भूमि को मध्यम बनाता है।",
+          "मानसून के लिए टिब्बत पठार व हिमालय की भूमिका अलग प्रश्न में आती है।"
+        ],
+        "mnemonics": ["Himalaya = wall against cold dry north winds."],
+        "related": ["Western Disturbance", "ऊँचाई पर तापमान कम"],
+        "memoryTip": "PYQ में 'बचाता है' + उत्तर दिशा → ठंडी हवाएँ।"
+      }
+    }
+  }
+]

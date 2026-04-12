@@ -57,7 +57,7 @@ import {
   type PYQWrongTopicInsight,
 } from '@/actions/pyq-intelligence';
 import { QuizHeader } from './quiz/QuizHeader';
-import { calculateMPPSCResult, getHighYieldFactsForQuestions } from '@/features/tests/actions/test-result';
+import { calculateMP_PoliceResult, getHighYieldFactsForQuestions } from '@/features/tests/actions/test-result';
 import { submitTestFeedback, hasUserSubmittedFeedback } from '@/app/actions/feedback';
 import { TestSeriesFeedbackModal } from '@/components/test-series-feedback-modal';
 import type { FeedbackFormType, FeedbackResponse } from '@/lib/schemas/feedback';
@@ -205,19 +205,19 @@ export function QuizResult({
     const checkFeedbackStatus = async () => {
       // 1. Check LocalStorage (Global for both guests and logged-in users)
       const hasFeedbackStorage =
-        typeof window !== 'undefined' ? localStorage.getItem('mppsc_feedback_given') : null;
+        typeof window !== 'undefined' ? localStorage.getItem('mppolice_feedback_given') : null;
       if (hasFeedbackStorage) {
         setShowFeedback(false);
         return;
       }
 
-      // 3. For logged-in users, check database
+      // 3. For logged-in mppscUsers, check database
       if (userId) {
         const submitted = await hasUserSubmittedFeedback();
         if (submitted) {
           setShowFeedback(false);
           // Sync with localStorage
-          if (typeof window !== 'undefined') localStorage.setItem('mppsc_feedback_given', 'true');
+          if (typeof window !== 'undefined') localStorage.setItem('mppolice_feedback_given', 'true');
           return;
         }
       }
@@ -235,7 +235,7 @@ export function QuizResult({
     try {
       // Get guest name from localStorage if active
       const guestName =
-        typeof window !== 'undefined' ? localStorage.getItem('mppsc_guest_name') : null;
+        typeof window !== 'undefined' ? localStorage.getItem('mppolice_guest_name') : null;
 
       const currentTestId = testId || 'guest-test-result';
       const testType = mode === 'pyq' ? 'pyq' : mode === 'full' ? 'premium' : 'free';
@@ -250,7 +250,7 @@ export function QuizResult({
 
       if (response.success) {
         // Sync with localStorage on success
-        if (typeof window !== 'undefined') localStorage.setItem('mppsc_feedback_given', 'true');
+        if (typeof window !== 'undefined') localStorage.setItem('mppolice_feedback_given', 'true');
       } else {
         logger.error('Failed to submit feedback', new Error(response.error), { category: 'ui' });
       }
@@ -662,7 +662,7 @@ export function QuizResult({
                   <div className="absolute inset-0 animate-[shimmer_3s_infinite] bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)] bg-[length:250%_250%]" />
                   <span className="relative flex items-center gap-1.5">
                     <Sparkles className="h-3 w-3 animate-pulse text-amber-400" />
-                    <span>Explore MPPSC 2026 Pro Platform 🚀</span>
+                    <span>Explore MP Police 2026 Pro Platform 🚀</span>
                     <ArrowRight className="h-3 w-3 text-amber-400 transition-transform group-hover:translate-x-1" />
                   </span>
                 </Link>
@@ -1431,11 +1431,8 @@ export function QuizResult({
                 <div className="hidden items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase md:flex">
                   <Link href="/dashboard" className="hover:text-slate-900">Dashboard</Link>
                   <ChevronRight size={10} />
-                  <Link href="/syllabus/quiz/pyq" className="hover:text-slate-900">Test Series</Link>
-                  <ChevronRight size={10} />
                   <span className="text-slate-600">Performance Intelligence</span>
                 </div>
-                
                 <h1 className="mt-1 flex items-center gap-2 text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600 border border-amber-100 sm:h-9 sm:w-9">
                      <Trophy className="h-4 w-4 sm:h-5 sm:w-5" />

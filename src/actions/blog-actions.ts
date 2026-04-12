@@ -8,6 +8,7 @@ import { verifyAuth } from '@/lib/auth';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { logger } from '@/lib/logger';
 import { CACHE } from '@/lib/cache';
+import { getErrorCode, getErrorMessage } from '@/lib/errors';
 import { eq } from 'drizzle-orm';
 import * as blogService from '@/services/blog-service';
 
@@ -97,6 +98,7 @@ export async function uploadBlog(data: any) {
       readingTime: parseInt(metadata.readingTime) || 5,
       content,
       contentType: metadata.type || 'blog',
+      examType: metadata.examType || 'mppolice',
       unitId: metadata.unit || null,
       topicId: metadata.topic || null, // Store the topic string directly as provided
       isPremium: metadata.isPremium !== undefined ? metadata.isPremium : true, // Legacy flag
@@ -114,12 +116,12 @@ export async function uploadBlog(data: any) {
     revalidateTag(CACHE.BLOGS.TAGS.DETAIL(metadata.slug), { expire: 0 }); // Bust detail cache
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Upload Blog Error:', error);
-    if (error.code === 'SQLITE_CONSTRAINT') {
+    if (getErrorCode(error) === 'SQLITE_CONSTRAINT') {
       return { success: false, error: 'Slug already exists' };
     }
-    return { success: false, error: error.message || 'Failed to create blog post' };
+    return { success: false, error: getErrorMessage(error) || 'Failed to create blog post' };
   }
 }
 
@@ -160,9 +162,9 @@ export async function toggleBlogPremium(blogId: string, isPremium: boolean) {
     }
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Toggle Blog Premium Error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 

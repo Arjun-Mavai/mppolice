@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { getErrorMessage } from '@/lib/errors';
 
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
@@ -18,7 +19,7 @@ export function signToken(payload: object) {
     // User ko laga "bhai app kharab hai" par actually JWT expire ho gaya tha.
     //
     // Now both are 30 days → user stays logged in for full cookie lifetime.
-    // Cookie: maxAge = 60*60*24*30 (set in mppsc-login/route.ts)
+    // Cookie: maxAge = 60*60*24*30 (set in mppolice-login/route.ts)
     // JWT:    expiresIn = '30d' (set here)
     return jwt.sign(payload, getJwtSecret(), { expiresIn: '30d' });
   } catch (error) {
@@ -30,8 +31,9 @@ export function signToken(payload: object) {
 export function verifyToken(token: string) {
   try {
     return jwt.verify(token, getJwtSecret());
-  } catch (error: any) {
-    if (error.message === 'jwt malformed' || error.message === 'invalid token') {
+  } catch (error: unknown) {
+    const msg = getErrorMessage(error);
+    if (msg === 'jwt malformed' || msg === 'invalid token') {
       return null;
     }
     console.error('Token verify error:', error);

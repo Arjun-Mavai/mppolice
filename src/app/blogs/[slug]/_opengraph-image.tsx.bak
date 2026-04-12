@@ -3,7 +3,7 @@ import { getBlogBySlug } from '@/services/blog-service';
 
 export const runtime = 'edge';
 
-export const alt = 'Mindful MPPSC Blog';
+export const alt = 'Mindful MP Police Blog';
 export const size = {
   width: 1200,
   height: 630,
@@ -16,7 +16,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
   const blog = await getBlogBySlug(slug);
 
   // Fallback title if blog not found (shouldn't happen in valid flows)
-  const title = blog?.title || 'Mindful MPPSC Blog';
+  const title = blog?.title || 'Mindful MP Police Blog';
 
   // If blog has an uploaded image, use it as the background with an overlay
   if (blog?.imageUrl) {
@@ -72,7 +72,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
               borderRadius: '12px',
             }}
           >
-            Mindful MPPSC 🎯
+            Mindful MP Police 🎯
           </div>
         </div>
       </div>,
@@ -106,7 +106,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
           color: 'rgba(255,255,255,0.8)',
         }}
       >
-        Mindful MPPSC 🌿
+        Mindful MP Police 🌿
       </div>
 
       <div
@@ -152,7 +152,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
           opacity: 0.7,
         }}
       >
-        mppsc.zenscroll.app
+        mppolice.zenscroll.app
       </div>
     </div>,
     { ...size }

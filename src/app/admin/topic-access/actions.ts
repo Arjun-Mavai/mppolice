@@ -13,7 +13,7 @@
 
 import { db } from '@/db';
 import { syllabusTopics } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 import { requireAdmin } from '@/lib/auth-admin';
 import { logger } from '@/lib/logger';
@@ -37,6 +37,7 @@ export async function getAllTopicsForAdmin() {
       isProAccess: syllabusTopics.isProAccess,
     })
     .from(syllabusTopics)
+    .where(eq(syllabusTopics.examType, 'mppolice'))
     .orderBy(syllabusTopics.unitId, syllabusTopics.order);
 
   return allTopics;
@@ -58,7 +59,7 @@ export async function toggleTopicAccess(
   await db
     .update(syllabusTopics)
     .set({ [field]: value })
-    .where(eq(syllabusTopics.id, topicId));
+    .where(and(eq(syllabusTopics.id, topicId), eq(syllabusTopics.examType, 'mppolice')));
 
   // Cache bust — syllabus pages re-fetch honge
   revalidateTag('syllabus', { expire: 0 });
@@ -83,7 +84,7 @@ export async function bulkUpdateTopicAccess(
   await db
     .update(syllabusTopics)
     .set({ [field]: value })
-    .where(eq(syllabusTopics.unitId, unitId));
+    .where(and(eq(syllabusTopics.unitId, unitId), eq(syllabusTopics.examType, 'mppolice')));
 
   revalidateTag('syllabus', { expire: 0 });
   revalidateTag('topics', { expire: 0 });

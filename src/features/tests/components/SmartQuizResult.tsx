@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { calculateMPPSCResult, SmartResultResponse } from '@/features/tests/actions/test-result';
+import { calculateMP_PoliceResult, SmartResultResponse } from '@/features/tests/actions/test-result';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { cn } from '@/lib/utils';
 import { QuizHeader } from './quiz/QuizHeader';
@@ -25,7 +25,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
+import { StructuredExplanationBlock } from '@/components/mppolice/StructuredExplanation';
+import { QUIZ_CONSTANTS } from '@/config/quiz';
 
 interface SmartQuizResultProps {
   testId?: string;
@@ -56,7 +58,7 @@ export function SmartQuizResult({
     async function fetchResult() {
       if (!testId || initialResult) return;
       try {
-        const res = await calculateMPPSCResult(testId);
+        const res = await calculateMP_PoliceResult(testId);
         if ('error' in res) {
           console.error(res.error);
         } else {
@@ -248,11 +250,15 @@ export function SmartQuizResult({
             <div className="mb-6 grid grid-cols-3 gap-4">
               <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 text-center transition-all hover:bg-emerald-50">
                 <div className="text-2xl font-black text-emerald-700">{result.correct}</div>
-                <div className="text-[10px] font-black tracking-widest text-emerald-600 uppercase">Correct (+3)</div>
+                <div className="text-[10px] font-black tracking-widest text-emerald-600 uppercase">
+                  Correct (+{QUIZ_CONSTANTS.MARKS_PER_QUESTION})
+                </div>
               </div>
               <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-3 text-center transition-all hover:bg-rose-50">
                 <div className="text-2xl font-black text-rose-700">{result.wrong}</div>
-                <div className="text-[10px] font-black tracking-widest text-rose-600 uppercase">Penalty (-1)</div>
+                <div className="text-[10px] font-black tracking-widest text-rose-600 uppercase">
+                  Wrong (-{QUIZ_CONSTANTS.NEGATIVE_MARKING})
+                </div>
               </div>
               <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 text-center transition-all hover:bg-slate-50">
                 <div className="text-2xl font-black text-slate-700">{result.skipped}</div>
@@ -460,11 +466,13 @@ export function SmartQuizResult({
                       )}
                     </div>
 
-                    {!isLocked && q.explanation && (
-                      <div className="mt-3 border-t pt-2 text-xs text-slate-600">
-                        <span className="mb-1 block font-semibold">Explanation:</span>
-                        {q.explanation}
-                      </div>
+                    {!isLocked && (
+                      <StructuredExplanationBlock
+                        extendedData={q.extendedData}
+                        explanation={q.explanation}
+                        explanationEn={q.explanationEn}
+                        isHi={isHi}
+                      />
                     )}
                   </CardContent>
                 </Card>

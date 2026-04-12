@@ -15,11 +15,29 @@
 
 import { db } from '@/db';
 import { tests, questions, syllabusTopics, testAttemptLimits, userAttempts, attemptAnswers, testLeaderboard } from '@/db/schema';
-import { eq, inArray, desc } from 'drizzle-orm';
+import { eq, inArray, desc, and, sql } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 import { requireAdmin } from '@/lib/auth-admin';
 import { logger } from '@/lib/logger';
+import { getErrorMessage } from '@/lib/errors';
 import { cachedData, CACHE } from '@/lib/cache';
+
+/** Admin panel: only MP Police product tests (exclude mppsc/upsc rows). */
+const mppoliceTestsFilter = sql`(${tests.examType} = 'mppolice')`;
+
+async function assertMppoliceTest(testId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const row = await db
+    .select({ examType: tests.examType })
+    .from(tests)
+    .where(and(eq(tests.id, testId), mppoliceTestsFilter))
+    .get();
+  if (!row) {
+    const anyRow = await db.select({ id: tests.id }).from(tests).where(eq(tests.id, testId)).get();
+    if (!anyRow) return { ok: false, error: 'Test not found' };
+    return { ok: false, error: 'Test is not MP Police content' };
+  }
+  return { ok: true };
+}
 
 /**
  * getAllTestsForAdmin
@@ -51,6 +69,7 @@ export async function getAllTestsForAdmin() {
       createdAt: tests.createdAt,
     })
     .from(tests)
+    .where(mppoliceTestsFilter)
     .orderBy(desc(tests.createdAt));
 
   // TOPIC tests ke liye syllabusTopics se proper name fetch karo
@@ -103,10 +122,13 @@ export async function toggleTestAccess(
 ) {
   await requireAdmin();
 
+  const gate = await assertMppoliceTest(testId);
+  if (!gate.ok) return { success: false, error: gate.error };
+
   await db
     .update(tests)
     .set({ [field]: value })
-    .where(eq(tests.id, testId));
+    .where(and(eq(tests.id, testId), mppoliceTestsFilter));
 
   // Cache bust — sab test lists fresh ho jayenge
   revalidateTag('tests', { expire: 0 });
@@ -134,7 +156,7 @@ export async function bulkUpdateTestAccess(
   await db
     .update(tests)
     .set({ [field]: value })
-    .where(eq(tests.type, testType));
+    .where(and(eq(tests.type, testType), mppoliceTestsFilter));
 
   revalidateTag('tests', { expire: 0 });
   revalidateTag('tests-list', { expire: 0 });
@@ -152,7 +174,13 @@ export async function bulkUpdateTestAccess(
 export async function toggleTestHidden(testId: string, isHidden: boolean) {
   await requireAdmin();
 
-  await db.update(tests).set({ isHidden }).where(eq(tests.id, testId));
+  const gate = await assertMppoliceTest(testId);
+  if (!gate.ok) return { success: false, error: gate.error };
+
+  await db
+    .update(tests)
+    .set({ isHidden })
+    .where(and(eq(tests.id, testId), mppoliceTestsFilter));
 
   // yaha tests ka cache burst ho raha h
 
@@ -172,6 +200,9 @@ export async function updateTestTitle(testId: string, title: string, titleEn: st
 
   if (!title.trim()) return { success: false, error: 'Hindi Title cannot be empty' };
 
+  const gate = await assertMppoliceTest(testId);
+  if (!gate.ok) return { success: false, error: gate.error };
+
   await db
     .update(tests)
     .set({
@@ -179,7 +210,7 @@ export async function updateTestTitle(testId: string, title: string, titleEn: st
       titleEn: titleEn ? titleEn.trim() : null,
       updatedAt: new Date(),
     })
-    .where(eq(tests.id, testId));
+    .where(and(eq(tests.id, testId), mppoliceTestsFilter));
 
   revalidateTag('tests', { expire: 0 });
   revalidateTag('tests-list', { expire: 0 });
@@ -194,7 +225,13 @@ export async function updateTestTitle(testId: string, title: string, titleEn: st
 export async function updateTestDisplayOrder(testId: string, displayOrder: number) {
   await requireAdmin();
 
-  await db.update(tests).set({ displayOrder }).where(eq(tests.id, testId));
+  const gate = await assertMppoliceTest(testId);
+  if (!gate.ok) return { success: false, error: gate.error };
+
+  await db
+    .update(tests)
+    .set({ displayOrder })
+    .where(and(eq(tests.id, testId), mppoliceTestsFilter));
 
   revalidateTag('tests', { expire: 0 });
   revalidateTag('tests-list', { expire: 0 });
@@ -272,7 +309,10 @@ export async function bulkUpdateMaxRetries(
 ) {
   await requireAdmin();
 
-  await db.update(tests).set({ maxRetries }).where(eq(tests.type, testType));
+  await db
+    .update(tests)
+    .set({ maxRetries })
+    .where(and(eq(tests.type, testType), mppoliceTestsFilter));
 
   revalidateTag('tests', { expire: 0 });
   revalidateTag('tests-list', { expire: 0 });
@@ -302,18 +342,18 @@ export async function deleteTest(testId: string) {
     const test = await db
       .select({ id: tests.id, title: tests.title, type: tests.type })
       .from(tests)
-      .where(eq(tests.id, testId))
+      .where(and(eq(tests.id, testId), mppoliceTestsFilter))
       .get();
 
     if (!test) {
-      return { success: false, error: 'Test not found bhai' };
+      return { success: false, error: 'Test not found or not MP Police content' };
     }
 
     // Leaderboard entries manually delete (no FK constraint on testId)
     await db.delete(testLeaderboard).where(eq(testLeaderboard.testId, testId));
 
     // Test delete — CASCADE se questions, userAttempts, attemptAnswers sab ud jayenge
-    await db.delete(tests).where(eq(tests.id, testId));
+    await db.delete(tests).where(and(eq(tests.id, testId), mppoliceTestsFilter));
 
     // Cache bust — sab test lists fresh ho jayenge
     revalidateTag('tests', { expire: 0 });
@@ -322,9 +362,9 @@ export async function deleteTest(testId: string) {
 
     logger.info(`Test deleted: ${testId} → "${test.title}" (${test.type})`);
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Delete Test Error:', error);
-    return { success: false, error: error.message || 'Test delete fail ho gaya' };
+    return { success: false, error: getErrorMessage(error) || 'Test delete fail ho gaya' };
   }
 }
 
@@ -347,10 +387,10 @@ export async function getTestWithQuestions(testId: string) {
       tags: tests.tags,
     })
     .from(tests)
-    .where(eq(tests.id, testId))
+    .where(and(eq(tests.id, testId), mppoliceTestsFilter))
     .get();
 
-  if (!test) return { success: false as const, error: 'Test not found' };
+  if (!test) return { success: false as const, error: 'Test not found or not MP Police content' };
 
   const qs = await db
     .select()
@@ -392,10 +432,10 @@ export async function updateTestContent(
     const test = await db
       .select({ id: tests.id, title: tests.title })
       .from(tests)
-      .where(eq(tests.id, testId))
+      .where(and(eq(tests.id, testId), mppoliceTestsFilter))
       .get();
 
-    if (!test) return { success: false, error: 'Test not found' };
+    if (!test) return { success: false, error: 'Test not found or not MP Police content' };
 
     let parsed;
     try {
@@ -420,28 +460,30 @@ export async function updateTestContent(
 
     // Step 2: Naye questions insert karo
     const { nanoid } = await import('nanoid');
-    const newQuestions = parsed.map((q: any, idx: number) => ({
+    const newQuestions = parsed.map((q: Record<string, unknown>, idx: number) => ({
       id: nanoid(),
       testId,
-      questionText: q.questionText,
-      questionTextEn: q.questionTextEn || null,
+      questionText: q.questionText as string,
+      questionTextEn: (q.questionTextEn as string) || null,
       options: JSON.stringify(q.options),
-      correctAnswer: q.correctAnswer,
-      explanation: q.explanation || null,
-      explanationEn: q.explanationEn || null,
-      marks: q.marks || 2,
-      negativeMarks: q.negativeMarks || 0,
-      idealTime: q.idealTime || 60,
-      order: q.order || idx + 1,
-      subject: q.subject || 'General',
-      type: q.type || 'standard',
-      matchPairs: q.matchPairs || null,
+      correctAnswer: String(q.correctAnswer ?? ''),
+      explanation: (q.explanation as string) || null,
+      explanationEn: (q.explanationEn as string) || null,
+      marks: (q.marks as number) || 2,
+      negativeMarks: (q.negativeMarks as number) || 0,
+      idealTime: (q.idealTime as number) || 60,
+      order: (q.order as number) || idx + 1,
+      subject: (q.subject as string) || 'General',
+      type: (q.type as 'standard' | 'matching') || 'standard',
+      matchPairs: q.matchPairs ?? null,
+      extendedData: q.extendedData ?? null,
+      examType: 'mppolice' as const,
     }));
 
     await db.insert(questions).values(newQuestions);
 
     // Step 3: Test metadata update (marks + count)
-    const totalMarks = newQuestions.reduce((sum: number, q: any) => sum + (q.marks || 0), 0);
+    const totalMarks = newQuestions.reduce((sum: number, q) => sum + (q.marks || 0), 0);
     await db
       .update(tests)
       .set({
@@ -449,7 +491,7 @@ export async function updateTestContent(
         totalMarks,
         updatedAt: new Date(),
       })
-      .where(eq(tests.id, testId));
+      .where(and(eq(tests.id, testId), mppoliceTestsFilter));
 
     // Cache bust
     revalidateTag('tests', { expire: 0 });
@@ -458,9 +500,9 @@ export async function updateTestContent(
 
     logger.info(`Test content updated: ${testId} → ${newQuestions.length} questions`);
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Update Test Content Error:', error);
-    return { success: false, error: error.message || 'Update fail ho gaya' };
+    return { success: false, error: getErrorMessage(error) || 'Update fail ho gaya' };
   }
 }
 
@@ -477,10 +519,13 @@ export async function toggleInstantMode(testId: string, disable: boolean) {
   await requireAdmin();
 
   try {
+    const gate = await assertMppoliceTest(testId);
+    if (!gate.ok) return { success: false, error: gate.error };
+
     const test = await db
       .select({ tags: tests.tags })
       .from(tests)
-      .where(eq(tests.id, testId))
+      .where(and(eq(tests.id, testId), mppoliceTestsFilter))
       .get();
 
     if (!test) return { success: false, error: 'Test not found' };
@@ -504,19 +549,17 @@ export async function toggleInstantMode(testId: string, disable: boolean) {
     await db
       .update(tests)
       .set({ tags: currentTags, updatedAt: new Date() })
-      .where(eq(tests.id, testId));
+      .where(and(eq(tests.id, testId), mppoliceTestsFilter));
 
     revalidateTag('tests', { expire: 0 });
     revalidateTag('tests-list', { expire: 0 });
 
     logger.info(`Instant mode ${disable ? 'disabled' : 'enabled'}: ${testId}`);
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Toggle Instant Mode Error:', error);
-    const errorMessage =
-      error && typeof error.message === 'string' && error.message.trim()
-        ? error.message
-        : String(error || 'Unknown error while toggling instant mode');
+    const msg = getErrorMessage(error).trim();
+    const errorMessage = msg || 'Unknown error while toggling instant mode';
     return { success: false, error: errorMessage };
   }
 }

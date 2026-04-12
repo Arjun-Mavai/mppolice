@@ -24,14 +24,14 @@ export default function AboutPage() {
           <h1 className="font-display mb-6 text-4xl leading-tight font-black text-slate-900 md:text-6xl">
             Revolutionizing{' '}
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-              MPPSC Prep
+              MP Police Prep
             </span>{' '}
             with Science.
           </h1>
           <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600 md:text-xl">
             We don't just give you Tests. We give you the{' '}
             <span className="font-semibold text-slate-800">memory hooks</span> to retain them
-            forever. Mindful MPPSC is MP's first bilingual mnemonic-based learning platform.
+            forever. Mindful MP Police is MP's first bilingual mnemonic-based learning platform.
           </p>
         </div>
       </section>
@@ -58,10 +58,10 @@ export default function AboutPage() {
         <div className="mx-auto max-w-3xl">
           <div className="prose prose-lg prose-slate mx-auto">
             <h2 className="font-display mb-6 text-3xl font-bold text-slate-900">
-              Why we started Mindful MPPSC?
+              Why we started Mindful MP Police?
             </h2>
             <p className="mb-6 text-slate-600">
-              The MPPSC syllabus is vast. History, Geography, Polity, MP GK, Ethics — the list goes
+              The MP Police syllabus is vast. History, Geography, Polity, MP GK, Ethics — the list goes
               on. Most aspirants spend 80% of their time <strong>reading</strong> and only 20%{' '}
               <strong>retaining</strong>.
             </p>
@@ -83,7 +83,7 @@ export default function AboutPage() {
               <ul className="space-y-3">
                 {[
                   'Bilingual Content (English + Hindi) for maximum reach',
-                  'Entire MPPSC syllabus Analysis for each topic',
+                  'Entire MP Police syllabus Analysis for each topic',
                   'Smart Analytics to identify your weak spots instantly',
                   'Curated PYQs (Previous Year Questions) from last 5+ years',
                 ].map((item) => (
@@ -105,7 +105,7 @@ export default function AboutPage() {
       <section className="bg-slate-900 px-4 py-20 text-center text-white">
         <div className="mx-auto max-w-2xl">
           <h2 className="font-display mb-6 text-3xl font-bold md:text-4xl">
-            Ready to ace MPPSC 2026?
+            Ready to ace MP Police 2026?
           </h2>
           <p className="mb-8 text-lg text-slate-400">
             Join thousands of serious aspirants who are studying smarter, not harder.

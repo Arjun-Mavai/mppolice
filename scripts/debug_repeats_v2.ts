@@ -52,8 +52,8 @@ async function main() {
     
   for (const [year, candidates] of testsByYear.entries()) {
       candidates.sort((a, b) => {
-          const isHindiA = a.title.includes('MPPSC राज्य सेवा');
-          const isHindiB = b.title.includes('MPPSC राज्य सेवा');
+          const isHindiA = a.title.includes('MP Police राज्य सेवा');
+          const isHindiB = b.title.includes('MP Police राज्य सेवा');
           if (isHindiA && !isHindiB) return -1;
           if (!isHindiA && isHindiB) return 1;
           return (b.totalQuestions || 0) - (a.totalQuestions || 0);

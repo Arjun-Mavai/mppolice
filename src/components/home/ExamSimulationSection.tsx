@@ -311,8 +311,8 @@ export function ExamSimulationSection() {
             </h2>
             <p className="text-lg leading-relaxed font-medium text-slate-400">
               {language === 'hi'
-                ? 'MPPSC 2026 के नए पैटर्न (3 अंक/प्रश्न, 1/3 नेगेटिव मार्किंग) पर आधारित लेटेस्ट सिमुलेशन। नए 300-अंकों वाले फॉर्मेट में अपनी तैयारी परखें।'
-                : 'Master the new MPPSC 2026 pattern: 3 marks per question with 1/3rd negative marking. Real-time simulation for the latest 300-mark format.'}
+                ? 'MP Police 2026 के नए पैटर्न (3 अंक/प्रश्न, 1/3 नेगेटिव मार्किंग) पर आधारित लेटेस्ट सिमुलेशन। नए 300-अंकों वाले फॉर्मेट में अपनी तैयारी परखें।'
+                : 'Master the new MP Police 2026 pattern: 3 marks per question with 1/3rd negative marking. Real-time simulation for the latest 300-mark format.'}
             </p>
             <Button
               onClick={handleMockStart}

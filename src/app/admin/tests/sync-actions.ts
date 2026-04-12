@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { tests } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 import { requireAdmin } from '@/lib/auth-admin';
 import { getSubjectWisePYQStats } from '@/features/tests/actions/pyq-analytics';
@@ -32,7 +32,7 @@ export async function syncSubjectParts() {
 
       // Check if exists
       const existing = await db.query.tests.findFirst({
-        where: eq(tests.slug, slug),
+        where: and(eq(tests.slug, slug), eq(tests.examType, 'mppolice')),
       });
 
       if (!existing) {
@@ -51,6 +51,7 @@ export async function syncSubjectParts() {
           isLiteAccess: false,
           isProAccess: true,
           tags: ['subject-series', `subject-${subjectSlug}`, `part-${part}`],
+          examType: 'mppolice',
         });
         createdTests.push(title);
       } else {

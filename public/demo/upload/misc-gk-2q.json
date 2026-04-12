@@ -1,0 +1,60 @@
+[
+  {
+    "questionText": "भारतीय संविधान कब लागू हुआ?",
+    "questionTextEn": "When did the Constitution of India come into effect?",
+    "options": [
+      { "id": "1", "text": "15 अगस्त 1947", "text_en": "15 Aug 1947" },
+      { "id": "2", "text": "26 जनवरी 1950", "text_en": "26 Jan 1950" },
+      { "id": "3", "text": "26 नवंबर 1949", "text_en": "26 Nov 1949" },
+      { "id": "4", "text": "2 अक्टूबर 1950", "text_en": "2 Oct 1950" }
+    ],
+    "correctAnswer": "2",
+    "subject": "General Knowledge",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "संविधान 26 जनवरी 1950 को लागू हुआ — इसलिए गणतंत्र दिवस।",
+    "explanationEn": "The Constitution took effect on 26 January 1950 (Republic Day).",
+    "extendedData": {
+      "explanation": {
+        "stream": "gk_science",
+        "facts": [
+          "26 नवंबर 1949: अपनाया गया (संविधान दिवस)।",
+          "26 जनवरी 1950: पूर्ण रूप से लागू।",
+          "1947: स्वतंत्रता; 1950: संवैधानिक ढाँचा।"
+        ],
+        "mnemonics": ["Adopted Nov, Started Jan Republic."],
+        "related": ["संविधान सभा की अध्यक्षता — अलग प्रश्न"],
+        "memoryTip": "गणतंत्र = Constitution **live** → Jan 26।"
+      }
+    }
+  },
+  {
+    "questionText": "विश्व पर्यावरण दिवस कब मनाया जाता है?",
+    "questionTextEn": "World Environment Day is observed on:",
+    "options": [
+      { "id": "1", "text": "22 अप्रैल", "text_en": "22 April" },
+      { "id": "2", "text": "5 जून", "text_en": "5 June" },
+      { "id": "3", "text": "16 सितंबर", "text_en": "16 September" },
+      { "id": "4", "text": "1 दिसंबर", "text_en": "1 December" }
+    ],
+    "correctAnswer": "2",
+    "subject": "General Knowledge",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "5 जून को विश्व पर्यावरण दिवस मनाया जाता है।",
+    "explanationEn": "World Environment Day is 5 June.",
+    "extendedData": {
+      "explanation": {
+        "stream": "gk_science",
+        "facts": [
+          "5 June: UN द्वारा Environment Day।",
+          "22 April: Earth Day (अलग)।",
+          "16 Sept: Ozone layer day।"
+        ],
+        "mnemonics": ["June 5 = Environment alive."],
+        "related": ["स्थायी विकास लक्ष्य SDGs"],
+        "memoryTip": "जून = गर्मी = पर्यावरण याद रखें।"
+      }
+    }
+  }
+]

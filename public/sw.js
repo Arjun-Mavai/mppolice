@@ -7,7 +7,7 @@
  * - HTML pages: Network First, fallback to cache (always fresh auth state)
  */
 
-const CACHE_NAME = 'mppsc-cache-v4'; // Bumped to v4 for fresh icon and manifest alignment
+const CACHE_NAME = 'mppolice-cache-v4'; // Bumped to v4 for fresh icon and manifest alignment
 
 const urlsToCache = [
   '/',

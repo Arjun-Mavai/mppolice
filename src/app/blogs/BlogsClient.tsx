@@ -97,8 +97,8 @@ export default function BlogsClient({
 
   // 5. Query Hooks (Data Fetching)
   // Derived fetch parameters to ensure Query Key matches actual fetch logic
-  const fetchUnitId = activeUnit === 'Free' || activeUnit === 'General' ? 'All' : activeUnit;
-  const fetchCategory = activeUnit === 'General' ? activeCategory : 'All';
+  const fetchUnitId = 'All'; // No more units
+  const fetchCategory = activeUnit === 'Free' ? 'All' : activeUnit;
   // STRICT FILTERING: If tab is 'Free', explicitly request only isFreeAccess=true
   const fetchIsFreeAccess = activeUnit === 'Free' ? true : undefined;
 
@@ -113,7 +113,7 @@ export default function BlogsClient({
     refetch,
   } = useInfiniteQuery({
     // ⚡ PERFORMANCE: Use actual fetch parameters in key to avoid duplicate caching
-    queryKey: ['blogs', fetchUnitId, fetchCategory, fetchIsFreeAccess, debouncedSearch],
+    queryKey: ['blogs', fetchCategory, fetchIsFreeAccess, debouncedSearch],
     queryFn: async ({ pageParam = 1 }) => {
       return await getBlogs({
         page: pageParam as number,
@@ -162,10 +162,21 @@ export default function BlogsClient({
   const hasMore = hasNextPage;
 
   // Tab Definitions
-  const tabs = isGuest
-    ? ['Free', 'General', 'All', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)]
-    : ['General', 'All', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)];
-  const defaultTab = isGuest ? 'Free' : 'General';
+  const subjects = [
+    { id: 'Free', label: '🎁 Free' },
+    { id: 'All', label: 'All Subjects' },
+    { id: 'mp_gk', label: 'MP GK' },
+    { id: 'history', label: 'History' },
+    { id: 'geography', label: 'Geography' },
+    { id: 'polity', label: 'Polity' },
+    { id: 'economy', label: 'Economy' },
+    { id: 'science', label: 'Science & Tech' },
+    { id: 'current_affairs', label: 'Current Affairs' },
+    { id: 'misc', label: 'Misc' },
+  ];
+
+  const tabs = subjects.map(s => s.id);
+  const defaultTab = 'Free';
 
   // Hydration-safe restore from URL/session so Back never snaps to default unexpectedly.
   useEffect(() => {
@@ -213,19 +224,6 @@ export default function BlogsClient({
       setActiveCategory('All');
     }
   }, [activeUnit, activeCategory]);
-
-  const subjects = [
-    { id: 'All', label: 'All Subjects' },
-    { id: 'general', label: 'General / Exam Info' },
-    { id: 'history', label: 'History' },
-    { id: 'geography', label: 'Geography' },
-    { id: 'polity', label: 'Polity' },
-    { id: 'economy', label: 'Economy' },
-    { id: 'science_tech', label: 'Science & Tech' },
-    { id: 'tribal_culture', label: 'Tribal Culture' },
-    { id: 'mp_general', label: 'MP General' },
-    { id: 'current_affairs', label: 'Current Affairs' },
-  ];
 
   // ------------------------------------------------------------------
   // 🧨 EVENT HANDLERS
@@ -359,7 +357,7 @@ export default function BlogsClient({
               </Button>
               <div>
                 <h1 className="font-display text-2xl font-black tracking-tight text-slate-900">
-                  MPPSC Knowledge
+                  MP Police Knowledge
                 </h1>
                 <p className="text-xs font-medium text-slate-500">
                   Exam-focused articles & strategies
@@ -379,18 +377,20 @@ export default function BlogsClient({
 
           {/* Tab Navigation */}
           <div className="no-scrollbar -mx-4 mt-4 flex snap-x gap-2 overflow-x-auto px-4 pt-2 pb-2 md:mx-0 md:px-0">
-            {tabs.map((tab) => {
+            {subjects.map((subject) => {
               const count =
-                tab === 'General'
-                  ? initialCounts.categories['general'] || 0
-                  : initialCounts.units[tab] || 0;
-              const isActive = activeUnit === tab;
-              const isFreeTab = tab === 'Free';
+                subject.id === 'All'
+                  ? initialCounts.units['All'] || 0
+                  : subject.id === 'Free'
+                    ? initialCounts.units['Free'] || 0
+                    : initialCounts.categories[subject.id] || 0;
+              const isActive = activeUnit === subject.id;
+              const isFreeTab = subject.id === 'Free';
 
               return (
                 <button
-                  key={tab}
-                  onClick={() => handleUnitChange(tab)}
+                  key={subject.id}
+                  onClick={() => handleUnitChange(subject.id)}
                   className={cn(
                     'group flex snap-start items-center gap-2 rounded-full border px-5 py-2.5 text-xs font-bold whitespace-nowrap transition-all',
                     isFreeTab && isActive
@@ -402,15 +402,7 @@ export default function BlogsClient({
                           : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                   )}
                 >
-                  <span>
-                    {tab === 'All'
-                      ? 'All Units'
-                      : tab === 'Free'
-                        ? '🎁 Free'
-                        : tab === 'General'
-                          ? '📚 Subjects'
-                          : `Unit ${tab.split('_')[1]}`}
-                  </span>
+                  <span>{subject.label}</span>
                   {count > 0 && (
                     <span
                       className={cn(
@@ -427,60 +419,6 @@ export default function BlogsClient({
               );
             })}
           </div>
-
-          {/* Sub-Category Tabs (Only for General) */}
-          {activeUnit === 'General' && (
-            <div className="animate-in fade-in slide-in-from-top-2 no-scrollbar -mx-4 mt-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
-              {subjects.map((subject) => {
-                const count =
-                  subject.id === 'All'
-                    ? Object.values(initialCounts.categories || {}).reduce(
-                        (sum, value) => (typeof value === 'number' ? sum + value : sum),
-                        0
-                      )
-                    : initialCounts.categories[subject.id] || 0;
-                const isActive = activeCategory === subject.id;
-                return (
-                  <button
-                    key={subject.id}
-                    onClick={() => setActiveCategory(subject.id)}
-                    className={cn(
-                      'group flex snap-start items-center gap-2 rounded-lg border px-4 py-2 text-[11px] font-black tracking-tight whitespace-nowrap transition-all',
-                      isActive
-                        ? 'border-slate-900 bg-slate-100 text-slate-900'
-                        : 'border-slate-100 bg-slate-50 text-slate-500 hover:bg-slate-100'
-                    )}
-                  >
-                    <span>{subject.label}</span>
-                    {count > 0 && (
-                      <span
-                        className={cn(
-                          'flex h-4 min-w-[1rem] items-center justify-center rounded-md px-1 text-[9px]',
-                          isActive ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600'
-                        )}
-                      >
-                        {count}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Breadcrumbs */}
-          {activeUnit !== 'All' && activeUnit !== 'General' && activeUnit !== 'Free' && (
-            <div className="animate-in fade-in slide-in-from-top-1 mt-3 flex items-center gap-2 text-sm text-slate-600">
-              <span className="font-bold text-slate-800">Unit {activeUnit.split('_')[1]}</span>
-            </div>
-          )}
-          {activeUnit === 'General' && activeCategory !== 'All' && (
-            <div className="animate-in fade-in slide-in-from-top-1 mt-3 flex items-center gap-2 text-sm text-slate-600">
-              <span className="font-bold text-slate-800">
-                {subjects.find((s) => s.id === activeCategory)?.label}
-              </span>
-            </div>
-          )}
         </div>
       </div>
 

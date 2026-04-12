@@ -10,12 +10,16 @@ export function ScrollToTop() {
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
 
-  if (pathname === '/tests') return null;
-
   useEffect(() => {
     setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (pathname === '/tests') {
+      setIsVisible(false);
+      return;
+    }
     const toggleVisibility = () => {
-      // Show button when page is scrolled down 300px
       if (window.scrollY > 300) {
         setIsVisible(true);
       } else {
@@ -26,7 +30,7 @@ export function ScrollToTop() {
     window.addEventListener('scroll', toggleVisibility);
 
     return () => window.removeEventListener('scroll', toggleVisibility);
-  }, []);
+  }, [pathname]);
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -35,7 +39,7 @@ export function ScrollToTop() {
     });
   };
 
-  if (!isMounted) return null;
+  if (pathname === '/tests' || !isMounted) return null;
 
   return (
     <button

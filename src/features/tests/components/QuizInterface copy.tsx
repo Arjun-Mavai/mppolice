@@ -160,7 +160,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
     if (!userId) {
       // Check localStorage for saved name
       if (typeof window !== 'undefined') {
-        const savedName = localStorage.getItem('mppsc_guest_name');
+        const savedName = localStorage.getItem('mppolice_guest_name');
         if (savedName) {
           // Name mil gaya! Set kar do, dialog skip ho jayega
           setGuestName(savedName);
@@ -189,7 +189,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
 
     // Save to localStorage for future visits (skip modal next time)
     if (typeof window !== 'undefined') {
-      localStorage.setItem('mppsc_guest_name', guestName.trim());
+      localStorage.setItem('mppolice_guest_name', guestName.trim());
     }
 
     // Save to DB (for marketing/lead gen)
@@ -233,7 +233,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
           setIsFullscreen(true);
           // Remember user preference (next time auto-start)
           if (typeof window !== 'undefined') {
-            localStorage.setItem('mppsc_quiz_fullscreen', 'true');
+            localStorage.setItem('mppolice_quiz_fullscreen', 'true');
           }
         })
         .catch((err) => {
@@ -268,7 +268,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
     if (document.fullscreenElement) {
       document.exitFullscreen().then(() => {
         setIsFullscreen(false);
-        localStorage.removeItem('mppsc_quiz_fullscreen');
+        localStorage.removeItem('mppolice_quiz_fullscreen');
       });
     }
     // Then call parent's onExit (navigate away)
@@ -541,7 +541,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
             <span className="font-display text-sm font-bold tracking-tight text-slate-900 sm:text-base">
               {title || (
                 <>
-                  MPPSC<span className="text-indigo-600">26</span>
+                  MP Police<span className="text-indigo-600">26</span>
                 </>
               )}
             </span>
@@ -1089,7 +1089,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
         <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="text-center text-2xl font-bold text-slate-900">
-              Welcome to MPPSC 2026! 🚀
+              Welcome to MP Police 2026! 🚀
             </DialogTitle>
             <DialogDescription className="pt-2 text-center text-slate-600">
               We value your time and just need your name to get started!
@@ -1106,7 +1106,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
                 Name <span className="text-red-500">*</span>
               </label>
               <Input
-                placeholder="e.g. MPPSC Aspirant"
+                placeholder="e.g. MP Police Aspirant"
                 value={guestName}
                 onChange={(e) => setGuestName(e.target.value)}
                 className="focus:border-electric-blue focus:ring-electric-blue h-11 border-slate-200"

@@ -22,7 +22,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { QuizListItem } from '@/components/QuizListItem';
 import { ConnectSocials } from '@/components/ConnectSocials';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
-import { MPPSC_UNITS } from './constants';
+import { MP_Police_UNITS } from './constants';
 
 // Subjects list — filter me use hoga
 const SUBJECTS = [
@@ -107,7 +107,7 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
   // Unit ka display name — "Unit 1" ya "यूनिट 1"
   const getUnitLabel = (unitId: string | null): string => {
     if (!unitId) return '';
-    const unit = MPPSC_UNITS.find((u) => u.id === unitId);
+    const unit = MP_Police_UNITS.find((u) => u.id === unitId);
     if (!unit) return unitId.replace('unit_', 'U');
     return hi ? unit.subjectHi : unit.subject;
   };
@@ -126,7 +126,7 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
                 </div>
                 <div>
                   <h1 className="text-base font-black tracking-tight text-slate-900 sm:text-xl">
-                    {hi ? 'MPPSC फ्री डेली क्विज़' : 'Free Daily Quiz'}
+                    {hi ? 'MP Police फ्री डेली क्विज़' : 'Free Daily Quiz'}
                   </h1>
                   <p className="text-[10px] text-slate-500 sm:text-xs">
                     {hi ? 'हर रोज़ नए प्रश्न' : 'Fresh questions daily'}
@@ -300,7 +300,7 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
                 {hi ? 'यूनिट चुनो' : 'Select Unit'}
               </p>
               <div className="flex flex-wrap gap-2">
-                {MPPSC_UNITS.map((unit) => (
+                {MP_Police_UNITS.map((unit) => (
                   <button
                     key={unit.id}
                     onClick={() => setSelectedUnit(selectedUnit === unit.id ? null : unit.id)}

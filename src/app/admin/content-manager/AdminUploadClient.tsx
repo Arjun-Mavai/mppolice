@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, type ChangeEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,36 +18,18 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { uploadBlog } from '@/actions/blog-actions';
 import { uploadTestFromJSON, getExistingTests } from '@/actions/admin-actions';
 import { toast } from 'sonner';
+import { Loader2, Upload, BookOpen, FileText, CheckCircle2, Plus, Database } from 'lucide-react';
 import {
-  Loader2,
-  FileJson,
-  Upload,
-  BookOpen,
-  Video,
-  FileText,
-  CheckCircle2,
-  Plus,
-  Database,
-} from 'lucide-react';
-import { syllabusData } from '@/data/syllabusData';
+  MPPOLICE_SECTION_IDS,
+  getMppoliceTopicsForSection,
+  getSectionLabel,
+  findTopicById,
+} from '@/data/mppoliceSyllabus';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { logger } from '@/lib/logger';
-
-const UNITS = Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`);
-
-const BLOG_CATEGORIES = [
-  { value: 'general', label: 'General' },
-  { value: 'history', label: 'History' },
-  { value: 'geography', label: 'Geography' },
-  { value: 'polity', label: 'Polity' },
-  { value: 'strategy', label: 'Strategy' },
-  { value: 'current_affairs_mp', label: 'MP Current Affairs' },
-  { value: 'economics', label: 'Economics' },
-  { value: 'science', label: 'Science & Tech' },
-  { value: 'mp_gk', label: 'Madhya Pradesh GK' },
-  { value: 'mp_polity', label: 'Madhya Pradesh Polity' },
-  { value: 'mp_current_affairs', label: 'Madhya Pradesh Current Affairs' },
-];
+import { Switch } from '@/components/ui/switch';
+import { QuestionImageUploadHelper } from '@/app/admin/content-manager/QuestionImageUploadHelper';
+import { getErrorMessage } from '@/lib/errors';
 
 export default function AdminUploadPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -64,12 +46,16 @@ export default function AdminUploadPage() {
   const [existingTests, setExistingTests] = useState<
     { id: string; title: string; type: string; totalQuestions: number }[]
   >([]);
-  const [topicLang, setTopicLang] = useState<'hi' | 'en'>('hi'); // Language toggle for topics
+  const [topicLang, setTopicLang] = useState<'hi' | 'en'>('hi'); // Language toggle for section labels
+
+  const [strictBilingual, setStrictBilingual] = useState(false);
+  const [collectionTag, setCollectionTag] = useState('');
+  const [manualUiBucket, setManualUiBucket] = useState('');
 
   const [testData, setTestData] = useState({
     type: 'TOPIC', // FLT | UNIT | TOPIC | CSAT | MISC
     title: '',
-    unitId: 'unit_1',
+    unitId: 'sec_gk_reasoning',
     topicId: '', // For Topic Tests
     subjectTag: '', // MISC type ke liye subject tag
     description: '',
@@ -85,22 +71,15 @@ export default function AdminUploadPage() {
   // Derived: Get Topics for selected Unit
   const availableTopics = useMemo(() => {
     if (!testData.unitId) return [];
-    // @ts-ignore
-    const unit = syllabusData.units[testData.unitId];
-    // Handle language structure differences
-    if (topicLang === 'hi') {
-      return unit?.topics || [];
-    } else {
-      return unit?.topics_en || unit?.topics || [];
-    }
-  }, [testData.unitId, topicLang]);
+    return getMppoliceTopicsForSection(testData.unitId);
+  }, [testData.unitId]);
 
-  const handleBlogChange = (e: any) => {
+  const handleBlogChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setBlogData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleTestChange = (e: any) => {
+  const handleTestChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setTestData((prev) => ({ ...prev, [name]: value }));
   };
@@ -179,12 +158,13 @@ export default function AdminUploadPage() {
       const formData = new FormData();
       formData.append('mode', testMode);
       formData.append('jsonData', testData.questionsJson);
+      formData.append('strictBilingual', strictBilingual ? 'true' : 'false');
 
       if (testMode === 'new') {
         let finalTitle = testData.title;
         // Auto-generate title if Topic Test
         if (testData.type === 'TOPIC' && testData.topicId) {
-          const topic = availableTopics.find((t: any) => t.id.toString() === testData.topicId);
+          const topic = availableTopics.find((t) => t.id === testData.topicId);
           if (topic && !finalTitle) {
             finalTitle = `Quick Check: ${topic.front}`;
           }
@@ -193,7 +173,27 @@ export default function AdminUploadPage() {
         formData.append('title', finalTitle);
         formData.append('type', testData.type);
         formData.append('unitId', testData.unitId);
-        formData.append('topicId', testData.topicId); // Pass topicId
+        formData.append('topicId', testData.topicId);
+        if (collectionTag.trim()) {
+          formData.append('collectionTag', collectionTag.trim());
+        }
+        const topicMeta = testData.topicId ? findTopicById(testData.topicId) : undefined;
+        let resolvedBucket =
+          testData.type === 'TOPIC' && topicMeta
+            ? topicMeta.uiBucket
+            : manualUiBucket || '';
+        const miscBucketMap: Record<string, string> = {
+          'General Knowledge': 'general_knowledge',
+          'General Science': 'general_science',
+          'Logical Reasoning': 'logical_reasoning',
+          'Quantitative Aptitude': 'quantitative_aptitude',
+        };
+        if (testData.type === 'MISC' && testData.subjectTag && miscBucketMap[testData.subjectTag]) {
+          resolvedBucket = miscBucketMap[testData.subjectTag];
+        }
+        if (resolvedBucket) {
+          formData.append('uiBucket', resolvedBucket);
+        }
         // MISC type ke liye subject tag bhi bhejo
         if (testData.type === 'MISC' && testData.subjectTag) {
           formData.append('subjectTag', testData.subjectTag);
@@ -212,8 +212,8 @@ export default function AdminUploadPage() {
       } else {
         toast.error(res.message || 'Upload failed');
       }
-    } catch (err: any) {
-      toast.error('Invalid JSON Questions: ' + err.message);
+    } catch (err: unknown) {
+      toast.error('Invalid JSON Questions: ' + getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -228,6 +228,44 @@ export default function AdminUploadPage() {
               Admin Upload Center
             </h1>
             <p className="text-slate-500">Manage content, quizzes, and learning resources.</p>
+            <p className="mt-2 max-w-2xl text-xs leading-relaxed text-slate-600">
+              <span className="font-semibold text-emerald-800">MP Police tests:</span>{' '}
+              <a
+                href="/docs/mp-police-content-upload.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-emerald-700 underline decoration-emerald-300 underline-offset-2"
+              >
+                Upload guide (types, tags, PYP / mock / 100-Q)
+              </a>
+              {' · '}
+              <a
+                href="/demo/mppolice-demo-questions.json"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-emerald-700 underline decoration-emerald-300 underline-offset-2"
+              >
+                Demo JSON (5Q + image stub)
+              </a>
+              {' · '}
+              <a
+                href="/demo/upload/INDEX.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-emerald-700 underline decoration-emerald-300 underline-offset-2"
+              >
+                Har type: 2Q demos (PYQ/FLT/TOPIC/UNIT/MISC/CSAT)
+              </a>
+              {' · '}
+              <a
+                href="/prompts/mppolice-ai-master.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-emerald-700 underline decoration-emerald-300 underline-offset-2"
+              >
+                AI prompts (bulk + explanations)
+              </a>
+            </p>
           </div>
         </div>
 
@@ -331,8 +369,48 @@ export default function AdminUploadPage() {
                   <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                   Test & Quiz Upload
                 </CardTitle>
-                <CardDescription>
-                  Create new assessments or append questions to existing ones.
+                <CardDescription className="space-y-1">
+                  <span className="block">
+                    Create new assessments or append questions to existing ones. Follow the MP Police
+                    guide so `examType`, tags, and buckets stay consistent.
+                  </span>
+                  <span className="block text-emerald-900/90">
+                    <a
+                      href="/docs/mp-police-content-upload.md"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold underline underline-offset-2"
+                    >
+                      Read MP Police upload guide
+                    </a>
+                    {' — '}
+                    <a
+                      href="/demo/mppolice-demo-questions.json"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold underline underline-offset-2"
+                    >
+                      demo 5Q JSON
+                    </a>
+                    {' · '}
+                    <a
+                      href="/demo/upload/INDEX.md"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold underline underline-offset-2"
+                    >
+                      type-wise 2Q demos
+                    </a>
+                    {' · '}
+                    <a
+                      href="/prompts/mppolice-ai-master.md"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold underline underline-offset-2"
+                    >
+                      AI master prompt
+                    </a>
+                  </span>
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6">
@@ -404,9 +482,9 @@ export default function AdminUploadPage() {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                {UNITS.map((u) => (
+                                {MPPOLICE_SECTION_IDS.map((u) => (
                                   <SelectItem key={u} value={u}>
-                                    Unit {u.split('_')[1]}
+                                    {getSectionLabel(u, topicLang === 'hi' ? 'hi' : 'en')}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -444,9 +522,10 @@ export default function AdminUploadPage() {
                               </SelectTrigger>
                               <SelectContent>
                                 <ScrollArea className="h-64">
-                                  {availableTopics.map((t: any) => (
-                                    <SelectItem key={t.id} value={t.id.toString()}>
-                                      {t.front.substring(0, 40)}...
+                                  {availableTopics.map((t) => (
+                                    <SelectItem key={t.id} value={t.id}>
+                                      {(t.front || '').slice(0, 72)}
+                                      {(t.front || '').length > 72 ? '…' : ''}
                                     </SelectItem>
                                   ))}
                                 </ScrollArea>
@@ -467,9 +546,10 @@ export default function AdminUploadPage() {
                               </SelectTrigger>
                               <SelectContent>
                                 {[
-                                  'History', 'MP Culture', 'Geography', 'MP Geography',
-                                  'Polity', 'Economy', 'Science', 'Current Affairs',
-                                  'ICT', 'MP Tribes',
+                                  'General Knowledge',
+                                  'General Science',
+                                  'Logical Reasoning',
+                                  'Quantitative Aptitude',
                                 ].map((s) => (
                                   <SelectItem key={s} value={s}>{s}</SelectItem>
                                 ))}
@@ -522,6 +602,54 @@ export default function AdminUploadPage() {
                       </Select>
                     </div>
                   )}
+
+                  {testMode === 'new' && (
+                    <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <Label htmlFor="strict-bi">Strict bilingual</Label>
+                          <p className="text-xs text-slate-500">
+                            Require Hindi + English question text for every row
+                          </p>
+                        </div>
+                        <Switch
+                          id="strict-bi"
+                          checked={strictBilingual}
+                          onCheckedChange={setStrictBilingual}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Collection tag (optional)</Label>
+                        <Input
+                          value={collectionTag}
+                          onChange={(e) => setCollectionTag(e.target.value)}
+                          placeholder="e.g. pyp, memory, full-tests"
+                        />
+                      </div>
+                      {testData.type !== 'TOPIC' && (
+                        <div className="space-y-2">
+                          <Label>Primary UI bucket (PYQ hub tabs)</Label>
+                          <Select
+                            value={manualUiBucket || '_none'}
+                            onValueChange={(v) => setManualUiBucket(v === '_none' ? '' : v)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Optional" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="_none">Any / not set</SelectItem>
+                              <SelectItem value="general_knowledge">General Knowledge</SelectItem>
+                              <SelectItem value="general_science">General Science</SelectItem>
+                              <SelectItem value="logical_reasoning">Logical Reasoning</SelectItem>
+                              <SelectItem value="quantitative_aptitude">Quantitative Aptitude</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <QuestionImageUploadHelper />
 
                   <div className="space-y-2">
                     <Label className="flex justify-between">

@@ -127,7 +127,7 @@ Thank you,
   };
 
   const openTelegramBot = () => {
-    window.open('https://t.me/MPPSC_Support_Bot', '_blank');
+    window.open('https://t.me/MP_Police_Support_Bot', '_blank');
   };
 
   return (
@@ -141,7 +141,7 @@ Thank you,
       {/* Header */}
       <nav className="fixed z-50 w-full border-b border-white/20 bg-white/70 shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
-          <Link href="/syllabus" className="group flex items-center gap-2">
+          <Link href="/dashboard" className="group flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white shadow-lg transition-transform group-hover:scale-105">
               <Quote size={18} fill="currentColor" className="text-white" />
             </div>
@@ -154,7 +154,7 @@ Thank you,
               className="text-slate-600 hover:bg-slate-100/50 hover:text-slate-900"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Syllabus
+              Back to Dashboard
             </Button>
           </button>
         </div>
@@ -175,7 +175,7 @@ Thank you,
           <p className="mx-auto max-w-lg text-lg text-slate-600">
             {amount === '299' || amount === '199'
               ? 'Get yearly access to 10 units, Quizzes, Mock Tests, and Smart Analytics.'
-              : 'Get yearly access to all 10 units of the MPPSC Syllabus with detailed notes.'}
+              : 'Get yearly access to all 10 units of the MP Police Syllabus with detailed notes.'}
           </p>
         </div>
 

@@ -11,7 +11,7 @@ export const NavbarLogo = memo(function NavbarLogo({ user }: NavbarLogoProps) {
   
   const handleLogoClick = useCallback(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    router.push(user ? '/syllabus/quiz/pyq' : '/');
+    router.push(user ? '/dashboard' : '/');
   }, [router, user]);
 
   return (
@@ -24,7 +24,7 @@ export const NavbarLogo = memo(function NavbarLogo({ user }: NavbarLogoProps) {
       </div>
       <div className="flex flex-col">
         <span className="font-display text-lg leading-none font-bold text-slate-900">
-          MPPSC<span className="text-slate-500">26</span>
+          MP Police<span className="text-slate-500">26</span>
         </span>
         <span className="text-[10px] font-medium tracking-wider text-slate-500 uppercase">
           Mindful Prep

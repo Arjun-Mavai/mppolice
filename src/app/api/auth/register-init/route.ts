@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { getErrorMessage } from '@/lib/errors';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { eq, sql } from 'drizzle-orm';
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
     // 🔍 Check Existing User
     // Kya ye banda pehle aaya tha?
     // 🛡️ FIX: Use LOWER() for case-insensitive email match
-    // Bhai, pehle eq(mppscUsers.email, normalizedEmail) tha —
+    // Bhai, pehle eq(users.email, normalizedEmail) tha —
     // agar DB mein "Arjun@Email.com" stored hai aur user "arjun@email.com"
     // bhejta hai, to match nahi hota! Duplicate account ban jaata!
     // Ab LOWER() dono side pe apply hota hai → consistent matching.
@@ -96,18 +97,19 @@ export async function POST(req: Request) {
       password: tempPassword,
       isActive: false, // 👈 Key: Inactive until paid
       role: 'guest',
+      examType: 'mppolice',
       metadata: JSON.stringify({ source }),
       planTier: 'free',
     });
 
     return NextResponse.json({ userId, isNew: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Registration init error:', error, {
       category: 'auth',
       metadata: { email: requestEmail, source: requestSource },
     });
     return NextResponse.json(
-      { error: error.message || 'Failed to initialize registration' },
+      { error: getErrorMessage(error) || 'Failed to initialize registration' },
       { status: 500 }
     );
   }

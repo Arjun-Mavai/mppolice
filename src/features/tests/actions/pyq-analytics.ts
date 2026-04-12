@@ -4,7 +4,7 @@ import { db } from '@/db';
 import { questions, tests } from '@/db/schema';
 import { and, eq, or } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
-import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
+import { normalizeMppolicePyqSubject } from '@/features/tests/utils/pyq-subject';
 
 // ------------------------------------------------------------------
 // 📊 Aggregation Action
@@ -21,7 +21,9 @@ export const getSubjectWisePYQStats = unstable_cache(
     const pyqTests = await db
       .select({ id: tests.id, title: tests.title })
       .from(tests)
-      .where(and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false)));
+      .where(
+        and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false), eq(tests.examType, 'mppolice'))
+      );
 
     if (pyqTests.length === 0) return {};
 
@@ -41,7 +43,7 @@ export const getSubjectWisePYQStats = unstable_cache(
     const stats: Record<string, number> = {};
 
     for (const q of allQuestions) {
-      const canonical = normalizeSubject(q.subject);
+      const canonical = normalizeMppolicePyqSubject(q.subject);
       stats[canonical] = (stats[canonical] || 0) + 1;
     }
 
@@ -49,7 +51,7 @@ export const getSubjectWisePYQStats = unstable_cache(
     // Only return categories with > 0 questions
     return stats;
   },
-  ['subject-wise-pyq-stats'],
+  ['subject-wise-pyq-stats-mppolice-v2'],
   { revalidate: 3600, tags: ['pyq-stats'] } // Revalidate every hour
 );
 
@@ -88,7 +90,9 @@ const fetchQuestionsBySubjectData = async (subject: string): Promise<MixedQuesti
       createdAt: tests.createdAt,
     })
     .from(tests)
-    .where(and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false)));
+    .where(
+      and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false), eq(tests.examType, 'mppolice'))
+    );
 
   if (pyqTests.length === 0) return [];
 
@@ -108,7 +112,7 @@ const fetchQuestionsBySubjectData = async (subject: string): Promise<MixedQuesti
 
   // 3. Filter & Map in JS
   const filteredQuestions = allQuestions
-    .filter((q) => normalizeSubject(q.subject) === subject)
+    .filter((q) => normalizeMppolicePyqSubject(q.subject) === subject)
     .map((q) => {
       const testInfo = testMap.get(q.testId) || { year: 'Unknown', title: 'Unknown Test' };
       return {
@@ -125,7 +129,7 @@ const fetchQuestionsBySubjectData = async (subject: string): Promise<MixedQuesti
 // Cached version - subject-specific, revalidates every hour
 export const getCachedQuestionsBySubject = unstable_cache(
   fetchQuestionsBySubjectData,
-  ['pyq-questions-by-subject'],
+  ['pyq-questions-by-subject-mppolice-v2'],
   { revalidate: 3600, tags: ['pyq-questions', 'tests'] }
 );
 

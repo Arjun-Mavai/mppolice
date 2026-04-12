@@ -163,7 +163,7 @@ export function PYQShowcaseSection() {
                 >
                   <div className="flex flex-col leading-[1.1] sm:leading-[1.15]">
                     <span className="text-slate-800">
-                      {isHindi ? 'हर MPPSC PYQ समझो' : 'Master Every PYQ'}
+                      {isHindi ? 'हर MP Police PYQ समझो' : 'Master Every PYQ'}
                     </span>
                     <div className="flex items-center justify-center lg:justify-start gap-2 mt-2">
                       <span className="bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 bg-clip-text text-transparent italic px-1" style={{ WebkitBackgroundClip: 'text' }}>
@@ -183,7 +183,7 @@ export function PYQShowcaseSection() {
                 >
                   {isHindi 
                     ? 'रटना छोड़ो, कॉन्सेप्ट पकड़ो। 2020-2025 तक के 600+ प्रश्नों की ऐसी "Smart Explanations" जो एग्जाम हॉल में आपको दूसरों से आगे रखेगी।'
-                    : 'Stop memorizing, start understanding. Decoded insights from 2020-2025 to give you the competitive edge in MPPSC Prelims.'}
+                    : 'Stop memorizing, start understanding. Decoded insights from 2020-2025 to give you the competitive edge in MP Police Prelims.'}
                 </m.p>
               </div>
 
@@ -264,7 +264,7 @@ export function PYQShowcaseSection() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                           <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
-                          <span className="text-[8px] sm:text-[9px] font-black tracking-[0.25em] text-[#5E6278] uppercase">MPPSC PRELIMS · INSIGHT</span>
+                          <span className="text-[8px] sm:text-[9px] font-black tracking-[0.25em] text-[#5E6278] uppercase">MP Police PRELIMS · INSIGHT</span>
                       </div>
                       <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-emerald-500 text-black shadow-lg shadow-emerald-500/30">
                           <TrendingUp size={14} className="sm:w-4 sm:h-4" />

@@ -5,7 +5,7 @@ import { sql } from 'drizzle-orm';
 import path from 'path';
 
 // Force local DB connection for this script as requested
-const dbPath = path.resolve(process.cwd(), 'mppsc_local_dev.db');
+const dbPath = path.resolve(process.cwd(), 'mppolice_local_dev.db');
 const client = createClient({ url: `file:${dbPath}` });
 const db = drizzle(client);
 

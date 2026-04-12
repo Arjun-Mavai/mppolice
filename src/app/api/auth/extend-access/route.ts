@@ -9,7 +9,7 @@ import { logger } from '@/lib/logger';
 // ⏳ EXTEND ACCESS API — Admin extends user's access duration
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
-// Use case: MPPSC paper delay hua → admin extends access for specific users
+// Use case: MP Police paper delay hua → admin extends access for specific users
 // Takes userId + additionalMonths → extends accessExpiresAt
 //
 // If user already expired → extends from NOW (not from old expired date)
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   try {
     // ── Admin Auth ──────────────────────────────────────────────
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    const token = cookieStore.get('mppolice_token')?.value;
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     }
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
+      where: (users, { eq }) => eq(mppscUsers.id, decoded.userId),
     });
 
     if (!adminUser || adminUser.role !== 'admin') {
@@ -52,8 +52,8 @@ export async function POST(request: Request) {
     }
 
     // ── Find User ───────────────────────────────────────────────
-    const users = await db.select().from(mppscUsers).where(eq(mppscUsers.id, userId)).limit(1);
-    const user = users[0];
+    const dbUsers = await db.select().from(mppscUsers).where(eq(mppscUsers.id, userId)).limit(1);
+    const user = dbUsers[0];
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
         newExpiry,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Extend access error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

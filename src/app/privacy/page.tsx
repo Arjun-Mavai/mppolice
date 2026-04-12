@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { contactEmail } from '../contact/page';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Mindful MPPSC',
+  title: 'Privacy Policy | Mindful MP Police',
   description:
-    'Privacy Policy for Mindful MPPSC — learn how we collect, use, and protect your data on our MPPSC exam preparation platform.',
+    'Privacy Policy for Mindful MP Police — learn how we collect, use, and protect your data on our MP Police exam preparation platform.',
 };
 
 export default function PrivacyPolicyPage() {
@@ -26,7 +26,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-xl font-semibold text-slate-900">1. Data Collection Scope</h2>
             <p className="mt-3">
-              To provide a bespoke educational experience, Mindful MPPSC collects essential
+              To provide a bespoke educational experience, Mindful MP Police collects essential
               information including registration details (name, email), academic progress data (quiz
               scores, study time), and technical metadata to ensure platform stability and
               performance.
@@ -56,7 +56,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-xl font-semibold text-slate-900">4. Third-Party Disclosures</h2>
             <p className="mt-3">
-              Mindful MPPSC does not sell or trade your personal information. Data sharing is
+              Mindful MP Police does not sell or trade your personal information. Data sharing is
               strictly limited to essential service providers (e.g., payment processors, hosting
               partners) who are contractually bound to maintain your privacy. Legal disclosures are
               made only when mandated by valid judicial or governmental orders.
@@ -83,7 +83,7 @@ export default function PrivacyPolicyPage() {
               </Link>{' '}
               or email us at{' '}
               <a
-                href="mailto:mppsc@zenscroll.app"
+                href="mailto:mppolice@zenscroll.app"
                 className="text-slate-900 underline hover:text-slate-600"
               >
                 {contactEmail}

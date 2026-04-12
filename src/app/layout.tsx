@@ -39,43 +39,43 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
 };
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://mppsc.zenscroll.app';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://mppolice.zenscroll.app';
 export const metadata: Metadata = {
   title: {
-    default: 'Mindful MPPSC - Crack MPPSC 2026 | Bilingual Tests & Mnemonics',
-    template: '%s | Mindful MPPSC',
+    default: 'Mindful MP Police - Crack MP Police 2026 | Bilingual Tests & Mnemonics',
+    template: '%s | Mindful MP Police',
   },
   description:
-    "Master the new MPPSC 2026 pattern with India's first bilingual mnemonic-based platform. Get 100+ topic tests, 5+ years PYQs, and smart explanations in Hindi & English.",
+    "Master the new MP Police 2026 pattern with India's first bilingual mnemonic-based platform. Get 100+ topic tests, 5+ years PYQs, and smart explanations in Hindi & English.",
   keywords: [
-    'MPPSC 2026 Test Series',
-    'MPPSC Prelims Mock Test',
-    'MPPSC Previous Year Papers',
-    'MPPSC Mnemonics',
-    'MPPSC Notes Hindi',
+    'MP Police 2026 Test Series',
+    'MP Police Prelims Mock Test',
+    'MP Police Previous Year Papers',
+    'MP Police Mnemonics',
+    'MP Police Notes Hindi',
   ],
   metadataBase: new URL(baseUrl),
   openGraph: {
     type: 'website',
     locale: 'en_IN',
     url: baseUrl,
-    title: 'MPPSC 2026 Elite Test Series | नवीनतम पैटर्न पर आधारित सर्वश्रेष्ठ अभ्यास',
+    title: 'MP Police 2026 Elite Test Series | नवीनतम पैटर्न पर आधारित सर्वश्रेष्ठ अभ्यास',
     description:
-      'Looking for MPPSC 2026 Test Series? Get 5+ Years PYQs, Topic-wise Tests, and Mnemonics in Hindi & English. The smartest way to clear MPPSC Prelims.',
-    siteName: 'Mindful MPPSC',
+      'Looking for MP Police 2026 Test Series? Get 5+ Years PYQs, Topic-wise Tests, and Mnemonics in Hindi & English. The smartest way to clear MP Police Prelims.',
+    siteName: 'Mindful MP Police',
     images: [
       {
         url: '/og-hero.webp',
         width: 1200,
         height: 630,
-        alt: 'Mindful MPPSC - Crack MPPSC 2026',
+        alt: 'Mindful MP Police - Crack MP Police 2026',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Mindful MPPSC | Best App for MPPSC 2026',
-    description: "Master MPPSC with India's first Bilingual Mnemonic App.",
+    title: 'Mindful MP Police | Best App for MP Police 2026',
+    description: "Master MP Police with India's first Bilingual Mnemonic App.",
     images: ['/og-hero.webp'],
   },
   manifest: '/manifest.json',
@@ -86,15 +86,14 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Mindful MPPSC',
+    title: 'Mindful MP Police',
   },
 };
 
 import { verifyAuth } from '@/lib/auth';
 import { AppNavbar } from '@/components/layout/AppNavbar';
 import { MainContentWrapper } from '@/components/layout/MainContentWrapper';
-
-// ... imports ...
+import { redirect } from 'next/navigation';
 
 export default async function RootLayout({
   children,
@@ -103,6 +102,17 @@ export default async function RootLayout({
 }>) {
   // 1. Fetch User on Server (Once per request)
   const user = await verifyAuth();
+
+  // 🛡️ SECURITY: Exam Type Isolation
+  // If a user with a different exam type (like MPPSC or UPSC) somehow logs in,
+  // we redirect them to the dashboard or a common landing if applicable.
+  // This ensures they don't see MP Police specific premium content.
+  if (user && user.examType !== 'mppolice' && user.examType !== 'all') {
+     // If they are admin, they might be allowed, but for regular users, redirect.
+     if (user.role !== 'admin') {
+        redirect('/dashboard'); // Or any other safe landing page
+     }
+  }
 
   // 2. Transform for Navbar
   const navbarUser = user
@@ -121,10 +131,10 @@ export default async function RootLayout({
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Mindful MPPSC',
+    name: 'Mindful MP Police',
     url: baseUrl,
     description:
-      'The #1 App for MPPSC 2026 Preparation with Mnemonics, Bilingual Notes, Tests & Quizzes',
+      'The #1 App for MP Police 2026 Preparation with Mnemonics, Bilingual Notes, Tests & Quizzes',
     potentialAction: {
       '@type': 'SearchAction',
       target: `${baseUrl}/blogs?q={search_term_string}`,
@@ -135,9 +145,9 @@ export default async function RootLayout({
   const organizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'EducationalOrganization',
-    name: 'Mindful MPPSC',
+    name: 'Mindful MP Police',
     url: baseUrl,
-    description: "India's first bilingual mnemonic-based MPPSC preparation platform",
+    description: "India's first bilingual mnemonic-based MP Police preparation platform",
     sameAs: [],
   };
 

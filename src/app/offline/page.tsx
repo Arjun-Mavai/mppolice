@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
-  title: 'Offline | Mindful MPPSC',
+  title: 'Offline | Mindful MP Police',
 };
 
 export default function OfflinePage() {

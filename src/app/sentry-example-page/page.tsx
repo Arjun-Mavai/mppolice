@@ -53,7 +53,7 @@ export default function Page() {
           <a
             target="_blank"
             rel="noopener"
-            href="https://mindful-mppsc-zen.sentry.io/issues/?project=4510888465399808"
+            href="https://mindful-mppolice-zen.sentry.io/issues/?project=4510888465399808"
           >
             Issues Page
           </a>

@@ -8,6 +8,10 @@ import { eq, sql, desc } from 'drizzle-orm';
 import { AdminDashboardResponse } from '@/types/admin';
 import { logger } from '@/lib/logger';
 import { requireAdmin } from '@/lib/auth-admin';
+import { QUIZ_CONSTANTS } from '@/config/quiz';
+import { normalizeMppoliceQuestionInput } from '@/lib/mppolice/question-normalize';
+import { uiBucketToTag } from '@/data/mppoliceSyllabus';
+import type { UiBucket } from '@/lib/mppolice/syllabus-types';
 
 // Helper to fetch tests for the dropdown
 export async function getExistingTests() {
@@ -22,6 +26,7 @@ export async function getExistingTests() {
       })
       .from(tests)
       .leftJoin(questions, eq(tests.id, questions.testId))
+      .where(eq(tests.examType, 'mppolice'))
       .groupBy(tests.id)
       .orderBy(tests.createdAt);
 
@@ -44,6 +49,9 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
     const topicId = formData.get('topicId') as string; // Changed from null/undefined
     const subjectTag = formData.get('subjectTag') as string; // MISC ke liye subject tag
     const jsonInput = formData.get('jsonData') as string;
+    const strictBilingual = formData.get('strictBilingual') === 'true';
+    const uiBucketRaw = formData.get('uiBucket') as string | null;
+    const collectionTag = formData.get('collectionTag') as string | null;
 
     // Basic Validation
     if (!jsonInput) {
@@ -76,6 +84,56 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
     let testId = existingTestId;
     let testTitle = title;
 
+    const normalizedQuestions = (parsedQuestions as Record<string, unknown>[]).map((q) =>
+      normalizeMppoliceQuestionInput(q)
+    );
+
+    for (let i = 0; i < normalizedQuestions.length; i++) {
+      const nq = normalizedQuestions[i];
+      if (
+        !nq.questionText ||
+        typeof nq.questionText !== 'string' ||
+        nq.questionText.trim().length === 0
+      ) {
+        return {
+          success: false,
+          message:
+            "Validation Failed: One or more questions are missing question text (use questionText or image.question).",
+        };
+      }
+      if (strictBilingual) {
+        const hasEn =
+          nq.questionTextEn &&
+          String(nq.questionTextEn).trim().length > 0 &&
+          String(nq.questionTextEn).trim().toLowerCase() !== 'n/a';
+        if (!hasEn) {
+          return {
+            success: false,
+            message: `Strict bilingual: question ${i + 1} needs questionTextEn.`,
+          };
+        }
+      }
+    }
+
+    const n = normalizedQuestions.length;
+    const durationMinutes = Math.max(1, Math.ceil(n * QUIZ_CONSTANTS.TIME_PER_QUESTION_MINUTES));
+    const totalMarksPlanned = normalizedQuestions.reduce((s, q) => s + (q.marks || 1), 0);
+
+    const tagsBase: string[] = [type, '2026'];
+    if (subjectTag) tagsBase.push(subjectTag);
+    const validBuckets: UiBucket[] = [
+      'general_knowledge',
+      'general_science',
+      'logical_reasoning',
+      'quantitative_aptitude',
+    ];
+    if (uiBucketRaw && validBuckets.includes(uiBucketRaw as UiBucket)) {
+      tagsBase.push(uiBucketToTag(uiBucketRaw as Exclude<UiBucket, 'all'>));
+    }
+    if (collectionTag?.trim()) {
+      tagsBase.push(`collection:${collectionTag.trim()}`);
+    }
+
     // 1. Create Test IF Mode is 'new'
     if (mode === 'new') {
       testId = nanoid();
@@ -95,13 +153,13 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         unitId: type === 'UNIT' || type === 'TOPIC' || type === 'MISC' ? unitId : null,
         topicId: type === 'TOPIC' ? topicId : null,
         description: `Imported test: ${title}`,
-        totalMarks: parsedQuestions.length * 2, // Initial marks
-        totalQuestions: parsedQuestions.length,
-        durationMinutes: 120,
+        totalMarks: totalMarksPlanned,
+        totalQuestions: n,
+        durationMinutes,
+        examType: 'mppolice',
         // MISC type = free quiz → isFreeAccess ON by default
         isFreeAccess: type === 'MISC' ? true : false,
-        // Tags — subject tag bhi store karo (filter me kaam aayega)
-        tags: subjectTag ? [type, '2026', subjectTag] : [type, '2026'],
+        tags: tagsBase,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -125,38 +183,24 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       startOrder = maxOrderResult[0]?.maxOrder || 0;
     }
 
-    // 2. Format Questions
-    // 2. Validate & Format Questions
-    for (const q of parsedQuestions) {
-      if (
-        !q.questionText ||
-        typeof q.questionText !== 'string' ||
-        q.questionText.trim().length === 0
-      ) {
-        return {
-          success: false,
-          message:
-            "Validation Failed: One or more questions are missing 'questionText'. Please check JSON keys.",
-        };
-      }
-    }
-
-    const questionsToInsert = parsedQuestions.map((q: any, idx: number) => ({
+    const questionsToInsert = normalizedQuestions.map((q, idx: number) => ({
       id: nanoid(),
       testId: testId,
-      questionText: q.questionText, // No fallback "Missing Text"
-      questionTextEn: q.questionTextEn || null,
-      options: JSON.stringify(q.options), // Store as JSON string
+      questionText: q.questionText,
+      questionTextEn: q.questionTextEn,
+      options: JSON.stringify(q.options),
       correctAnswer: q.correctAnswer,
       explanation: q.explanation,
-      explanationEn: q.explanationEn || null,
-      marks: q.marks || 2,
-      negativeMarks: q.negativeMarks || 0,
-      idealTime: q.idealTime || 60,
-      order: startOrder + idx + 1, // Continue from last order
+      explanationEn: q.explanationEn,
+      marks: q.marks || 1,
+      negativeMarks: q.negativeMarks ?? 0,
+      idealTime: q.idealTime ?? 60,
+      order: startOrder + idx + 1,
       subject: q.subject || 'General',
       type: q.type || 'standard',
-      matchPairs: q.matchPairs || null,
+      matchPairs: q.matchPairs ?? null,
+      extendedData: q.extendedData ?? null,
+      examType: 'mppolice' as const,
     }));
 
     // Filter out duplicates (check against existing questions in this test)
@@ -185,9 +229,6 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
     if (questionsToInsert.length > 0) {
       await db.insert(questions).values(questionsToInsert);
 
-      // Update Test Meta (Marks + Count + Timestamp)
-      const newMarksToAdd = questionsToInsert.reduce((sum, q) => sum + (q.marks || 0), 0);
-
       // We need current total questions to add to it, or just set it based on COUNT(*)
       // Setting based on COUNT(*) is safer for data consistency.
       if (testId) {
@@ -198,12 +239,23 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         const totalQ = countResult[0]?.count || 0;
         finalQuestionCount = totalQ;
 
+        const marksSumResult = await db
+          .select({ s: sql<number>`coalesce(sum(${questions.marks}),0)`.mapWith(Number) })
+          .from(questions)
+          .where(eq(questions.testId, testId));
+        const totalMarksNow = marksSumResult[0]?.s ?? 0;
+        const durationNow = Math.max(
+          1,
+          Math.ceil(totalQ * QUIZ_CONSTANTS.TIME_PER_QUESTION_MINUTES)
+        );
+
         await db
           .update(tests)
           .set({
             updatedAt: new Date(),
-            totalMarks: sql`${tests.totalMarks} + ${newMarksToAdd}`,
+            totalMarks: totalMarksNow,
             totalQuestions: totalQ,
+            durationMinutes: durationNow,
           })
           .where(eq(tests.id, testId));
       }
@@ -246,7 +298,8 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
         totalQuestions: tests.totalQuestions,
         updatedAt: tests.updatedAt,
       })
-      .from(tests);
+      .from(tests)
+      .where(eq(tests.examType, 'mppolice'));
 
     const blogsData = await db
       .select({
@@ -256,7 +309,8 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
         contentType: contentBlogs.contentType,
         createdAt: contentBlogs.createdAt,
       })
-      .from(contentBlogs);
+      .from(contentBlogs)
+      .where(eq(contentBlogs.examType, 'mppolice'));
 
     const recentGuests = await db
       .select({
@@ -267,6 +321,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
         createdAt: guests.createdAt,
       })
       .from(guests)
+      .where(eq(guests.examType, 'mppolice'))
       .orderBy(desc(guests.createdAt))
       .limit(100); // Increased limit to show more history per user request
 
@@ -301,9 +356,9 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
 
     testsData.forEach((t) => {
       const normalizedType = t.type?.toUpperCase();
-      if (normalizedType && typeCount.hasOwnProperty(normalizedType)) {
-        // @ts-ignore
-        typeCount[normalizedType]++;
+      if (normalizedType && Object.hasOwn(typeCount, normalizedType)) {
+        const k = normalizedType as keyof typeof typeCount;
+        typeCount[k]++;
       }
       if (normalizedType === 'TOPIC' && t.unitId && t.topicId) {
         if (!topicCoverage[t.unitId]) {

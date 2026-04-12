@@ -46,15 +46,15 @@ const faqData = [
   {
     q: { en: 'How long is my access valid?', hi: 'मेरा एक्सेस कब तक वैध रहेगा?' },
     a: {
-      en: 'Pro access is valid till MPPSC 2026 Mains.',
-      hi: 'प्रो एक्सेस MPPSC 2026 मेन्स तक वैध है।',
+      en: 'Pro access is valid till MP Police 2026.',
+      hi: 'प्रो एक्सेस MP Police 2026 तक वैध है।',
     },
   },
   {
     q: { en: 'What if the exam is delayed?', hi: 'अगर परीक्षा में देरी हुई तो?' },
     a: {
-      en: 'If MPPSC delays the exam, we will extend your access accordingly. No extra charge.',
-      hi: 'अगर MPPSC परीक्षा में देरी करता है, तो हम आपका एक्सेस उसी हिसाब से बढ़ा देंगे। कोई अतिरिक्त शुल्क नहीं।',
+      en: 'If MP Police delays the exam, we will extend your access accordingly. No extra charge.',
+      hi: 'अगर MP Police परीक्षा में देरी करता है, तो हम आपका एक्सेस उसी हिसाब से बढ़ा देंगे। कोई अतिरिक्त शुल्क नहीं।',
     },
   },
 ];
@@ -128,10 +128,10 @@ export default function PricingPage() {
 
   const p = pricingData?.pricing || PRICING_DEFAULTS;
 
-  // Pro users ko pricing page bilkul na dikhao — redirect to quiz
+  // Pro users ko pricing page bilkul na dikhao — redirect to dashboard
   useEffect(() => {
     if (isProUser) {
-      router.replace('/syllabus/quiz/pyq');
+      router.replace('/dashboard');
     }
   }, [isProUser, router]);
 
@@ -174,13 +174,13 @@ export default function PricingPage() {
       {/* ── Hero Header ──────────────────────────────────── */}
       <section className="relative z-10 px-4 pt-24 pb-4 text-center md:pt-32 md:pb-8">
         <Badge className="mb-6 cursor-default border-amber-200 bg-amber-50 px-5 py-2 text-xs font-black tracking-widest text-amber-800 uppercase shadow-sm">
-          MPPSC 2026 Special
+          MP Police 2026 Special
         </Badge>
         <h1 className="font-display mb-4 text-4xl leading-tight font-black tracking-tight text-slate-900 md:text-6xl">
           {hi ? (
-             <>अपनी <span className="text-amber-600">MPPSC सफलता</span> में निवेश करें</>
+             <>अपनी <span className="text-amber-600">MP Police सफलता</span> में निवेश करें</>
           ) : (
-             <>Invest in Your <span className="text-amber-600">MPPSC Success</span></>
+             <>Invest in Your <span className="text-amber-600">MP Police Success</span></>
           )}
         </h1>
         <p className="mx-auto mb-2 max-w-2xl text-lg font-bold text-slate-600 md:text-xl">
@@ -205,7 +205,7 @@ export default function PricingPage() {
         </section>
       )}
 
-      {/* ── Free users — both plans ──────────────────────── */}
+      {/* ── Free users — Pro plan only ──────────────────────── */}
       {!isProUser && !isLiteUser && (
         <section className="px-4 pb-16">
           
@@ -260,7 +260,7 @@ export default function PricingPage() {
                 {
                   icon: Newspaper,
                   label: hi ? 'प्रीमियम ब्लॉग्स' : 'Premium Blogs',
-                  sub: hi ? 'MPPSC की सभी 10 यूनिट्स की बेसिक समझ' : 'Basic understanding of all 10 units of MPPSC',
+                  sub: hi ? 'MP Police की सभी 10 यूनिट्स की बेसिक समझ' : 'Basic understanding of all 10 units of MP Police',
                 },
                 {
                   icon: BookOpen,

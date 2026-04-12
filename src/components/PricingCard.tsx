@@ -238,8 +238,8 @@ export function PricingCard({
                 <span>
                   {hi
                     ? isLite
-                      ? 'MPPSC 2026 प्रीलिम्स तक वैध'
-                      : 'MPPSC 2026 मेन्स तक वैध'
+                      ? 'MP Police 2026 प्रीलिम्स तक वैध'
+                      : 'MP Police 2026 मेन्स तक वैध'
                     : validityText}
                 </span>
               </li>

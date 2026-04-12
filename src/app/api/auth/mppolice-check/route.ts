@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 export async function GET() {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token');
+    const token = cookieStore.get('mppolice_token');
 
     if (!token) {
       return NextResponse.json({ authenticated: false });
@@ -22,7 +22,7 @@ export async function GET() {
     }
 
     // Verify user exists and is subscribed
-    const users = await db
+    const dbUsers = await db
       .select({
         id: mppscUsers.id,
         name: mppscUsers.name,
@@ -35,7 +35,7 @@ export async function GET() {
       .where(eq(mppscUsers.id, decoded.userId)) // Use decoded userId, not token string
       .limit(1);
 
-    const user = users[0];
+    const user = dbUsers[0];
 
     if (!user) {
       return NextResponse.json({ authenticated: false });

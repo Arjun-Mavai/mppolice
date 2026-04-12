@@ -16,8 +16,8 @@ async function main() {
       .from(tests);
 
     const relevantTests = allTests.filter(t => 
-      (t.title.includes('MPPSC State Service Prelims') && t.title.includes('Paper 1')) ||
-      (t.title.includes('MPPSC राज्य सेवा प्रारंभिक') && t.title.includes('पेपर 1'))
+      (t.title.includes('MP Police State Service Prelims') && t.title.includes('Paper 1')) ||
+      (t.title.includes('MP Police राज्य सेवा प्रारंभिक') && t.title.includes('पेपर 1'))
     );
 
     if (relevantTests.length === 0) {

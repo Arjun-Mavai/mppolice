@@ -3,7 +3,7 @@
 import { verifyAuth } from '@/lib/auth';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { cookies, headers } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
@@ -72,12 +72,17 @@ export async function loginUserAction(formData: LoginParams) {
     }
 
     // ── Find User by Email ──────────────────────────────────────
-    const users = await db
+    const dbUsers = await db
       .select()
       .from(mppscUsers)
-      .where(eq(mppscUsers.email, email.toLowerCase().trim()))
+      .where(
+        and(
+          eq(mppscUsers.email, email.toLowerCase().trim()),
+          sql`(${mppscUsers.examType} = 'mppolice' OR ${mppscUsers.examType} = 'all')`
+        )
+      )
       .limit(1);
-    const user = users[0];
+    const user = dbUsers[0];
 
     if (!user) {
       return { error: 'Invalid credentials' };
@@ -150,7 +155,7 @@ export async function loginUserAction(formData: LoginParams) {
 
     // ── Set HTTP-Only Cookie (30 days) ──────────────────────────
     const cookieStore = await cookies();
-    cookieStore.set('mppsc_token', token, {
+    cookieStore.set('mppolice_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       path: '/',

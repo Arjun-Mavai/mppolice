@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, UserPlus, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/errors';
 
 export default function AdminCreateUserPage() {
   const [name, setName] = useState('');
@@ -38,7 +39,7 @@ export default function AdminCreateUserPage() {
     setLoading(true);
     setResult(null);
     try {
-      const res = await fetch('/api/auth/mppsc-signup', {
+      const res = await fetch('/api/auth/mppolice-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -65,8 +66,8 @@ export default function AdminCreateUserPage() {
       setPlanTier('lite');
       setRole('guest');
       setAccessMonths(4);
-    } catch (err: any) {
-      toast.error(err.message || 'Something went wrong');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err) || 'Something went wrong');
     } finally {
       setLoading(false);
     }

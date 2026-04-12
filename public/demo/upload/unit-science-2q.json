@@ -1,0 +1,60 @@
+[
+  {
+    "questionText": "न्यूटन का पहला नियम किस अवधारणा से संबंधित है?",
+    "questionTextEn": "Newton's first law is about which concept?",
+    "options": [
+      { "id": "1", "text": "गुरुत्वाकर्षण", "text_en": "Gravitation" },
+      { "id": "2", "text": "जड़त्व", "text_en": "Inertia" },
+      { "id": "3", "text": "संवेग संरक्षण", "text_en": "Conservation of momentum" },
+      { "id": "4", "text": "ऊर्जा संरक्षण", "text_en": "Conservation of energy" }
+    ],
+    "correctAnswer": "2",
+    "subject": "General Science",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "पहला नियम जड़त्व (वस्तु विराम/गति पर अड़ी रहती है) को परिभाषित करता है।",
+    "explanationEn": "The first law defines inertia — objects resist changes in motion.",
+    "extendedData": {
+      "explanation": {
+        "stream": "gk_science",
+        "facts": [
+          "जड़त्व: विराम या समवेग गति बनाए रखने की प्रवृत्ति।",
+          "F=0 हो तो v स्थिर (गैलीलियो-न्यूटन)।",
+          "दूसरा नियम F=ma, तीसरा action-reaction।"
+        ],
+        "mnemonics": ["1st = Inertia, 2nd = F=ma, 3rd = pair forces."],
+        "related": ["रियर सीट बेल्ट — जड़त्व का जीवन उदाहरण"],
+        "memoryTip": "MCQ में 'पहला' दिखे तो पहले inertia ढूँढो।"
+      }
+    }
+  },
+  {
+    "questionText": "pH = 7 का विलयन कैसा होता है?",
+    "questionTextEn": "A solution with pH = 7 is:",
+    "options": [
+      { "id": "1", "text": "अम्लीय", "text_en": "Acidic" },
+      { "id": "2", "text": "उदासीन", "text_en": "Neutral" },
+      { "id": "3", "text": "क्षारीय", "text_en": "Alkaline" },
+      { "id": "4", "text": "अवशोषक", "text_en": "Absorbent" }
+    ],
+    "correctAnswer": "2",
+    "subject": "General Science",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "pH 7 उदासीन विलयन (जल जैसा) होता है।",
+    "explanationEn": "pH 7 is neutral, like pure water at 25°C.",
+    "extendedData": {
+      "explanation": {
+        "stream": "gk_science",
+        "facts": [
+          "pH स्केल 0–14; 7 = neutral।",
+          "<7 अम्लीय, >7 क्षारीय।",
+          "H+ सांद्रता: pH = -log10[H+]"
+        ],
+        "mnemonics": ["7 = neutral heaven in the middle."],
+        "related": ["अम्ल वर्षा, साबुन का क्षारीय"],
+        "memoryTip": "Constable लेवल: 7 याद = neutral।"
+      }
+    }
+  }
+]

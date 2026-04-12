@@ -165,7 +165,7 @@ export async function POST(req: Request) {
     // 📧 Send Receipt Email
     const resend = new Resend(process.env.RESEND_API_KEY);
 
-    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
+    const fromName = process.env.EMAIL_FROM_NAME || 'MP Police 2026';
     const fromAddress =
       process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
@@ -173,7 +173,7 @@ export async function POST(req: Request) {
     const { error: emailError } = await resend.emails.send({
       from: fromEmail,
       to: [user.email],
-      subject: '🚀 Upgrade Successful — MPPSC ZEN',
+      subject: '🚀 Upgrade Successful — Mindful MP Police',
       html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
                 <h1 style="color: #111;">Upgrade Successful!</h1>
@@ -186,7 +186,7 @@ export async function POST(req: Request) {
                 <p>All Pro features are now unlocked for your account.</p>
                 <p>Keep practicing!</p>
                 <hr style="border: none; border-top: 1px solid #eaeaea; margin: 40px 0;" />
-                <p style="color: #888; font-size: 12px;">Mindful MPPSC Zen App</p>
+                <p style="color: #888; font-size: 12px;">Mindful MP Police</p>
             </div>
         `,
     });

@@ -76,7 +76,7 @@ export function PaperAnalysis({ stats, repeatedQuestions, isHindi, theme = 'dark
                   <div className="flex flex-col gap-1">
                     <div className={cn("mb-1 flex items-center gap-2 text-sm font-medium tracking-wider uppercase", theme === 'light' ? "text-[#86868B]" : "text-slate-400")}>
                       <div className={cn("h-1.5 w-1.5 rounded-full", theme === 'light' ? "bg-indigo-500" : "bg-emerald-500")} />
-                      {isHindi ? 'MPPSC प्रिलिम्स' : 'MPPSC Prelims'}
+                      {isHindi ? 'MP Police प्रिलिम्स' : 'MP Police Prelims'}
                     </div>
                     <h3 className={cn("flex items-center gap-3 text-2xl font-extrabold tracking-tight sm:text-3xl", theme === 'light' ? "text-[#1D1D1F]" : "text-white")}>
                       {year}
@@ -141,7 +141,7 @@ export function PaperAnalysis({ stats, repeatedQuestions, isHindi, theme = 'dark
                               year: q.year,
                               qNo: q.qNo,
                               subject: q.subject, // Map subject from DB
-                              testTitle: `MPPSC Prelims ${q.year}`,
+                              testTitle: `MP Police Prelims ${q.year}`,
                             }));
 
                             return (

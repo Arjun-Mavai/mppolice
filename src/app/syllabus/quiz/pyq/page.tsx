@@ -1,4 +1,8 @@
-import { getCachedPYQTests, getUserAttemptsByType } from '@/features/tests/actions/submission';
+import {
+  getCachedPYQTests,
+  getCachedMppoliceMockTests,
+  getUserAttempts,
+} from '@/features/tests/actions/submission';
 import { getSubjectWisePYQStats } from '@/features/tests/actions/pyq-analytics'; // Back to original
 import PYQPageClient from './PYQPageClient';
 import { verifyAuth } from '@/lib/auth';
@@ -7,17 +11,22 @@ import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 import { Suspense } from 'react';
 import { QuizListSkeleton } from '@/components/QuizListSkeleton';
 
-export default async function PYQPage({ 
-  searchParams 
-}: { 
-  searchParams?: Promise<{ mode?: string }> 
+export default async function PYQPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ mode?: string; tab?: string; bucket?: string; collection?: string }>;
 }) {
   const params = searchParams ? await searchParams : {};
-  
+
   return (
     <div className="relative min-h-screen bg-[#fafbfc] pb-20 font-sans">
       <Suspense fallback={<QuizListFallback />}>
-        <PYQPageData mode={params.mode} />
+        <PYQPageData
+          mode={params.mode}
+          initialTab={params.tab}
+          initialBucket={params.bucket}
+          initialCollection={params.collection}
+        />
       </Suspense>
     </div>
   );
@@ -35,24 +44,36 @@ function QuizListFallback() {
   );
 }
 
-async function PYQPageData({ mode }: { mode?: string }) {
+async function PYQPageData({
+  mode,
+  initialTab,
+  initialBucket,
+  initialCollection,
+}: {
+  mode?: string;
+  initialTab?: string;
+  initialBucket?: string;
+  initialCollection?: string;
+}) {
   const userPromise = verifyAuth();
-  const [user, tests, attemptLimits, attempts, subjectStats] = await Promise.all([
+  const [user, pyqTests, mockTests, attemptLimits, subjectStats] = await Promise.all([
     userPromise,
     getCachedPYQTests(),
+    getCachedMppoliceMockTests(),
     getCachedAttemptLimits(),
-    (async () => {
-      const resolvedUser = await userPromise;
-      const userId = resolvedUser?.id;
-      return userId ? getUserAttemptsByType('PYQ', userId) : ({} as Record<string, number>);
-    })(),
-    getSubjectWisePYQStats(), // Back to original working function
+    getSubjectWisePYQStats(),
   ]);
 
-  const tier = getUserTier(user);
-  const maxRetries = attemptLimits['PYQ'] ?? null;
+  const allIds = [...pyqTests.map((t) => t.id), ...mockTests.map((t) => t.id)];
+  const attempts =
+    user && allIds.length > 0
+      ? await getUserAttempts(allIds, user.id)
+      : ({} as Record<string, number>);
 
-  const enrichedTests = tests.map((test) => {
+  const tier = getUserTier(user);
+  const maxRetriesPyq = attemptLimits['PYQ'] ?? null;
+
+  const enrichedTests = pyqTests.map((test) => {
     const hasAccess =
       user?.role === 'admin' ||
       hasAccessToContent(
@@ -64,7 +85,8 @@ async function PYQPageData({ mode }: { mode?: string }) {
         tier
       );
     const attemptsCount = attempts[test.id] || 0;
-    const attemptsLeft = maxRetries != null ? Math.max(0, maxRetries - attemptsCount) : null;
+    const attemptsLeft =
+      maxRetriesPyq != null ? Math.max(0, maxRetriesPyq - attemptsCount) : null;
 
     return {
       ...test,
@@ -73,10 +95,51 @@ async function PYQPageData({ mode }: { mode?: string }) {
       isLocked: !hasAccess && !(test.isFreeAccess ?? false),
       isFree: (test.isFreeAccess ?? false) && !user,
       attemptsLeft: user && attemptsLeft != null ? attemptsLeft : undefined,
-      maxRetries: user ? maxRetries : null,
-      year: test.year ? parseInt(test.year) : undefined,
+      maxRetries: user ? maxRetriesPyq : null,
+      year: test.year ? parseInt(String(test.year), 10) : undefined,
     };
   });
 
-  return <PYQPageClient initialTests={enrichedTests} subjectStats={subjectStats} isLoggedIn={!!user} mode={mode} />;
+  const enrichedMocks = mockTests.map((test) => {
+    const hasAccess =
+      user?.role === 'admin' ||
+      hasAccessToContent(
+        {
+          isFreeAccess: test.isFreeAccess,
+          isLiteAccess: test.isLiteAccess,
+          isProAccess: test.isProAccess,
+        },
+        tier
+      );
+    const attemptsCount = attempts[test.id] || 0;
+    const lim =
+      (attemptLimits as Record<string, number | null>)[test.type] ??
+      attemptLimits['FLT'] ??
+      null;
+    const attemptsLeft = lim != null ? Math.max(0, lim - attemptsCount) : null;
+
+    return {
+      ...test,
+      questions: test.totalQuestions ?? 0,
+      totalQuestions: test.totalQuestions ?? 0,
+      isLocked: !hasAccess && !(test.isFreeAccess ?? false),
+      isFree: (test.isFreeAccess ?? false) && !user,
+      attemptsLeft: user && attemptsLeft != null ? attemptsLeft : undefined,
+      maxRetries: user ? lim : null,
+      year: test.year ? parseInt(String(test.year), 10) : undefined,
+    };
+  });
+
+  return (
+    <PYQPageClient
+      initialTests={enrichedTests}
+      initialMockTests={enrichedMocks}
+      subjectStats={subjectStats}
+      isLoggedIn={!!user}
+      mode={mode}
+      initialTab={initialTab}
+      initialBucket={initialBucket}
+      initialCollection={initialCollection}
+    />
+  );
 }

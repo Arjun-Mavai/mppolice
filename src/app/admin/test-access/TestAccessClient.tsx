@@ -71,6 +71,7 @@ import {
 import { toast } from 'sonner';
 import { revalidateSyllabus } from '@/actions/revalidate';
 import { syncSubjectParts } from '@/app/admin/tests/sync-actions';
+import { getErrorMessage } from '@/lib/errors';
 
 // Test type ka full form aur color — admin ko samajh aaye
 const TYPE_CONFIG = {
@@ -455,7 +456,9 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
                 Test Access Manager
               </h1>
               <p className="text-sm text-slate-500">
-                Toggle karo kaun kaunsa test de sakta hai — turant reflect hoga
+                Sirf <span className="font-semibold text-emerald-700">MP Police</span> tests (
+                <code className="text-xs">examType = mppolice</code>) — MPPSC / upsc rows yahan nahi
+                dikhenge
               </p>
             </div>
           </div>
@@ -473,9 +476,9 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
                 } else {
                   toast.error('Sync failed');
                 }
-              } catch (err: any) {
+              } catch (err: unknown) {
                 console.error('Sync error:', err);
-                toast.error('Sync failed: ' + (err.message || 'Unknown error'));
+                toast.error('Sync failed: ' + (getErrorMessage(err) || 'Unknown error'));
               }
             }}
           >

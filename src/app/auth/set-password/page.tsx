@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Loader2, LockKeyhole, Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-react';
 import { logger } from '@/lib/logger';
+import { getErrorMessage } from '@/lib/errors';
 
 const passwordSchema = z
   .object({
@@ -86,12 +87,12 @@ function SetPasswordContent() {
       setIsSuccess(true);
       toast.success(`Password set! Your ${data.planTier || ''} plan is active.`);
       setTimeout(() => router.push('/login'), 3000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Set password failed', error, {
         category: 'auth',
         metadata: { component: 'SetPasswordPage' },
       });
-      toast.error(error.message);
+      toast.error(getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -122,7 +123,7 @@ function SetPasswordContent() {
           </div>
           <h2 className="mb-2 text-xl font-bold text-slate-900">You&apos;re All Set! 🎉</h2>
           <p className="mb-4 text-sm text-slate-500">
-            Your password has been set and your premium plan is now active. Start your MPPSC
+            Your password has been set and your premium plan is now active. Start your MP Police
             preparation!
           </p>
           <p className="text-xs text-slate-400">Redirecting to login...</p>
@@ -140,7 +141,7 @@ function SetPasswordContent() {
           </div>
           <h1 className="text-xl font-bold text-slate-900">Set Your Password</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Create a secure password to access your MPPSC premium account.
+            Create a secure password to access your MP Police premium account.
           </p>
         </div>
 

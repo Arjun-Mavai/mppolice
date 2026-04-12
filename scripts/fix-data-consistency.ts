@@ -12,7 +12,7 @@ import {
 import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
 
 // Local database connection
-const sqlite = new Database('./mppsc_local.db');
+const sqlite = new Database('./mppolice_local.db');
 const db = drizzle(sqlite);
 
 const CANONICAL_TEST_IDS: Record<number, string> = {

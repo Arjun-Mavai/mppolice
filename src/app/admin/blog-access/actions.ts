@@ -11,11 +11,14 @@
 
 import { db } from '@/db';
 import { contentBlogs } from '@/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { revalidateTag, revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth-admin';
 import { logger } from '@/lib/logger';
 import { CACHE } from '@/lib/cache';
+import { getErrorCode, getErrorMessage } from '@/lib/errors';
+
+const mppoliceBlogWhere = eq(contentBlogs.examType, 'mppolice');
 
 /**
  * getAllBlogsForAdmin — Sab blogs fetch with access flags
@@ -40,6 +43,7 @@ export async function getAllBlogsForAdmin() {
       createdAt: contentBlogs.createdAt,
     })
     .from(contentBlogs)
+    .where(mppoliceBlogWhere)
     .orderBy(contentBlogs.createdAt);
 
   return allBlogs;
@@ -63,11 +67,14 @@ export async function toggleBlogAccess(
   await db
     .update(contentBlogs)
     .set({ [field]: value, updatedAt: new Date() })
-    .where(eq(contentBlogs.id, blogId));
+    .where(and(eq(contentBlogs.id, blogId), mppoliceBlogWhere));
 
   // Sync legacy isPremium — agar free hai to premium false
   if (field === 'isFreeAccess' && value === true) {
-    await db.update(contentBlogs).set({ isPremium: false }).where(eq(contentBlogs.id, blogId));
+    await db
+      .update(contentBlogs)
+      .set({ isPremium: false })
+      .where(and(eq(contentBlogs.id, blogId), mppoliceBlogWhere));
   }
 
   // Cache bust — blog pages re-fetch honge
@@ -78,7 +85,7 @@ export async function toggleBlogAccess(
   const blog = await db
     .select({ slug: contentBlogs.slug })
     .from(contentBlogs)
-    .where(eq(contentBlogs.id, blogId))
+    .where(and(eq(contentBlogs.id, blogId), mppoliceBlogWhere))
     .get();
   if (blog) {
     revalidateTag(CACHE.BLOGS.TAGS.DETAIL(blog.slug), { expire: 0 });
@@ -108,16 +115,19 @@ export async function bulkUpdateBlogAccess(
       await db
         .update(contentBlogs)
         .set({ [field]: value, updatedAt: new Date() })
-        .where(sql`${contentBlogs.unitId} IS NULL`);
+        .where(and(sql`${contentBlogs.unitId} IS NULL`, mppoliceBlogWhere));
     } else {
       await db
         .update(contentBlogs)
         .set({ [field]: value, updatedAt: new Date() })
-        .where(eq(contentBlogs.unitId, unitId));
+        .where(and(eq(contentBlogs.unitId, unitId), mppoliceBlogWhere));
     }
   } else {
-    // All blogs
-    await db.update(contentBlogs).set({ [field]: value, updatedAt: new Date() });
+    // All MP Police blogs
+    await db
+      .update(contentBlogs)
+      .set({ [field]: value, updatedAt: new Date() })
+      .where(mppoliceBlogWhere);
   }
 
   revalidateTag(CACHE.BLOGS.TAGS.ALL, { expire: 0 });
@@ -138,7 +148,7 @@ export async function toggleBlogHidden(blogId: string, isHidden: boolean) {
   await db
     .update(contentBlogs)
     .set({ isHidden, updatedAt: new Date() })
-    .where(eq(contentBlogs.id, blogId));
+    .where(and(eq(contentBlogs.id, blogId), mppoliceBlogWhere));
 
   revalidateTag(CACHE.BLOGS.TAGS.ALL, { expire: 0 });
   revalidatePath('/blogs');
@@ -146,7 +156,7 @@ export async function toggleBlogHidden(blogId: string, isHidden: boolean) {
   const blog = await db
     .select({ slug: contentBlogs.slug })
     .from(contentBlogs)
-    .where(eq(contentBlogs.id, blogId))
+    .where(and(eq(contentBlogs.id, blogId), mppoliceBlogWhere))
     .get();
   if (blog) {
     revalidateTag(CACHE.BLOGS.TAGS.DETAIL(blog.slug), { expire: 0 });
@@ -179,7 +189,7 @@ export async function getBlogById(blogId: string) {
       topicId: contentBlogs.topicId,
     })
     .from(contentBlogs)
-    .where(eq(contentBlogs.id, blogId))
+    .where(and(eq(contentBlogs.id, blogId), mppoliceBlogWhere))
     .get();
 
   if (!blog) return { success: false as const, error: `Blog not found for id ${blogId}` };
@@ -269,7 +279,7 @@ export async function updateBlog(
     const oldBlog = await db
       .select({ slug: contentBlogs.slug })
       .from(contentBlogs)
-      .where(eq(contentBlogs.id, blogId))
+      .where(and(eq(contentBlogs.id, blogId), mppoliceBlogWhere))
       .get();
 
     if (!oldBlog) {
@@ -296,7 +306,7 @@ export async function updateBlog(
         topicId: metadata.topic || null,
         updatedAt: new Date(),
       })
-      .where(eq(contentBlogs.id, blogId));
+      .where(and(eq(contentBlogs.id, blogId), mppoliceBlogWhere));
 
     // Cache bust — purana slug + naya slug dono bust karo
     revalidateTag(CACHE.BLOGS.TAGS.ALL, { expire: 0 });
@@ -311,12 +321,12 @@ export async function updateBlog(
     logger.info(`Blog updated: ${blogId} → ${metadata.title}`);
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Update Blog Error:', error);
-    if (error.code === 'SQLITE_CONSTRAINT') {
+    if (getErrorCode(error) === 'SQLITE_CONSTRAINT') {
       return { success: false, error: 'Ye slug already kisi aur blog ka h bhai' };
     }
-    return { success: false, error: error.message || 'Blog update fail ho gaya' };
+    return { success: false, error: getErrorMessage(error) || 'Blog update fail ho gaya' };
   }
 }
 
@@ -331,10 +341,10 @@ export async function deleteBlog(blogId: string) {
     const blog = await db
       .select({ slug: contentBlogs.slug })
       .from(contentBlogs)
-      .where(eq(contentBlogs.id, blogId))
+      .where(and(eq(contentBlogs.id, blogId), mppoliceBlogWhere))
       .get();
 
-    await db.delete(contentBlogs).where(eq(contentBlogs.id, blogId));
+    await db.delete(contentBlogs).where(and(eq(contentBlogs.id, blogId), mppoliceBlogWhere));
 
     // Cache bust
     revalidateTag(CACHE.BLOGS.TAGS.ALL, { expire: 0 });
@@ -345,8 +355,8 @@ export async function deleteBlog(blogId: string) {
 
     logger.info(`Blog deleted: ${blogId}`);
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Delete Blog Error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: getErrorMessage(error) };
   }
 }

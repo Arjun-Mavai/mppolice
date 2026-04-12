@@ -1,0 +1,59 @@
+[
+  {
+    "questionText": "12 का 15% कितना है?",
+    "questionTextEn": "What is 15% of 12?",
+    "options": [
+      { "id": "1", "text": "1.6", "text_en": "1.6" },
+      { "id": "2", "text": "1.8", "text_en": "1.8" },
+      { "id": "3", "text": "2.0", "text_en": "2.0" },
+      { "id": "4", "text": "1.4", "text_en": "1.4" }
+    ],
+    "correctAnswer": "2",
+    "subject": "Quantitative Aptitude",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "15% = 3/20; 12 × 3/20 = 36/20 = 1.8",
+    "explanationEn": "15% of 12 = 0.15 × 12 = 1.8",
+    "extendedData": {
+      "explanation": {
+        "stream": "math_quant",
+        "steps": [
+          "15% = 15/100 = 3/20।",
+          "12 × 3/20 = 36/20।",
+          "और काटें: 9/5 = 1.8।"
+        ],
+        "shortcut": "10% of 12 = 1.2; 5% = 0.6; जोड़ = 1.8",
+        "trap": "12% of 15 भी 1.8 होता है — गुणा क्रम commutative; उत्तर समान लेकिन प्रश्न अलग।",
+        "memoryTip": "छोटे %: 10%+5% तोड़ लो।"
+      }
+    }
+  },
+  {
+    "questionText": "यदि 3x - 7 = 14, तो x का मान क्या है?",
+    "questionTextEn": "If 3x - 7 = 14, find x.",
+    "options": [
+      { "id": "1", "text": "5", "text_en": "5" },
+      { "id": "2", "text": "7", "text_en": "7" },
+      { "id": "3", "text": "6", "text_en": "6" },
+      { "id": "4", "text": "9", "text_en": "9" }
+    ],
+    "correctAnswer": "2",
+    "subject": "Quantitative Aptitude",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "3x = 21 ⇒ x = 7।",
+    "explanationEn": "3x = 14 + 7 = 21, so x = 7.",
+    "extendedData": {
+      "explanation": {
+        "stream": "math_quant",
+        "steps": [
+          "3x - 7 = 14 ⇒ 3x = 14 + 7 = 21।",
+          "x = 21/3 = 7।"
+        ],
+        "shortcut": "पहले constant दूसरी तरफ।",
+        "trap": "भूल से 14-7 कर दोगे तो गलत — minus sign ध्यान से।",
+        "memoryTip": "एक चर: एक ही पंक्ति में इकट्ठा करो।"
+      }
+    }
+  }
+]

@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { getErrorMessage } from '@/lib/errors';
 
 export default function SyllabusUploadPage() {
   const [jsonInput, setJsonInput] = useState('');
@@ -34,8 +35,8 @@ export default function SyllabusUploadPage() {
       } else {
         setStatus({ type: 'error', msg: result.message });
       }
-    } catch (e: any) {
-      setStatus({ type: 'error', msg: e.message });
+    } catch (e: unknown) {
+      setStatus({ type: 'error', msg: getErrorMessage(e) });
     } finally {
       setLoading(false);
     }

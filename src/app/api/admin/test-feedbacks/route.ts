@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   try {
     // Verify Admin
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    const token = cookieStore.get('mppolice_token')?.value;
 
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
     // Check role
     const user = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
+      where: (users, { eq }) => eq(mppscUsers.id, decoded.userId),
       columns: { role: true },
     });
 
@@ -32,6 +32,8 @@ export async function GET(request: Request) {
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100); // Max 100
     const offset = (page - 1) * limit;
+
+    const { and } = await import('drizzle-orm');
 
     // Fetch Test Feedbacks joined with Test Titles (with pagination)
     const data = await db
@@ -51,6 +53,11 @@ export async function GET(request: Request) {
       })
       .from(testFeedback)
       .leftJoin(tests, eq(testFeedback.testId, tests.id))
+      .where(
+        and(
+          sql`(${testFeedback.examType} = 'mppolice' OR ${testFeedback.examType} = 'all')`
+        )
+      )
       .orderBy(desc(testFeedback.createdAt))
       .limit(limit)
       .offset(offset);
@@ -58,7 +65,8 @@ export async function GET(request: Request) {
     // Get total count for pagination
     const totalCount = await db
       .select({ count: sql<number>`count(*)` })
-      .from(testFeedback);
+      .from(testFeedback)
+      .where(sql`(${testFeedback.examType} = 'mppolice' OR ${testFeedback.examType} = 'all')`);
 
     // Use testName as fallback when testTitle is null (for practice tests without real test IDs)
     const transformedData = data.map(item => ({

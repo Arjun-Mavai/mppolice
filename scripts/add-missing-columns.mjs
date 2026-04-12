@@ -17,7 +17,7 @@ async function migrate() {
     // 1. Add exam_type column
     console.log('⏳ Adding "exam_type" column...');
     try {
-      await client.execute("ALTER TABLE tests ADD COLUMN exam_type TEXT NOT NULL DEFAULT 'mppsc';");
+      await client.execute("ALTER TABLE tests ADD COLUMN exam_type TEXT NOT NULL DEFAULT 'mppolice';");
       console.log('✅ Added "exam_type" column successfully.');
     } catch (e) {
       if (e.message.includes('duplicate column name')) {

@@ -3,14 +3,21 @@ import { db } from '@/db';
 import { syllabusTopics, mppscUsers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { getErrorMessage } from '@/lib/errors';
 
 // Admin Secret for protection (reuse the one we added)
 const ADMIN_SECRET_HEADER = 'x-admin-secret';
 
 type EnrichedTopic = {
   id: string;
-  content_hindi: any;
-  content_english: any;
+  content_hindi: unknown;
+  content_english: unknown;
+};
+
+type UnitExportGroup = {
+  title: string;
+  topics: Array<Record<string, unknown>>;
+  topics_en: unknown[];
 };
 
 export async function GET(request: NextRequest) {
@@ -28,7 +35,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Group by Unit
-    const grouped: Record<string, any> = {};
+    const grouped: Record<string, UnitExportGroup> = {};
 
     // Helper to format unit ID (unit_1 -> Unit 1) if needed,
     // but we keep keys as unit_1 for consistency
@@ -62,8 +69,8 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json({ units: grouped });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -80,8 +87,8 @@ export async function POST(request: NextRequest) {
     // Verify secret against DB (Optional but recommended for robust security)
     // For speed in this script, we can rely on the secret matching a known value or DB lookup
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { and, eq }) =>
-        and(eq(users.role, 'admin'), eq(users.adminSecret, adminSecret)),
+      where: (table, { and, eq }) =>
+        and(eq(table.role, 'admin'), eq(table.adminSecret, adminSecret)),
     });
 
     if (!adminUser) {
@@ -100,7 +107,7 @@ export async function POST(request: NextRequest) {
     }
 
     let updatedCount = 0;
-    let errors = [];
+    const errors: Array<{ id: string; error: string }> = [];
 
     // logger.debug("topics", topics)
     // 3. Bulk Update
@@ -119,9 +126,9 @@ export async function POST(request: NextRequest) {
           .where(eq(syllabusTopics.id, topic.id));
 
         updatedCount++;
-      } catch (err: any) {
+      } catch (err: unknown) {
         logger.error(`Failed to update topic ${topic.id}:`, err);
-        errors.push({ id: topic.id, error: err.message });
+        errors.push({ id: topic.id, error: getErrorMessage(err) });
       }
     }
 
@@ -130,8 +137,8 @@ export async function POST(request: NextRequest) {
       message: `Successfully updated ${updatedCount} topics.`,
       errors: errors.length > 0 ? errors : undefined,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Bulk enrichment failed:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

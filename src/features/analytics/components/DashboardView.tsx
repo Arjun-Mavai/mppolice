@@ -245,7 +245,7 @@ export function DashboardView({ data, userName }: DashboardViewProps) {
                 </div>
                 <Button
                   className="h-10 w-full rounded-xl bg-indigo-600 text-[10px] font-bold tracking-widest text-white uppercase shadow-lg shadow-indigo-600/20 hover:bg-indigo-500"
-                  onClick={() => router.push('/syllabus/quiz/pyq')}
+                  onClick={() => router.push('/free-quiz')}
                 >
                   START TEST SERIES
                 </Button>
@@ -287,7 +287,7 @@ export function DashboardView({ data, userName }: DashboardViewProps) {
                   <Button
                     variant="outline"
                     className="mt-4 w-full border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                    onClick={() => router.push('/syllabus/quiz/units')}
+                    onClick={() => router.push('/free-quiz')}
                   >
                     Practice Weak Areas
                   </Button>

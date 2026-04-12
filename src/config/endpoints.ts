@@ -15,12 +15,12 @@ export const API = {
     ME: '/api/auth/me',
     UPGRADE: '/api/auth/upgrade',
     EXTEND_ACCESS: '/api/auth/extend-access',
-    // MPPSC-specific auth
-    MPPSC_LOGIN: '/api/auth/mppsc-login',
-    MPPSC_SIGNUP: '/api/auth/mppsc-signup',
-    MPPSC_LOGOUT: '/api/auth/mppsc-logout',
-    MPPSC_FORGOT_PASSWORD: '/api/auth/mppsc-forgot-password',
-    MPPSC_CHECK: '/api/auth/mppsc-check',
+    // MP Police-specific auth
+    MP_Police_LOGIN: '/api/auth/mppolice-login',
+    MP_Police_SIGNUP: '/api/auth/mppolice-signup',
+    MP_Police_LOGOUT: '/api/auth/mppolice-logout',
+    MP_Police_FORGOT_PASSWORD: '/api/auth/mppolice-forgot-password',
+    MP_Police_CHECK: '/api/auth/mppolice-check',
     CHECK_EMAIL: '/api/auth/check-email',
   },
 

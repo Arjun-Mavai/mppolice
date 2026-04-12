@@ -146,7 +146,7 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
     const startIndex = text.indexOf(marker);
     if (startIndex === -1) return null;
 
-    let content = text.slice(startIndex + marker.length);
+    const content = text.slice(startIndex + marker.length);
     let minIndex = content.length;
     nextMarkers.forEach((nm) => {
       const idx = content.indexOf(nm);
@@ -197,7 +197,7 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
     for (const marker of markers) {
       const idx = text.indexOf(marker);
       if (idx !== -1) {
-        let content = text.slice(idx);
+        const content = text.slice(idx);
         // Find the next marker
         let minIndex = content.length;
         otherMarkers.forEach((nm) => {

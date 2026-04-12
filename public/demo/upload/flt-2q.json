@@ -1,0 +1,61 @@
+[
+  {
+    "questionText": "यदि A का अर्थ B है, B का अर्थ C है, तो A का अर्थ सीधे किससे जुड़ा है? (डेमो: कूट भाषण)",
+    "questionTextEn": "If A means B and B means C, A is directly related to — (demo coding style)",
+    "options": [
+      { "id": "1", "text": "केवल B", "text_en": "Only B" },
+      { "id": "2", "text": "केवल C", "text_en": "Only C" },
+      { "id": "3", "text": "B के माध्यम से C", "text_en": "C through B" },
+      { "id": "4", "text": "किसी से नहीं", "text_en": "None" }
+    ],
+    "correctAnswer": "3",
+    "subject": "Logical Reasoning",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "कड़ियाँ जोड़ो: A→B और B→C ⇒ A का संबंध C से B के ज़रिए।",
+    "explanationEn": "Chain the relations: A→B and B→C, so A links to C via B.",
+    "extendedData": {
+      "explanation": {
+        "stream": "reasoning",
+        "chain": [
+          "पहली कथन: A को B से जोड़ता है।",
+          "दूसरी: B को C से।",
+          "संयोजन: A से C तक रास्ता B से होकर जाता है।",
+          "अतः 'सीधे केवल C' गलत — माध्यम B है।"
+        ],
+        "pattern": "ट्रांजिटिव / चेन रिलेशन",
+        "elimination": "\"केवल C\" माध्यम भूल जाता है; \"केवल B\" अधूरा।",
+        "memoryTip": "तीर चित्र बना लो: A→B→C — उत्तर पढ़ते ही दिख जाएगा।"
+      }
+    }
+  },
+  {
+    "questionText": "एक वस्तु का मूल्य 800 रु. है। 25% लाभ पर बेचने पर विक्रय मूल्य क्या होगा?",
+    "questionTextEn": "Cost is ₹800. Selling price at 25% profit?",
+    "options": [
+      { "id": "1", "text": "900 रु.", "text_en": "₹900" },
+      { "id": "2", "text": "1000 रु.", "text_en": "₹1000" },
+      { "id": "3", "text": "950 रु.", "text_en": "₹950" },
+      { "id": "4", "text": "850 रु.", "text_en": "₹850" }
+    ],
+    "correctAnswer": "2",
+    "subject": "Quantitative Aptitude",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "25% लाभ = लागत का 1/4; 800 + 200 = 1000।",
+    "explanationEn": "25% of 800 is 200; SP = 1000.",
+    "extendedData": {
+      "explanation": {
+        "stream": "math_quant",
+        "steps": [
+          "लागत CP = 800।",
+          "लाभ 25% ⇒ लाभ = 800 × 25/100 = 200।",
+          "विक्रय मूल्य SP = CP + लाभ = 800 + 200 = 1000।"
+        ],
+        "shortcut": "×1.25 सीधे: 800 × 5/4 = 1000",
+        "trap": "% को हमेशा **किस पर** निकालना है — यहाँ लागत पर, विक्रय पर नहीं।",
+        "memoryTip": "25% = चौथाई; आँखों से 800+200।"
+      }
+    }
+  }
+]

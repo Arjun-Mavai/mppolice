@@ -16,7 +16,13 @@ export async function GET() {
     const csatTests = await db
       .select()
       .from(tests)
-      .where(and(eq(tests.type, 'CSAT'), eq(tests.isHidden, false)))
+      .where(
+        and(
+          eq(tests.type, 'CSAT'),
+          eq(tests.isHidden, false),
+          eq(tests.examType, 'mppolice')
+        )
+      )
       .orderBy(asc(tests.displayOrder));
 
     let attemptsData: any[] = [];

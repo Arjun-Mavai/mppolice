@@ -143,3 +143,57 @@ export function normalizeSubject(rawSubject: string | null): string {
   });
   return 'Misc';
 }
+
+const MP_UI_BUCKETS = [
+  'General Knowledge',
+  'General Science',
+  'Logical Reasoning',
+  'Quantitative Aptitude',
+] as const;
+
+/** MP Police PYQ hub: 4-tab subject buckets (+ Misc) */
+export function normalizeMppolicePyqSubject(rawSubject: string | null): string {
+  if (!rawSubject) return 'Misc';
+  const trimmed = rawSubject.trim();
+  if ((MP_UI_BUCKETS as readonly string[]).includes(trimmed)) return trimmed;
+
+  const lower = rawSubject.toLowerCase();
+
+  if (
+    /reasoning|puzzle|coding|decoding|syllogism|blood relation|direction|figure|mirror|fold|paper cutting|dice|venn/i.test(
+      rawSubject
+    )
+  ) {
+    return 'Logical Reasoning';
+  }
+
+  if (
+    /arithmetic|algebra|mensuration|percent|ratio|interest|train|boat|time and work|probability|permutation|compound interest|simple interest|average| lcm|hcf|ages|mixture/i.test(
+      lower
+    )
+  ) {
+    return 'Quantitative Aptitude';
+  }
+
+  if (
+    /physics|chemistry|biology|science/i.test(lower) &&
+    !/political|social science/i.test(lower)
+  ) {
+    return 'General Science';
+  }
+
+  const leg = normalizeSubject(rawSubject);
+  const legacyToBucket: Record<string, string> = {
+    'MP GK': 'General Knowledge',
+    'Current Affairs': 'General Knowledge',
+    History: 'General Knowledge',
+    Geography: 'General Knowledge',
+    Polity: 'General Knowledge',
+    Economy: 'General Knowledge',
+    Science: 'General Science',
+    ICT: 'General Knowledge',
+    Misc: 'Misc',
+  };
+  if (legacyToBucket[leg]) return legacyToBucket[leg];
+  return 'Misc';
+}

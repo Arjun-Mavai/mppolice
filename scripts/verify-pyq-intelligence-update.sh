@@ -41,7 +41,7 @@ echo "- Subject-wise aggregation from unit data"
 echo "- Fixed data for 6 years (2020-2025)"
 
 echo ""
-echo "🌐 Live Page: https://mppsc.zenscroll.app/syllabus/quiz/pyq/intelligence"
+echo "🌐 Live Page: https://mppolice.zenscroll.app/syllabus/quiz/pyq/intelligence"
 echo "📊 Expected Result: Subject-wise distribution instead of unit-wise"
 echo ""
 echo "✨ Ready for production deployment!"

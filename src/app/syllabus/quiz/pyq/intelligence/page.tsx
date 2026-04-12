@@ -16,8 +16,8 @@ import LoadingSkeleton from './loading';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Expert PYQ Intelligence | MPPSC Analytics',
-  description: 'Deep analysis of MPPSC Previous Year Questions — unit distribution, repeated questions & topic trends from 2020 to 2025.',
+  title: 'Expert PYQ Intelligence | MP Police Analytics',
+  description: 'Deep analysis of MP Police Previous Year Questions — unit distribution, repeated questions & topic trends from 2020 to 2025.',
 };
 
 // ISR: Revalidate every 6 hours — data is fixed for 2020–2025 period

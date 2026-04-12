@@ -8,7 +8,7 @@ export async function POST() {
   const cookieStore = await cookies();
 
   // Clear the JWT auth cookie
-  cookieStore.delete('mppsc_token');
+  cookieStore.delete('mppolice_token');
 
   // Set no-cache headers to prevent browser/CDN from caching logout response
   const response = NextResponse.json({ success: true });

@@ -14,7 +14,7 @@ interface LogActivityParams {
 }
 
 /**
- * Logs a critical user activity to the mppsc_user_activities table.
+ * Logs a critical user activity to the mppolice_user_activities table.
  * Used for audit trails of plan changes, deletions, etc.
  */
 export async function logUserActivity({
@@ -33,7 +33,7 @@ export async function logUserActivity({
       userName: userName || null,
       adminId: adminId || 'system',
       action,
-      details: details ? JSON.stringify(details) : null,
+      details: details ?? null,
     });
   } catch (error) {
     console.error('Failed to log user activity:', error);

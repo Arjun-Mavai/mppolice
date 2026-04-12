@@ -2,9 +2,9 @@ import { getBlogs, getBlogCounts } from '@/services/blog-service';
 import BlogsClient from './BlogsClient';
 
 export const metadata = {
-  title: 'MPPSC Study Blogs & Articles | MPPSC Knowledge',
+  title: 'MP Police Study Blogs & Articles | MP Police Knowledge',
   description:
-    'Read high-quality articles, strategies, and notes for MPPSC preparation. Covering History, Geography, Polity, and MP Special topics.',
+    'Read high-quality articles, strategies, and notes for MP Police preparation. Covering History, Geography, Polity, and MP Special topics.',
 };
 
 // Force Static Generation

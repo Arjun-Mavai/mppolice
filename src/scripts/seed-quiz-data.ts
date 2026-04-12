@@ -4,7 +4,7 @@ import { tests, questions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
-// Real MPPSC Data for Unit 1 (History, Culture & Literature of MP)
+// Real MP Police Data for Unit 1 (History, Culture & Literature of MP)
 const realUnit1Questions = [
   {
     question:
@@ -36,10 +36,10 @@ const realUnit1Questions = [
     explanation: 'Bhimbetka rock shelters were discovered by Dr. Vishnu Shridhar Wakankar in 1957.',
   },
   {
-    question: 'Where is the headquarters of MPPSC located?',
+    question: 'Where is the headquarters of MP Police located?',
     options: ['Bhopal', 'Gwalior', 'Indore', 'Jabalpur'],
     correctAnswer: 2,
-    explanation: 'The headquarters of MPPSC is located in Indore, Madhya Pradesh.',
+    explanation: 'The headquarters of MP Police is located in Indore, Madhya Pradesh.',
   },
   {
     question: 'Which Dynasty built the famous Khajuraho Temples?',
@@ -150,7 +150,7 @@ const realUnit1Questions = [
   },
 ];
 
-// Real MPPSC FLT Questions (Research Based 2024-25 Data)
+// Real MP Police FLT Questions (Research Based 2024-25 Data)
 const realFLTQuestions = [
   {
     question: "Which of the following creates the 'Satpura Thermal Power Station'?",
@@ -232,7 +232,7 @@ const realFLTQuestions = [
     subject: 'MP Geography',
   },
   {
-    question: 'Who was the first Chairman of MPPSC?',
+    question: 'Who was the first Chairman of MP Police?',
     options: ['D.B. Rege', 'H.C. Seth', 'S.P. Mushran', 'R.C.V.P. Noronha'],
     correctAnswer: 0,
     explanation:
@@ -421,8 +421,8 @@ async function main() {
 
   // 2. Seed Mock FLT
   await seedTest(
-    'MPPSC Prelims - Full Length Mock Test 1',
-    'mppsc-flt-mock-1',
+    'MP Police Prelims - Full Length Mock Test 1',
+    'mppolice-flt-mock-1',
     'FLT',
     null,
     realFLTQuestions
@@ -431,9 +431,9 @@ async function main() {
   // 3. Create Placeholder Tests for PYQs (2022-2025)
   // We populate them with a subset of FLT questions just so they are playable for now
   const pyqs = [
-    { year: '2022', title: 'MPPSC Prelims 2022 - Paper 1 (GS)' },
-    { year: '2023', title: 'MPPSC Prelims 2023 - Paper 1 (GS)' },
-    { year: '2024', title: 'MPPSC Prelims 2024 - Paper 1 (GS)' },
+    { year: '2022', title: 'MP Police Prelims 2022 - Paper 1 (GS)' },
+    { year: '2023', title: 'MP Police Prelims 2023 - Paper 1 (GS)' },
+    { year: '2024', title: 'MP Police Prelims 2024 - Paper 1 (GS)' },
   ];
 
   for (const pyq of pyqs) {
@@ -442,7 +442,7 @@ async function main() {
       qData = realPYQ2024Questions;
     }
 
-    await seedTest(pyq.title, `mppsc-prelims-${pyq.year}-gs`, 'FLT', null, qData);
+    await seedTest(pyq.title, `mppolice-prelims-${pyq.year}-gs`, 'FLT', null, qData);
   }
 
   console.log('Seeding Complete!');

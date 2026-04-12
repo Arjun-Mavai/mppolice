@@ -1,0 +1,60 @@
+[
+  {
+    "questionText": "यदि TODAY को VQGPEC लिखा जाता है, तो NIGHT को क्या लिखा जाएगा? (प्रत्येक अक्षर +2)",
+    "questionTextEn": "If TODAY is coded as VQGPEC, code NIGHT (+2 each letter).",
+    "options": [
+      { "id": "1", "text": "PKIJV", "text_en": "PKIJV" },
+      { "id": "2", "text": "PIKJV", "text_en": "PIKJV" },
+      { "id": "3", "text": "PKIJW", "text_en": "PKIJW" },
+      { "id": "4", "text": "OJHIV", "text_en": "OJHIV" }
+    ],
+    "correctAnswer": "1",
+    "subject": "Logical Reasoning",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "N+2=P, I+2=K, G+2=I, H+2=J, T+2=V ⇒ PKIJV।",
+    "explanationEn": "Shift each letter +2: NIGHT → PKIJV.",
+    "extendedData": {
+      "explanation": {
+        "stream": "reasoning",
+        "chain": [
+          "T→V, O→Q, D→F … सब +2 — पैटर्न पुष्टि।",
+          "N→P, I→K, G→I, H→J, T→V।",
+          "क्रम: PKIJV।"
+        ],
+        "pattern": "Letter-shift / Caesar-style +2",
+        "elimination": "गलत विकल्प अक्षर गिनकर काटो।",
+        "memoryTip": "Coding में पहले 1–2 अक्षर चेक कर लो, पूरा शब्द मत लिखो पहले।"
+      }
+    }
+  },
+  {
+    "questionText": "A, B की माँ है। B, C का पिता है। C से A का क्या संबंध है? (डेमो)",
+    "questionTextEn": "A is mother of B. B is father of C. A is which relation to C?",
+    "options": [
+      { "id": "1", "text": "दादी", "text_en": "Grandmother" },
+      { "id": "2", "text": "नानी", "text_en": "Maternal grandmother" },
+      { "id": "3", "text": "माँ", "text_en": "Mother" },
+      { "id": "4", "text": "बहन", "text_en": "Sister" }
+    ],
+    "correctAnswer": "1",
+    "subject": "Logical Reasoning",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "A → B की माँ; B → C का पिता ⇒ A, C की पिता की माँ = दादी (पैटरनल ग्रैंडमदर)।",
+    "explanationEn": "A is B's mother; B is C's father → A is C's paternal grandmother.",
+    "extendedData": {
+      "explanation": {
+        "stream": "reasoning",
+        "chain": [
+          "पीढ़ी: A ऊपर, B बीच, C नीचे।",
+          "B पुरुष (पिता) ⇒ A, C की दादी।",
+          "नानी तब जब माँ की माँ।"
+        ],
+        "pattern": "Blood relation — generation ladder",
+        "elimination": "'माँ' असंभव — एक पीढ़ी ऊपर।",
+        "memoryTip": "ट्री बना लो; लिंग शब्द (पिता/माता) हाइलाइट करो।"
+      }
+    }
+  }
+]

@@ -9,15 +9,15 @@ export type Question = {
 export const mockTopicQuestions: Question[] = [
   {
     id: 1,
-    question: 'When was the Madhya Pradesh Public Service Commission (MPPSC) constituted?',
+    question: 'When was the Madhya Pradesh Public Service Commission (MP Police) constituted?',
     options: ['1st November 1956', '26th January 1950', '15th August 1947', '1st November 2000'],
     correctAnswer: 0,
     explanation:
-      'MPPSC was constituted on 1st November 1956 under Section 118(3) of the States Reorganization Act, 1956.',
+      'MP Police was constituted on 1st November 1956 under Section 118(3) of the States Reorganization Act, 1956.',
   },
   {
     id: 2,
-    question: 'Who was the first Chairman of MPPSC?',
+    question: 'Who was the first Chairman of MP Police?',
     options: ['D.B. Rege', 'H.C. Seth', 'S.P. Mushran', 'R.C.V.P. Noronha'],
     correctAnswer: 0,
     explanation:
@@ -25,10 +25,10 @@ export const mockTopicQuestions: Question[] = [
   },
   {
     id: 3,
-    question: 'Where is the headquarters of MPPSC located?',
+    question: 'Where is the headquarters of MP Police located?',
     options: ['Bhopal', 'Gwalior', 'Indore', 'Jabalpur'],
     correctAnswer: 2,
-    explanation: 'The headquarters of MPPSC is located in Indore, Madhya Pradesh.',
+    explanation: 'The headquarters of MP Police is located in Indore, Madhya Pradesh.',
   },
   {
     id: 4,
@@ -40,7 +40,7 @@ export const mockTopicQuestions: Question[] = [
   },
   {
     id: 5,
-    question: 'The members of MPPSC are appointed by?',
+    question: 'The members of MP Police are appointed by?',
     options: [
       'President of India',
       'Chief Minister of MP',

@@ -1,0 +1,60 @@
+[
+  {
+    "questionText": "मध्य प्रदेश की राजधानी क्या है?",
+    "questionTextEn": "What is the capital of Madhya Pradesh?",
+    "options": [
+      { "id": "1", "text": "इंदौर", "text_en": "Indore" },
+      { "id": "2", "text": "भोपाल", "text_en": "Bhopal" },
+      { "id": "3", "text": "जबलपुर", "text_en": "Jabalpur" },
+      { "id": "4", "text": "ग्वालियर", "text_en": "Gwalior" }
+    ],
+    "correctAnswer": "2",
+    "subject": "General Knowledge",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "मध्य प्रदेश की राजधानी भोपाल है — यह राज्य प्रशासन का मुख्य केंद्र है।",
+    "explanationEn": "Bhopal is the capital of Madhya Pradesh.",
+    "extendedData": {
+      "explanation": {
+        "stream": "gk_science",
+        "facts": [
+          "भोपाल: MP की राजधानी; प्रशासनिक केंद्र।",
+          "MP बना 1 नवंबर 1956 को (भाषाई आधार पर पुनर्गठन)।",
+          "राज्य की विधानसभा भोपाल में।"
+        ],
+        "mnemonics": ["MP capital → Bhopal (B for both)."],
+        "related": ["CM residence / MP High Court Jabalpur", "MP के मुख्य शहर: इंदौर (व्यापार), ग्वालियर (इतिहास)"],
+        "memoryTip": "राजधानी vs सबसे बड़ा शहर अलग हो सकते हैं — कन्फ्यूज मत होना।"
+      }
+    }
+  },
+  {
+    "questionText": "नीचे दिए वाक्य में रिक्त स्थान भरें: पानी का क्वथनांक सामान्य दबाव पर _____ °C होता है।",
+    "questionTextEn": "Fill in the blank: At standard pressure, water boils at _____ °C.",
+    "options": [
+      { "id": "1", "text": "90°C", "text_en": "90°C" },
+      { "id": "2", "text": "100°C", "text_en": "100°C" },
+      { "id": "3", "text": "110°C", "text_en": "110°C" },
+      { "id": "4", "text": "0°C", "text_en": "0°C" }
+    ],
+    "correctAnswer": "2",
+    "subject": "General Science",
+    "marks": 1,
+    "negativeMarks": 0,
+    "explanation": "सामान्य वायुदाब पर शुद्ध पानी 100°C पर उबलता है।",
+    "explanationEn": "Pure water boils at 100°C at standard atmospheric pressure.",
+    "extendedData": {
+      "explanation": {
+        "stream": "gk_science",
+        "facts": [
+          "क्वथनांक: द्रव जिस ताप पर वाष्प दबाव = बाह्य दबाव।",
+          "समुद्र तल पर पानी: ठोस→द्रव 0°C, द्रव→वाष्प 100°C (लगभग)।",
+          "दबाव बढ़ने पर क्वथनांक बढ़ता है (प्रेशर कुकर)।"
+        ],
+        "mnemonics": ["100 = boil, 0 = freeze (water, normal pressure)."],
+        "related": ["हिमांक 0°C", "वाष्पीकरण शरीर से ठंडक"],
+        "memoryTip": "MCQ में 'standard pressure' दिखे तो पानी = 100°C याद रखें।"
+      }
+    }
+  }
+]

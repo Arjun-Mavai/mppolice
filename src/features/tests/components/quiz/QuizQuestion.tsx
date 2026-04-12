@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle2, X, Flag, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -43,6 +43,17 @@ export function QuizQuestion({
   translations: t,
   currentTimeSpent = 0,
 }: QuizQuestionProps) {
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!lightboxUrl) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [lightboxUrl]);
+
   const showFeedback = instantModeEnabled && isAnswered;
 
   const rawOptions =
@@ -62,6 +73,7 @@ export function QuizQuestion({
   };
 
   return (
+    <>
     <div className="mx-auto max-w-3xl space-y-4 sm:space-y-5">
       {/* Question Header */}
       <div className="flex items-center justify-between">
@@ -110,6 +122,27 @@ export function QuizQuestion({
         className="text-lg leading-relaxed font-semibold text-slate-900 sm:text-xl md:text-2xl"
       />
 
+      {(question as { questionImageUrl?: string }).questionImageUrl && (
+        <button
+          type="button"
+          onClick={() =>
+            setLightboxUrl((question as { questionImageUrl?: string }).questionImageUrl ?? null)
+          }
+          className="mt-4 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-left ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          aria-label={language === 'hi' ? 'प्रश्न चित्र बड़ा करें' : 'Expand question image'}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={(question as { questionImageUrl?: string }).questionImageUrl}
+            alt=""
+            className="max-h-[min(70vh,28rem)] w-full object-contain"
+          />
+          <span className="block px-2 py-1.5 text-center text-[10px] font-medium text-slate-500 sm:text-xs">
+            {language === 'hi' ? 'टैप करके बड़ा देखें' : 'Tap to enlarge'}
+          </span>
+        </button>
+      )}
+
       {/* Matching Questions */}
       {question.type === 'matching' && question.matchPairs && (
         <div className="mt-4 mb-6 pl-1">
@@ -157,11 +190,13 @@ export function QuizQuestion({
           const isCorrect = correctIdx === idx;
 
           let optionText = opt;
+          let optionImage: string | undefined;
           if (typeof opt === 'object' && opt !== null) {
+            optionImage = (opt as { image?: string }).image;
             optionText =
               language === 'hi'
-                ? opt.text || opt.textEn || opt.text_en || JSON.stringify(opt)
-                : opt.textEn || opt.text_en || opt.text || JSON.stringify(opt);
+                ? opt.text || opt.textEn || opt.text_en || (optionImage ? ' ' : JSON.stringify(opt))
+                : opt.textEn || opt.text_en || opt.text || (optionImage ? ' ' : JSON.stringify(opt));
           }
 
           return (
@@ -193,15 +228,36 @@ export function QuizQuestion({
               <div className="relative z-10 flex items-center justify-between">
                 <span
                   className={cn(
-                    'pr-4 text-base leading-relaxed sm:text-lg',
-                    // Text color bhi strong karo feedback me — green/red clearly dikhe
+                    'flex min-w-0 flex-1 flex-col gap-2 pr-4 text-base leading-relaxed sm:text-lg',
                     showFeedback && isCorrect && 'font-bold text-emerald-800',
                     showFeedback && isSelected && !isCorrect && 'font-bold text-red-800',
                     !showFeedback && isSelected && 'font-semibold text-slate-900',
                     !showFeedback && !isSelected && 'text-slate-700'
                   )}
                 >
-                  {optionText}
+                  {optionImage ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLightboxUrl(optionImage);
+                        }}
+                        className="inline-block max-w-full rounded-md border border-transparent p-0 text-left ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                        aria-label={language === 'hi' ? 'विकल्प चित्र बड़ा करें' : 'Expand option image'}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={optionImage}
+                          alt=""
+                          className="max-h-44 w-full max-w-[min(100%,20rem)] cursor-zoom-in rounded-md border border-slate-200 object-contain sm:max-h-48"
+                        />
+                      </button>
+                      {String(optionText).trim() ? optionText : null}
+                    </>
+                  ) : (
+                    optionText
+                  )}
                 </span>
 
                 <div className="shrink-0">
@@ -249,5 +305,35 @@ export function QuizQuestion({
         })}
       </div>
     </div>
+
+    {lightboxUrl && (
+      <div
+        className="fixed inset-0 z-[200] flex flex-col bg-black/90 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]"
+        role="dialog"
+        aria-modal="true"
+        aria-label={language === 'hi' ? 'चित्र पूर्ण स्क्रीन' : 'Image full screen'}
+        onClick={() => setLightboxUrl(null)}
+      >
+        <div className="flex shrink-0 justify-end">
+          <button
+            type="button"
+            onClick={() => setLightboxUrl(null)}
+            className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm"
+          >
+            {language === 'hi' ? 'बंद करें' : 'Close'}
+          </button>
+        </div>
+        <div className="flex min-h-0 flex-1 items-center justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={lightboxUrl}
+            alt=""
+            className="max-h-full max-w-full object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      </div>
+    )}
+    </>
   );
 }

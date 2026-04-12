@@ -6,7 +6,7 @@ import { questions, tests } from '../src/db/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { getScopedStateServiceYear, PYQ_SCOPE_START_YEAR, PYQ_SCOPE_END_YEAR } from '../src/features/tests/utils/pyq-scope';
 
-const client = createClient({ url: 'file:mppsc_local.db' });
+const client = createClient({ url: 'file:mppolice_local.db' });
 const db = drizzle(client, { schema });
 
 const STOP_WORDS = new Set([
@@ -58,8 +58,8 @@ async function analyzeMicroThemes() {
     for (const year of Array.from(testsByYear.keys())) {
         const candidates = testsByYear.get(year);
         candidates.sort((a: any, b: any) => {
-            const isHindiA = a.title.includes('MPPSC राज्य सेवा');
-            const isHindiB = b.title.includes('MPPSC राज्य सेवा');
+            const isHindiA = a.title.includes('MP Police राज्य सेवा');
+            const isHindiB = b.title.includes('MP Police राज्य सेवा');
             if (isHindiA && !isHindiB) return -1;
             if (!isHindiA && isHindiB) return 1;
             return (b.totalQuestions || 0) - (a.totalQuestions || 0);

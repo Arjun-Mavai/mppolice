@@ -16,6 +16,10 @@ export interface PartAccessStatus {
 }
 
 const ALLOWED_SUBJECTS = [
+  'general knowledge',
+  'general science',
+  'logical reasoning',
+  'quantitative aptitude',
   'mp gk',
   'history',
   'geography',

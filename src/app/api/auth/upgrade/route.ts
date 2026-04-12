@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   try {
     // ── Admin Auth Check ────────────────────────────────────────
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    const token = cookieStore.get('mppolice_token')?.value;
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     }
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
+      where: (users, { eq }) => eq(mppscUsers.id, decoded.userId),
     });
 
     if (!adminUser || adminUser.role !== 'admin') {
@@ -54,8 +54,8 @@ export async function POST(request: Request) {
     }
 
     // ── Find Current User ───────────────────────────────────────
-    const users = await db.select().from(mppscUsers).where(eq(mppscUsers.id, userId)).limit(1);
-    const user = users[0];
+    const dbUsers = await db.select().from(mppscUsers).where(eq(mppscUsers.id, userId)).limit(1);
+    const user = dbUsers[0];
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -102,7 +102,7 @@ export async function POST(request: Request) {
       message: `${user.name || user.email} upgraded from ${oldTier} to Pro (${accessMonths} months)`,
       user: { id: userId, planTier: 'pro', accessExpiresAt },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Upgrade error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

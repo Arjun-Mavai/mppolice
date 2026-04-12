@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { Loader2, ArrowLeft, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/errors';
 import { motion } from 'framer-motion';
 
 // Zod Schema for Email Validation
@@ -50,9 +51,9 @@ export default function ForgotPasswordPage() {
       toast.success('Reset link sent!', {
         description: 'Check your email inbox for instructions.',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Request failed', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
     } finally {
       setIsLoading(false);

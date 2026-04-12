@@ -21,7 +21,7 @@ export async function GET() {
   try {
     // ── Admin Auth ──────────────────────────────────────────────
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    const token = cookieStore.get('mppolice_token')?.value;
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -35,7 +35,7 @@ export async function GET() {
     }
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
+      where: (users, { eq }) => eq(mppscUsers.id, decoded.userId),
     });
 
     if (!adminUser || adminUser.role !== 'admin') {
@@ -60,6 +60,7 @@ export async function GET() {
         previousUserId: mppscUsers.previousUserId,
       })
       .from(mppscUsers)
+      .where(sql`(${mppscUsers.examType} = 'mppolice' OR ${mppscUsers.examType} = 'all')`)
       .orderBy(sql`created_at DESC`);
 
     // ── Calculate Stats ─────────────────────────────────────────
@@ -104,7 +105,7 @@ export async function GET() {
         headers: { 'Cache-Control': 'no-store' },
       }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Admin users list error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
@@ -117,7 +118,7 @@ export async function DELETE(req: Request) {
 
     // ── Admin Auth ──────────────────────────────────────────────
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    const token = cookieStore.get('mppolice_token')?.value;
 
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -127,7 +128,7 @@ export async function DELETE(req: Request) {
     if (!decoded?.userId) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
+      where: (users, { eq }) => eq(mppscUsers.id, decoded.userId),
     });
 
     if (!adminUser || adminUser.role !== 'admin') {
@@ -162,7 +163,7 @@ export async function DELETE(req: Request) {
     await db.delete(mppscUsers).where(sql`id = ${userId}`);
 
     return NextResponse.json({ message: 'User deleted safely' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Delete user error:', error);
     return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
   }

@@ -16,6 +16,7 @@ const getCachedBaseSyllabusData = unstable_cache(
   async () => {
     try {
       const topics = await db.query.syllabusTopics.findMany({
+        where: eq(syllabusTopics.examType, 'mppolice'),
         orderBy: [asc(syllabusTopics.order)],
       });
 

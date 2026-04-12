@@ -5,6 +5,7 @@ import { tests, questions, mppscUsers, syllabusTopics } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { logger } from '@/lib/logger';
+import { getErrorMessage } from '@/lib/errors';
 import { CACHE } from '@/lib/cache';
 
 // Type definitions for the upload payload
@@ -159,8 +160,8 @@ export async function uploadTopicTestQuestions(data: BulkUploadPayload, adminSec
     revalidateTag(CACHE.SYLLABUS.TAGS.ALL, { expire: 0 }); // Invalidate syllabus stats (topic counts etc.)
 
     return { success: true, message: `Successfully processed ${processedCount} topics.` };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Bulk Upload Error:', error);
-    return { success: false, error: error.message || 'Internal Server Error' };
+    return { success: false, error: getErrorMessage(error) || 'Internal Server Error' };
   }
 }

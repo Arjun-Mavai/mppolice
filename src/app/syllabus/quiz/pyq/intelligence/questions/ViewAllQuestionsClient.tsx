@@ -111,7 +111,7 @@ export default function ViewAllQuestionsClient({
       return topicTitle;
     }
     if (source === 'paper' && year) {
-      return `MPPSC Prelims ${year} - ${formatUnitTitle(unitId)}`;
+      return `MP Police Prelims ${year} - ${formatUnitTitle(unitId)}`;
     }
     if (source === 'subject' && subject) {
       return `${subject} Questions (2020-2025)`;

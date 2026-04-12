@@ -12,7 +12,7 @@ const updateUserSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   email: z.string().email().max(255).optional(),
   password: z.string().min(6).optional(),
-  planTier: z.enum(['free', 'lite', 'pro']).optional(),
+  planTier: z.enum(['free', 'pro']).optional(),
   isActive: z.boolean().optional(),
   isSubscribed: z.boolean().optional(),
   accessMonths: z.number().min(1).max(24).optional(),
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   try {
     // Admin Auth
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    const token = cookieStore.get('mppolice_token')?.value;
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { verifyToken } = await import('@/lib/jwt');
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     if (!decoded?.userId) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
 
     const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
+      where: (table, { eq }) => eq(table.id, decoded.userId),
     });
     if (!adminUser || adminUser.role !== 'admin') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
@@ -142,7 +142,7 @@ export async function POST(request: Request) {
       success: true,
       message: `Updated: ${changes.join(', ')}`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.issues[0]?.message || 'Invalid input' },

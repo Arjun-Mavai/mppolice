@@ -44,7 +44,7 @@ function formatOptions(optionsJson) {
 }
 
 async function extractData() {
-  const dbPath = './mppsc_local.db';
+  const dbPath = './mppolice_local.db';
   const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READONLY);
   
   return new Promise((resolve, reject) => {

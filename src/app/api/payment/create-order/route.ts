@@ -86,7 +86,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ ...(order as any), planType });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Razorpay order creation error:', error, {
       category: 'payment',
       metadata: { planType },

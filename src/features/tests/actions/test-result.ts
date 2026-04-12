@@ -180,7 +180,7 @@ export async function getHighYieldFactsForQuestions(
 // Main Action
 // ------------------------------------------------------------------
 
-export async function calculateMPPSCResult(
+export async function calculateMP_PoliceResult(
   testId: string, 
   attemptId?: string // Optional: if null, fetch latest
 ): Promise<SmartResultResponse | { error: string }> {
@@ -220,24 +220,26 @@ export async function calculateMPPSCResult(
     // 3. Analyze Scoring
     // Dynamic marking based on question metadata
     
-    const scoring = testQuestions.map(q => {
-      const ans = answers.find(a => a.questionId === q.id);
-      
+    const scoring = testQuestions.map((q) => {
+      const ans = answers.find((a) => a.questionId === q.id);
+
       let status: 'correct' | 'wrong' | 'skipped' = 'skipped';
       let delta = 0;
       let userAnswer = null;
-      
-      const marks = 3; 
-      const negative = 1;
+
+      const marks = q.marks ?? 1;
+      const negative = Number(q.negativeMarks ?? 0);
 
       if (ans) {
         userAnswer = ans.userAnswer;
-        if (ans.userAnswer === q.correctAnswer) {
+        const ok =
+          String(ans.userAnswer ?? '').trim() === String(q.correctAnswer ?? '').trim();
+        if (ok) {
           status = 'correct';
           delta = marks;
         } else {
           status = 'wrong';
-          delta = -negative;
+          delta = negative > 0 ? -negative : 0;
         }
       }
 
@@ -246,27 +248,26 @@ export async function calculateMPPSCResult(
         userAnswer,
         status,
         delta,
-        negativeUsed: negative,
-        subject: q.subject || 'Unknown'
+        negativeUsed: status === 'wrong' ? negative : 0,
+        subject: q.subject || 'Unknown',
       };
     });
 
     const net_score = scoring.reduce((sum, item) => sum + item.delta, 0);
-    const correct = scoring.filter(i => i.status === 'correct').length;
-    const wrong = scoring.filter(i => i.status === 'wrong').length;
-    const skipped = scoring.filter(i => i.status === 'skipped').length;
+    const correct = scoring.filter((i) => i.status === 'correct').length;
+    const wrong = scoring.filter((i) => i.status === 'wrong').length;
+    const skipped = scoring.filter((i) => i.status === 'skipped').length;
     const total_questions = testQuestions.length;
-    
-    // Max score is sum of all question marks (Enforced Pattern)
-    const max_score = total_questions * 3;
+
+    const max_score = testQuestions.reduce((s, q) => s + (q.marks ?? 1), 0);
 
     const accuracy = (correct + wrong) > 0 ? correct / (correct + wrong) : 0;
 
     // 4. Intelligence Metrics
     // Sum of negative marks for all wrong answers
     const wasted_points = scoring
-      .filter(i => i.status === 'wrong')
-      .reduce((sum, item) => sum + item.negativeUsed, 0);
+      .filter((i) => i.status === 'wrong')
+      .reduce((sum, item) => sum + (item.negativeUsed || 0), 0);
       
     const could_have_scored = net_score + wasted_points;
     const breakeven_accuracy = 0.25; 

@@ -23,7 +23,7 @@ export const getSafeStorage = () => {
 
   try {
     const storage = window.localStorage;
-    const testKey = '__mppsc_storage_test__';
+    const testKey = '__mppolice_storage_test__';
     storage.setItem(testKey, testKey);
     storage.removeItem(testKey);
     return storage;

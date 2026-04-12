@@ -30,9 +30,9 @@ export function ContactForm() {
       topic: 'Topic',
       message: 'Message',
       send: 'Send Message',
-      placeholderName: 'MPPSC Aspirant',
+      placeholderName: 'MP Police Aspirant',
       placeholderPhone: '+91...',
-      placeholderEmail: 'student@mppsc.com',
+      placeholderEmail: 'student@mppolice.com',
       placeholderTopic: 'Select a topic',
       placeholderMessage: 'How can we help you?',
       topics: {
@@ -52,9 +52,9 @@ export function ContactForm() {
       topic: 'विषय',
       message: 'संदेश',
       send: 'संदेश भेजें',
-      placeholderName: 'MPPSC अभ्यर्थी',
+      placeholderName: 'MP Police अभ्यर्थी',
       placeholderPhone: '+91...',
-      placeholderEmail: 'student@mppsc.com',
+      placeholderEmail: 'student@mppolice.com',
       placeholderTopic: 'विषय चुनें',
       placeholderMessage: 'हम आपकी कैसे सहायता कर सकते हैं?',
       topics: {

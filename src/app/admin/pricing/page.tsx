@@ -12,6 +12,7 @@ import { Loader2, IndianRupee, Save, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { type PricingData, PRICING_DEFAULTS } from '@/config/pricing';
 import { API } from '@/config/endpoints';
+import { getErrorMessage } from '@/lib/errors';
 
 export default function AdminPricingPage() {
   const [data, setData] = useState<PricingData>(PRICING_DEFAULTS);
@@ -46,8 +47,8 @@ export default function AdminPricingPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
       toast.success(json.message || 'Pricing updated!');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to update');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err) || 'Failed to update');
     } finally {
       setSaving(false);
     }

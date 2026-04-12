@@ -7,7 +7,7 @@ import { sql, eq, and } from 'drizzle-orm';
 
 // Setup local DB connection directly to bypass env validation
 const client = createClient({
-  url: 'file:mppsc_local_dev.db',
+  url: 'file:mppolice_local_dev.db',
 });
 const db = drizzle(client, { schema });
 

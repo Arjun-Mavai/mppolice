@@ -16,7 +16,7 @@ console.log('env.NODE_ENV:', env.NODE_ENV);
 
 const isDev = env.NODE_ENV === 'development' && env.USE_PROD_DB.trim() !== 'true';
 const connectionUrl = isDev 
-  ? 'file:mppsc_local_dev.db' 
+  ? 'file:mppolice_local_dev.db' 
   : env.TURSO_DATABASE_URL;
 
 const connectionAuthToken = isDev
@@ -24,7 +24,7 @@ const connectionAuthToken = isDev
   : env.TURSO_AUTH_TOKEN;
 
 if (process.env.NODE_ENV !== 'test') {
-  console.log(`🔌 Initializing DB Connection: ${isDev ? 'LOCAL (mppsc_local_dev.db)' : 'REMOTE (Turso)'}`);
+  console.log(`🔌 Initializing DB Connection: ${isDev ? 'LOCAL (mppolice_local_dev.db)' : 'REMOTE (Turso)'}`);
 }
 
 export const client =

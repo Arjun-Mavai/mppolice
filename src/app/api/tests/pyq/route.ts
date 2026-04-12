@@ -14,9 +14,16 @@ export async function GET() {
         totalQuestions: tests.totalQuestions,
         durationMinutes: tests.durationMinutes,
         createdAt: tests.createdAt,
+        examType: tests.examType,
       })
       .from(tests)
-      .where(and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false)))
+      .where(
+        and(
+          eq(tests.type, 'PYQ'),
+          eq(tests.isHidden, false),
+          eq(tests.examType, 'mppolice')
+        )
+      )
       .orderBy(desc(tests.createdAt));
 
     // Extract year from title or createdAt

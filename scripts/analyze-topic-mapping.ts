@@ -12,7 +12,7 @@ import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
 
 // Use environment variables for production database
 const turso = createClient({
-  url: process.env.NEXT_PUBLIC_TURSO_DATABASE_URL || 'file:./mppsc_local.db',
+  url: process.env.NEXT_PUBLIC_TURSO_DATABASE_URL || 'file:./mppolice_local.db',
   authToken: process.env.TURSO_AUTH_TOKEN || undefined,
 });
 

@@ -81,7 +81,7 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
             <p className="mx-auto max-w-xl text-lg leading-relaxed font-medium text-slate-500 md:text-xl">
               {language === 'hi'
                 ? 'एमपीपीएससी प्रीलिम्स 2026 के लिए आधुनिक रणनीति। 100+ टॉपिक्स, नेमोनिक्स और टेस्ट सीरीज।'
-                : 'The most comprehensive roadmap for MPPSC 2026. 100+ topics, smart mnemonics, and real-time assessments.'}
+                : 'The most comprehensive roadmap for MP Police 2026. 100+ topics, smart mnemonics, and real-time assessments.'}
             </p>
           </div>
 
@@ -111,101 +111,6 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
               </motion.div>
             </div>
           </motion.div>
-        </motion.div>
-
-        {/* Units Grid/List */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="space-y-4"
-        >
-          {/* ✦ PYQ Intelligence Section */}
-          <div className="mx-auto max-w-4xl">
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">📊</span>
-                <div>
-                  <h2 className="text-lg font-black text-slate-900">
-                    {language === 'hi' ? 'PYQ इंटेलिजेंस' : 'PYQ Intelligence'}
-                  </h2>
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                    {language === 'hi' ? '2020-2025 · MPPSC Prelims ट्रेंड्स' : '2020-2025 · MPPSC Prelims Trends'}
-                  </p>
-                </div>
-              </div>
-              <div
-                onClick={() => {
-                  setNavigatingId('pyq-view-all');
-                  router.push('/syllabus/quiz/pyq/analysis');
-                }}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-black text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
-              >
-                {language === 'hi' ? 'सब देखें' : 'View All'}
-                <ArrowRight className="h-3.5 w-3.5" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4">
-
-              {/* Card 1: Year-wise Trend */}
-              <div 
-                onClick={() => {
-                  setNavigatingId('pyq-matrix');
-                  router.push('/syllabus/quiz/pyq/analysis');
-                }} 
-                className="group block cursor-pointer"
-              >
-                <div className={cn(
-                  "relative h-full rounded-[1.5rem] border border-blue-100 bg-blue-50 p-6 transition-all hover:shadow-lg hover:shadow-blue-200/40 hover:-translate-y-0.5 max-w-2xl mx-auto w-full",
-                  navigatingId === 'pyq-matrix' && "opacity-80 grayscale-[0.5] pointer-events-none"
-                )}>
-                  {navigatingId === 'pyq-matrix' && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/20 backdrop-blur-[1px] rounded-[1.5rem]">
-                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
-                    </div>
-                  )}
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">📅</span>
-                      <div>
-                        <h3 className="text-base font-black text-slate-800">
-                          {language === 'hi' ? 'Year-wise Matrix' : 'Year-wise Matrix'}
-                        </h3>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                          {language === 'hi' ? 'ट्रेंड एनालिसिस' : 'Trend Analysis'}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="rounded-full bg-blue-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-blue-600">
-                      {language === 'hi' ? 'ट्रेंड' : 'Trend'}
-                    </span>
-                  </div>
-                  
-                  {/* Mini bar chart - slightly larger for 1-column layout */}
-                  <div className="mt-4 space-y-2.5">
-                    {[
-                      { year: '2025', pct: 90, color: 'bg-blue-500' },
-                      { year: '2024', pct: 72, color: 'bg-blue-400' },
-                      { year: '2023', pct: 58, color: 'bg-blue-300' },
-                    ].map((row) => (
-                      <div key={row.year} className="flex items-center gap-3">
-                        <span className="w-10 text-[11px] font-black text-slate-500">{row.year}</span>
-                        <div className="flex-1 h-3 rounded-full bg-blue-100 overflow-hidden">
-                          <div className={`h-full rounded-full ${row.color} transition-all`} style={{ width: `${row.pct}%` }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="mt-5 text-xs font-black text-blue-600 group-hover:underline flex items-center gap-1">
-                    {language === 'hi' ? 'पूरा मैट्रिक्स देखें' : 'Explore Full Matrix'}
-                    <ArrowRight className="h-3 w-3" />
-                  </p>
-                </div>
-              </div>
-
-            </div>
-          </div>
         </motion.div>
 
         {/* Units Grid/List */}

@@ -460,8 +460,8 @@ function TestHistoryRow({ test }: { test: TestAttemptDetail }) {
     month: 'short',
   });
 
-  const rightMarks = test.correctAnswers * 3;
-  const wrongMarks = test.wrongAnswers * 1;
+  const rightMarks = test.correctAnswers * 1;
+  const wrongMarks = test.wrongAnswers * 0;
 
   return (
     <div className="rounded-lg border border-slate-100 bg-white p-3 transition-colors hover:border-slate-200 sm:p-3">
@@ -560,13 +560,13 @@ function TestHistoryRow({ test }: { test: TestAttemptDetail }) {
         {/* Correct/Wrong/Skipped Counters */}
         <div className="flex shrink-0 items-center gap-2">
           <div className="flex flex-col items-center">
-            <span className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">Right (+3)</span>
+            <span className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">Right (+1)</span>
             <span className="flex items-center justify-center min-w-[36px] rounded bg-white px-2 py-1 text-xs font-black text-emerald-700 border border-slate-100 shadow-sm">
               {test.correctAnswers}
             </span>
           </div>
           <div className="flex flex-col items-center">
-            <span className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">Wrong (-1)</span>
+            <span className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">Wrong (0)</span>
             <span className="flex items-center justify-center min-w-[36px] rounded bg-white px-2 py-1 text-xs font-black text-rose-700 border border-slate-100 shadow-sm">
               {test.wrongAnswers}
             </span>
@@ -590,7 +590,7 @@ function TestHistoryRow({ test }: { test: TestAttemptDetail }) {
                 ? 'border-rose-100 text-rose-700'
                 : 'border-slate-100 text-slate-600'
             )}
-            title={`Math: (${test.correctAnswers} × 3) - (${test.wrongAnswers} × 1) = ${test.netScore}`}
+            title={`Math: (${test.correctAnswers} × 1) - (${test.wrongAnswers} × 0) = ${test.netScore}`}
           >
             <div className="flex items-baseline gap-0.5">
               <span className="text-[9px] opacity-40 mr-0.5 text-slate-400">Score:</span>

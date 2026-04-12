@@ -20,11 +20,11 @@ function getScopedStateServiceYear(title: string): number | null {
   const normalized = title.replace(/\s+/g, ' ').trim();
 
   // English pattern
-  const enMatch = normalized.match(/MPPSC State Service Prelims.*? (20\d{2}).*?Paper 1/i);
+  const enMatch = normalized.match(/MP Police State Service Prelims.*? (20\d{2}).*?Paper 1/i);
   if (enMatch) return Number(enMatch[1]);
 
   // Hindi pattern
-  const hiMatch = normalized.match(/MPPSC राज्य सेवा प्रारंभिक.*? (20\d{2}).*?पेपर 1/);
+  const hiMatch = normalized.match(/MP Police राज्य सेवा प्रारंभिक.*? (20\d{2}).*?पेपर 1/);
   if (hiMatch) return Number(hiMatch[1]);
 
   return null;
@@ -75,7 +75,7 @@ async function runSmartAnalysis() {
       
       // Sort: Hindi title preferred (often main one), then higher question count
       candidates.sort((a, b) => {
-          // Prefer 'MPPSC State Service' clearly over others if ambiguous
+          // Prefer 'MP Police State Service' clearly over others if ambiguous
           // Actually, our regex already filters for that.
           // Prefer one with ~100 questions.
           const diffA = Math.abs((a.totalQuestions || 0) - 100);

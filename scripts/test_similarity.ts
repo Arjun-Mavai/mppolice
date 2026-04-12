@@ -8,7 +8,7 @@ import { getScopedStateServiceYear } from '@/features/tests/utils/pyq-scope';
 
 // Mock DB connection for script
 const client = createClient({
-  url: 'file:mppsc_local.db',
+  url: 'file:mppolice_local.db',
 });
 const db = drizzle(client, { schema });
 
@@ -71,8 +71,8 @@ async function run() {
     const selectedTestIds = new Set<string>();
     for (const [year, candidates] of testsByYear.entries()) {
         candidates.sort((a, b) => {
-            const isHindiA = a.title.includes('MPPSC राज्य सेवा');
-            const isHindiB = b.title.includes('MPPSC राज्य सेवा');
+            const isHindiA = a.title.includes('MP Police राज्य सेवा');
+            const isHindiB = b.title.includes('MP Police राज्य सेवा');
             if (isHindiA && !isHindiB) return -1;
             if (!isHindiA && isHindiB) return 1;
             return (b.totalQuestions || 0) - (a.totalQuestions || 0);

@@ -1,6 +1,6 @@
 export type BilingualOption =
   | string
-  | { text: string; textEn?: string; text_en?: string; [key: string]: any };
+  | { text: string; textEn?: string; text_en?: string; image?: string; id?: string; [key: string]: unknown };
 
 export interface Question {
   id: string;
@@ -15,6 +15,9 @@ export interface Question {
   negativeMarks?: number;
   type?: 'standard' | 'matching';
   subject?: string; // 🏷️ New field for mixed quizzes
+  /** Parsed from extended_data for image MCQs */
+  questionImageUrl?: string;
+  extendedData?: unknown;
   matchPairs?: {
     id: string;
     label: string;

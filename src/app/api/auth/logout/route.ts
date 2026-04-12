@@ -5,8 +5,8 @@ export async function POST(request: Request) {
   const cookieStore = await cookies();
 
   // ✅ FIX: Delete the CORRECT cookie name!
-  // Login sets 'mppsc_token', so logout should delete 'mppsc_token'
-  cookieStore.delete('mppsc_token');
+  // Login sets 'mppolice_token', so logout should delete 'mppolice_token'
+  cookieStore.delete('mppolice_token');
 
   return NextResponse.json({ success: true });
 }

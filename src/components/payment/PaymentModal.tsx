@@ -28,6 +28,7 @@ import { verifyPayment, startPayment } from '@/actions/payment-actions';
 import { checkEmailExists } from '@/actions/email-actions';
 import { getCurrentUser } from '@/actions/auth-actions';
 import { trackFbStandardEvent } from '@/lib/analytics/facebook-pixel';
+import { getErrorMessage } from '@/lib/errors';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -43,14 +44,14 @@ interface PaymentModalProps {
   planName?: string;
 }
 
-const MPPSC_FACTS = [
-  { icon: BookOpen, text: 'MPPSC Prelims has 100 MCQs in GS Paper 1' },
+const MP_Police_FACTS = [
+  { icon: BookOpen, text: 'MP Police Prelims has 100 MCQs in GS Paper 1' },
   { icon: BarChart3, text: 'Practice tests improve scores by up to 30%' },
-  { icon: Target, text: 'MP Geography is high-scoring in MPPSC Prelims' },
-  { icon: Target, text: '2 lakh+ students appear for MPPSC every year' },
+  { icon: Target, text: 'MP Geography is high-scoring in MP Police Prelims' },
+  { icon: Target, text: '2 lakh+ students appear for MP Police every year' },
   { icon: Brain, text: 'Indian History covers 15-20% of Prelims questions' },
 
-  { icon: Sparkles, text: 'MPPSC 2026 Prelims expected date is 26 April' },
+  { icon: Sparkles, text: 'MP Police 2026 Prelims expected date is 26 April' },
   { icon: BookOpen, text: 'GS Paper 2 (CSAT) is qualifying — 33% needed' },
 
   { icon: Brain, text: 'Current Affairs covers 20-25% of questions' },
@@ -64,7 +65,7 @@ const MPPSC_FACTS = [
  *    Humne 'smart-toggle' logic lagaya h: Dialog close -> Razorpay Open -> Dialog Re-open.
  * 2. **State Preservation**: Dialog close hone par React state udd jaati h. Isliye humne `useRef`
  *    use kiya h (userIdRef, formValuesRef) taaki data persist rahe jab dialog wapas aaye.
- * 3. **Engaging Loading State**: User bore na ho isliye MPPSC ke amazing facts rotate hote h
+ * 3. **Engaging Loading State**: User bore na ho isliye MP Police ke amazing facts rotate hote h
  *    jab tak payment verify ho raha h.
  */
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -165,7 +166,7 @@ export function PaymentModal({
   useEffect(() => {
     if (!isLoading || loadingPhase === 'razorpay-open') return;
     const interval = setInterval(() => {
-      setFactIndex((prev) => (prev + 1) % MPPSC_FACTS.length);
+      setFactIndex((prev) => (prev + 1) % MP_Police_FACTS.length);
     }, 3000);
     return () => clearInterval(interval);
   }, [isLoading, loadingPhase]);
@@ -246,7 +247,7 @@ export function PaymentModal({
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: 'MPPSC Syllabus',
+        name: 'MP Police Syllabus',
         description: planName,
         order_id: orderData.id,
         prefill: { name: values.name, email: values.email, contact: values.phone },
@@ -330,9 +331,9 @@ export function PaymentModal({
 
       const paymentObject = new (window as any).Razorpay(options);
       paymentObject.open();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error(error.message || 'Something went wrong');
+      toast.error(getErrorMessage(error) || 'Something went wrong');
       setIsLoading(false);
       setLoadingPhase(null);
     }
@@ -342,7 +343,7 @@ export function PaymentModal({
   if (loadingPhase === 'razorpay-open' && !open) return null;
 
   const showLoading = isLoading && loadingPhase !== 'razorpay-open';
-  const CurrentFactIcon = MPPSC_FACTS[factIndex].icon;
+  const CurrentFactIcon = MP_Police_FACTS[factIndex].icon;
 
   // Determine if we should show the "Simplified" view for logged in users (Lite upgrade / renew)
   // Session se data lete h — form nahi; direct paywall. Phone required by Razorpay; if missing we show form for phone only.
@@ -352,7 +353,7 @@ export function PaymentModal({
     <Dialog open={open} onOpenChange={showLoading ? undefined : onOpenChange} modal={false}>
       <DialogContent className="border-zinc-200 bg-white text-black sm:max-w-[425px]">
         {showLoading ? (
-          // ── Loading State: MPPSC facts while API calls process ──
+          // ── Loading State: MP Police facts while API calls process ──
           <div className="flex flex-col items-center justify-center space-y-6 py-8 text-center">
             <DialogTitle
               style={{
@@ -378,7 +379,7 @@ export function PaymentModal({
               <p className="text-sm font-semibold text-zinc-900">{getLoadingMessage()}</p>
             </div>
 
-            {/* MPPSC Fact Card */}
+            {/* MP Police Fact Card */}
             <div className="w-full rounded-lg border border-zinc-100 bg-zinc-50 p-4 transition-all duration-500">
               <p className="mb-2 text-[10px] font-bold tracking-wider text-zinc-400 uppercase">
                 Did you know?
@@ -387,13 +388,13 @@ export function PaymentModal({
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black/5">
                   <CurrentFactIcon className="h-4 w-4 text-zinc-600" />
                 </div>
-                <p className="text-sm leading-snug text-zinc-700">{MPPSC_FACTS[factIndex].text}</p>
+                <p className="text-sm leading-snug text-zinc-700">{MP_Police_FACTS[factIndex].text}</p>
               </div>
             </div>
 
             {/* Dot indicators */}
             <div className="flex gap-1">
-              {MPPSC_FACTS.map((_, i) => (
+              {MP_Police_FACTS.map((_, i) => (
                 <div
                   key={i}
                   className={`h-1 rounded-full transition-all duration-300 ${i === factIndex ? 'w-4 bg-black' : 'w-1 bg-zinc-200'}`}

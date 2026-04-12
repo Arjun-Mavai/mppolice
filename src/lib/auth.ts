@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
-import { eq, isNull, and } from 'drizzle-orm';
+import { eq, isNull, and, sql } from 'drizzle-orm';
 import { cache } from 'react';
 import { logger } from '@/lib/logger';
 
@@ -25,7 +25,7 @@ import { logger } from '@/lib/logger';
 
 export const verifyAuth = cache(async () => {
   const cookieStore = await cookies();
-  const token = cookieStore.get('mppsc_token');
+  const token = cookieStore.get('mppolice_token');
 
   if (!token) {
     return null;
@@ -42,14 +42,19 @@ export const verifyAuth = cache(async () => {
 
   try {
     // Only fetch active users — soft-deleted + inactive users are treated as non-existent
-    const users = await db
+    const dbUsers = await db
       .select()
       .from(mppscUsers)
       .where(
-        and(eq(mppscUsers.id, userId), isNull(mppscUsers.deletedAt), eq(mppscUsers.isActive, true))
+        and(
+          eq(mppscUsers.id, userId),
+          isNull(mppscUsers.deletedAt),
+          eq(mppscUsers.isActive, true),
+          sql`(${mppscUsers.examType} = 'mppolice' OR ${mppscUsers.examType} = 'all')`
+        )
       )
       .limit(1);
-    return users[0] || null;
+    return dbUsers[0] || null;
   } catch (error) {
     // DB errors → null (graceful degradation, user redirected to login)
     logger.error('Database error during auth verification:', error, {

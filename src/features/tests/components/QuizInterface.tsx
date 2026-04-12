@@ -128,7 +128,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
       const success = await requestFullscreenSafely();
       if (success) {
         setIsFullscreen(true);
-        localStorage.setItem('mppsc_quiz_fullscreen', 'true');
+        localStorage.setItem('mppolice_quiz_fullscreen', 'true');
       } else {
         // Fullscreen failed or not supported - continue without it
         console.info('Fullscreen not available on this device');
@@ -141,7 +141,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
       const success = await exitFullscreenSafely();
       if (success) {
         setIsFullscreen(false);
-        localStorage.removeItem('mppsc_quiz_fullscreen');
+        localStorage.removeItem('mppolice_quiz_fullscreen');
       }
     }
     onExit();
@@ -152,7 +152,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
   const handleExitCancel = useCallback(() => {
     setShowExitConfirm(false);
     // 🔧 GUEST FLOW FIX: If exit is cancelled, show guest entry dialog if it was active
-    if (!userId && !localStorage.getItem('mppsc_guest_name')) {
+    if (!userId && !localStorage.getItem('mppolice_guest_name')) {
       setShowGuestEntryDialog(true);
     }
 
@@ -169,7 +169,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
   // ── Guest entry ──
   useEffect(() => {
     if (!userId && typeof window !== 'undefined') {
-      const saved = localStorage.getItem('mppsc_guest_name');
+      const saved = localStorage.getItem('mppolice_guest_name');
       if (saved) setGuestName(saved);
       else setShowGuestEntryDialog(true);
     }
@@ -180,7 +180,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
     if (!guestName.trim()) return;
     setIsSubmittingGuest(true);
     try {
-      localStorage.setItem('mppsc_guest_name', guestName.trim());
+      localStorage.setItem('mppolice_guest_name', guestName.trim());
       await createGuestUser({ name: guestName, email: guestEmail, mobile: guestMobile });
 
       // 🎯 Track Lead generated when Guest gives contact info
@@ -263,7 +263,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
           .exitFullscreen()
           .then(() => {
             setIsFullscreen(false);
-            localStorage.removeItem('mppsc_quiz_fullscreen');
+            localStorage.removeItem('mppolice_quiz_fullscreen');
           })
           .catch(() => {});
       }

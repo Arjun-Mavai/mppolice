@@ -5,7 +5,7 @@ import { QuizPlayClient } from './QuizPlayClient';
 import { verifyAuth } from '@/lib/auth';
 import { Question } from '@/types/quiz';
 import { logger } from '@/lib/logger';
-import { SCORING_CONFIG } from '@/lib/quiz-scoring';
+import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 import { getSubjectPartAccess } from '@/app/syllabus/quiz/pyq/actions';
 import { canAccessTest, getUserTier } from '@/lib/access-control';
@@ -32,6 +32,10 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
 
   // 📝 0. Validate Subject Whiteslist for Security
   const ALLOWED_SUBJECTS = [
+    'General Knowledge',
+    'General Science',
+    'Logical Reasoning',
+    'Quantitative Aptitude',
     'MP GK',
     'History',
     'Geography',
@@ -105,6 +109,18 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
 
     const questions: Question[] = questionsSlice.map((q: any) => {
       const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+      let ext = q.extendedData;
+      if (typeof ext === 'string') {
+        try {
+          ext = JSON.parse(ext);
+        } catch {
+          ext = undefined;
+        }
+      }
+      const img =
+        ext && typeof ext === 'object' && ext !== null && 'questionImageUrl' in ext
+          ? (ext as { questionImageUrl?: string }).questionImageUrl
+          : undefined;
       return {
         id: q.id,
         question: q.questionText,
@@ -113,12 +129,13 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
         options: parsedOptions as string[],
         explanation: q.explanation || undefined,
         explanationEn: q.explanationEn || undefined,
-        // 🏷️ INJECT YEAR INTO SUBJECT FIELD FOR DISPLAY
         subject: `PYQ ${q.year}`,
         type: q.type || 'standard',
-        matchPairs: q.matchPairs, // Fixed typo matchPairs
-        negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING,
-        marks: SCORING_CONFIG.MARKS_PER_QUESTION,
+        matchPairs: q.matchPairs,
+        negativeMarks: q.negativeMarks ?? QUIZ_CONSTANTS.NEGATIVE_MARKING,
+        marks: q.marks ?? QUIZ_CONSTANTS.MARKS_PER_QUESTION,
+        extendedData: ext,
+        questionImageUrl: img,
       };
     });
 
@@ -185,8 +202,19 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
 
   // Map Questions
   const questions: Question[] = testData.questions.map((q) => {
-    // Ensure options are parsed if they come as a stringified array
     const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+    let ext = q.extendedData;
+    if (typeof ext === 'string') {
+      try {
+        ext = JSON.parse(ext);
+      } catch {
+        ext = undefined;
+      }
+    }
+    const img =
+      ext && typeof ext === 'object' && ext !== null && 'questionImageUrl' in ext
+        ? (ext as { questionImageUrl?: string }).questionImageUrl
+        : undefined;
 
     return {
       id: q.id,
@@ -199,14 +227,16 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
           ? q.questionText
           : q.questionTextEn || undefined,
       correctAnswer: Number(q.correctAnswer),
-      options: parsedOptions as string[], // Cast assumes standard string[] options for now
+      options: parsedOptions as string[],
       explanation: q.explanation || undefined,
       explanationEn: q.explanationEn || undefined,
       subject: q.subject || undefined,
       type: (q.type as 'standard' | 'matching') || 'standard',
       matchPairs: (q.matchPairs as any) || undefined,
-      negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING, // Force Global Config (1)
-      marks: SCORING_CONFIG.MARKS_PER_QUESTION, // Force Global Config (3)
+      negativeMarks: q.negativeMarks ?? QUIZ_CONSTANTS.NEGATIVE_MARKING,
+      marks: q.marks ?? QUIZ_CONSTANTS.MARKS_PER_QUESTION,
+      extendedData: ext,
+      questionImageUrl: img,
     };
   });
 

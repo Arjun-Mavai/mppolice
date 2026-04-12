@@ -55,12 +55,12 @@ export async function POST(request: Request) {
     }
 
     // ── Find User by Email ──────────────────────────────────────
-    const users = await db
+    const dbUsers = await db
       .select()
       .from(mppscUsers)
       .where(eq(mppscUsers.email, email.toLowerCase().trim()))
       .limit(1);
-    const user = users[0];
+    const user = dbUsers[0];
 
     if (!user) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
@@ -141,7 +141,7 @@ export async function POST(request: Request) {
 
     // ── Set HTTP-Only Cookie (30 days) ──────────────────────────
     const cookieStore = await cookies();
-    cookieStore.set('mppsc_token', token, {
+    cookieStore.set('mppolice_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       path: '/',

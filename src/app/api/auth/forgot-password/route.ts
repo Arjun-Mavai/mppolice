@@ -31,13 +31,13 @@ export async function POST(request: Request) {
     }
 
     // --- CHECK EMAIL EXISTENCE EFFICIENTLY ---
-    const users = await db
+    const dbUsers = await db
       .select({ id: mppscUsers.id })
       .from(mppscUsers)
       .where(eq(mppscUsers.email, email))
       .limit(1);
 
-    const user = users[0];
+    const user = dbUsers[0];
 
     if (!user) {
       // SECURITY: Don't reveal if user exists or not.

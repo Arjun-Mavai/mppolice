@@ -5,6 +5,7 @@ import { syllabusData } from '@/data/syllabusData';
 import { Button } from '@/components/ui/button';
 import { Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 
 export default function ExportTool() {
@@ -105,8 +106,8 @@ export default function ExportTool() {
 
       toast.success(data.message || 'Upload successful!');
       setImportJson(''); // Clear on success
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     } finally {
       setIsUploading(false);
     }

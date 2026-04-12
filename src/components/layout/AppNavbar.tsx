@@ -107,7 +107,6 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   // ✅ PERFORMANCE: Memoized navigation items
   const navItems = useMemo(() => [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, color: 'text-slate-700' },
-    { name: 'Syllabus', href: '/syllabus', icon: BookOpen, color: 'text-emerald-600' },
     {
       name: 'Test Series',
       href: '/syllabus/quiz/pyq',
@@ -226,7 +225,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
       }
 
       // 4. Hit server to delete httpOnly cookie
-      await fetch('/api/auth/mppsc-logout', { method: 'POST' });
+      await fetch('/api/auth/mppolice-logout', { method: 'POST' });
 
       // 5. Hard reload — flush Next.js router cache + RSC cache completely
       window.location.href = '/';
@@ -461,7 +460,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                       <div className="tap-scale-96">
                         <SheetClose asChild>
                           <a
-                            href="https://t.me/MPPSC2026_Mission"
+                            href="https://t.me/MP Police2026_Mission"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-sky-50 hover:text-sky-600"

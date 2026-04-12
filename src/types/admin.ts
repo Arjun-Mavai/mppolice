@@ -31,11 +31,19 @@ export interface RecentGuest {
   createdAt: Date | null;
 }
 
+export interface RecentBlogRow {
+  id: string;
+  title: string;
+  category: string | null;
+  contentType: string | null;
+  createdAt: Date | null;
+}
+
 export interface AdminDashboardResponse {
   success: boolean;
   stats?: AdminDashboardStats;
   recentUploads?: RecentUpload[];
-  recentBlogs?: any[];
+  recentBlogs?: RecentBlogRow[];
   recentGuests?: RecentGuest[];
   topicCoverage?: Record<string, string[]>;
   error?: string;

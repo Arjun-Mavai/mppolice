@@ -6,6 +6,6 @@ export const dynamic = 'force-dynamic';
 
 export default async function UserDashboardPage() {
   await requireAdmin();
-  const users = await getUserDashboardData();
-  return <UserDashboardClient users={users} />;
+  const dbUsers = await getUserDashboardData();
+  return <UserDashboardClient users={dbUsers} />;
 }

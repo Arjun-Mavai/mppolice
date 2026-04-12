@@ -25,12 +25,12 @@ export type LogCategory =
 
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
-interface LogContext {
+/** Known fields + arbitrary extras for Sentry `extra` (no `any`). */
+export type LogContext = {
   category: LogCategory;
   userId?: string;
-  metadata?: Record<string, any>;
-  [key: string]: any;
-}
+  metadata?: Record<string, unknown>;
+} & Record<string, unknown>;
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -45,7 +45,7 @@ const formatContext = (context?: LogContext) => {
     },
     user: userId ? { id: userId } : undefined,
     extra: {
-      ...metadata,
+      ...(metadata ?? {}),
       ...rest,
     },
   };
@@ -54,7 +54,7 @@ const formatContext = (context?: LogContext) => {
 /**
  * Internal printer that handles both Console and Sentry
  */
-const logToSentry = (level: LogLevel, message: string, error?: any, context?: LogContext) => {
+const logToSentry = (level: LogLevel, message: string, error?: unknown, context?: LogContext) => {
   const { tags, user, extra } = formatContext(context);
 
   Sentry.withScope((scope) => {
@@ -89,7 +89,7 @@ const logToSentry = (level: LogLevel, message: string, error?: any, context?: Lo
   });
 };
 
-const printConsole = (level: LogLevel, message: string, error?: any, context?: LogContext) => {
+const printConsole = (level: LogLevel, message: string, error?: unknown, context?: LogContext) => {
   if (!isDev) return; // Optional: Silence console in prod to keep logs clean, or keep it for Vercel logs
 
   const timestamp = new Date().toISOString().substring(11, 19);
@@ -125,7 +125,7 @@ const printConsole = (level: LogLevel, message: string, error?: any, context?: L
 type Logger = {
   info: (message: string, context?: LogContext) => void;
   warn: (message: string, context?: LogContext) => void;
-  error: (message: string, error?: any, context?: LogContext) => void;
+  error: (message: string, error?: unknown, context?: LogContext) => void;
   debug: (message: string, context?: LogContext) => void;
 };
 
@@ -152,7 +152,7 @@ export const logger: Logger = {
    * 🚨 ERROR: Critical failures (DB connection lost, Payment failed)
    * - recorded as Sentry Issues (Error level) w/ Stack Trace
    */
-  error: (message: string, error?: any, context?: LogContext) => {
+  error: (message: string, error?: unknown, context?: LogContext) => {
     printConsole('error', message, error, context);
     logToSentry('error', message, error, context);
   },

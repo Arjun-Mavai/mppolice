@@ -12,7 +12,11 @@ import { Album, BookOpen, Layers, Clock, BrainCircuit } from 'lucide-react';
 const NAV_ITEMS = [
   {
     id: 'pyq',
-    label: { en: 'PYQ', hi: 'PYQ' },
+    label: { en: 'PYP · Mocks', hi: 'PYP · मॉक' },
+    title: {
+      en: 'MP Police: previous papers, memory-based & subject practice',
+      hi: 'MP Police: पिछले पेपर, मेमोरी व विषय अभ्यास',
+    },
     icon: Clock,
     href: '/syllabus/quiz/pyq',
     color: 'bg-slate-900 border-slate-900',
@@ -20,35 +24,15 @@ const NAV_ITEMS = [
   },
   {
     id: 'full-length',
-    label: { en: 'FLT', hi: 'FLT' },
+    label: { en: '100 Q mock', hi: '100 प्रश्न मॉक' },
+    title: {
+      en: 'Full-length 100-question mock tests (MP Police pattern)',
+      hi: 'पूर्ण 100 प्रश्न मॉक (MP Police पैटर्न)',
+    },
     icon: Album,
     href: '/syllabus/quiz/full-length',
     color: 'bg-amber-500 border-amber-500',
     activeText: 'text-amber-600',
-  },
-  {
-    id: 'csat',
-    label: { en: 'CSAT', hi: 'CSAT' },
-    icon: BrainCircuit,
-    href: '/syllabus/quiz/csat',
-    color: 'bg-pink-500 border-pink-500',
-    activeText: 'text-pink-600',
-  },
-  {
-    id: 'topic',
-    label: { en: 'Topics', hi: 'टॉपिक' },
-    icon: Layers,
-    href: '/syllabus/quiz/topic',
-    color: 'bg-indigo-600 border-indigo-600',
-    activeText: 'text-indigo-600',
-  },
-  {
-    id: 'units',
-    label: { en: 'Units', hi: 'यूनिट' },
-    icon: BookOpen,
-    href: '/syllabus/quiz/units',
-    color: 'bg-emerald-500 border-emerald-500',
-    activeText: 'text-emerald-600',
   },
 ];
 
@@ -101,6 +85,7 @@ export function QuizSubNav() {
                 <Link
                   key={item.id}
                   href={item.href}
+                  title={hi ? item.title.hi : item.title.en}
                   prefetch={true}
                   scroll={false}
                   onMouseEnter={() => router.prefetch(item.href)}
@@ -141,12 +126,13 @@ export function QuizSubNav() {
                 <Link
                   key={item.id}
                   href={item.href}
+                  title={hi ? item.title.hi : item.title.en}
                   prefetch={true}
                   scroll={false}
                   onMouseEnter={() => router.prefetch(item.href)}
                   onTouchStart={() => router.prefetch(item.href)}
                   className={cn(
-                    'relative flex min-w-[64px] shrink-0 flex-col items-center gap-1 transition-all',
+                    'relative flex min-w-[72px] shrink-0 flex-col items-center gap-1 transition-all',
                     isActive ? item.activeText : 'text-slate-400',
                     isPending && !isActive && 'opacity-70'
                   )}
