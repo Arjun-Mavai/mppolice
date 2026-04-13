@@ -3,6 +3,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { Question } from '@/types/quiz';
 import { logger } from '@/lib/logger';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
+import { selectedIndexToStoredAnswer } from '@/lib/mppolice/mcq-answer-key';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🎯 QUIZ LOGIC HOOK (useQuizLogic)
@@ -235,7 +236,8 @@ export function useQuizLogic({
       // ───────────────────────────────────────────────────────
       const formattedAnswers: Record<string, string> = {};
       Object.entries(answers).forEach(([qId, optIdx]) => {
-        formattedAnswers[qId] = String(optIdx);
+        const q = questions.find((qq) => qq.id === qId);
+        formattedAnswers[qId] = selectedIndexToStoredAnswer(optIdx, q?.options);
       });
 
       // ───────────────────────────────────────────────────────

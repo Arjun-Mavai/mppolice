@@ -219,6 +219,7 @@ export default function HistoryUnitPage() {
                       practiceTest: activeTab === 'hindi' ? 'अभ्यास करें' : 'Practice',
                       closeAnalysis: activeTab === 'hindi' ? 'बंद करें' : 'Close',
                     }}
+                    language={activeTab === 'hindi' ? 'hi' : 'en'}
                   />
                 </motion.div>
               ))}

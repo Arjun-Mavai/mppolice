@@ -34,8 +34,8 @@ export function DashboardActionCard({ totalTests = 0 }: DashboardActionCardProps
         </div>
 
         <button 
-          onMouseEnter={() => router.prefetch('/syllabus/quiz/units')}
-          onClick={() => router.push('/syllabus/quiz/units')}
+          onMouseEnter={() => router.prefetch('/syllabus/quiz/full-tests?tab=subject')}
+          onClick={() => router.push('/syllabus/quiz/full-tests?tab=subject')}
           className="mt-6 flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-slate-200 transition-all hover:bg-slate-800 hover:scale-[1.02] active:scale-95"
         >
           <Play size={16} className="fill-current" />

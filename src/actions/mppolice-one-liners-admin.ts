@@ -91,3 +91,37 @@ export async function publishAllDraftMppoliceOneLiners(subjectTag?: string | nul
     return { success: false, error: getErrorMessage(e) };
   }
 }
+
+export async function getMppoliceOneLinerStats() {
+  await requireAdmin();
+  try {
+    const all = await db
+      .select({
+        subjectTag: mppoliceOneLinerFacts.subjectTag,
+        status: mppoliceOneLinerFacts.status,
+      })
+      .from(mppoliceOneLinerFacts);
+
+    const stats = {
+      total: all.length,
+      published: all.filter((r) => r.status === 'published').length,
+      draft: all.filter((r) => r.status === 'draft').length,
+      bySubject: {} as Record<string, { total: number; published: number; draft: number }>,
+    };
+
+    MPPOLICE_ONELINER_SUBJECTS.forEach((s) => {
+      const subjectRows = all.filter((r) => r.subjectTag === s);
+      stats.bySubject[s] = {
+        total: subjectRows.length,
+        published: subjectRows.filter((r) => r.status === 'published').length,
+        draft: subjectRows.filter((r) => r.status === 'draft').length,
+      };
+    });
+
+    return { success: true, stats };
+  } catch (e) {
+    logger.error('getMppoliceOneLinerStats', e);
+    return { success: false, error: getErrorMessage(e) };
+  }
+}
+

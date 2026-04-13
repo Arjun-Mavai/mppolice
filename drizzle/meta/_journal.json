@@ -120,6 +120,20 @@
       "when": 1775195724047,
       "tag": "0016_reflective_jazinda",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1776047345325,
+      "tag": "0017_overrated_karnak",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1776100168790,
+      "tag": "0018_parallel_risque",
+      "breakpoints": true
     }
   ]
 }

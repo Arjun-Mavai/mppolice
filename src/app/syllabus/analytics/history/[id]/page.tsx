@@ -42,7 +42,8 @@ async function AttemptContent({ attemptId }: { attemptId: string }) {
       matchPairs: ans.matchPairs,
       negativeMarks: ans.negativeMarks || SCORING_CONFIG.NEGATIVE_MARKING,
       marks: ans.marks || SCORING_CONFIG.MARKS_PER_QUESTION,
-      subject: ans.subject
+      subject: ans.subject,
+      extendedData: ans.extendedData
     };
   });
 

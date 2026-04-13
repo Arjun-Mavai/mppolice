@@ -86,7 +86,7 @@ export function QuizPlayClient({
               </Button>
               <Button
                 variant="outline"
-                onClick={() => router.push('/syllabus/quiz')}
+                onClick={() => router.push('/syllabus/quiz/full-tests')}
                 className="h-12 w-full rounded-xl"
               >
                 Back to Tests
@@ -178,7 +178,7 @@ export function QuizPlayClient({
         testId={testId}
         title={title}
         timeLimitInMinutes={Math.ceil(questions.length * QUIZ_CONSTANTS.TIME_PER_QUESTION_MINUTES)}
-        onExit={() => router.push('/syllabus/quiz')}
+        onExit={() => router.push('/syllabus/quiz/full-tests')}
       />
     );
   }
@@ -193,11 +193,12 @@ export function QuizPlayClient({
       userId={userId}
       userName={userName}
       timeLimitInMinutes={Math.ceil(questions.length * QUIZ_CONSTANTS.TIME_PER_QUESTION_MINUTES)}
-      onExit={() => router.push('/syllabus/quiz')}
+      onExit={() => router.push('/syllabus/quiz/full-tests')}
       onRetry={() => {
         // Optimistic update, server should re-validate
         setRetryCount((r) => r + 1);
       }}
+      isInstantMode
     />
   );
 }

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,6 @@ import { Fragment } from 'react';
 import { getUserTier } from '@/lib/access-control';
 import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
 
-import { QuizSubNav } from '@/features/syllabus/components/QuizSubNav';
 import { QuizListItem } from '@/components/QuizListItem';
 
 interface Topic {
@@ -49,8 +48,6 @@ interface TopicSelectionClientProps {
 export default function TopicSelectionClient({ initialDbData }: TopicSelectionClientProps) {
   const router = useRouter();
   const { language, user } = useSettingsStore();
-  const pathname = usePathname();
-
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [paywallOpen, setPaywallOpen] = useState(false);

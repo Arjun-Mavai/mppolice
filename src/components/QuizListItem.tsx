@@ -29,6 +29,7 @@ interface QuizListItemProps {
 export function QuizListItem({
   index,
   title,
+  subtitle,
   questions,
   marks,
   duration,
@@ -186,7 +187,7 @@ export function QuizListItem({
           </h3>
           {isFree && (
             <span className="rounded-md border border-emerald-200 bg-emerald-100 px-1.5 py-0.5 text-[10px] font-black tracking-wider text-emerald-700 uppercase">
-              Free
+              {hi ? 'मुफ़्त' : 'Free'}
             </span>
           )}
           {/* 🔒 ATTEMPTS (Grey Text Only) */}
@@ -213,6 +214,10 @@ export function QuizListItem({
             </span>
           )}
         </div>
+
+        {subtitle ? (
+          <p className="mb-1 line-clamp-2 text-xs font-medium leading-snug text-slate-500">{subtitle}</p>
+        ) : null}
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-slate-500">
           {(questions !== undefined || itemLabel) && (

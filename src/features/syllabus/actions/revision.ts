@@ -88,25 +88,59 @@ export async function getRevisionCount(topicId: string) {
   }
 }
 
+export async function getRevisedTopics() {
+  const userId = await getUserId();
+  if (!userId) return [];
+
+  try {
+    return await db
+      .select({
+        topicId: topicRevisions.topicId,
+        unitId: topicRevisions.unitId,
+        revisionCount: topicRevisions.revisionCount,
+        lastRevisedAt: topicRevisions.lastRevisedAt,
+      })
+      .from(topicRevisions)
+      .where(eq(topicRevisions.userId, userId))
+      .orderBy(sql`${topicRevisions.lastRevisedAt} DESC`);
+  } catch (error) {
+    logger.error('Error fetching revised topics:', error);
+    return [];
+  }
+}
+
+import { getUserOneLinerProgress } from '@/features/revision/actions/mppolice-one-liner-revisions';
+
 export async function getUserSyllabusProgress() {
   const userId = await getUserId();
   if (!userId) return null;
 
   try {
-    const result = await db
-      .select({
-        count: sql<number>`count(distinct ${topicRevisions.topicId})`,
-        totalRevisions: sql<number>`sum(${topicRevisions.revisionCount})`,
-      })
-      .from(topicRevisions)
-      .where(eq(topicRevisions.userId, userId));
+    const [topicResult, oneLinerStats] = await Promise.all([
+      db
+        .select({
+          count: sql<number>`count(distinct ${topicRevisions.topicId})`,
+          totalRevisions: sql<number>`sum(${topicRevisions.revisionCount})`,
+        })
+        .from(topicRevisions)
+        .where(eq(topicRevisions.userId, userId)),
+      getUserOneLinerProgress()
+    ]);
 
-    const revisedTopicsCount = result[0]?.count || 0;
-    const totalRevisions = result[0]?.totalRevisions || 0;
+    const revisedTopicsCount = topicResult[0]?.count || 0;
+    const totalTopicRevisions = topicResult[0]?.totalRevisions || 0;
 
-    return { revisedTopicsCount, totalRevisions };
+    return { 
+      revisedTopicsCount, 
+      totalTopicRevisions,
+      oneLinerStats // revisedFactsCount, totalRevisions, totalFacts
+    };
   } catch (error) {
     logger.error('Error fetching progress:', error);
-    return { revisedTopicsCount: 0, totalRevisions: 0 };
+    return { 
+      revisedTopicsCount: 0, 
+      totalTopicRevisions: 0,
+      oneLinerStats: { revisedFactsCount: 0, totalRevisions: 0, totalFacts: 0 }
+    };
   }
 }

@@ -3,12 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { syllabusData } from '@/data/syllabusData';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { QuizListItem } from '@/components/QuizListItem';
-import { QuizSubNav } from '@/features/syllabus/components/QuizSubNav';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { getUserTier } from '@/lib/access-control';
@@ -29,9 +26,14 @@ interface QuizUnitSelectionClientProps {
     isFreeAccess: boolean;
     isLiteAccess?: boolean; // Added access flag
   }[];
+  /** Omit full-page shell (used inside Full tests hub) */
+  embedded?: boolean;
 }
 
-export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSelectionClientProps) {
+export default function QuizUnitSelectionClient({
+  availableTests,
+  embedded = false,
+}: QuizUnitSelectionClientProps) {
   const router = useRouter();
   const { language, user, authCheckStatus } = useSettingsStore(); // ✅ Fix: Read auth status
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
@@ -52,10 +54,6 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
   const isAdmin = user?.role === 'admin';
   const effectiveTier = getUserTier(user as any);
 
-  // 🔒 ACCESS CONTROL: Only PRO  users get full access to Unit Tests
-  // REVERT: Lite users SHOULD see Unit tests (based on user request)
-  const hasActivePlan = effectiveTier === 'lite' || effectiveTier === 'pro';
-
   const handleUnitClick = (testId: string, isLocked: boolean, title: string) => {
     if (isLocked) {
       setUnlockModalOpen(true);
@@ -71,39 +69,27 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
 
   const hi = language === 'hi';
 
-  console.log('isAuthloading', isAuthLoading);
-
   // 🔄 Wait for Auth Check
   if (isAuthLoading) {
-    return (
-      <div className="mx-auto max-w-5xl px-6 pt-10 pb-20">
-        <div className="mb-12 space-y-4 text-center">
-          <div className="mx-auto h-12 w-48 animate-pulse rounded-lg bg-slate-200" />
-          <div className="mx-auto h-4 w-64 animate-pulse rounded bg-slate-100" />
+    const sk = (
+      <div className={embedded ? 'py-10' : 'mx-auto max-w-5xl px-6 pt-10 pb-20'}>
+        <div className="mb-8 space-y-4 text-center">
+          <div className="mx-auto h-10 w-40 animate-pulse rounded-lg bg-slate-200" />
+          <div className="mx-auto h-3 w-56 animate-pulse rounded bg-slate-100" />
         </div>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 w-full animate-pulse rounded-2xl bg-slate-100" />
+            <div key={i} className="h-20 w-full animate-pulse rounded-2xl bg-slate-100" />
           ))}
         </div>
       </div>
     );
+    return sk;
   }
 
-  return (
-    <Fragment>
-      <div className="relative min-h-screen overflow-hidden bg-[#fafbfc] pb-20 font-sans">
-        {/* 🎭 PREMIUM BACKGROUND BLURS */}
-        <div className="pointer-events-none absolute top-0 left-0 h-[500px] w-full bg-gradient-to-b from-slate-100/30 to-transparent" />
-        <div className="pointer-events-none absolute top-[-100px] right-[-100px] h-[500px] w-[500px] rounded-full bg-indigo-50/40 blur-[100px]" />
-        <div className="pointer-events-none absolute bottom-[20%] left-[-150px] h-[400px] w-[400px] rounded-full bg-emerald-50/30 blur-[100px]" />
-
-        <div className="relative z-10 mx-auto max-w-5xl px-6 pt-10 md:pt-8">
-        {/* Header */}
-        <div className="mb-8">{/* Back button removed as requested */}</div>
-
-        {/* 🧭 CONSOLIDATED SUB-NAV - Moved to Layout */}
-
+  const listSection = (
+    <>
+      {!embedded && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -118,9 +104,17 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
               : 'Select a unit to strengthen your preparation and score.'}
           </p>
         </motion.div>
+      )}
+      {embedded && (
+        <div className="mb-6 text-center">
+          <h2 className="text-lg font-black text-slate-900">{hi ? 'विषयवार यूनिट' : 'Subject-wise units'}</h2>
+          <p className="text-xs font-medium text-slate-500">
+            {hi ? 'UNIT टाइप — सेक्शन के हिसाब से' : 'UNIT type — by official section'}
+          </p>
+        </div>
+      )}
 
-        {/* 📝 LIST VIEW */}
-        <div className="space-y-4 pb-32 md:pb-20">
+      <div className={`space-y-4 ${embedded ? 'pb-2' : 'pb-32 md:pb-20'}`}>
           <AnimatePresence mode="popLayout">
             {availableTests.map((test, idx) => {
               const unitData = test.unitId ? syllabusData.units[test.unitId] : null;
@@ -189,10 +183,27 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
             </div>
           )}
         </div>
-      </div>
 
       <SyllabusLockModal open={unlockModalOpen} onOpenChange={setUnlockModalOpen} />
-    </div>
+    </>
+  );
+
+  if (embedded) {
+    return listSection;
+  }
+
+  return (
+    <Fragment>
+      <div className="relative min-h-screen overflow-hidden bg-[#fafbfc] pb-20 font-sans">
+        <div className="pointer-events-none absolute top-0 left-0 h-[500px] w-full bg-gradient-to-b from-slate-100/30 to-transparent" />
+        <div className="pointer-events-none absolute top-[-100px] right-[-100px] h-[500px] w-[500px] rounded-full bg-indigo-50/40 blur-[100px]" />
+        <div className="pointer-events-none absolute bottom-[20%] left-[-150px] h-[400px] w-[400px] rounded-full bg-emerald-50/30 blur-[100px]" />
+
+        <div className="relative z-10 mx-auto max-w-5xl px-6 pt-10 md:pt-8">
+          <div className="mb-8" />
+          {listSection}
+        </div>
+      </div>
     </Fragment>
   );
 }

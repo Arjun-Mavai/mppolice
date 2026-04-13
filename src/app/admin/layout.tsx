@@ -1,15 +1,6 @@
 'use client';
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🏢 ADMIN LAYOUT — Sidebar + Content Area
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
-// Mobile-first: hamburger menu → slide-out sidebar
-// Desktop: fixed sidebar left + content right
-// Sidebar links: sab admin routes ek jagah
-//
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -29,12 +20,12 @@ import {
   IndianRupee,
   CreditCard,
   BarChart3,
+  Sparkles,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
-// ── Admin routes — sidebar me ye dikhenge ───────────────────
 const ADMIN_ROUTES = [
   {
     href: '/admin/dashboard',
@@ -77,6 +68,12 @@ const ADMIN_ROUTES = [
     label: 'Content Upload',
     icon: Upload,
     description: 'Upload test content',
+  },
+  {
+    href: '/admin/one-liner-gk',
+    label: 'GK One-Liners',
+    icon: Sparkles,
+    description: 'Import revision facts (JSON)',
   },
   {
     href: '/admin/syllabus-upload',
@@ -160,12 +157,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* ── Mobile Sidebar Overlay ───────────────────────── */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
           />
-          {/* Sidebar panel */}
           <div className="animate-in slide-in-from-left absolute top-0 bottom-0 left-0 w-72 bg-white shadow-2xl duration-300">
             <SidebarContent pathname={pathname} onClose={() => setSidebarOpen(false)} />
           </div>
@@ -188,10 +183,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   );
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 📋 SIDEBAR CONTENT — Reusable for mobile + desktop
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 function SidebarContent({ pathname, onClose }: { pathname: string; onClose?: () => void }) {
   return (
     <div className="flex h-full flex-col">
@@ -206,7 +197,6 @@ function SidebarContent({ pathname, onClose }: { pathname: string; onClose?: () 
             <p className="text-[10px] text-slate-500">MP Police 2026</p>
           </div>
         </Link>
-        {/* Close button (mobile only) */}
         {onClose && (
           <Button variant="ghost" size="icon" onClick={onClose} className="lg:hidden">
             <X className="h-4 w-4" />
@@ -253,7 +243,6 @@ function SidebarContent({ pathname, onClose }: { pathname: string; onClose?: () 
         })}
       </nav>
 
-      {/* ── Footer ──────────────────────────────────────── */}
       <div className="border-t border-slate-100 p-4">
         <Link
           href="/"

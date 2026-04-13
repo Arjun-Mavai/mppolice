@@ -34,7 +34,7 @@ function ThankYouContent() {
   useEffect(() => {
     if (isUpgrade) {
       const timer = setTimeout(() => {
-        router.push('/syllabus/quiz/topic');
+        router.push('/syllabus/quiz/chapters');
       }, 3500);
       return () => clearTimeout(timer);
     }
@@ -174,7 +174,7 @@ function ThankYouContent() {
               asChild
               className="h-11 w-full bg-slate-900 font-semibold text-white hover:bg-slate-800"
             >
-              <Link href="/syllabus/quiz/topic">
+              <Link href="/syllabus/quiz/chapters">
                 Start Practicing <ArrowRight className="ml-1.5 h-4 w-4" />
               </Link>
             </Button>

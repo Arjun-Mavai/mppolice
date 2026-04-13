@@ -6,9 +6,9 @@ interface LanguageSwitcherProps {
   setLanguage: (language: 'en' | 'hi') => void;
 }
 
-export const LanguageSwitcher = memo(function LanguageSwitcher({ 
-  language, 
-  setLanguage 
+export const LanguageSwitcher = memo(function LanguageSwitcher({
+  language,
+  setLanguage,
 }: LanguageSwitcherProps) {
   const handleEnglish = useCallback(() => setLanguage('en'), [setLanguage]);
   const handleHindi = useCallback(() => setLanguage('hi'), [setLanguage]);
@@ -18,7 +18,7 @@ export const LanguageSwitcher = memo(function LanguageSwitcher({
       {/* Animated Background Pill */}
       <div
         className={cn(
-          'ease-[var(--ease-spring-smooth)] absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full bg-white shadow-sm transition-transform duration-300',
+          'ease-[var(--ease-spring-smooth)] pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full bg-white shadow-sm transition-transform duration-300',
           language === 'hi' ? 'translate-x-[calc(100%+4px)]' : 'translate-x-0'
         )}
       />

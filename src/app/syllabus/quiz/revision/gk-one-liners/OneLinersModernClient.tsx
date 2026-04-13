@@ -446,6 +446,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                           answerEn={f.answerEn || ''}
                           extendedData={f.extendedData}
                           showFooter={false}
+                          language={language as 'hi' | 'en'}
                           frontClassName={cn("border-2 transition-all duration-500", color.bg, color.border)}
                           className={cn("h-[450px] shadow-2xl rounded-[3rem] border-2", color.border)}
                           labels={{

@@ -13,7 +13,9 @@ const getCachedUnitTests = unstable_cache(
     return await db
       .select()
       .from(tests)
-      .where(and(eq(tests.type, 'UNIT'), eq(tests.isHidden, false)))
+      .where(
+        and(eq(tests.type, 'UNIT'), eq(tests.isHidden, false), eq(tests.examType, 'mppolice'))
+      )
       .orderBy(asc(tests.displayOrder));
   },
   ['unit-tests-list'],

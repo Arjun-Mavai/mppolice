@@ -43,7 +43,8 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
     const mode = formData.get('mode') as 'new' | 'existing'; // 'new' or 'existing'
     const existingTestId = formData.get('existingTestId') as string;
 
-    const title = formData.get('title') as string;
+    const title = (formData.get('title') as string) || '';
+    const titleEnForm = ((formData.get('titleEn') as string) || '').trim();
     const type = formData.get('type') as 'FLT' | 'UNIT' | 'PYQ' | 'CSAT' | 'TOPIC' | 'MISC';
     const unitId = formData.get('unitId') as string;
     const topicId = formData.get('topicId') as string; // Changed from null/undefined
@@ -58,8 +59,8 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       return { success: false, message: 'Missing JSON Data' };
     }
 
-    if (mode === 'new' && (!title || !type)) {
-      return { success: false, message: 'Missing Title or Type for New Test' };
+    if (mode === 'new' && !type) {
+      return { success: false, message: 'Missing Type for New Test' };
     }
 
     if (mode === 'new' && type === 'MISC' && !subjectTag) {
@@ -70,19 +71,48 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       return { success: false, message: 'Select an existing test to add questions to.' };
     }
 
-    let parsedQuestions;
+    let parsedQuestions: unknown[];
+    let aiTestTitle: string | undefined;
+    let aiTestTitleEn: string | undefined;
+
     try {
-      parsedQuestions = JSON.parse(jsonInput);
+      const raw: unknown = JSON.parse(jsonInput);
+      if (Array.isArray(raw)) {
+        parsedQuestions = raw;
+      } else if (
+        raw &&
+        typeof raw === 'object' &&
+        Array.isArray((raw as { questions?: unknown }).questions)
+      ) {
+        const o = raw as {
+          questions: unknown[];
+          testTitle?: unknown;
+          testTitleEn?: unknown;
+        };
+        parsedQuestions = o.questions;
+        if (typeof o.testTitle === 'string' && o.testTitle.trim()) {
+          aiTestTitle = o.testTitle.trim();
+        }
+        if (typeof o.testTitleEn === 'string' && o.testTitleEn.trim()) {
+          aiTestTitleEn = o.testTitleEn.trim();
+        }
+      } else {
+        return {
+          success: false,
+          message:
+            'JSON must be a question array, or an object { "testTitle"?, "testTitleEn"?, "questions": [...] }',
+        };
+      }
     } catch (e) {
       return { success: false, message: 'Invalid JSON format' };
     }
 
-    if (!Array.isArray(parsedQuestions)) {
-      return { success: false, message: 'JSON must be an array of questions' };
-    }
+    const formTitle = title.trim();
+    const resolvedTitle = formTitle || aiTestTitle || 'Imported test';
+    const resolvedTitleEn = titleEnForm || aiTestTitleEn || null;
 
     let testId = existingTestId;
-    let testTitle = title;
+    let testTitle = resolvedTitle;
 
     const normalizedQuestions = (parsedQuestions as Record<string, unknown>[]).map((q) =>
       normalizeMppoliceQuestionInput(q)
@@ -138,7 +168,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
     if (mode === 'new') {
       testId = nanoid();
       const slug =
-        title
+        resolvedTitle
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/(^-|-$)/g, '') +
@@ -147,12 +177,13 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
 
       await db.insert(tests).values({
         id: testId,
-        title: title,
+        title: resolvedTitle,
+        titleEn: resolvedTitleEn,
         slug: slug,
         type: type, // FLT, UNIT, MISC, etc.
         unitId: type === 'UNIT' || type === 'TOPIC' || type === 'MISC' ? unitId : null,
         topicId: type === 'TOPIC' ? topicId : null,
-        description: `Imported test: ${title}`,
+        description: `Imported test: ${resolvedTitle}`,
         totalMarks: totalMarksPlanned,
         totalQuestions: n,
         durationMinutes,
@@ -261,7 +292,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       }
     } else if (mode === 'new') {
       // If new test but 0 questions inserted (unlikely unless empty JSON), update count
-      finalQuestionCount = parsedQuestions.length;
+      finalQuestionCount = n;
       await db
         .update(tests)
         .set({ totalQuestions: finalQuestionCount })

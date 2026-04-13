@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-// import { Outfit, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import PwaRegistry from '@/components/PwaRegistry';
 import { Suspense } from 'react';
@@ -20,18 +19,6 @@ const SupportButton = dynamic(() =>
   import('@/components/SupportButton').then((m) => m.SupportButton)
 );
 
-// const outfit = Outfit({
-//   subsets: ['latin'],
-//   variable: '--font-outfit',
-//   display: 'swap',
-// });
-
-// const playfair = Playfair_Display({
-//   subsets: ['latin'],
-//   variable: '--font-playfair',
-//   display: 'swap',
-// });
-
 export const viewport: Viewport = {
   themeColor: '#4c1d95',
   width: 'device-width',
@@ -39,20 +26,21 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
 };
+
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://mppolice.zenscroll.app';
+
 export const metadata: Metadata = {
   title: {
     default: 'Mindful MP Police - Crack MP Police 2026 | Bilingual Tests & Mnemonics',
     template: '%s | Mindful MP Police',
   },
   description:
-    "Master the new MP Police 2026 pattern with India's first bilingual mnemonic-based platform. Get 100+ topic tests, 5+ years PYQs, and smart explanations in Hindi & English.",
+    'MP Police Constable Paper I (100 MCQs, 120 minutes, no negative marking): GK & reasoning, mental ability, science & simple arithmetic — bilingual practice, PYQs, dashboard, and structured explanations.',
   keywords: [
-    'MP Police 2026 Test Series',
-    'MP Police Prelims Mock Test',
-    'MP Police Previous Year Papers',
-    'MP Police Mnemonics',
-    'MP Police Notes Hindi',
+    'MP Police Constable Paper I',
+    'MP Police 2026 syllabus',
+    'MP Police PYQ',
+    'MP Police test series Hindi English',
   ],
   metadataBase: new URL(baseUrl),
   openGraph: {
@@ -61,7 +49,7 @@ export const metadata: Metadata = {
     url: baseUrl,
     title: 'MP Police 2026 Elite Test Series | नवीनतम पैटर्न पर आधारित सर्वश्रेष्ठ अभ्यास',
     description:
-      'Looking for MP Police 2026 Test Series? Get 5+ Years PYQs, Topic-wise Tests, and Mnemonics in Hindi & English. The smartest way to clear MP Police Prelims.',
+      'MP Police Constable Paper I prep: official 40+30+30 sections, bilingual MCQs, PYQ hub, dashboard & test history.',
     siteName: 'Mindful MP Police',
     images: [
       {
@@ -75,18 +63,13 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Mindful MP Police | Best App for MP Police 2026',
-    description: "Master MP Police with India's first Bilingual Mnemonic App.",
+    description: 'Bilingual MP Police Constable Paper I practice: PYQs, analytics, and smart explanations.',
     images: ['/og-hero.webp'],
   },
   manifest: '/manifest.json',
   icons: {
     icon: '/icons/icon-192x192.png',
     apple: '/icons/icon-192x192.png',
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'Mindful MP Police',
   },
 };
 
@@ -100,17 +83,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // 1. Fetch User on Server (Once per request)
+  // 1. Fetch User on Server
   const user = await verifyAuth();
 
   // 🛡️ SECURITY: Exam Type Isolation
-  // If a user with a different exam type (like MPPSC or UPSC) somehow logs in,
-  // we redirect them to the dashboard or a common landing if applicable.
-  // This ensures they don't see MP Police specific premium content.
   if (user && user.examType !== 'mppolice' && user.examType !== 'all') {
-     // If they are admin, they might be allowed, but for regular users, redirect.
      if (user.role !== 'admin') {
-        redirect('/dashboard'); // Or any other safe landing page
+        redirect('/dashboard');
      }
   }
 
@@ -127,28 +106,12 @@ export default async function RootLayout({
       }
     : null;
 
-  // JSON-LD structured data — helps Google show rich results
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'Mindful MP Police',
     url: baseUrl,
-    description:
-      'The #1 App for MP Police 2026 Preparation with Mnemonics, Bilingual Notes, Tests & Quizzes',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: `${baseUrl}/blogs?q={search_term_string}`,
-      'query-input': 'required name=search_term_string',
-    },
-  };
-
-  const organizationSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'EducationalOrganization',
-    name: 'Mindful MP Police',
-    url: baseUrl,
-    description: "India's first bilingual mnemonic-based MP Police preparation platform",
-    sameAs: [],
+    description: 'MP Police Constable Paper I — bilingual tests, PYQs, dashboard, and structured explanations.',
   };
 
   return (
@@ -160,32 +123,14 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
         <Script
-          id="schema-organization"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-        />
-        {/* Facebook Pixel Code */}
-        <Script
           id="fb-pixel"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js'); fbq('init', '2337193063478696'); fbq('track', 'PageView');`,
           }}
         />
-        <noscript>
-          <img
-            height="1"
-            width="1"
-            style={{ display: 'none' }}
-            src="https://www.facebook.com/tr?id=2337193063478696&ev=PageView&noscript=1"
-            alt="facebook pixel"
-          />
-        </noscript>
-        {/* End Facebook Pixel Code */}
       </head>
-      <body
-        className={`bg-gray-50 font-sans text-gray-900 antialiased`}
-      >
+      <body className="bg-gray-50 font-sans text-gray-900 antialiased">
         <GlobalErrorBoundary>
           <PwaRegistry />
           <Providers>
@@ -210,11 +155,7 @@ export default async function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                  }, function(err) {
-                    console.log('ServiceWorker registration failed: ', err);
-                  });
+                  navigator.serviceWorker.register('/sw.js');
                 });
               }
             `,

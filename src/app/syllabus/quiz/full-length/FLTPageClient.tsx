@@ -28,9 +28,11 @@ export interface TestWithAccess {
 
 interface FLTPageClientProps {
   tests: TestWithAccess[];
+  /** Omit page chrome (used inside Full tests hub MBT tab) */
+  embedded?: boolean;
 }
 
-export default function FLTPageClient({ tests }: FLTPageClientProps) {
+export default function FLTPageClient({ tests, embedded = false }: FLTPageClientProps) {
   const router = useRouter();
   const { language } = useSettingsStore();
   const [paywallOpen, setPaywallOpen] = useState(false);
@@ -62,20 +64,13 @@ export default function FLTPageClient({ tests }: FLTPageClientProps) {
 
   const hi = language === 'hi';
 
-  return (
-    <Fragment>
-      <div className="relative min-h-screen overflow-hidden bg-[#fafbfc] pb-20 font-sans">
-        {/* 🎭 PREMIUM BACKGROUND BLURS */}
-        <div className="pointer-events-none absolute top-0 left-0 h-[500px] w-full bg-gradient-to-b from-slate-100/30 to-transparent" />
-        <div className="pointer-events-none absolute top-[-100px] right-[-100px] h-[500px] w-[500px] rounded-full bg-indigo-50/40 blur-[100px]" />
-        <div className="pointer-events-none absolute bottom-[20%] left-[-150px] h-[400px] w-[400px] rounded-full bg-emerald-50/30 blur-[100px]" />
+  const listBottom = embedded ? 'pb-2' : 'pb-32 md:pb-20';
 
-        <div className="relative z-10 mx-auto max-w-5xl px-6 pt-10 md:pt-8">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-12 space-y-2 text-center"
-          >
+  const listBlock = (
+    <>
+      <div className={embedded ? 'space-y-3' : 'mb-12 space-y-2 text-center'}>
+        {!embedded && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="text-4xl font-black tracking-tight text-slate-900 md:text-5xl">
               {hi ? 'फुल लेंथ टेस्ट' : 'Full Length Tests'}
             </h1>
@@ -85,9 +80,18 @@ export default function FLTPageClient({ tests }: FLTPageClientProps) {
                 : 'Simulate the real exam environment with comprehensive mocks.'}
             </p>
           </motion.div>
+        )}
+        {embedded && (
+          <div className="text-center">
+            <h2 className="text-lg font-black text-slate-900">{hi ? '100 प्रश्न मॉक' : '100-question mocks'}</h2>
+            <p className="text-xs font-medium text-slate-500">
+              {hi ? 'FLT टाइप — पूरा पेपर एक साथ' : 'FLT type — full paper in one go'}
+            </p>
+          </div>
+        )}
+      </div>
 
-          {/* 📝 LIST VIEW */}
-          <div className="space-y-4 pb-32 md:pb-20">
+      <div className={`space-y-4 ${listBottom}`}>
             <AnimatePresence mode="popLayout">
               {tests.map((test, idx) => (
                 <QuizListItem
@@ -131,9 +135,23 @@ export default function FLTPageClient({ tests }: FLTPageClientProps) {
               </div>
             )}
           </div>
-        </div>
 
-        <SyllabusLockModal open={paywallOpen} onOpenChange={setPaywallOpen} />
+      <SyllabusLockModal open={paywallOpen} onOpenChange={setPaywallOpen} />
+    </>
+  );
+
+  if (embedded) {
+    return listBlock;
+  }
+
+  return (
+    <Fragment>
+      <div className="relative min-h-screen overflow-hidden bg-[#fafbfc] pb-20 font-sans">
+        <div className="pointer-events-none absolute top-0 left-0 h-[500px] w-full bg-gradient-to-b from-slate-100/30 to-transparent" />
+        <div className="pointer-events-none absolute top-[-100px] right-[-100px] h-[500px] w-[500px] rounded-full bg-indigo-50/40 blur-[100px]" />
+        <div className="pointer-events-none absolute bottom-[20%] left-[-150px] h-[400px] w-[400px] rounded-full bg-emerald-50/30 blur-[100px]" />
+
+        <div className="relative z-10 mx-auto max-w-5xl px-6 pt-10 md:pt-8">{listBlock}</div>
       </div>
     </Fragment>
   );

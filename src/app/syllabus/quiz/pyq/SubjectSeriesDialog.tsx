@@ -24,6 +24,8 @@ interface SubjectSeriesDialogProps {
   isOpen: boolean;
   onClose: () => void;
   subject: string;
+  /** Shown in header; defaults to `subject` (English key for API/URLs) */
+  titleOverride?: string;
   totalQuestions: number;
   onSelectSeries: (limit: number, offset: number) => void;
 }
@@ -75,6 +77,7 @@ export function SubjectSeriesDialog({
   isOpen,
   onClose,
   subject,
+  titleOverride,
   totalQuestions,
   onSelectSeries,
 }: SubjectSeriesDialogProps) {
@@ -150,7 +153,7 @@ export function SubjectSeriesDialog({
                   <Icon className="h-6 w-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-slate-900">{subject}</h2>
+                  <h2 className="text-xl font-black text-slate-900">{titleOverride ?? subject}</h2>
                   <p className={cn('text-xs font-bold tracking-wider uppercase', style.text)}>
                     {totalQuestions} {hi ? 'प्रश्न' : 'Questions'} • {totalParts}{' '}
                     {hi ? 'भाग' : 'Parts'}

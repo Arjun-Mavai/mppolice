@@ -29,6 +29,7 @@ import {
   Flame,
   History,
   Newspaper,
+  LayoutDashboard,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -184,7 +185,9 @@ export default function PricingPage() {
           )}
         </h1>
         <p className="mx-auto mb-2 max-w-2xl text-lg font-bold text-slate-600 md:text-xl">
-          {hi ? 'उन गंभीर छात्रों के साथ जुड़ें जो स्मार्ट और डेटा-आधारित तैयारी कर रहे हैं' : 'Join serious aspirants who are mastering the syllabus with a data-driven approach'}
+          {hi
+            ? 'डैशबोर्ड, टेस्ट हिस्ट्री, और हर खंड में सब्जेक्ट-वाइज प्रश्न — उसी JSON-स्टाइल व्याख्या के साथ जो प्लेटफ़ॉर्म पर अपलोड होती है।'
+            : 'Dashboard, test history, and subject-wise questions across every Paper I section — with the same JSON-style explanations you get in-app.'}
         </p>
       </section>
 
@@ -221,52 +224,58 @@ export default function PricingPage() {
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {[
                 {
+                  icon: LayoutDashboard,
+                  label: hi ? 'डैशबोर्ड और टेस्ट हिस्ट्री' : 'Dashboard & test history',
+                  sub: hi ? 'प्रगति, पुराने प्रयास, रिवीज़न लूप' : 'Progress, past attempts, revision loop',
+                  highlight: true,
+                },
+                {
                   icon: BarChart3,
-                  label: hi ? 'एग्जाम DNA विश्लेषण' : 'Exam DNA Analysis',
-                  sub: hi ? 'विषय वितरण और रुझान' : 'Topic Distribution & Trends',
-                  highlight: true
+                  label: hi ? 'PYQ इंटेलिजेंस' : 'PYQ intelligence',
+                  sub: hi ? 'ट्रेंड, वेटेज, टॉपिक हीटमैप' : 'Trends, weightage, topic heatmaps',
+                  highlight: true,
                 },
                 {
                   icon: Target,
-                  label: hi ? 'सिलेबस पर महारत' : 'Master Your Syllabus',
-                  sub: hi ? 'सभी 10 यूनिट्स की पूरी समझ' : 'Basic understanding of all 10 units',
-                  highlight: true
-                },
-                {
-                  icon: Sparkles,
-                  label: hi ? 'प्रीमियम फैक्ट्स लाइब्रेरी' : 'Premium Facts Library',
-                  sub: hi ? 'हाई-यील्ड एग्जाम फैक्ट्स' : 'High-yield Exam Facts',
-                  highlight: true
-                },
-                {
-                  icon: Zap,
-                  label: hi ? '5000+ प्रश्न' : '5000+ Questions',
-                  sub: hi ? 'सभी विषयों में' : 'Across all topics',
-                },
-                {
-                  icon: FileText,
-                  label: hi ? 'फुल मॉक टेस्ट' : 'Full Mock Tests',
-                  sub: hi ? '100 प्रश्न प्रत्येक' : '100Q each',
-                },
-                {
-                  icon: History,
-                  label: hi ? '5+ साल के PYQ' : '5+ Years PYQs',
-                  sub: hi ? 'विस्तृत उत्तर सहित' : 'With Explanations',
-                  badges: hi 
-                    ? ['वर्ष-वार', 'विषय-वार', 'यूनिट-वार'] 
-                    : ['Year-wise', 'Subject-wise', 'Unit-wise'],
-                  highlight: true
-                },
-                {
-                  icon: Newspaper,
-                  label: hi ? 'प्रीमियम ब्लॉग्स' : 'Premium Blogs',
-                  sub: hi ? 'MP Police की सभी 10 यूनिट्स की बेसिक समझ' : 'Basic understanding of all 10 units of MP Police',
+                  label: hi ? 'पेपर I — तीन खंड' : 'Paper I — three sections',
+                  sub: hi ? 'GK+तर्क · मानसिक · विज्ञान+अंक' : 'GK+reasoning · mental · science+arithmetic',
+                  highlight: true,
                 },
                 {
                   icon: BookOpen,
-                  label: hi ? 'कॉन्सेप्ट पर महारत' : 'Master The Concept',
-                  sub: hi ? 'विस्तृत व्याख्या और शॉर्ट-कट' : 'Structured Breakdowns & Shortcuts',
-                  highlight: true
+                  label: hi ? 'सब्जेक्ट-वाइज बेस्ट व्याख्या' : 'Subject-wise best explanations',
+                  sub: hi ? 'gk_science / reasoning / math_quant' : 'gk_science / reasoning / math_quant',
+                  highlight: true,
+                },
+                {
+                  icon: Zap,
+                  label: hi ? '1000+ वन-लाइनर्स (जल्द)' : '1000+ one-liners (soon)',
+                  sub: hi ? 'तेज रिवीज़न — धीरे-धीरे जोड़े जाएँगे' : 'Fast revision — rolling release',
+                },
+                {
+                  icon: Sparkles,
+                  label: hi ? 'प्रीमियम फैक्ट्स लाइब्रेरी' : 'Premium facts library',
+                  sub: hi ? 'हाई-यील्ड MCQ हुक' : 'High-yield MCQ hooks',
+                  highlight: true,
+                },
+                {
+                  icon: FileText,
+                  label: hi ? 'फुल मॉक टेस्ट' : 'Full mock tests',
+                  sub: hi ? '100 प्रश्न · 120 मिनट पैटर्न' : '100Q · 120 min pattern',
+                },
+                {
+                  icon: History,
+                  label: hi ? '2020–2025 PYQ' : '2020–2025 PYQs',
+                  sub: hi ? 'वर्ष-वार · खंड-वार · टॉपिक-टैग' : 'Year-wise · section-wise · topic tags',
+                  badges: hi
+                    ? ['वर्ष-वार', 'खंड-वार', 'टॉपिक-वार']
+                    : ['Year-wise', 'Section-wise', 'Topic-wise'],
+                  highlight: true,
+                },
+                {
+                  icon: Newspaper,
+                  label: hi ? 'प्रीमियम ब्लॉग्स' : 'Premium blogs',
+                  sub: hi ? 'MP Police सिलेबस की गहरी समझ' : 'Deep dives aligned to MP Police syllabus',
                 },
               ].map((item) => {
                 const { icon: Icon, label, sub, highlight } = item;

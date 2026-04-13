@@ -66,7 +66,7 @@ export function GuestResultClient({ userId }: { userId?: string }) {
       questionTimes={result.questionTimes}
       onRetry={() => {
         clearResult();
-        router.push('/syllabus/quiz');
+        router.push('/syllabus/quiz/full-tests');
       }}
       onExit={() => {
         clearResult();

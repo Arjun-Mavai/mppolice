@@ -125,7 +125,7 @@ export function TestHistoryClient({ analytics }: TestHistoryClientProps) {
             <Button
               size="sm"
               className="h-8 rounded-full bg-slate-900 px-4 text-xs font-bold text-white hover:bg-slate-800"
-              onClick={() => router.push('/syllabus/quiz')}
+              onClick={() => router.push('/syllabus/quiz/full-tests')}
             >
               <TrendingUp className="mr-1.5 h-3.5 w-3.5" /> New Test
             </Button>
@@ -162,7 +162,7 @@ export function TestHistoryClient({ analytics }: TestHistoryClientProps) {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => router.push('/syllabus/quiz')}
+              onClick={() => router.push('/syllabus/quiz/full-tests')}
               className="rounded-full font-bold"
             >
               Take a Test

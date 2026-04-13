@@ -9,6 +9,7 @@ import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 import { getSubjectPartAccess } from '@/app/syllabus/quiz/pyq/actions';
 import { canAccessTest, getUserTier } from '@/lib/access-control';
+import { correctAnswerToOptionIndex } from '@/lib/mppolice/mcq-answer-key';
 
 interface PageProps {
   searchParams: Promise<{
@@ -125,7 +126,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
         id: q.id,
         question: q.questionText,
         questionEn: q.questionTextEn || undefined,
-        correctAnswer: Number(q.correctAnswer),
+        correctAnswer: correctAnswerToOptionIndex(q.correctAnswer, parsedOptions),
         options: parsedOptions as string[],
         explanation: q.explanation || undefined,
         explanationEn: q.explanationEn || undefined,
@@ -226,7 +227,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
           q.questionTextEn.trim().toLowerCase() === 'na')
           ? q.questionText
           : q.questionTextEn || undefined,
-      correctAnswer: Number(q.correctAnswer),
+      correctAnswer: correctAnswerToOptionIndex(q.correctAnswer, parsedOptions),
       options: parsedOptions as string[],
       explanation: q.explanation || undefined,
       explanationEn: q.explanationEn || undefined,

@@ -268,7 +268,7 @@ export function QuizPaletteMobile(props: QuizPaletteProps) {
 // Desktop: Always-visible sidebar palette
 export function QuizPaletteDesktop(props: QuizPaletteProps) {
   return (
-    <aside className="hidden w-[320px] shrink-0 flex-col overflow-hidden border-l border-slate-100 bg-slate-50/30 p-6 lg:flex xl:w-[360px]">
+    <aside className="hidden w-[280px] shrink-0 flex-col overflow-hidden border-l border-slate-100 bg-slate-50/30 p-6 lg:flex xl:w-[320px]">
       <PaletteGrid {...props} />
     </aside>
   );

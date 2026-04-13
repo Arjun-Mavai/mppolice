@@ -7,15 +7,29 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 
-import { Album, BookOpen, Layers, Clock, BrainCircuit } from 'lucide-react';
+import { BookMarked, Clock, LayoutGrid, Sparkles } from 'lucide-react';
 
 const NAV_ITEMS = [
   {
-    id: 'pyq',
-    label: { en: 'PYP · Mocks', hi: 'PYP · मॉक' },
+    id: 'full-tests',
+    label: { en: 'Full tests', hi: 'फुल टेस्ट' },
+    shortLabel: { en: 'Mocks', hi: 'मॉक' },
     title: {
-      en: 'MP Police: previous papers, memory-based & subject practice',
-      hi: 'MP Police: पिछले पेपर, मेमोरी व विषय अभ्यास',
+      en: '100-Q MBT mocks and subject-wise unit tests',
+      hi: '100 प्रश्न MBT मॉक और विषयवार यूनिट टेस्ट',
+    },
+    icon: LayoutGrid,
+    href: '/syllabus/quiz/full-tests',
+    color: 'bg-amber-500 border-amber-500',
+    activeText: 'text-amber-600',
+  },
+  {
+    id: 'pyq',
+    label: { en: 'PYQ', hi: 'PYQ' },
+    shortLabel: { en: 'PYQ', hi: 'PYQ' },
+    title: {
+      en: 'Previous-year papers, mocks & PYQ intelligence',
+      hi: 'पिछले वर्ष के पेपर, मॉक और विश्लेषण',
     },
     icon: Clock,
     href: '/syllabus/quiz/pyq',
@@ -23,16 +37,30 @@ const NAV_ITEMS = [
     activeText: 'text-slate-900',
   },
   {
-    id: 'full-length',
-    label: { en: '100 Q mock', hi: '100 प्रश्न मॉक' },
+    id: 'chapters',
+    label: { en: 'Chapters', hi: 'अध्याय' },
+    shortLabel: { en: 'Topics', hi: 'टॉपिक' },
     title: {
-      en: 'Full-length 100-question mock tests (MP Police pattern)',
-      hi: 'पूर्ण 100 प्रश्न मॉक (MP Police पैटर्न)',
+      en: 'Topic tests by Science, GK, Reasoning, Quant, MP GK',
+      hi: 'विज्ञान, GK, तर्क, गणित, MP GK — अध्यायवार',
     },
-    icon: Album,
-    href: '/syllabus/quiz/full-length',
-    color: 'bg-amber-500 border-amber-500',
-    activeText: 'text-amber-600',
+    icon: BookMarked,
+    href: '/syllabus/quiz/chapters',
+    color: 'bg-violet-600 border-violet-600',
+    activeText: 'text-violet-600',
+  },
+  {
+    id: 'one-liners',
+    label: { en: '1-line GK', hi: 'वन-लाइन' },
+    shortLabel: { en: '1-line', hi: 'लाइन' },
+    title: {
+      en: 'High-yield one-liner facts — glance Q&A, expand for deep notes',
+      hi: 'महत्वपूर्ण वन-लाइन तथ्य — तेज़ रिवीज़न',
+    },
+    icon: Sparkles,
+    href: '/syllabus/quiz/revision/gk-one-liners',
+    color: 'bg-emerald-600 border-emerald-600',
+    activeText: 'text-emerald-600',
   },
 ];
 
@@ -52,12 +80,27 @@ export function QuizSubNav() {
   const hi = language === 'hi';
   const [isPending] = useTransition();
 
-  const activeHref = useMemo(
-    () =>
-      NAV_ITEMS.find((item) => pathname === item.href)?.href ||
-      (pathname.startsWith('/syllabus/quiz/pyq') ? '/syllabus/quiz/pyq' : pathname),
-    [pathname]
-  );
+  const activeHref = useMemo(() => {
+    if (pathname.startsWith('/syllabus/quiz/revision')) {
+      return '/syllabus/quiz/revision/gk-one-liners';
+    }
+    if (pathname.startsWith('/syllabus/quiz/pyq')) {
+      return '/syllabus/quiz/pyq';
+    }
+    if (
+      pathname.startsWith('/syllabus/quiz/full-tests') ||
+      pathname.startsWith('/syllabus/quiz/full-length') ||
+      pathname.startsWith('/syllabus/quiz/units')
+    ) {
+      return '/syllabus/quiz/full-tests';
+    }
+    if (pathname.startsWith('/syllabus/quiz/chapters') || pathname.startsWith('/syllabus/quiz/topic')) {
+      return '/syllabus/quiz/chapters';
+    }
+    const direct = NAV_ITEMS.find((item) => pathname === item.href)?.href;
+    if (direct) return direct;
+    return pathname;
+  }, [pathname]);
 
   const springConfig: any = { type: 'spring', stiffness: 400, damping: 40 };
 
@@ -132,7 +175,7 @@ export function QuizSubNav() {
                   onMouseEnter={() => router.prefetch(item.href)}
                   onTouchStart={() => router.prefetch(item.href)}
                   className={cn(
-                    'relative flex min-w-[72px] shrink-0 flex-col items-center gap-1 transition-all',
+                    'relative flex min-w-[56px] max-w-[88px] shrink flex-1 flex-col items-center gap-1 transition-all',
                     isActive ? item.activeText : 'text-slate-400',
                     isPending && !isActive && 'opacity-70'
                   )}
@@ -149,11 +192,11 @@ export function QuizSubNav() {
 
                     <span
                       className={cn(
-                        'text-[10px] leading-none font-bold tracking-tight uppercase transition-all',
+                        'text-[9px] leading-tight font-bold tracking-tight uppercase transition-all',
                         isActive ? 'scale-105 text-slate-900' : 'text-slate-400'
                       )}
                     >
-                      {hi ? item.label.hi : item.label.en}
+                      {hi ? item.shortLabel.hi : item.shortLabel.en}
                     </span>
                   </div>
 

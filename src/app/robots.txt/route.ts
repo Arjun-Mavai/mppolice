@@ -1,5 +1,8 @@
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppolice.zenscroll.app';
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    'https://mppolice.zenscroll.app';
 
   // 🤖 CUSTOM ROBOTS.TXT
 

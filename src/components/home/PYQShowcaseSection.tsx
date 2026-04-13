@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect, memo } from 'react';
 import { LazyMotion, domAnimation, m, AnimatePresence } from 'framer-motion';
-import { 
-  History, 
-  ArrowRight, 
+import {
+  ArrowRight,
   CheckCircle2,
   Lightbulb,
   Brain,
@@ -12,10 +11,11 @@ import {
   Zap,
   TrendingUp,
   BookOpen,
-  Scale,
+  FlaskConical,
   ChevronDown,
   X,
-  Sparkles
+  Sparkles,
+  Cpu,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,74 +26,185 @@ import Link from 'next/link';
 // ── DATA FOR VISUALIZATIONS (Moved outside for performance) ───────────────────
 
 const PREVIEW_QUESTIONS = [
-  { id: 1, year: '2020', subject: 'GEOGRAPHY OF MP', set: 'SET-Q1', text: 'Panna district of Madhya Pradesh is famous for which mineral?' },
-  { id: 2, year: '2025', subject: 'ENVIRONMENT/FORESTRY', set: 'SET-Q96', text: 'During the year 2021, which state had the largest forest cover in India?' },
-  { id: 3, year: '2024', subject: 'ICT', set: 'SET-Q42', text: 'A ______ attack comes in the form of deceptive emails or text messages.' },
-  { id: 4, year: '2020', subject: 'INFORMATION TECHNOLOGY', set: 'SET-Q91', text: 'Which is not a type of secondary memory?' }
+  {
+    id: 1,
+    year: '2024',
+    subjectEn: 'GK · MP & India',
+    subjectHi: 'सामान्य ज्ञान · म.प्र. व भारत',
+    set: 'PAPER I',
+    textEn: 'Panna district of Madhya Pradesh is mainly known for which mineral?',
+    textHi: 'मध्य प्रदेश के पन्ना जिले में मुख्यतः किस खनिज के लिए प्रसिद्धि है?',
+  },
+  {
+    id: 2,
+    year: '2023',
+    subjectEn: 'Reasoning · Verbal',
+    subjectHi: 'तर्कशक्ति · मौखिक',
+    set: 'PAPER I',
+    textEn: 'Find the odd one out: Rose, Lily, Lotus, Oak',
+    textHi: 'असंगत चुनें: गुलाब, कुमुदिनी, कमल, बरगद',
+  },
+  {
+    id: 3,
+    year: '2025',
+    subjectEn: 'Mental Ability',
+    subjectHi: 'बौद्धिक क्षमता',
+    set: 'PAPER I',
+    textEn: 'If 12 men can complete a job in 8 days, how many days will 16 men take?',
+    textHi: 'यदि 12 आदमी किसी काम को 8 दिन में पूरा करते हैं, तो 16 आदमी कितने दिन में पूरा करेंगे?',
+  },
+  {
+    id: 4,
+    year: '2022',
+    subjectEn: 'Science · Chemistry',
+    subjectHi: 'विज्ञान · रसायन',
+    set: 'PAPER I',
+    textEn: 'Which gas is most abundant in the Earth’s atmosphere?',
+    textHi: 'पृथ्वी के वायुमंडल में सबसे अधिक कौन-सी गैस पाई जाती है?',
+  },
 ];
 
 const WEIGHTAGE_BARS = [
-  { nameEn: 'MP GK', nameHi: 'मध्यप्रदेश सामान्य ज्ञान', pct: 36, color: 'from-amber-400 to-orange-500' },
-  { nameEn: 'History', nameHi: 'इतिहास', pct: 14, color: 'from-emerald-400 to-teal-500' },
-  { nameEn: 'Polity', nameHi: 'राजव्यवस्था', pct: 12, color: 'from-blue-400 to-indigo-500' },
-  { nameEn: 'Geography', nameHi: 'भूगोल', pct: 10, color: 'from-rose-400 to-pink-500' },
+  {
+    nameEn: 'GK & Reasoning (40 marks)',
+    nameHi: 'सामान्य ज्ञान एवं तर्कशक्ति (40 अंक)',
+    pct: 40,
+    color: 'from-amber-400 to-orange-500',
+  },
+  {
+    nameEn: 'Mental Ability (30 marks)',
+    nameHi: 'बौद्धिक क्षमता (30 अंक)',
+    pct: 30,
+    color: 'from-emerald-400 to-teal-500',
+  },
+  {
+    nameEn: 'Science & Arithmetic (30 marks)',
+    nameHi: 'विज्ञान एवं सरल अंकगणित (30 अंक)',
+    pct: 30,
+    color: 'from-blue-400 to-indigo-500',
+  },
 ];
 
 const SUBJECT_LIST_DETAILED = [
-  { name: 'MP GK', count: 188, pct: 31, icon: BookOpen, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/20' },
-  { name: 'Polity', count: 95, pct: 16, icon: Scale, color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-  { name: 'History', count: 83, pct: 14, icon: History, color: 'text-pink-500', bg: 'bg-pink-500/10 border-pink-500/20' },
+  {
+    nameEn: 'General Knowledge & Reasoning',
+    nameHi: 'सामान्य ज्ञान एवं तर्कशक्ति',
+    marks: 40,
+    pct: 40,
+    icon: BookOpen,
+    color: 'text-amber-500',
+    bg: 'bg-amber-500/10 border-amber-500/20',
+  },
+  {
+    nameEn: 'Intellectual & Mental Ability',
+    nameHi: 'बौद्धिक क्षमता एवं मानसिक क्षमता',
+    marks: 30,
+    pct: 30,
+    icon: Cpu,
+    color: 'text-emerald-500',
+    bg: 'bg-emerald-500/10 border-emerald-500/20',
+  },
+  {
+    nameEn: 'Science & Simple Arithmetic',
+    nameHi: 'विज्ञान एवं सरल अंकगणित',
+    marks: 30,
+    pct: 30,
+    icon: FlaskConical,
+    color: 'text-sky-500',
+    bg: 'bg-sky-500/10 border-sky-500/20',
+  },
 ];
 
-const BETWA_EXPLANATION = [
-  { id: 'core', icon: CheckCircle2, labelEn: 'Core Logic', labelHi: 'तर्क एवं विश्लेषण', color: 'emerald', contentEn: 'Based on pollution levels like the Ganges, Betwa is called the Ganga of MP.', contentHi: 'प्रदूषण के आधार पर इसे म.प्र. की गंगा कहा जाता है।' },
-  { id: 'exam', icon: Lightbulb, labelEn: 'Exam Fact', labelHi: 'इतिहास', color: 'amber', contentEn: 'Origin: Kumra Gaon (Raisen). Total Length: 480 km.', contentHi: 'उद्गम: कुमरा गांव (रायसेन)। कुल लंबाई: 480 किमी।' },
-  { id: 'memory', icon: Brain, labelEn: 'Memory Tip', labelHi: 'मेमोरी टिप', color: 'blue', contentEn: '"Betwa = Beta (Son) of Raisen" -> Kumra Gaon.', contentHi: '"Betwa = Beta (Son) of Raisen" -> Kumra Gaon.' },
-  { id: 'scam', icon: AlertTriangle, labelEn: 'Scam Alert', labelHi: 'स्कैम अलर्ट', color: 'rose', contentEn: 'Don\'t confuse with Narmada. Narmada is the Lifeline of MP.', contentHi: 'नर्मदा से कंफ्यूज न हों। नर्मदा म.प्र. की जीवन रेखा (Lifeline) है।' }
+/** Mirrors `extendedData.explanation` for stream `gk_science` (AI upload JSON) */
+const GK_SCIENCE_EXPLANATION_PREVIEW = [
+  {
+    id: 'facts',
+    icon: CheckCircle2,
+    labelEn: 'facts[]',
+    labelHi: 'facts[]',
+    color: 'emerald',
+    contentEn: 'Pollution profile similar to the Ganges → Betwa is called the “Ganga of MP”.',
+    contentHi: 'गंगा जैसे प्रदूषण संदर्भ में बेतवा को “म.प्र. की गंगा” कहा जाता है।',
+  },
+  {
+    id: 'mnemonics',
+    icon: Brain,
+    labelEn: 'mnemonics[]',
+    labelHi: 'mnemonics[]',
+    color: 'blue',
+    contentEn: '“Betwa = Beta (son) of Raisen” → origin cue Kumra Gaon.',
+    contentHi: '“Betwa = रायसेन का बेटा” → उद्गम संकेत कुमरा गाँव।',
+  },
+  {
+    id: 'related',
+    icon: Lightbulb,
+    labelEn: 'related[]',
+    labelHi: 'related[]',
+    color: 'amber',
+    contentEn: 'Revise Narmada = lifeline of MP; don’t swap “Ganga of MP” vs lifeline.',
+    contentHi: 'नर्मदा = म.प्र. की जीवन रेखा; “गंगा वाला” टैग बेतवा से मिलान करें।',
+  },
+  {
+    id: 'memoryTip',
+    icon: AlertTriangle,
+    labelEn: 'memoryTip',
+    labelHi: 'memoryTip',
+    color: 'rose',
+    contentEn: 'Trap: options often pair Betwa with Narmada — tag the question: pollution vs drainage.',
+    contentHi: 'जाल: विकल्प में बेतवा-नर्मदा मिला देते हैं — प्रश्न देखकर प्रदूषण बनाम जलधारा अलग करें।',
+  },
 ];
 
 const TABS = [
   { labelEn: 'Year-wise', labelHi: 'वर्ष-अनुसार', id: 0 },
-  { labelEn: 'Subjects', labelHi: 'विषय', id: 2 },
-  { labelEn: 'Explanations', labelHi: 'बेस्ट व्याख्या', id: 4, badge: 'Premium' },
-  { labelEn: 'Weightage', labelHi: 'वेटेज', id: 1 },
+  { labelEn: 'Sections', labelHi: 'पेपर I खंड', id: 2 },
+  { labelEn: 'Explanations', labelHi: 'JSON व्याख्या', id: 4, badge: 'Premium' },
+  { labelEn: 'Weightage', labelHi: 'अंक बंटन', id: 1 },
   { labelEn: 'Instant', labelHi: 'इंस्टेंट', id: 3 },
 ];
 
 // Memoized Sub-components for "Light Speed" performance
-const QuestionItem = memo(({ q }: { q: typeof PREVIEW_QUESTIONS[0] }) => (
+const QuestionItem = memo(({ q, isHindi }: { q: (typeof PREVIEW_QUESTIONS)[0]; isHindi: boolean }) => (
   <div className="relative rounded-xl sm:rounded-2xl bg-white/5 border border-white/5 p-3 sm:p-5 space-y-3 sm:space-y-4 group/q hover:bg-white/[0.08] transition-all overflow-hidden will-change-transform">
     <div className="flex items-start gap-3 sm:gap-4">
       <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 border border-white/5 text-amber-500 text-[9px] sm:text-[10px] font-black">
         {q.id}
       </div>
       <p className="text-[12px] sm:text-sm font-bold leading-relaxed text-slate-100 opacity-90 pt-0.5 sm:pt-1 text-left">
-        {q.text}
+        {isHindi ? q.textHi : q.textEn}
       </p>
     </div>
     <div className="flex flex-wrap gap-1.5 sm:gap-2 pl-10 sm:pl-12">
       <Badge className="bg-amber-500/10 text-amber-500 border-none px-2 py-0.5 text-[7px] sm:text-[8px] font-black">{q.year}</Badge>
-      <Badge className="bg-emerald-500/10 text-emerald-500 border-none px-2 py-0.5 text-[7px] sm:text-[8px] font-black whitespace-nowrap">{q.subject}</Badge>
+      <Badge className="bg-emerald-500/10 text-emerald-500 border-none px-2 py-0.5 text-[7px] sm:text-[8px] font-black whitespace-nowrap">
+        {isHindi ? q.subjectHi : q.subjectEn}
+      </Badge>
       <Badge className="bg-white/5 text-slate-500 border-none px-2 py-0.5 text-[7px] sm:text-[8px] font-black">{q.set}</Badge>
     </div>
   </div>
 ));
 QuestionItem.displayName = 'QuestionItem';
 
-const SubjectItem = memo(({ sub }: { sub: typeof SUBJECT_LIST_DETAILED[0] }) => {
+const SubjectItem = memo(({ sub, isHindi }: { sub: (typeof SUBJECT_LIST_DETAILED)[0]; isHindi: boolean }) => {
   const Icon = sub.icon;
   return (
     <div className="flex items-center justify-between rounded-2xl sm:rounded-3xl border border-white/5 bg-white/[0.03] p-3 sm:p-5 hover:bg-white/5 transition-all will-change-transform text-left">
       <div className="flex items-center gap-3 sm:gap-4">
-        <div className={cn("h-9 w-9 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl border flex items-center justify-center", sub.bg)}>
-          <Icon size={16} className={cn("sm:scale-110", sub.color)} />
+        <div className={cn('h-9 w-9 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl border flex items-center justify-center', sub.bg)}>
+          <Icon size={16} className={cn('sm:scale-110', sub.color)} />
         </div>
         <div className="space-y-0.5">
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] sm:text-sm font-black text-white">{sub.name}</span>
-            <span className="text-[9px] sm:text-[10px] font-black text-emerald-500">{sub.count}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[13px] sm:text-sm font-black text-white">
+              {isHindi ? sub.nameHi : sub.nameEn}
+            </span>
+            <span className="text-[9px] sm:text-[10px] font-black text-emerald-500">
+              {sub.marks} {isHindi ? 'अंक' : 'marks'}
+            </span>
           </div>
-          <p className="text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest">{sub.pct}% weightage</p>
+          <p className="text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+            {sub.pct}% {isHindi ? 'पेपर वेटेज' : 'of paper'}
+          </p>
         </div>
       </div>
       <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-600">
@@ -150,7 +261,9 @@ export function PYQShowcaseSection() {
                     <CheckCircle2 className="h-3 w-3 text-white" />
                     <div className="absolute inset-0 animate-pulse rounded-lg bg-white/20" />
                   </div>
-                  <span className="relative z-10">{isHindi ? 'PYQ रिवीज़न का समाधान' : 'PYQ Revision Solved'}</span>
+                  <span className="relative z-10">
+                    {isHindi ? 'पेपर I · 100 प्रश्न · 120 मिनट' : 'Paper I · 100Q · 120 min'}
+                  </span>
                   <div className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
                 </m.div>
 
@@ -163,13 +276,19 @@ export function PYQShowcaseSection() {
                 >
                   <div className="flex flex-col leading-[1.1] sm:leading-[1.15]">
                     <span className="text-slate-800">
-                      {isHindi ? 'हर MP Police PYQ समझो' : 'Master Every PYQ'}
+                      {isHindi
+                        ? 'तीन खंड, एक पेपर — पूरा सिलेबस'
+                        : 'Three sections. One paper. Full syllabus.'}
                     </span>
-                    <div className="flex items-center justify-center lg:justify-start gap-2 mt-2">
-                      <span className="bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 bg-clip-text text-transparent italic px-1" style={{ WebkitBackgroundClip: 'text' }}>
-                        {isHindi ? 'आसान तरीके से' : 'The Smart Way'}
+                    <div className="mt-2 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+                      <span
+                        className="bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 bg-clip-text px-1 text-xl font-black tracking-tight text-transparent sm:text-2xl md:text-3xl"
+                        style={{ WebkitBackgroundClip: 'text' }}
+                      >
+                        {isHindi
+                          ? 'GK+तर्क · बौद्धिक · विज्ञान+अंकगणित'
+                          : 'GK+Reasoning · Mental · Science+Math'}
                       </span>
-                      <span className="not-italic text-[1.1em] drop-shadow-sm select-none" style={{ color: 'initial' }}>🎯</span>
                     </div>
                   </div>
                 </m.h2>
@@ -181,9 +300,9 @@ export function PYQShowcaseSection() {
                   transition={{ delay: 0.2 }}
                   className="mx-auto lg:mx-0 max-w-xl text-left text-base sm:text-xl font-medium leading-relaxed text-slate-500 min-h-[4.5rem] sm:min-h-[auto]"
                 >
-                  {isHindi 
-                    ? 'रटना छोड़ो, कॉन्सेप्ट पकड़ो। 2020-2025 तक के 600+ प्रश्नों की ऐसी "Smart Explanations" जो एग्जाम हॉल में आपको दूसरों से आगे रखेगी।'
-                    : 'Stop memorizing, start understanding. Decoded insights from 2020-2025 to give you the competitive edge in MP Police Prelims.'}
+                  {isHindi
+                    ? 'आधिकारिक 40+30+30 अंक वाले खंडों के साथ PYQ, टॉपिक-टैग और AI JSON व्याख्या (gk_science / reasoning / math_quant) — वही फॉर्मेट जो कंटेंट अपलोड में चलता है।'
+                    : 'Practice matches the official 40+30+30 mark split: GK & reasoning, mental ability, science & arithmetic — with PYQs, topic tags, and the same structured explanation JSON your uploads use (gk_science, reasoning, math_quant).'}
                 </m.p>
               </div>
 
@@ -286,9 +405,9 @@ export function PYQShowcaseSection() {
                           )}
                         >
                           {activeCard === 0 ? (isHindi ? 'वर्ष-अनुसार पेपर्स' : 'Yearly Archives') : 
-                          activeCard === 2 ? (isHindi ? 'विषय-अनुसार टॉपिक' : 'Subject Matrix') :
-                          activeCard === 4 ? (isHindi ? 'बेस्ट व्याख्या' : 'Best Explanations') :
-                          activeCard === 1 ? (isHindi ? 'एग्जाम वेटेज' : 'Overall Weightage') : (isHindi ? 'इंस्टेंट मोड' : 'Instant Mode')}
+                          activeCard === 2 ? (isHindi ? 'पेपर I के तीन खंड' : 'Paper I — 3 sections') :
+                          activeCard === 4 ? (isHindi ? 'stream: gk_science' : 'stream: gk_science') :
+                          activeCard === 1 ? (isHindi ? 'अंक बंटन (40-30-30)' : 'Mark split (40-30-30)') : (isHindi ? 'इंस्टेंट अभ्यास' : 'Instant practice')}
                         </m.h3>
                     </AnimatePresence>
                   </div>
@@ -314,7 +433,9 @@ export function PYQShowcaseSection() {
 
                           <div className="space-y-3 pt-2">
                               <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Recent Questions</p>
-                              {PREVIEW_QUESTIONS.map((q) => <QuestionItem key={q.id} q={q} />)}
+                              {PREVIEW_QUESTIONS.map((q) => (
+                                <QuestionItem key={q.id} q={q} isHindi={isHindi} />
+                              ))}
                           </div>
                         </m.div>
                       )}
@@ -329,17 +450,21 @@ export function PYQShowcaseSection() {
                                   <span className="text-[9px] sm:text-[10px] font-black text-amber-500">{sub.pct}%</span>
                                 </div>
                                 <div className="h-2.5 sm:h-3 w-full rounded-full bg-white/5 overflow-hidden ring-1 ring-white/5">
-                                  <m.div 
-                                      initial={{ width: 0 }} animate={{ width: `${sub.pct * 2.5}%` }} transition={{ duration: 0.8, ease: 'easeOut' }}
-                                      className={cn("h-full rounded-full bg-gradient-to-r", sub.color)}
+                                  <m.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${sub.pct}%` }}
+                                    transition={{ duration: 0.8, ease: 'easeOut' }}
+                                    className={cn('h-full rounded-full bg-gradient-to-r', sub.color)}
                                   />
                                 </div>
                               </div>
                           ))}
-                          <div className="pt-4 border-t border-white/5">
-                              <Badge className="bg-amber-500/10 text-amber-500 border-none px-3 py-1 font-black text-[8px] sm:text-[9px] uppercase tracking-widest">
-                                2020-2025: 600+ Questions Decoded
-                              </Badge>
+                          <div className="border-t border-white/5 pt-4">
+                            <Badge className="border-none bg-amber-500/10 px-3 py-1 font-black text-[8px] uppercase tracking-widest text-amber-500 sm:text-[9px]">
+                              {isHindi
+                                ? 'कुल 100 प्रश्न · कोई नेगेटिव नहीं'
+                                : '100 questions · No negative marking'}
+                            </Badge>
                           </div>
                         </m.div>
                       )}
@@ -348,11 +473,13 @@ export function PYQShowcaseSection() {
                       {activeCard === 2 && (
                         <m.div key="c2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }} className="space-y-5 text-left">
                           <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
-                            <span>Topic-wise Mapping</span>
-                            <span className="text-blue-500">10+ Subjects</span>
+                            <span>{isHindi ? 'आधिकारिक सिलेबस मैप' : 'Official syllabus map'}</span>
+                            <span className="text-blue-500">3</span>
                           </div>
                           <div className="space-y-3 sm:space-y-4">
-                            {SUBJECT_LIST_DETAILED.map((sub) => <SubjectItem key={sub.name} sub={sub} />)}
+                            {SUBJECT_LIST_DETAILED.map((sub) => (
+                              <SubjectItem key={sub.nameEn} sub={sub} isHindi={isHindi} />
+                            ))}
                           </div>
                         </m.div>
                       )}
@@ -364,52 +491,77 @@ export function PYQShowcaseSection() {
                               {/* Background Pattern */}
                               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-50 blur-3xl" />
                               
-                              <div className="flex items-start justify-between relative z-10">
+                              <div className="relative z-10 flex items-start justify-between">
                                 <div className="space-y-0.5">
-                                    <p className="text-[8px] sm:text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none">UNIT 1 · MP HISTORY</p>
-                                    <h4 className="text-[14px] sm:text-base font-black tracking-tight">Smart Practice Mode</h4>
+                                  <p className="text-[8px] font-black uppercase leading-none tracking-widest text-emerald-600 sm:text-[9px]">
+                                    {isHindi ? 'खंड 1 · तर्कशक्ति' : 'Section 1 · Reasoning'}
+                                  </p>
+                                  <h4 className="text-[14px] font-black tracking-tight sm:text-base">
+                                    {isHindi ? 'तुरंत जवाब + व्याख्या' : 'Instant answer + breakdown'}
+                                  </h4>
                                 </div>
-                                <Badge className="bg-emerald-500 text-white border-none font-black text-[8px] sm:text-[9px] px-2 py-1 sm:px-3 sm:py-1.5 flex items-center gap-1 rounded-full shadow-lg shadow-emerald-500/20">
-                                    <Zap size={10} className="fill-white" /> {isHindi ? 'लाइव फीडबैक' : 'Live Feedback'}
+                                <Badge className="flex items-center gap-1 rounded-full border-none bg-emerald-500 px-2 py-1 font-black text-[8px] text-white shadow-lg shadow-emerald-500/20 sm:px-3 sm:py-1.5 sm:text-[9px]">
+                                  <Zap size={10} className="fill-white" />{' '}
+                                  {isHindi ? 'लाइव फीडबैक' : 'Live feedback'}
                                 </Badge>
                               </div>
 
-                              <div className="space-y-2 relative z-10">
-                                <p className="text-[12px] sm:text-sm font-bold leading-relaxed text-slate-800">
-                                  {isHindi ? 'किस ग्रंथ में ' : 'Which text provides the earliest mention of the '}
-                                  <span className="text-rose-600 underline decoration-rose-200 decoration-2 underline-offset-4">{isHindi ? 'चेदि जनपद' : 'Chedi Kingdom'}</span>
-                                  {isHindi ? ' का सबसे पहला उल्लेख मिलता है?' : '?'}
+                              <div className="relative z-10 space-y-2">
+                                <p className="text-[12px] font-bold leading-relaxed text-slate-800 sm:text-sm">
+                                  {isHindi
+                                    ? 'असंगत चुनें: तांबा, लोहा, चाँदी, पीतल'
+                                    : 'Odd one out: Copper, Iron, Silver, Brass'}
                                 </p>
                               </div>
 
-                              <div className="space-y-2.5 sm:space-y-3 relative z-10">
-                                <div className="flex items-center justify-between rounded-lg sm:rounded-xl border border-rose-100 bg-rose-50/30 p-3 sm:p-4 text-slate-400 group/opt">
-                                    <span className="text-[11px] sm:text-xs font-semibold">Mahabharata (महाभारत)</span>
-                                    <X size={14} className="text-rose-400 sm:w-4 sm:h-4" />
+                              <div className="relative z-10 space-y-2.5 sm:space-y-3">
+                                <div className="group/opt flex items-center justify-between rounded-lg border border-rose-100 bg-rose-50/30 p-3 text-slate-400 sm:rounded-xl sm:p-4">
+                                  <span className="text-[11px] font-semibold sm:text-xs">
+                                    {isHindi ? 'तांबा (Copper)' : 'Copper'}
+                                  </span>
+                                  <X size={14} className="text-rose-400 sm:h-4 sm:w-4" />
                                 </div>
-                                <m.div 
-                                  initial={{ x: 0 }} animate={{ x: [0, 2, 0] }} transition={{ repeat: Infinity, duration: 2 }}
-                                  className="flex items-center justify-between rounded-lg sm:rounded-xl border-2 border-emerald-500 bg-emerald-50/50 p-3 sm:p-4 text-slate-900 shadow-xl shadow-emerald-500/10"
+                                <div className="group/opt flex items-center justify-between rounded-lg border border-rose-100 bg-rose-50/30 p-3 text-slate-400 sm:rounded-xl sm:p-4">
+                                  <span className="text-[11px] font-semibold sm:text-xs">
+                                    {isHindi ? 'लोहा (Iron)' : 'Iron'}
+                                  </span>
+                                  <X size={14} className="text-rose-400 sm:h-4 sm:w-4" />
+                                </div>
+                                <m.div
+                                  initial={{ x: 0 }}
+                                  animate={{ x: [0, 2, 0] }}
+                                  transition={{ repeat: Infinity, duration: 2 }}
+                                  className="flex items-center justify-between rounded-lg border-2 border-emerald-500 bg-emerald-50/50 p-3 text-slate-900 shadow-xl shadow-emerald-500/10 sm:rounded-xl sm:p-4"
                                 >
-                                    <span className="text-[12px] sm:text-sm font-black">Rigveda (ऋग्वेद)</span>
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[9px] font-black text-emerald-600 uppercase tracking-tighter">Correct</span>
-                                      <CheckCircle2 size={18} className="text-emerald-600 sm:w-5 sm:h-5" />
-                                    </div>
+                                  <span className="text-[12px] font-black sm:text-sm">
+                                    {isHindi ? 'पीतल (Brass — मिश्र धातु)' : 'Brass (alloy)'}
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[9px] font-black uppercase tracking-tighter text-emerald-600">
+                                      {isHindi ? 'सही' : 'Correct'}
+                                    </span>
+                                    <CheckCircle2 size={18} className="text-emerald-600 sm:h-5 sm:w-5" />
+                                  </div>
                                 </m.div>
                               </div>
 
-                              <div className="rounded-xl sm:rounded-2xl bg-slate-900 p-4 sm:p-5 space-y-2.5 relative z-10 border border-white/10">
+                              <div className="relative z-10 space-y-2.5 rounded-xl border border-white/10 bg-slate-900 p-4 sm:rounded-2xl sm:p-5">
                                 <div className="flex items-center justify-between">
-                                  <Badge className="bg-emerald-500 text-white border-none text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest">Smart Solution</Badge>
+                                  <Badge className="rounded-md border-none bg-emerald-500 px-2 py-0.5 font-black text-[8px] uppercase tracking-widest text-white">
+                                    stream: reasoning
+                                  </Badge>
                                   <Brain size={14} className="text-emerald-400" />
                                 </div>
                                 <div className="space-y-2">
-                                  <p className="text-[10px] sm:text-[11px] font-bold leading-relaxed text-emerald-50">
-                                      {isHindi ? 'ऋग्वेद के दानस्तुति सूक्त में चेदि राजा "कशु" का उल्लेख मिलता है।' : 'The Rigveda (Danastuti hymn) mentions the Chedi king "Kashu".'}
+                                  <p className="text-[10px] font-bold leading-relaxed text-emerald-50 sm:text-[11px]">
+                                    {isHindi
+                                      ? 'chain[]: तांबा, लोहा, चाँदी धातु हैं; पीतल तांबा+जस्ता की मिश्र धातु है।'
+                                      : 'chain[]: Cu, Fe, Ag are elements; brass is Cu+Zn — the outlier.'}
                                   </p>
-                                  <p className="text-[9px] sm:text-[10px] font-medium leading-relaxed text-slate-400 border-t border-white/5 pt-2 italic">
-                                      {isHindi ? 'प्रो टिप: यह 16 महाजनपदों में से एक था जिसकी राजधानी "शुक्तिमती" थी।' : 'Pro Tip: It was one of the 16 Mahajanapadas with capital "Shuktimati".'}
+                                  <p className="border-t border-white/5 pt-2 text-[9px] font-medium italic leading-relaxed text-slate-400 sm:text-[10px]">
+                                    {isHindi
+                                      ? 'elimination: धातु बनाम मिश्र धातु लेबल पढ़कर काटें।'
+                                      : 'elimination: scan for “alloy vs pure metal” in one glance.'}
                                   </p>
                                 </div>
                               </div>
@@ -422,30 +574,47 @@ export function PYQShowcaseSection() {
                         <m.div key="c4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }} className="space-y-4 text-left">
                           <div className="flex items-center justify-between border-b border-white/5 pb-3">
                             <div className="space-y-1">
-                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">The "Why" Factor</span>
-                              <h4 className="text-xs font-bold text-white">Smart Solution Key 🔑</h4>
+                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                extendedData.explanation
+                              </span>
+                              <h4 className="text-xs font-bold text-white">
+                                {isHindi ? 'उदाहरण: gk_science' : 'Sample: gk_science'}
+                              </h4>
                             </div>
-                            <Badge className="bg-pink-500 text-black text-[8px] font-black px-2 py-1">PREMIUM</Badge>
+                            <Badge className="bg-pink-500 px-2 py-1 font-black text-[8px] text-black">PREMIUM</Badge>
                           </div>
                           <div className="space-y-3">
-                            {BETWA_EXPLANATION.map((block) => (
-                                <div key={block.id} className={cn("rounded-xl sm:rounded-2xl border-l-[3px] border p-3 sm:p-4 space-y-1.5 bg-[#1C1C28]/50 ring-1 ring-white/5", {
-                                  'border-emerald-500/50 bg-emerald-500/5': block.color === 'emerald',
-                                  'border-amber-500/50 bg-amber-500/5': block.color === 'amber',
-                                  'border-blue-500/50 bg-blue-500/5': block.color === 'blue',
-                                  'border-rose-500/50 bg-rose-500/5': block.color === 'rose',
-                                })}>
-                                  <div className="flex items-center gap-2">
-                                      <block.icon size={12} className={cn({
-                                        'text-emerald-400': block.color === 'emerald', 'text-amber-400': block.color === 'amber',
-                                        'text-blue-400': block.color === 'blue', 'text-rose-400': block.color === 'rose',
-                                      })} />
-                                      <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{isHindi ? block.labelHi : block.labelEn}</span>
-                                  </div>
-                                  <p className="text-[11px] font-bold leading-relaxed text-slate-100">
-                                      {isHindi ? block.contentHi : block.contentEn}
-                                  </p>
+                            {GK_SCIENCE_EXPLANATION_PREVIEW.map((block) => (
+                              <div
+                                key={block.id}
+                                className={cn(
+                                  'space-y-1.5 rounded-xl border-l-[3px] border bg-[#1C1C28]/50 p-3 ring-1 ring-white/5 sm:rounded-2xl sm:p-4',
+                                  {
+                                    'border-emerald-500/50 bg-emerald-500/5': block.color === 'emerald',
+                                    'border-amber-500/50 bg-amber-500/5': block.color === 'amber',
+                                    'border-blue-500/50 bg-blue-500/5': block.color === 'blue',
+                                    'border-rose-500/50 bg-rose-500/5': block.color === 'rose',
+                                  }
+                                )}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <block.icon
+                                    size={12}
+                                    className={cn({
+                                      'text-emerald-400': block.color === 'emerald',
+                                      'text-amber-400': block.color === 'amber',
+                                      'text-blue-400': block.color === 'blue',
+                                      'text-rose-400': block.color === 'rose',
+                                    })}
+                                  />
+                                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                                    {isHindi ? block.labelHi : block.labelEn}
+                                  </span>
                                 </div>
+                                <p className="text-[11px] font-bold leading-relaxed text-slate-100">
+                                  {isHindi ? block.contentHi : block.contentEn}
+                                </p>
+                              </div>
                             ))}
                           </div>
                         </m.div>

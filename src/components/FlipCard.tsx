@@ -42,6 +42,7 @@ export interface FlipCardProps {
   onReadMore?: () => void;
 
   // Labels (for bilingual support)
+  language?: 'hi' | 'en';
   labels?: {
     tapToFlip: string;
     topicAnalysis: string;
@@ -82,6 +83,7 @@ const FlipCard: React.FC<FlipCardProps> = ({
   },
   frontClassName,
   backClassName,
+  language = 'hi',
 }) => {
   const [internalFlipped, setInternalFlipped] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -89,11 +91,20 @@ const FlipCard: React.FC<FlipCardProps> = ({
   const flipped = isFlipped !== undefined ? isFlipped : internalFlipped;
 
   // content resolution
-  const isHindi = !!stemHi;
-  const displayTitle = title || stemHi || 'MP Police Fact';
-  const displayAnswer = answerHi || '';
-  const finalFacts = facts || extendedData?.facts || [];
-  const finalMnemonic = mnemonic || extendedData?.memoryTip || '';
+  const isLanguageHindi = language === 'hi';
+  const displayTitle = isLanguageHindi 
+    ? (title || stemHi || 'MP Police Fact')
+    : (stemEn || title || 'MP Police Fact');
+    
+  const displayAnswer = isLanguageHindi ? (answerHi || '') : (answerEn || answerHi || '');
+  
+  const finalFacts = isLanguageHindi 
+    ? (facts || extendedData?.facts || [])
+    : (extendedData?.factsEn || facts || extendedData?.facts || []);
+    
+  const finalMnemonic = isLanguageHindi
+    ? (mnemonic || extendedData?.memoryTip || '')
+    : (extendedData?.memoryTipEn || mnemonic || extendedData?.memoryTip || '');
 
   const handleFlip = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('button')) return;
@@ -208,7 +219,7 @@ const FlipCard: React.FC<FlipCardProps> = ({
                <p className="text-3xl font-black text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.4)]">
                  {displayAnswer}
                </p>
-               <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500/50 mt-1 block">{isHindi ? 'जवाब' : 'ANSWER'}</span>
+               <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500/50 mt-1 block">{isLanguageHindi ? 'जवाब' : 'ANSWER'}</span>
             </div>
             
             <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />

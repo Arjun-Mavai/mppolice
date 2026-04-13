@@ -123,12 +123,12 @@ export default function UnitContent({
     if (type === 'unit') {
       // Unit Test: Free users can only access first 5 topics in Unit 1, logged users get full access
       if (user || isSubscribed) {
-        router.push(`/syllabus/quiz/units`);
+        router.push(`/syllabus/quiz/full-tests?tab=subject`);
         return;
       }
       // Free non-logged users: Only Unit 1 allowed
       if (unitId === 'unit_1') {
-        router.push(`/syllabus/quiz/topic`);
+        router.push(`/syllabus/quiz/chapters`);
         return;
       }
       setIsUnlockModalOpen(true);
@@ -138,7 +138,7 @@ export default function UnitContent({
     if (type === 'topic' && topicId) {
       const index = currentTopics.findIndex((t) => t.id === topicId);
       if (!isTopicLocked(currentTopics[index], index)) {
-        router.push(`/syllabus/quiz/topic`);
+        router.push(`/syllabus/quiz/chapters`);
       } else {
         setIsUnlockModalOpen(true);
       }
@@ -504,6 +504,7 @@ export default function UnitContent({
                       practiceTest: language === 'hi' ? 'यूनिट टेस्ट दें' : 'Start Unit Test',
                       closeAnalysis: language === 'hi' ? 'बंद करें' : 'Close Analysis',
                     }}
+                    language={language as 'hi' | 'en'}
                   />
                 </motion.div>
               </div>

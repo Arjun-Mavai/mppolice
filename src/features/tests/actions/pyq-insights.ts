@@ -277,7 +277,7 @@ export const getPublishedPyqFacts = unstable_cache(
     facts: PyqFactItem[];
   }> => {
     const effectiveSubject = normalizeSubject(subject);
-    const safeLimit = Math.min(Math.max(limit, 1), 200);
+    const safeLimit = Math.min(Math.max(limit, 1), 1000);
 
     try {
       const conditions = [eq(pyqFactBank.status, 'published'), eq(pyqFactBank.subject, effectiveSubject)];

@@ -39,6 +39,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { PremiumExplanation } from './PremiumExplanation';
+import { QuizExplanation } from './quiz/QuizExplanation';
+import { buildRevisionCardsFromStructuredExplanations } from '@/lib/mppolice/revision-cards-from-questions';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { getTestLeaderboard } from '@/actions/leaderboard-actions';
 import { revalidateAnalyticsAction } from '@/features/analytics/actions';
@@ -325,20 +327,21 @@ export function QuizResult({
   }, [router, testId, userId]);
 
   useEffect(() => {
-    // 🔧 UNIVERSAL FLASHCARDS FIX: Removed 'pyq' mode guard to allow Topic & Full tests
     const wrongQIds = questions
       .filter((q) => answers[q.id] !== undefined && answers[q.id] !== q.correctAnswer)
       .map((q) => q.id);
+    const wrongSet = new Set(wrongQIds);
+    const fromJson = buildRevisionCardsFromStructuredExplanations(questions, wrongSet);
 
     if (wrongQIds.length === 0 && !testId) {
       setPyqInsights([]);
-      setPyqFacts([]);
+      setPyqFacts(fromJson as PyqFactCard[]);
       return;
     }
 
     setIsFetchingInsights(true);
     Promise.all([
-      typeof getPYQIntelligenceForWrongQuestions === 'function' 
+      typeof getPYQIntelligenceForWrongQuestions === 'function'
         ? getPYQIntelligenceForWrongQuestions(wrongQIds)
         : Promise.resolve([]),
       typeof getHighYieldFactsForQuestions === 'function'
@@ -347,10 +350,17 @@ export function QuizResult({
     ])
       .then(([insights, facts]) => {
         setPyqInsights(insights || []);
-        setPyqFacts((facts || []) as PyqFactCard[]);
+        const server = (facts || []) as PyqFactCard[];
+        const seen = new Set(server.map((f) => f.id));
+        const merged = [...server];
+        for (const c of fromJson) {
+          if (!seen.has(c.id)) merged.push(c as PyqFactCard);
+        }
+        setPyqFacts(merged);
       })
       .catch((err) => {
         console.error('Failed to fetch universal facts:', err);
+        setPyqFacts(fromJson as PyqFactCard[]);
       })
       .finally(() => setIsFetchingInsights(false));
   }, [questions, answers, mode, testId]);
@@ -614,14 +624,15 @@ export function QuizResult({
 
               <div className="pt-2">
                 <div className="mb-4 flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
-                  <AlertCircle className="h-4 w-4" /> Comprehensive Explanation
+                  <AlertCircle className="h-4 w-4" />{' '}
+                  {isHindi ? 'विस्तृत व्याख्या (टेक्स्ट + स्ट्रक्चर्ड)' : 'Explanation (text + structured)'}
                 </div>
 
                 <div className="px-1">
-                  <PremiumExplanation
-                    explanation={q.explanation || 'No explanation available.'}
-                    explanationEn={q.explanationEn}
-                    explanationHi={q.explanation_hi}
+                  <QuizExplanation
+                    question={q}
+                    language={language}
+                    translations={{ explanation: isHindi ? 'व्याख्या' : 'Explanation' }}
                   />
                 </div>
               </div>
@@ -1336,9 +1347,9 @@ export function QuizResult({
              {isHindi ? 'कोई फ्लैशकार्ड नहीं मिला' : 'No Flashcards Found'}
           </h3>
           <p className="text-sm text-slate-500">
-            {isHindi 
-              ? 'अपनी गलतियों को सुधारने के लिए और अधिक अभ्यास करें।' 
-              : 'Practice more and analyze mistakes to unlock high-yield facts.'}
+            {isHindi
+              ? 'PYQ बैंक से फैक्ट न मिलें तो भी, अगर सवालों में structured JSON (gk_science / reasoning / math_quant) है तो वहीं से रिविज़न कार्ड बन जाते हैं — पहले टेस्ट में instant मोड और रिव्यू टैब चेक करें।'
+              : 'If the PYQ fact bank returns nothing, wrong answers that include structured explanation JSON still become revision cards here — use Instant mode + Review tab during the test to see full explanations.'}
           </p>
         </div>
       );

@@ -29,6 +29,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { logger } from '@/lib/logger';
 import { Switch } from '@/components/ui/switch';
 import { QuestionImageUploadHelper } from '@/app/admin/content-manager/QuestionImageUploadHelper';
+import { ContentManagerUploadGuide } from '@/app/admin/content-manager/ContentManagerUploadGuide';
 import { getErrorMessage } from '@/lib/errors';
 
 export default function AdminUploadPage() {
@@ -55,6 +56,7 @@ export default function AdminUploadPage() {
   const [testData, setTestData] = useState({
     type: 'TOPIC', // FLT | UNIT | TOPIC | CSAT | MISC
     title: '',
+    titleEn: '',
     unitId: 'sec_gk_reasoning',
     topicId: '', // For Topic Tests
     subjectTag: '', // MISC type ke liye subject tag
@@ -162,15 +164,22 @@ export default function AdminUploadPage() {
 
       if (testMode === 'new') {
         let finalTitle = testData.title;
-        // Auto-generate title if Topic Test
+        let finalTitleEn = testData.titleEn;
+        // Auto-generate titles if Topic Test (Hindi-ish + English); JSON testTitle* still wins on server if form empty
         if (testData.type === 'TOPIC' && testData.topicId) {
           const topic = availableTopics.find((t) => t.id === testData.topicId);
-          if (topic && !finalTitle) {
-            finalTitle = `Quick Check: ${topic.front}`;
+          if (topic) {
+            if (!finalTitle.trim()) {
+              finalTitle = `त्वरित चेक: ${topic.front}`;
+            }
+            if (!finalTitleEn.trim()) {
+              finalTitleEn = `Quick check: ${topic.frontEn || topic.front}`;
+            }
           }
         }
 
         formData.append('title', finalTitle);
+        formData.append('titleEn', finalTitleEn);
         formData.append('type', testData.type);
         formData.append('unitId', testData.unitId);
         formData.append('topicId', testData.topicId);
@@ -240,6 +249,15 @@ export default function AdminUploadPage() {
               </a>
               {' · '}
               <a
+                href="/docs/mp-police-gemini-upload-walkthrough.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-emerald-700 underline decoration-emerald-300 underline-offset-2"
+              >
+                Gemini steps (copy / paste / har type)
+              </a>
+              {' · '}
+              <a
                 href="/demo/mppolice-demo-questions.json"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -265,9 +283,25 @@ export default function AdminUploadPage() {
               >
                 AI prompts (bulk + explanations)
               </a>
+              {' · '}
+              <a
+                href="/docs/mp-police-syllabus-reference"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-emerald-700 underline decoration-emerald-300 underline-offset-2"
+              >
+                Syllabus topic IDs
+              </a>
             </p>
           </div>
         </div>
+
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <span className="font-semibold">Question / option images (Uploadthing):</span> pehle upar wala{' '}
+          <strong>Tests &amp; Quizzes</strong> tab kholo — file picker usi tab ke andar,{' '}
+          <strong>Questions JSON</strong> se thoda upar, dashed border wale card mein dikhega. Blog tab mein
+          ye nahi hai.
+        </p>
 
         <Tabs
           defaultValue="blog"
@@ -383,6 +417,15 @@ export default function AdminUploadPage() {
                     >
                       Read MP Police upload guide
                     </a>
+                    {' · '}
+                    <a
+                      href="/docs/mp-police-gemini-upload-walkthrough.md"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold underline underline-offset-2"
+                    >
+                      Gemini walkthrough
+                    </a>
                     {' — '}
                     <a
                       href="/demo/mppolice-demo-questions.json"
@@ -409,6 +452,15 @@ export default function AdminUploadPage() {
                       className="font-semibold underline underline-offset-2"
                     >
                       AI master prompt
+                    </a>
+                    {' · '}
+                    <a
+                      href="/docs/mp-police-syllabus-reference"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold underline underline-offset-2"
+                    >
+                      Syllabus topic IDs
                     </a>
                   </span>
                 </CardDescription>
@@ -559,13 +611,28 @@ export default function AdminUploadPage() {
                         )}
 
                         <div className="space-y-2">
-                          <Label>Title</Label>
+                          <Label>Title (Hindi / primary)</Label>
                           <Input
                             name="title"
                             value={testData.title}
                             onChange={handleTestChange}
                             placeholder={
-                              testData.type === 'TOPIC' ? 'Auto-generated if empty' : 'Test Title'
+                              testData.type === 'TOPIC'
+                                ? 'Optional — topic se auto (या JSON में testTitle)'
+                                : 'Test title'
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Title (English)</Label>
+                          <Input
+                            name="titleEn"
+                            value={testData.titleEn}
+                            onChange={handleTestChange}
+                            placeholder={
+                              testData.type === 'TOPIC'
+                                ? 'Optional — topic se auto (या JSON में testTitleEn)'
+                                : 'English title (optional)'
                             }
                           />
                         </div>
@@ -601,6 +668,14 @@ export default function AdminUploadPage() {
                         </SelectContent>
                       </Select>
                     </div>
+                  )}
+
+                  {testMode === 'new' && (
+                    <ContentManagerUploadGuide
+                      testType={testData.type}
+                      unitId={testData.unitId}
+                      topicId={testData.topicId}
+                    />
                   )}
 
                   {testMode === 'new' && (
@@ -658,8 +733,7 @@ export default function AdminUploadPage() {
                         <span className="text-xs font-normal text-slate-400">
                           Format:{' '}
                           <code>
-                            [{`{ "questionText": "...", "options": ["A","B"], "correctAnswer": 0 }`}
-                            ]
+                            [{`{ "questionText":"…","options":[{"id":"1","text":"…","text_en":"…"}],"correctAnswer":"1" }`}]
                           </code>
                         </span>
                         {testData.type === 'MISC' && (

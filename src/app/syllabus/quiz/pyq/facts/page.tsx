@@ -45,7 +45,7 @@ export default async function PYQFactsPage({ searchParams }: PageProps) {
   const selectedYear = params.year ? Number(params.year) : undefined;
   const yearOptions = coverage.years.filter((item) => item.pyqQuestionCount > 0).map((item) => item.year);
   const rawLimit = Number(params.limit);
-  const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 10), 200) : 50;
+  const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 10), 1000) : 50;
 
   // 1. Fetch topics
   const topics = await getPyqPublishedTopicsBySubject(selectedSubject);

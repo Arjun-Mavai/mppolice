@@ -1,3 +1,5 @@
+import { coerceLegacyNestedExplanation } from '@/lib/mppolice/explanation-schema';
+
 /** Normalize admin JSON row → DB row shape (single question) */
 export function normalizeMppoliceQuestionInput(q: Record<string, unknown>): {
   questionText: string;
@@ -55,6 +57,13 @@ export function normalizeMppoliceQuestionInput(q: Record<string, unknown>): {
 
   if (!extOut && extendedData && typeof extendedData === 'object') {
     extOut = extendedData as Record<string, unknown>;
+  }
+
+  if (extOut && typeof extOut.explanation === 'object' && extOut.explanation !== null) {
+    extOut = {
+      ...extOut,
+      explanation: coerceLegacyNestedExplanation(extOut.explanation) as Record<string, unknown>,
+    };
   }
 
   return {

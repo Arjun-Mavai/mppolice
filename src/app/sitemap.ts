@@ -15,7 +15,10 @@ import { eq } from 'drizzle-orm';
  * jis se "MP Police preparation", "MP Police syllabus" etc search kare to mile
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppolice.zenscroll.app';
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    'https://mppolice.zenscroll.app';
 
   // Static pages jo hamesha rahenge - ye h tumhara SEO ka backbone
   const staticPages: MetadataRoute.Sitemap = [
@@ -98,6 +101,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // Quiz category pages - public landing pages for test types
     const quizPages: MetadataRoute.Sitemap = [
+      {
+        url: `${baseUrl}/syllabus/quiz/full-tests`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.85,
+      },
+      {
+        url: `${baseUrl}/syllabus/quiz/chapters`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.8,
+      },
       {
         url: `${baseUrl}/syllabus/quiz/full-length`,
         lastModified: new Date(),

@@ -8,7 +8,7 @@ export default function QuizSelectionPage() {
 
   // 🚀 REDIRECT TO NEW PRIMARY VIEW (PYQ)
   useEffect(() => {
-    router.replace('/syllabus/quiz/pyq');
+    router.replace('/syllabus/quiz/full-tests');
   }, [router]);
 
   // Prevent UI flash during redirect

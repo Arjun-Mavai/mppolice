@@ -81,6 +81,11 @@ export const PRO_FEATURES: PlanFeatureWithIcon[] = [
   { en: 'Smart Analytics Dashboard', hi: 'स्मार्ट एनालिटिक्स डैशबोर्ड', icon: 'BarChart3' },
   { en: 'Premium Study Blogs', hi: 'प्रीमियम स्टडी ब्लॉग्स', icon: 'FileText' },
   { en: 'Test History for Revision', hi: 'रिवीज़न के लिए टेस्ट हिस्ट्री', icon: 'History' },
+  {
+    en: '1000+ revision one-liners (rolling release — coming soon)',
+    hi: '1000+ रिवीज़न वन-लाइनर्स (धीरे-धीरे जोड़े जाएँगे — जल्द)',
+    icon: 'Zap',
+  },
 ];
 
 // Helper: compute discount percentage

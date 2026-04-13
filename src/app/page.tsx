@@ -10,7 +10,9 @@ const Testimonials = dynamic(() =>
 export default function Home() {
   return (
     <main>
-      <h1 className="sr-only">Mindful MP Police - Crack MP Police Constable & SI 2026 with Bilingual Tests & Mnemonics</h1>
+      <h1 className="sr-only">
+        Mindful MP Police - Crack MP Police Constable & SI 2026 with Bilingual Tests & Mnemonics
+      </h1>
 
       <UpgradePage />
 

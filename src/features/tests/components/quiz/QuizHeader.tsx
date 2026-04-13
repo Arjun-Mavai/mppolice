@@ -158,8 +158,8 @@ export function QuizHeader({
           <span className="h-2 w-2 animate-[pulse_3s_ease-in-out_infinite] rounded-full bg-pink-400 opacity-70" />
         </div>
 
-        {/* Palette button slot (mobile only - desktop shows sidebar) */}
-        <div className="lg:hidden">{paletteButton}</div>
+        {/* Palette button slot (visible on all screens to ensure accessibility) */}
+        <div>{paletteButton}</div>
       </div>
     </header>
   );

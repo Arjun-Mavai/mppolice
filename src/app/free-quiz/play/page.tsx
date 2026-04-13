@@ -8,6 +8,7 @@ import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { ProductionErrorBoundary } from '@/components/ProductionErrorBoundary';
 import { PYQFactsLoader } from '@/components/ui/PYQFactsLoader';
+import { correctAnswerToOptionIndex } from '@/lib/mppolice/mcq-answer-key';
 
 interface PageProps {
   searchParams: Promise<{ testId?: string }>;
@@ -60,7 +61,7 @@ async function FreeQuizDataFetcher({ searchParams }: { searchParams: Promise<{ t
         id: q.id,
         question: q.questionText,
         questionEn: q.questionTextEn || undefined,
-        correctAnswer: Number(q.correctAnswer),
+        correctAnswer: correctAnswerToOptionIndex(q.correctAnswer, parsedOptions),
         options: parsedOptions,
         explanation: q.explanation || undefined,
         explanationEn: q.explanationEn || undefined,

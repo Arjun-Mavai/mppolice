@@ -601,6 +601,7 @@ export const getAttemptDetails = cachedData(
           negativeMarks: questions.negativeMarks, // Ensure negativeMarks are available
           type: questions.type,
           matchPairs: questions.matchPairs,
+          extendedData: questions.extendedData,
         })
         .from(questions)
         .where(eq(questions.testId, attempt[0].testId))
@@ -663,6 +664,7 @@ export const getAttemptDetails = cachedData(
           negativeMarks: q.negativeMarks,
           type: q.type,
           matchPairs: typeof q.matchPairs === 'string' ? JSON.parse(q.matchPairs) : q.matchPairs,
+          extendedData: q.extendedData,
         };
       });
 

@@ -108,6 +108,9 @@ export function QuestionImageUploadHelper() {
           </div>
           <UploadButton
             endpoint="mppoliceQuestionImage"
+            content={{
+              button: 'Choose images (max 4, 4MB each)',
+            }}
             onClientUploadComplete={(res) => {
               const urls = res
                 .map((r) => (r as { url?: string; ufsUrl?: string }).url || (r as { ufsUrl?: string }).ufsUrl)

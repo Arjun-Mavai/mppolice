@@ -201,6 +201,58 @@ export const pyqFactBank = sqliteTable(
   ]
 );
 
+/** Fast-revision GK / GS one-liners (MP Police) — tile shows Q+A; expand for deep JSON */
+export const mppoliceOneLinerFacts = sqliteTable(
+  'mppolice_one_liner_facts',
+  {
+    id: text('id').primaryKey(),
+    subjectTag: text('subject_tag').notNull(),
+    stemHi: text('stem_hi').notNull(),
+    stemEn: text('stem_en'),
+    answerHi: text('answer_hi').notNull(),
+    answerEn: text('answer_en'),
+    importanceScore: real('importance_score').default(0),
+    sortOrder: integer('sort_order').default(0),
+    extendedData: text('extended_data', { mode: 'json' }).$type<{
+      facts?: string[];
+      factsEn?: string[];
+      memoryTip?: string;
+      memoryTipEn?: string;
+      related?: string[];
+      explanationHi?: string;
+      explanationEn?: string;
+    } | null>(),
+    status: text('status', { enum: ['draft', 'published', 'archived'] }).default('draft'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => [
+    index('idx_mppol_ol_subject_status').on(table.subjectTag, table.status),
+    index('idx_mppol_ol_importance').on(table.status, table.importanceScore),
+  ]
+);
+
+// GK One-Liner User Revision Tracking
+export const mppoliceOneLinerRevisions = sqliteTable(
+  'mppolice_one_liner_revisions',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .references(() => mppscUsers.id, { onDelete: 'cascade' })
+      .notNull(),
+    factId: text('fact_id')
+      .references(() => mppoliceOneLinerFacts.id, { onDelete: 'cascade' })
+      .notNull(),
+    revisionCount: integer('revision_count').default(0),
+    lastRevisedAt: integer('last_revised_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => [
+    index('idx_mppol_rel_user').on(table.userId),
+    index('idx_mppol_rel_fact').on(table.factId),
+    uniqueIndex('idx_mppol_rel_user_fact').on(table.userId, table.factId),
+  ]
+);
+
 // PYQ Topic Trends Snapshot
 export const pyqTopicTrends = sqliteTable(
   'pyq_topic_trends',
