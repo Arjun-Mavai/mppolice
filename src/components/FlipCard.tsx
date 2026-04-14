@@ -50,6 +50,7 @@ export interface FlipCardProps {
     practiceTest: string;
     closeAnalysis: string;
   };
+  frontActions?: React.ReactNode;
 }
 
 const FlipCard: React.FC<FlipCardProps> = ({
@@ -84,6 +85,7 @@ const FlipCard: React.FC<FlipCardProps> = ({
   frontClassName,
   backClassName,
   language = 'hi',
+  frontActions,
 }) => {
   const [internalFlipped, setInternalFlipped] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -179,6 +181,13 @@ const FlipCard: React.FC<FlipCardProps> = ({
             {isLocked && (
               <div className="inline-flex items-center rounded-lg border border-pink-200 bg-gradient-to-r from-red-100 via-pink-100 to-amber-100 px-3 py-1.5 text-xs font-black tracking-widest text-amber-600 uppercase">
                 <Lock className="mr-2 h-3.5 w-3.5 animate-pulse" /> Premium
+              </div>
+            )}
+            
+            {/* FRONT ACTIONS (e.g. Mark Revised) */}
+            {frontActions && (
+              <div className="mt-4 flex w-full justify-center">
+                {frontActions}
               </div>
             )}
           </div>
