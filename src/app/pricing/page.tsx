@@ -229,7 +229,6 @@ export default function PricingPage() {
                   sub: hi ? 'प्रगति, पुराने प्रयास, रिवीज़न लूप' : 'Progress, past attempts, revision loop',
                   highlight: true,
                 },
-               
                 {
                   icon: Target,
                   label: hi ? 'पेपर I — तीनों खंड' : 'Paper I — All 3 Sections',
