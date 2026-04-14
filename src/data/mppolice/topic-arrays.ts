@@ -180,3 +180,16 @@ export const MPPOLICE_CHEMISTRY_TOPICS = [
   "States of Matter: Gases and Liquids",
   "Chemistry in Everyday Life"
 ] as const;
+
+export const MPPOLICE_MPGK_TOPICS = [
+  "History and Culture of Madhya Pradesh",
+  "Geography of Madhya Pradesh (Rivers, Dams, Forests)",
+  "National Parks & Wildlife Sanctuaries in MP",
+  "Polity and Administration of MP",
+  "Folk Dances and Festivals of Madhya Pradesh",
+  "Tourism and Historical Places in MP",
+  "Madhya Pradesh Economy & Schemes",
+  "MP Famous Personalities & Awards",
+  "District-wise GK Facts",
+  "Current Affairs of Madhya Pradesh"
+] as const;

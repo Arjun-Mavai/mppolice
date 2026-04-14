@@ -10,13 +10,15 @@ export type UiBucket =
   | 'general_knowledge'
   | 'general_science'
   | 'logical_reasoning'
-  | 'quantitative_aptitude';
+  | 'quantitative_aptitude'
+  | 'mp_general_knowledge';
 
 export const UI_BUCKET_KEYS: Exclude<UiBucket, 'all'>[] = [
   'general_knowledge',
   'general_science',
   'logical_reasoning',
   'quantitative_aptitude',
+  'mp_general_knowledge',
 ];
 
 export interface MppolicePickerTopic {

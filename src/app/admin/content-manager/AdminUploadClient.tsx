@@ -18,9 +18,10 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { uploadBlog } from '@/actions/blog-actions';
 import { uploadTestFromJSON, getExistingTests } from '@/actions/admin-actions';
 import { toast } from 'sonner';
-import { Loader2, Upload, BookOpen, FileText, CheckCircle2, Plus, Database } from 'lucide-react';
+import { Loader2, Upload, BookOpen, FileText, CheckCircle2, Plus, Database, Copy, Sparkles, MessageSquare, ExternalLink, ArrowRight } from 'lucide-react';
 import {
   MPPOLICE_SECTION_IDS,
+  getMppoliceFlattenedTopics,
   getMppoliceTopicsForSection,
   getSectionLabel,
   findTopicById,
@@ -64,6 +65,51 @@ export default function AdminUploadPage() {
     existingTestId: '',
     questionsJson: '',
   });
+
+  // Prompt Generator State
+  const [promptBucket, setPromptBucket] = useState('');
+  const [promptTopicId, setPromptTopicId] = useState('');
+  const [generatedPrompt, setGeneratedPrompt] = useState('');
+
+  const allFlattenedTopics = useMemo(() => getMppoliceFlattenedTopics(), []);
+  
+  const filteredPromptTopics = useMemo(() => {
+    if (!promptBucket) return [];
+    return allFlattenedTopics.filter(t => t.uiBucket === promptBucket);
+  }, [promptBucket, allFlattenedTopics]);
+
+  const generateAIPrompt = () => {
+    if (!promptTopicId) {
+      toast.error('Select a topic first');
+      return;
+    }
+    const topic = allFlattenedTopics.find(t => t.id === promptTopicId);
+    if (!topic) return;
+
+    const subjectName = topic.uiBucket.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    
+    const prompt = `TASK: Build 10 MCQs for MP Police Constable Paper I.
+CONTENT TYPE: TOPIC drill (10 Questions Chapter-wise)
+SUBJECT: ${subjectName}
+TOPIC / CHAPTER: ${topic.front} (${topic.frontEn || topic.front})
+SYLLABUS TOPIC ID (for admin): ${topic.id}
+
+CONSTRAINTS:
+- Difficulty: Exam level (Standard MP Police Constable)
+- Every MCQ must include full extendedData.explanation (gk_science/math_quant/reasoning stream + bilingual *En fields)
+- Strictly 10 questions only.
+- Include one trap or common mistake where applicable.
+
+Return valid JSON of exactly 10 question objects.`;
+    
+    setGeneratedPrompt(prompt);
+    toast.success('Prompt generated!');
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard!');
+  };
 
   useEffect(() => {
     // Fetch existing tests on mount
@@ -196,6 +242,7 @@ export default function AdminUploadPage() {
           'General Science': 'general_science',
           'Logical Reasoning': 'logical_reasoning',
           'Quantitative Aptitude': 'quantitative_aptitude',
+          'MP General Knowledge': 'mp_general_knowledge',
         };
         if (testData.type === 'MISC' && testData.subjectTag && miscBucketMap[testData.subjectTag]) {
           resolvedBucket = miscBucketMap[testData.subjectTag];
@@ -466,6 +513,96 @@ export default function AdminUploadPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6">
+                 {/* 🚀 AI PROMPT GENERATOR SECTION */}
+                 <div className="mb-10 rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/30 p-6">
+                    <div className="mb-4 flex items-center justify-between">
+                       <div className="flex items-center gap-2">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 shadow-lg">
+                             <Sparkles className="h-4 w-4 text-white" />
+                          </div>
+                          <div>
+                             <h4 className="text-sm font-black tracking-tight text-emerald-900 uppercase">Chapter-wise Prompt Generator</h4>
+                             <p className="text-[10px] font-medium text-emerald-600">Generate a perfect AI prompt for 10-question drills</p>
+                          </div>
+                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                       <div className="space-y-1.5">
+                          <Label className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Subject Strip</Label>
+                          <Select value={promptBucket} onValueChange={setPromptBucket}>
+                             <SelectTrigger className="bg-white">
+                                <SelectValue placeholder="Select Subject" />
+                             </SelectTrigger>
+                             <SelectContent>
+                                <SelectItem value="general_knowledge">General Knowledge</SelectItem>
+                                <SelectItem value="general_science">General Science</SelectItem>
+                                <SelectItem value="logical_reasoning">Logical Reasoning</SelectItem>
+                                <SelectItem value="quantitative_aptitude">Quantitative Aptitude</SelectItem>
+                                <SelectItem value="mp_general_knowledge">MP General Knowledge</SelectItem>
+                             </SelectContent>
+                          </Select>
+                       </div>
+
+                       <div className="space-y-1.5">
+                          <Label className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Chapter / Topic</Label>
+                          <Select 
+                            value={promptTopicId} 
+                            onValueChange={setPromptTopicId}
+                            disabled={!promptBucket}
+                          >
+                             <SelectTrigger className="bg-white">
+                                <SelectValue placeholder={!promptBucket ? "Select subject first" : "Select Topic"} />
+                             </SelectTrigger>
+                             <SelectContent>
+                                <ScrollArea className="h-64">
+                                   {filteredPromptTopics.map((t) => (
+                                     <SelectItem key={t.id} value={t.id}>
+                                       {t.front.slice(0, 50)}{t.front.length > 50 ? '...' : ''}
+                                     </SelectItem>
+                                   ))}
+                                </ScrollArea>
+                             </SelectContent>
+                          </Select>
+                       </div>
+
+                       <div className="flex items-end">
+                          <Button 
+                            type="button"
+                            onClick={generateAIPrompt}
+                            className="w-full bg-emerald-700 font-bold hover:bg-emerald-800"
+                            disabled={!promptTopicId}
+                          >
+                             Generate Prompt
+                          </Button>
+                       </div>
+                    </div>
+
+                    {generatedPrompt && (
+                       <div className="mt-6 space-y-3">
+                          <div className="flex items-center justify-between">
+                             <span className="text-[10px] font-black tracking-widest text-emerald-700 uppercase">AI Prompt (Copy & Paste to Gemini/GPT)</span>
+                             <Button 
+                               variant="outline" 
+                               size="sm" 
+                               onClick={() => copyToClipboard(generatedPrompt)}
+                               className="h-7 border-emerald-200 bg-white px-2 text-[10px] font-bold text-emerald-700 hover:bg-emerald-50"
+                             >
+                                <Copy className="mr-1 h-3 w-3" /> Copy Prompt
+                             </Button>
+                          </div>
+                          <div className="relative">
+                             <pre className="max-h-[150px] overflow-y-auto rounded-xl border border-emerald-100 bg-white p-4 text-[11px] leading-relaxed text-slate-700 shadow-inner">
+                                {generatedPrompt}
+                             </pre>
+                             <div className="absolute right-3 bottom-3 animate-pulse">
+                               <ArrowRight className="h-4 w-4 text-emerald-400" />
+                             </div>
+                          </div>
+                       </div>
+                    )}
+                 </div>
+
                 <form onSubmit={handleTestSubmit} className="space-y-6">
                   {/* Mode Toggle */}
                   <RadioGroup
@@ -602,6 +739,7 @@ export default function AdminUploadPage() {
                                   'General Science',
                                   'Logical Reasoning',
                                   'Quantitative Aptitude',
+                                  'MP General Knowledge',
                                 ].map((s) => (
                                   <SelectItem key={s} value={s}>{s}</SelectItem>
                                 ))}
@@ -717,6 +855,7 @@ export default function AdminUploadPage() {
                               <SelectItem value="general_science">General Science</SelectItem>
                               <SelectItem value="logical_reasoning">Logical Reasoning</SelectItem>
                               <SelectItem value="quantitative_aptitude">Quantitative Aptitude</SelectItem>
+                              <SelectItem value="mp_general_knowledge">MP General Knowledge</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>

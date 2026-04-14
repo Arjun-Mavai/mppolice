@@ -7,6 +7,7 @@ import {
   MPPOLICE_PHYSICS_TOPICS,
   MPPOLICE_CHEMISTRY_TOPICS,
   MPPOLICE_SIMPLE_ARITHMETIC_TOPICS,
+  MPPOLICE_MPGK_TOPICS,
 } from '@/data/mppolice/topic-arrays';
 
 export const MPPOLICE_EXAM = {
@@ -127,6 +128,13 @@ export function getMppoliceFlattenedTopics(): MppolicePickerTopic[] {
     'quantitative_aptitude',
     'arithmetic'
   );
+  pushTopics(
+    out,
+    'sec_gk_reasoning',
+    MPPOLICE_MPGK_TOPICS,
+    'mp_general_knowledge',
+    'mpgk'
+  );
   return out;
 }
 
@@ -158,7 +166,13 @@ export function parseUiBucketFromTags(tags: unknown): UiBucket | null {
   for (const t of tags) {
     if (typeof t === 'string' && t.startsWith('ui_bucket:')) {
       const b = t.replace('ui_bucket:', '') as UiBucket;
-      if (b === 'general_knowledge' || b === 'general_science' || b === 'logical_reasoning' || b === 'quantitative_aptitude')
+      if (
+        b === 'general_knowledge' ||
+        b === 'general_science' ||
+        b === 'logical_reasoning' ||
+        b === 'quantitative_aptitude' ||
+        b === 'mp_general_knowledge'
+      )
         return b;
     }
   }
