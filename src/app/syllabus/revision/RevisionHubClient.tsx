@@ -247,7 +247,7 @@ export function RevisionHubClient({ allFacts, initialRevisionMap, stats }: Revis
                key={t}
                onClick={() => { setActiveTab(t); setBatchIndex(0); }}
                className={cn(
-                 "flex items-center gap-2 px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all",
+                 "flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all",
                  activeTab === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600 hover:bg-white/50"
                )}
              >

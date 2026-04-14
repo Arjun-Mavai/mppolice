@@ -245,26 +245,24 @@ export function PYQShowcaseSection() {
         <div className="pointer-events-none absolute right-[-5%] bottom-0 h-[250px] w-[250px] sm:h-[400px] sm:w-[400px] rounded-full bg-pink-500/5 blur-[70px] sm:blur-[100px] will-change-transform" />
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="grid items-start gap-12 lg:grid-cols-2 lg:gap-24">
+          <div className="flex flex-col items-center gap-12 lg:gap-20">
             
-            {/* LEFT COLUMN: Strategic Copy */}
-            <div className="relative z-10 w-full overflow-hidden space-y-8 sm:space-y-12 text-center lg:text-left lg:pt-10">
+            {/* STRATEGIC HEADER: Fully Centered */}
+            <div className="relative z-10 w-full max-w-4xl space-y-8 sm:space-y-10 text-center">
               <div className="space-y-6 sm:space-y-8">
-                {/* Premium Floating Badge with Apple-like Glassmorphism */}
+                {/* Premium Floating Badge */}
                 <m.div
                   initial={{ opacity: 0, y: -20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  className="group relative inline-flex items-center gap-3 rounded-2xl border border-pink-200/40 bg-white/90 sm:bg-white/50 backdrop-blur-xl px-5 py-2.5 text-[10px] sm:text-[11px] font-black tracking-[0.15em] text-pink-600 uppercase shadow-[0_20px_40px_rgba(219,39,119,0.08)] ring-4 ring-pink-50/20"
+                  className="group relative inline-flex items-center gap-3 rounded-2xl border border-pink-200/40 bg-white/90 backdrop-blur-xl px-5 py-2.5 text-[10px] sm:text-[11px] font-black tracking-[0.15em] text-pink-600 uppercase shadow-[0_20px_40px_rgba(219,39,119,0.08)] ring-4 ring-pink-50/20"
                 >
                   <div className="relative flex h-5 w-5 items-center justify-center rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg shadow-pink-500/30">
                     <CheckCircle2 className="h-3 w-3 text-white" />
-                    <div className="absolute inset-0 animate-pulse rounded-lg bg-white/20" />
                   </div>
                   <span className="relative z-10">
                     {isHindi ? 'पेपर I · 100 प्रश्न · 120 मिनट' : 'Paper I · 100Q · 120 min'}
                   </span>
-                  <div className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
                 </m.div>
 
                 <m.h2
@@ -272,7 +270,10 @@ export function PYQShowcaseSection() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.1 }}
-                  className="py-1 text-3xl font-black tracking-tighter text-slate-900 drop-shadow-md sm:text-5xl md:text-6xl lg:text-7xl text-balance"
+                  className="py-1 text-3xl font-black tracking-tighter text-slate-900 sm:text-5xl md:text-6xl lg:text-7xl text-balance"
+                  style={{ 
+                    filter: 'drop-shadow(0 15px 15px rgba(0,0,0,0.1))'
+                  }}
                 >
                   <div className="flex flex-col leading-[1.1] sm:leading-[1.15]">
                     <span className="text-slate-800">
@@ -280,9 +281,9 @@ export function PYQShowcaseSection() {
                         ? 'तीन खंड, एक पेपर — पूरा सिलेबस'
                         : 'Three sections. One paper. Full syllabus.'}
                     </span>
-                    <div className="mt-2 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+                    <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                       <span
-                        className="bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 bg-clip-text px-1 text-xl font-black tracking-tight text-transparent sm:text-2xl md:text-3xl"
+                        className="bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 bg-clip-text px-2 text-xl font-black tracking-tight text-transparent sm:text-2xl md:text-3xl lg:text-4xl"
                         style={{ WebkitBackgroundClip: 'text' }}
                       >
                         {isHindi
@@ -298,24 +299,24 @@ export function PYQShowcaseSection() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.2 }}
-                  className="mx-auto lg:mx-0 max-w-xl text-left text-base sm:text-xl font-medium leading-relaxed text-slate-500 min-h-[4.5rem] sm:min-h-[auto]"
+                  className="mx-auto max-w-2xl text-center text-base sm:text-xl font-medium leading-relaxed text-slate-500"
                 >
                   {isHindi
-                    ? 'आधिकारिक 40+30+30 अंक वाले खंडों के साथ PYQ, टॉपिक-टैग और AI JSON व्याख्या (gk_science / reasoning / math_quant) — वही फॉर्मेट जो कंटेंट अपलोड में चलता है।'
-                    : 'Practice matches the official 40+30+30 mark split: GK & reasoning, mental ability, science & arithmetic — with PYQs, topic tags, and the same structured explanation JSON your uploads use (gk_science, reasoning, math_quant).'}
+                    ? 'आधिकारिक 40+30+30 अंक वाले खंडों के साथ PYQ, टॉपिक-टैग और AI JSON व्याख्या (gk_science / reasoning / math_quant) — वही फॉर्मेट जो कंटेंट अपलोड में चलता hai.'
+                    : 'Practice matches the official 40+30+30 mark split: GK & reasoning, mental ability, science & arithmetic — with PYQs, topic tags, and structured explanations.'}
                 </m.p>
               </div>
 
-              {/* TAB SELECTORS */}
+              {/* TAB SELECTORS: Centered */}
               <m.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.3 }}
-                className="flex items-center justify-center lg:justify-start"
+                className="flex items-center justify-center"
               >
-                <div className="relative w-full overflow-hidden">
-                  <div className="flex gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-2 max-w-full">
+                <div className="relative w-full max-w-2xl overflow-hidden">
+                  <div className="flex justify-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-2">
                     {TABS.map((tab) => (
                       <button
                         key={tab.id}
@@ -328,11 +329,6 @@ export function PYQShowcaseSection() {
                         )}
                       >
                         <span className="relative z-10">{isHindi ? tab.labelHi : tab.labelEn}</span>
-                        {tab.badge && (
-                          <span className="relative z-10 rounded bg-emerald-500 px-1 py-0.5 text-[7px] font-black leading-none text-white ml-0.5">
-                            {tab.badge}
-                          </span>
-                        )}
                         {activeCard === tab.id && (
                           <m.div 
                             layoutId="nav-bg"
@@ -343,38 +339,18 @@ export function PYQShowcaseSection() {
                       </button>
                     ))}
                   </div>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-white/90 to-transparent lg:hidden" />
                 </div>
-              </m.div>
-
-              {/* CTA BUTTON - Desktop Only (Hidden on mobile) */}
-              <m.div
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.4 }}
-                className="hidden lg:block pt-4"
-              >
-                <Link 
-                  href="/pricing"
-                  className="group relative inline-flex items-center gap-4 rounded-3xl bg-[#0F172A] px-10 py-5 text-[11px] font-black tracking-[0.2em] text-white uppercase transition-all hover:scale-105 active:scale-95 shadow-[0_20px_50px_rgba(15,23,42,0.3)] overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-pink-600 to-rose-500 opacity-0 transition-opacity group-hover:opacity-100" />
-                  <span className="relative z-10">{isHindi ? 'प्रीमियम एक्सेस अनलॉक करें' : 'Unlock Premium Access'}</span>
-                  <Sparkles className="relative z-10 h-4 w-4 text-emerald-400 group-hover:animate-pulse" />
-                  <ArrowRight className="relative z-10 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
               </m.div>
             </div>
 
-            {/* RIGHT COLUMN: Visual Showcase Cards */}
+            {/* VISUAL SHOWCASE: Below Header, Centered */}
             <div 
-              className="group relative flex flex-col items-center lg:items-end -mt-16 sm:-mt-16 lg:mt-0"
+              className="group relative flex w-full flex-col items-center justify-center"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
             >
               {/* Ambient Background Blur */}
-              <div className="absolute -inset-4 sm:-inset-10 rounded-[3rem] sm:rounded-[4rem] bg-gradient-to-br from-pink-600/10 via-emerald-500/10 to-rose-600/10 opacity-40 blur-[40px] sm:blur-[80px] group-hover:opacity-60 transition-opacity duration-1000" />
+              <div className="absolute -inset-4 sm:-inset-10 rounded-full bg-gradient-to-br from-pink-600/10 via-emerald-500/10 to-rose-600/10 opacity-40 blur-[60px] sm:blur-[100px] group-hover:opacity-60 transition-opacity duration-1000" />
 
               <div className="relative aspect-[4/5.5] sm:aspect-[3.5/5.4] w-full max-w-[340px] sm:max-w-md">
                 <Card className="relative h-full w-full overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-slate-800 bg-[#06080F] p-0 text-white shadow-2xl ring-1 ring-white/5">

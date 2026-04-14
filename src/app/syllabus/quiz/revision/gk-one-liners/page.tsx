@@ -39,7 +39,7 @@ export default async function GkOneLinersPage({ searchParams }: PageProps) {
       ? 'All'
       : raw && raw.length > 0
         ? raw
-        : 'General Knowledge';
+        : 'All';
 
   const [facts, counts] = await Promise.all([
     getPublishedMppoliceOneLiners(subject, 3000),

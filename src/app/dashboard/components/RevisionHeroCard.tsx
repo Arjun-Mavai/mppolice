@@ -67,13 +67,23 @@ export function RevisionHeroCard({ stats }: RevisionHeroCardProps) {
                   </p>
               </div>
 
-              <button 
-                onClick={() => router.push('/syllabus/revision')}
-                className="flex items-center gap-3 rounded-full bg-white px-8 py-4 text-[11px] font-black uppercase tracking-widest text-slate-900 shadow-xl transition-all hover:bg-emerald-400 hover:scale-105 active:scale-95"
-              >
-                {hi ? 'रिवीजन जारी रखें' : 'Continue Revision'}
-                <ChevronRight size={16} />
-              </button>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <button 
+                  onClick={() => router.push('/syllabus/quiz/revision/gk-one-liners')}
+                  className="flex w-full sm:w-auto items-center justify-center gap-3 rounded-full bg-white px-8 py-4 text-[11px] font-black uppercase tracking-widest text-slate-900 shadow-xl transition-all hover:bg-emerald-400 hover:scale-105 active:scale-95"
+                >
+                  {hi ? 'रिवीजन जारी रखें' : 'Continue Revision'}
+                  <ChevronRight size={16} />
+                </button>
+                
+                <button 
+                  onClick={() => router.push('/syllabus/revision')}
+                  className="flex w-full sm:w-auto items-center justify-center gap-3 rounded-full border border-white/20 bg-white/5 px-8 py-4 text-[11px] font-black uppercase tracking-widest text-white shadow-xl transition-all hover:bg-white/10 hover:border-white/40 hover:scale-105 active:scale-95 backdrop-blur-sm"
+                >
+                  {hi ? 'प्रोग्रेस ट्रैक करें' : 'Track Progress'}
+                  <div className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                </button>
+              </div>
           </div>
 
           {/* 📊 PROGRESS ORB (Premium Glassmorphism Style) */}

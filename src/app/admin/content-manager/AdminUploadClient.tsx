@@ -88,22 +88,31 @@ export default function AdminUploadPage() {
 
     const subjectName = topic.uiBucket.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     
+    // Determine the stream based on the subject/bucket
+    let streamType = 'gk_science';
+    if (topic.uiBucket === 'logical_reasoning') streamType = 'reasoning';
+    if (topic.uiBucket === 'quantitative_aptitude') streamType = 'math_quant';
+
     const prompt = `TASK: Build 10 MCQs for MP Police Constable Paper I.
-CONTENT TYPE: TOPIC drill (10 Questions Chapter-wise)
+CONTENT TYPE: TOPIC drill (Chapter-wise)
 SUBJECT: ${subjectName}
 TOPIC / CHAPTER: ${topic.front} (${topic.frontEn || topic.front})
 SYLLABUS TOPIC ID (for admin): ${topic.id}
 
+VOICE (Human Coach):
+- Hindi: spoken like a teacher ("पहले देखो...", "इसका मतलब...").
+- English: natural, friendly tutor (NOT literal translation).
+
 CONSTRAINTS:
 - Difficulty: Exam level (Standard MP Police Constable)
-- Every MCQ must include full extendedData.explanation (gk_science/math_quant/reasoning stream + bilingual *En fields)
-- Strictly 10 questions only.
-- Include one trap or common mistake where applicable.
+- Bilingual: Every question must have questionText (Hindi) and questionTextEn (English).
+- Deep Structure: Every MCQ MUST include "extendedData": { "explanation": { "stream": "${streamType}", ... } }.
+- For ${streamType}: Include ${streamType === 'gk_science' ? 'facts[], factsEn[], mnemonics[], related[], memoryTip' : streamType === 'reasoning' ? 'chain[], chainEn[], pattern, elimination, memoryTip' : 'steps[], stepsEn[], shortcut, trap, memoryTip'}.
 
-Return valid JSON of exactly 10 question objects.`;
+Return ONLY a valid JSON array of exactly 10 question objects. No markdown.`;
     
     setGeneratedPrompt(prompt);
-    toast.success('Prompt generated!');
+    toast.success('Smart prompt generated!');
   };
 
   const copyToClipboard = (text: string) => {
@@ -514,24 +523,24 @@ Return valid JSON of exactly 10 question objects.`;
               </CardHeader>
               <CardContent className="p-6">
                  {/* 🚀 AI PROMPT GENERATOR SECTION */}
-                 <div className="mb-10 rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/30 p-6">
+                 <div className="mb-10 rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/30 p-6 shadow-sm">
                     <div className="mb-4 flex items-center justify-between">
                        <div className="flex items-center gap-2">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 shadow-lg">
-                             <Sparkles className="h-4 w-4 text-white" />
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 shadow-lg shadow-emerald-200">
+                             <Sparkles className="h-5 w-5 text-white" />
                           </div>
                           <div>
-                             <h4 className="text-sm font-black tracking-tight text-emerald-900 uppercase">Chapter-wise Prompt Generator</h4>
-                             <p className="text-[10px] font-medium text-emerald-600">Generate a perfect AI prompt for 10-question drills</p>
+                             <h4 className="text-base font-black tracking-tight text-emerald-900 uppercase">AI Smart Prompt Generator</h4>
+                             <p className="text-xs font-medium text-emerald-600">Generate perfect prompts for "Best Explanation" (Structured JSON) content</p>
                           </div>
                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                        <div className="space-y-1.5">
-                          <Label className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Subject Strip</Label>
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Subject Strip</Label>
                           <Select value={promptBucket} onValueChange={setPromptBucket}>
-                             <SelectTrigger className="bg-white">
+                             <SelectTrigger className="border-emerald-200 bg-white shadow-sm focus:ring-emerald-500">
                                 <SelectValue placeholder="Select Subject" />
                              </SelectTrigger>
                              <SelectContent>
@@ -545,13 +554,13 @@ Return valid JSON of exactly 10 question objects.`;
                        </div>
 
                        <div className="space-y-1.5">
-                          <Label className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Chapter / Topic</Label>
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Chapter / Topic</Label>
                           <Select 
                             value={promptTopicId} 
                             onValueChange={setPromptTopicId}
                             disabled={!promptBucket}
                           >
-                             <SelectTrigger className="bg-white">
+                             <SelectTrigger className="border-emerald-200 bg-white shadow-sm focus:ring-emerald-500">
                                 <SelectValue placeholder={!promptBucket ? "Select subject first" : "Select Topic"} />
                              </SelectTrigger>
                              <SelectContent>
@@ -570,35 +579,41 @@ Return valid JSON of exactly 10 question objects.`;
                           <Button 
                             type="button"
                             onClick={generateAIPrompt}
-                            className="w-full bg-emerald-700 font-bold hover:bg-emerald-800"
+                            className="w-full bg-emerald-700 font-bold shadow-md hover:bg-emerald-800 transition-all active:scale-95"
                             disabled={!promptTopicId}
                           >
-                             Generate Prompt
+                             Generate High-Impact Prompt
                           </Button>
                        </div>
                     </div>
 
                     {generatedPrompt && (
-                       <div className="mt-6 space-y-3">
+                       <div className="mt-6 space-y-3 animate-in fade-in slide-in-from-top-2">
                           <div className="flex items-center justify-between">
-                             <span className="text-[10px] font-black tracking-widest text-emerald-700 uppercase">AI Prompt (Copy & Paste to Gemini/GPT)</span>
+                             <div className="flex items-center gap-2">
+                                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="text-[10px] font-black tracking-widest text-emerald-800 uppercase">AI Master Prompt (Copy to Gemini/GPT-4o)</span>
+                             </div>
                              <Button 
                                variant="outline" 
                                size="sm" 
                                onClick={() => copyToClipboard(generatedPrompt)}
-                               className="h-7 border-emerald-200 bg-white px-2 text-[10px] font-bold text-emerald-700 hover:bg-emerald-50"
+                               className="h-8 border-emerald-300 bg-white px-3 text-[10px] font-black text-emerald-700 shadow-sm hover:bg-emerald-50 hover:text-emerald-800"
                              >
-                                <Copy className="mr-1 h-3 w-3" /> Copy Prompt
+                                <Copy className="mr-1.5 h-3.5 w-3.5" /> COPY MASTER PROMPT
                              </Button>
                           </div>
-                          <div className="relative">
-                             <pre className="max-h-[150px] overflow-y-auto rounded-xl border border-emerald-100 bg-white p-4 text-[11px] leading-relaxed text-slate-700 shadow-inner">
+                          <div className="relative group">
+                             <pre className="max-h-[180px] overflow-y-auto rounded-xl border border-emerald-200 bg-white/80 p-5 text-[11px] leading-relaxed text-slate-700 shadow-inner scrollbar-thin scrollbar-thumb-emerald-200">
                                 {generatedPrompt}
                              </pre>
-                             <div className="absolute right-3 bottom-3 animate-pulse">
-                               <ArrowRight className="h-4 w-4 text-emerald-400" />
+                             <div className="absolute right-4 bottom-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                               <Sparkles className="h-5 w-5 text-emerald-400/50" />
                              </div>
                           </div>
+                          <p className="text-[10px] text-emerald-600 font-medium italic">
+                            *This prompt forces the AI to use the structured "extendedData.explanation" format for "Best Explanation" rendering.
+                          </p>
                        </div>
                     )}
                  </div>
@@ -867,12 +882,14 @@ Return valid JSON of exactly 10 question objects.`;
 
                   <div className="space-y-2">
                     <Label className="flex justify-between">
-                      <span>Questions JSON Array</span>
+                      <span className="flex items-center gap-1.5 text-emerald-900 font-black uppercase tracking-wider text-xs">
+                        <Database className="h-3.5 w-3.5" /> Questions JSON Array (Bilingual + extendedData)
+                      </span>
                       <div className="flex gap-2">
                         <span className="text-xs font-normal text-slate-400">
                           Format:{' '}
                           <code>
-                            [{`{ "questionText":"…","options":[{"id":"1","text":"…","text_en":"…"}],"correctAnswer":"1" }`}]
+                            [{`{ "questionText":"…", "extendedData": { "explanation": { "stream": "...", ... } } }`}]
                           </code>
                         </span>
                         {testData.type === 'MISC' && (
@@ -891,10 +908,15 @@ Return valid JSON of exactly 10 question objects.`;
                       name="questionsJson"
                       value={testData.questionsJson}
                       onChange={handleTestChange}
-                      className="h-[300px] bg-emerald-50/30 font-mono text-xs font-medium text-slate-700"
-                      placeholder='[{ "questionText": "Question 1", "options": ["A", "B", "C", "D"], "correctAnswer": "A", "explanation": "..." }]'
+                      className="h-[350px] bg-emerald-50/20 font-mono text-xs font-medium text-slate-700 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500"
+                      placeholder='[{ "questionText": "...", "questionTextEn": "...", "options": [...], "correctAnswer": "1", "extendedData": { "explanation": { "stream": "gk_science", "facts": ["...", "..."], "memoryTip": "..." } } }]'
                       required
                     />
+                    <div className="rounded-md bg-amber-50 p-3 border border-amber-100 mt-2">
+                      <p className="text-[10px] text-amber-900 leading-relaxed">
+                        <span className="font-bold">Pro Tip:</span> Use the <span className="font-bold underline uppercase">extendedData.explanation</span> key with a stream (gk_science, reasoning, or math_quant) to enable the premium tutor-style "Best Explanation" rendering in Instant Mode.
+                      </p>
+                    </div>
                   </div>
 
                   <Button
