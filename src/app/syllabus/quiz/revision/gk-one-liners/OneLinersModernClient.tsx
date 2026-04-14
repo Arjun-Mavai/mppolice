@@ -60,18 +60,17 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
   const hi = language === 'hi';
 
   const subjectParam = searchParams.get('subject') || initialSubject;
-  // 🗺️ SUBJECT LOGIC: Default to 'All' if unknown or empty
-  const activeSubject = (subjectParam === 'All' || MPPOLICE_ONELINER_SUBJECTS.includes(subjectParam as any)) 
-    ? subjectParam 
-    : 'All';
+  // 🗺️ SUBJECT LOGIC: Default to 'All'
+  const isKnown =
+    subjectParam === 'All' ||
+    MPPOLICE_ONELINER_SUBJECTS.includes(subjectParam as (typeof MPPOLICE_ONELINER_SUBJECTS)[number]);
+  const activeSubject = !isKnown ? 'All' : subjectParam;
 
   // States
   const [facts, setFacts] = useState<MppoliceOneLinerRow[]>(() => initialFacts.slice(0, PAGE_SIZE));
   const [batchIndex, setBatchIndex] = useState(0);
   const [viewMode, setViewMode] = useState<'list' | 'flip'>('flip');
   const [revisionMap, setRevisionMap] = useState<Record<string, number>>({});
-  
-  // 🪗 ACCORDION: Only one item can be expanded at once
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [loadingBatch, setLoadingBatch] = useState(false);
   const [stats, setStats] = useState({ revisedFactsCount: 0, totalFacts: 0 });
@@ -91,7 +90,12 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
     refreshStats();
   }, [refreshStats]);
 
-  const progressPercent = Math.min(100, Math.round((stats.revisedFactsCount / (stats.totalFacts || 1)) * 100));
+  // 🛠️ BUG FIX: Use precision for progress percentage
+  const progressPercentRaw = (stats.revisedFactsCount / (stats.totalFacts || 1)) * 100;
+  const progressPercent = Math.min(100, Math.round(progressPercentRaw));
+  const progressPercentDisplay = progressPercentRaw > 0 && progressPercentRaw < 1 
+    ? progressPercentRaw.toFixed(1) 
+    : progressPercent.toString();
 
   const totalPossible = useMemo(() => {
     if (activeSubject === 'All') {
@@ -125,7 +129,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
       const offset = newIndex * PAGE_SIZE;
       const nextBatch = await getPublishedMppoliceOneLiners(activeSubject, PAGE_SIZE, offset);
       setFacts(nextBatch);
-      setExpandedId(null); // Reset expansion on batch change
+      setExpandedId(null);
       await loadRevisionData(nextBatch.map(f => f.id));
       window.scrollTo({ top: 0, behavior: 'instant' });
     } catch (err) {
@@ -240,27 +244,26 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                        value={String(batchIndex)}
                        onValueChange={(v) => handleBatchChange(Number(v))}
                      >
-                       <SelectTrigger className="h-11 w-full rounded-full border-slate-200 bg-white px-5 text-[12px] font-bold text-slate-900 shadow-sm focus:ring-2 focus:ring-indigo-500/20 transition-all">
+                       <SelectTrigger className="h-12 w-full rounded-full border-slate-200 bg-white px-5 text-[12px] font-bold text-slate-900 shadow-sm focus:ring-2 focus:ring-indigo-500/20 transition-all">
                          <div className="flex items-center gap-2">
                             <Layers size={14} className="text-slate-400" />
                             <SelectValue placeholder={hi ? 'बैच चुनें' : 'Select Batch'} />
                          </div>
                        </SelectTrigger>
-                       <SelectContent className="rounded-2xl border-slate-200 bg-white shadow-2xl max-h-[300px] overflow-y-auto">
+                       <SelectContent position="popper" className="rounded-2xl border-slate-200 bg-white shadow-2xl max-h-[300px] overflow-y-auto">
                          {Array.from({ length: totalBatches }).map((_, i) => (
                            <SelectItem 
                              key={i} 
                              value={String(i)}
                              className="py-3 text-[12px] font-bold text-slate-700 focus:bg-indigo-50 focus:text-indigo-700"
                            >
-                             {hi ? `तथ्य` : `Facts`} {i * PAGE_SIZE + 1} - {Math.min((i + 1) * PAGE_SIZE, totalPossible)}
+                             {hi ? `बैच` : `Batch`} {i + 1} ({i * PAGE_SIZE + 1} - {Math.min((i + 1) * PAGE_SIZE, totalPossible)})
                            </SelectItem>
                          ))}
                        </SelectContent>
                      </Select>
                    </div>
 
-                   {/* 🏷️ REVERTED: View Toggles with text labels */}
                    <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1">
                       <button
                         onClick={() => setViewMode('list')}
@@ -285,7 +288,6 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                    </div>
                  </div>
                  
-                 {/* 📊 PROGRESS & STATS */}
                  <div className="flex items-center gap-3">
                     <div className="flex items-center gap-3 rounded-full bg-slate-900 px-5 py-2 border border-slate-800 shadow-lg">
                         <div className="relative h-7 w-7 flex items-center justify-center">
@@ -293,15 +295,11 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                                 <circle cx="14" cy="14" r="12" stroke="currentColor" strokeWidth="2.5" fill="transparent" className="text-slate-800" />
                                 <circle cx="14" cy="14" r="12" stroke="currentColor" strokeWidth="2.5" fill="transparent" strokeDasharray={75.4} strokeDashoffset={75.4 - (75.4 * progressPercent) / 100} strokeLinecap="round" className="text-emerald-500 transition-all duration-1000" />
                             </svg>
-                            <span className="absolute text-[8px] font-black text-white">{progressPercent}%</span>
+                            <span className="absolute text-[8px] font-black text-white">{progressPercentDisplay}%</span>
                         </div>
                         <div className="flex flex-col items-center">
-                            <p className="text-[12px] font-black text-white leading-tight">
-                              {stats.revisedFactsCount} / {stats.totalFacts}
-                            </p>
-                            <p className="text-[7px] font-black uppercase tracking-widest text-slate-400">
-                              {hi ? 'पूरा हुआ' : 'Facts Revised'}
-                            </p>
+                            <p className="text-[12px] font-black text-white leading-tight">{stats.revisedFactsCount}/{stats.totalFacts}</p>
+                            <p className="text-[7px] font-black uppercase tracking-widest text-slate-400">{hi ? 'पूर्ण' : 'Done'}</p>
                         </div>
                     </div>
                  </div>
@@ -316,7 +314,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
         {loadingBatch ? (
           <div className="flex flex-col items-center justify-center py-32 space-y-4">
             <Loader2 className="h-12 w-12 animate-spin text-indigo-600" />
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">{hi ? 'तथ्य लोड हो रहे हैं...' : 'Loading Facts...'}</p>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">{hi ? 'तथ्य लोड ho rahe hain...' : 'Loading Facts...'}</p>
           </div>
         ) : (
           <div className="will-change-transform">
