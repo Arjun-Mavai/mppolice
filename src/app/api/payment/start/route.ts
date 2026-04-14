@@ -35,6 +35,7 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { verifyAuth } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
+import { notifyAdminOnVerificationFailure } from '@/lib/admin-notify';
 
 const startSchema = z.object({
   name: z.string().min(2).max(100),
@@ -45,17 +46,20 @@ const startSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  let planType: 'lite' | 'pro' | 'upgrade' | undefined;
   try {
     // 🚦 Single rate-limit check (instead of 2 separate ones)
     const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
     const { paymentLimiter } = await import('@/lib/rate-limit');
-    const { success } = await checkRateLimit(paymentLimiter, ip);
+    const { success } = await checkRateLimit(paymentLimiter as any, ip);
     if (!success) {
       return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
     }
 
     const body = await req.json();
-    const { name, email, phone, source, planType } = startSchema.parse(body);
+    const parsed = startSchema.parse(body);
+    planType = parsed.planType;
+    const { name, email, phone, source } = parsed;
     const normalizedEmail = email.toLowerCase().trim();
 
     // ── PHASE 1: Find existing user by email (case-insensitive so we never create duplicate or overwrite Pro/Lite)
@@ -87,15 +91,21 @@ export async function POST(req: Request) {
     let userId: string;
     if (existingUser) {
       // Existing user allowed: only update name/phone/metadata — NEVER touch planTier, isSubscribed, role
+      // Safe metadata update for Drizzle mode: 'json'
+      const existingMeta =
+        typeof existingUser.metadata === 'object' && existingUser.metadata !== null
+          ? (existingUser.metadata as Record<string, any>)
+          : {};
+
       await db
         .update(mppscUsers)
         .set({
           name: name.trim(),
           phone: phone.trim(),
-          metadata: JSON.stringify({
-            ...JSON.parse((existingUser.metadata as string) || '{}'),
+          metadata: {
+            ...existingMeta,
             source,
-          }),
+          },
         })
         .where(eq(mppscUsers.id, existingUser.id));
       userId = existingUser.id;
@@ -110,7 +120,7 @@ export async function POST(req: Request) {
         password: tempPassword,
         isActive: false,
         role: 'guest',
-        metadata: JSON.stringify({ source }),
+        metadata: { source },
         planTier: 'free',
         examType: 'mppolice',
       });
@@ -124,15 +134,19 @@ export async function POST(req: Request) {
     const rows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, 'mppolice'))
       .limit(1);
-    const p = rows[0] || PRICING_DEFAULTS;
+    const p = (rows[0] as any) || PRICING_DEFAULTS;
 
     const PLAN_AMOUNTS: Record<string, number> = {
       lite: (p.litePrice ?? PRICING_DEFAULTS.litePrice) * 100,
       pro: (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100,
       upgrade: (p.upgradePrice ?? PRICING_DEFAULTS.upgradePrice) * 100,
     };
+
+    if (!planType) {
+      return NextResponse.json({ error: 'Plan type is required' }, { status: 400 });
+    }
 
     const amount = PLAN_AMOUNTS[planType];
     if (!amount || amount < 100) {
@@ -153,11 +167,19 @@ export async function POST(req: Request) {
     // Single response — userId + order details
     return NextResponse.json({ userId, order: { ...order, planType } });
   } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to start payment';
     logger.error('Payment start error:', error, {
       category: 'payment',
-      metadata: { planType: (error as any)?.planType },
+      metadata: { planType },
     });
-    const message = error instanceof Error ? error.message : 'Failed to start payment';
+    
+    // 🚨 Notify Admin on Start Failure
+    notifyAdminOnVerificationFailure({
+      userId: 'pending',
+      orderId: 'none',
+      error: `Payment Start Failure: ${message}`,
+    }).catch(() => {});
+
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

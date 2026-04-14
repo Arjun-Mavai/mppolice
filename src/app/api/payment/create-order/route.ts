@@ -53,9 +53,9 @@ export async function POST(req: Request) {
     const rows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, 'mppolice'))
       .limit(1);
-    const p = rows[0] || PRICING_DEFAULTS;
+    const p = (rows[0] as any) || PRICING_DEFAULTS;
 
     const PLAN_AMOUNTS: Record<string, number> = {
       lite: (p.litePrice ?? PRICING_DEFAULTS.litePrice) * 100, // Amount in Paise (INR * 100)

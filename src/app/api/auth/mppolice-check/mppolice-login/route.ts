@@ -62,16 +62,20 @@ export async function POST(request: Request) {
       .limit(1);
     const user = dbUsers[0];
 
+    // 🛡️ SECURITY: Timing Attack Protection
+    // We run a dummy comparison even if user doesn't exist to prevent email enumeration
+    const dummyHash = '$2a$10$ZyP8.Yf1A0Xl6U8K5N9Z.O1X1X1X1X1X1X1X1X1X1X1X1X1X1X1X1'; // Valid format but wrong salt/pass
+    
     if (!user) {
+      await bcrypt.compare(password, dummyHash);
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // ── Soft Delete Check — deactivated account can't login ─────
+    // ── Soft Delete Check ─────
     if (user.deletedAt) {
+      await bcrypt.compare(password, dummyHash); // Maintain timing
       return NextResponse.json(
-        {
-          error: 'Account deactivated. Contact admin for reactivation.',
-        },
+        { error: 'Account deactivated. Contact admin for reactivation.' },
         { status: 403 }
       );
     }

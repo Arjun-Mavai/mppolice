@@ -217,7 +217,7 @@ export function PaymentModal({
       }
 
       // 🚀 Server Action: Register + Create Order in ONE call
-      const startRes = await startPayment({ ...values, planType });
+      const startRes = await startPayment({ ...values, planType, examType: 'mppolice' });
 
       // Server-side block: existing lite/pro must be same logged-in user
       if (!startRes.success || !startRes.data) {
@@ -301,16 +301,23 @@ export function PaymentModal({
 
             toast.success('Payment successful! 🎉');
 
-            // Sab clean up karke Thank You page par bhejo
-            onOpenChange(false);
-            setIsLoading(false);
-            setLoadingPhase(null);
-
             const displayPlan = planType === 'upgrade' ? 'pro' : verifyResult.planTier || planType;
             const upgradeParam = planType === 'upgrade' ? '&type=upgrade' : '';
+            
+            // 🛡️ Security: Set transient success flag
+            if (typeof window !== 'undefined') {
+              sessionStorage.setItem('payment_success_fresh', 'true');
+            }
+
+            // 🎯 Redirection Priority: Navigate first, then cleanup state
             router.push(
               `/thank-you?plan=${displayPlan}&email=${encodeURIComponent(values.email)}&name=${encodeURIComponent(values.name)}${upgradeParam}`
             );
+
+            // Sab clean up karke modal close karo
+            onOpenChange(false);
+            setIsLoading(false);
+            setLoadingPhase(null);
           } catch (error) {
             console.error(error);
             toast.error('Payment verification failed. Please contact support.');

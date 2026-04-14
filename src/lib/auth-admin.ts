@@ -1,27 +1,35 @@
-import { verifyAuth } from './auth';
-import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { verifyToken } from '@/lib/jwt';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
-export async function requireAdmin() {
-  const user = await verifyAuth();
+/**
+ * 🛡️ Validate Admin Session
+ * 
+ * Centralized security check for all /api/admin routes.
+ * Returns the admin user object if valid, throws error otherwise.
+ */
+export async function validateAdmin() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('mppolice_token')?.value;
 
-  if (!user) {
-    redirect('/login');
+  if (!token) {
+    throw new Error('Unauthorized');
   }
 
-  try {
-    // Fetch fresh user data to check role
-    const dbUser = await db.select().from(mppscUsers).where(eq(mppscUsers.id, user.id)).get();
-
-    if (!dbUser || dbUser.role !== 'admin') {
-      redirect('/');
-    }
-
-    return dbUser;
-  } catch (error) {
-    console.error('Admin Check Error:', error);
-    redirect('/');
+  const decoded: any = verifyToken(token);
+  if (!decoded?.userId) {
+    throw new Error('Invalid session');
   }
+
+  const adminUser = await db.query.mppscUsers.findFirst({
+    where: (u, { eq }) => eq(mppscUsers.id, decoded.userId),
+  });
+
+  if (!adminUser || adminUser.role !== 'admin') {
+    throw new Error('Admin access required');
+  }
+
+  return adminUser;
 }

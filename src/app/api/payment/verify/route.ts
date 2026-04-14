@@ -12,7 +12,7 @@ import { addHours } from 'date-fns';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { appPath } from '@/lib/app-url';
 import { PRICING_DEFAULTS } from '@/config/pricing';
-import { notifyAdminOnPayment, notifyAdminOnEmailFailure } from '@/lib/admin-notify';
+import { notifyAdminOnPayment, notifyAdminOnEmailFailure, notifyAdminOnVerificationFailure } from '@/lib/admin-notify';
 
 /**
  * Payment Verification API - The Trust Center 🏦
@@ -74,6 +74,12 @@ export async function POST(req: Request) {
     );
 
     if (!isValidSignature) {
+      notifyAdminOnVerificationFailure({
+        userId,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        error: 'Invalid Razorpay signature (API route)',
+      }).catch(() => {});
       return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 });
     }
 
@@ -93,6 +99,12 @@ export async function POST(req: Request) {
       where: eq(mppscUsers.id, userId),
     });
     if (!user || user.email === null) {
+      notifyAdminOnVerificationFailure({
+        userId,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        error: `User not found or email is null (User ID: ${userId})`,
+      }).catch(() => {});
       return NextResponse.json({ error: 'User not found' }, { status: 400 });
     }
 
@@ -126,9 +138,9 @@ export async function POST(req: Request) {
     const pricingRows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, 'mppolice'))
       .limit(1);
-    const p = pricingRows[0] || PRICING_DEFAULTS;
+    const p = (pricingRows[0] as any) || PRICING_DEFAULTS;
     const proAmountPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
     const planTier = paidAmount >= proAmountPaise ? 'pro' : 'lite';
 
@@ -179,9 +191,9 @@ export async function POST(req: Request) {
     // Resend API se beautiful email bhejo jisme Magic Link ho.
     const resend = new Resend(process.env.RESEND_API_KEY);
 
-    const fromName = process.env.EMAIL_FROM_NAME || 'MP Police 2026';
+    const fromName = process.env.EMAIL_FROM_NAME || 'MP POLICE ZEN';
     const fromAddress =
-      process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
+      process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'mppolice@zenscroll.app';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
     const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
@@ -191,7 +203,7 @@ export async function POST(req: Request) {
     const { error: emailError } = await resend.emails.send({
       from: fromEmail,
       to: [user.email],
-      subject: '🎉 Welcome to Mindful MP Police — Set Your Password',
+      subject: '🎉 Welcome to MP POLICE ZEN — Set Your Password',
       react: EmailTemplate({ name: user.name || 'Student', actionUrl, planName: planLabel }),
     });
 
@@ -259,6 +271,12 @@ export async function POST(req: Request) {
       userId: requestUserId,
       metadata: { razorpay_order_id: requestOrderId, razorpay_payment_id: requestPaymentId },
     });
+    notifyAdminOnVerificationFailure({
+      userId: requestUserId || 'unknown',
+      orderId: requestOrderId || 'unknown',
+      paymentId: requestPaymentId,
+      error: error instanceof Error ? error.message : 'Unexpected verification error in verify API route',
+    }).catch(() => {});
     return NextResponse.json({ error: 'Payment verification failed' }, { status: 500 });
   }
 }

@@ -116,9 +116,9 @@ export async function POST(req: Request) {
     const pricingRows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, 'mppolice'))
       .limit(1);
-    const p = pricingRows[0] || PRICING_DEFAULTS;
+    const p = (pricingRows[0] as any) || PRICING_DEFAULTS;
 
     // We expect user to pay at least upgrade price
     const upgradeAmountPaise = (p.upgradePrice ?? PRICING_DEFAULTS.upgradePrice) * 100;

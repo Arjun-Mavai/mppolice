@@ -25,7 +25,7 @@ export function PricingSection() {
   // 🔒 Server Action + React Query (shared cache with /pricing page!)
   const { data: pricingData } = useQuery({
     queryKey: ['pricing'],
-    queryFn: getPricingData,
+    queryFn: () => getPricingData('mppolice'),
     staleTime: 5 * 60 * 1000,
   });
 

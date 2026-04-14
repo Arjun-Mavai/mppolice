@@ -21,7 +21,7 @@ export async function sendTelegramNotification(message: string) {
   }
 
   // Add Branding Header
-  const brandedMessage = `<b>🚨 MPPOLICE ALERT 🚨</b>\n\n${message}`;
+  const brandedMessage = `<b>👮 MP POLICE ZEN ALERT</b>\n\n${message}`;
 
   // ⏱️ AbortController to prevent hanging (5s timeout)
   const controller = new AbortController();

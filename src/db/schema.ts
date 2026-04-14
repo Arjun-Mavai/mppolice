@@ -373,7 +373,7 @@ export const userAttempts = sqliteTable(
     ),
     // Time-based analytics index
     index('idx_attempts_by_date').on(table.userId, table.endTime),
-    // NEW: Requested by code review
+    // NEW: Pro-Level Index for Leaderboards and Score Analytics
     index('idx_user_attempts_completion_score').on(table.userId, table.isCompleted, table.score),
   ]
 );

@@ -17,7 +17,7 @@ import { sql } from 'drizzle-orm';
  * Falls back to RESEND_FROM_EMAIL if not set.
  */
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.RESEND_FROM_EMAIL || 'admin@zenscroll.app';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.RESEND_FROM_EMAIL || 'mppolice@zenscroll.app';
 
 interface PaymentNotification {
   type: 'new_payment' | 'upgrade' | 'failed';
@@ -53,8 +53,8 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
 
     const resend = new Resend(apiKey);
 
-    const fromName = process.env.EMAIL_FROM_NAME || 'MP Police 2026';
-    const fromAddress = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const fromName = process.env.EMAIL_FROM_NAME || 'MP POLICE ZEN';
+    const fromAddress = process.env.RESEND_FROM_EMAIL || 'mppolice@zenscroll.app';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
     const { type, userName, userEmail, planTier, amountInRupees, orderId, paymentId, isUpgrade } = data;
@@ -139,8 +139,8 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
 
     const resend = new Resend(apiKey);
 
-    const fromName = process.env.EMAIL_FROM_NAME || 'MP Police 2026';
-    const fromAddress = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const fromName = process.env.EMAIL_FROM_NAME || 'MP POLICE ZEN';
+    const fromAddress = process.env.RESEND_FROM_EMAIL || 'mppolice@zenscroll.app';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
     const { userName, userEmail, errorMessage, paymentId } = data;
@@ -196,6 +196,51 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
       category: 'email',
       metadata: { userEmail: data.userEmail, paymentId: data.paymentId }
     });
+  }
+}
+
+/**
+ * 🚨 Notify Admin on Verification Failure
+ * 
+ * Jab user payment verify kare but kuch galat ho jaye (e.g. order mismatch)
+ */
+export async function notifyAdminOnVerificationFailure(data: {
+  userId: string;
+  orderId: string;
+  paymentId?: string;
+  error: string;
+}) {
+  try {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) return;
+
+    const resend = new Resend(apiKey);
+
+    const fromName = process.env.EMAIL_FROM_NAME || 'MP POLICE ZEN';
+    const fromAddress = process.env.RESEND_FROM_EMAIL || 'mppolice@zenscroll.app';
+    const fromEmail = `${fromName} <${fromAddress}>`;
+
+    const { userId, orderId, paymentId, error } = data;
+
+    const html = `
+      <div style="font-family: sans-serif; padding: 20px;">
+        <h2 style="color: #dc2626;">🚨 Payment Verification Failed</h2>
+        <p><strong>User ID:</strong> ${userId}</p>
+        <p><strong>Order ID:</strong> ${orderId}</p>
+        ${paymentId ? `<p><strong>Payment ID:</strong> ${paymentId}</p>` : ''}
+        <p><strong>Error:</strong> ${error}</p>
+        <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+      </div>
+    `;
+
+    await resend.emails.send({
+      from: fromEmail,
+      to: [ADMIN_EMAIL],
+      subject: `🚨 VERIFICATION FAILED: ${orderId}`,
+      html,
+    });
+  } catch (err) {
+    logger.error('Failed to send verification failure admin notification', err);
   }
 }
 

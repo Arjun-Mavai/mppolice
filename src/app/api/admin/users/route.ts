@@ -5,6 +5,8 @@ import { cookies } from 'next/headers';
 import { sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 
+import { validateAdmin } from '@/lib/auth-admin';
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 👥 ADMIN USERS LIST API — Saare users with stats
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -20,27 +22,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     // ── Admin Auth ──────────────────────────────────────────────
-    const cookieStore = await cookies();
-    const token = cookieStore.get('mppolice_token')?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token);
-
-    if (!decoded?.userId) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
-    }
-
-    const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(mppscUsers.id, decoded.userId),
-    });
-
-    if (!adminUser || adminUser.role !== 'admin') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-    }
+    await validateAdmin();
 
     // ── Fetch All Users (password excluded for security) ────────
     const allUsers = await db
@@ -117,23 +99,7 @@ export async function DELETE(req: Request) {
     const { userId } = await req.json();
 
     // ── Admin Auth ──────────────────────────────────────────────
-    const cookieStore = await cookies();
-    const token = cookieStore.get('mppolice_token')?.value;
-
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token);
-
-    if (!decoded?.userId) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
-
-    const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(mppscUsers.id, decoded.userId),
-    });
-
-    if (!adminUser || adminUser.role !== 'admin') {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
-    }
+    const adminUser = await validateAdmin();
 
     if (!userId) return NextResponse.json({ error: 'User ID required' }, { status: 400 });
 

@@ -61,12 +61,12 @@ const FAQS: QA[] = [
   },
   {
     question: {
-      en: "What's included in the test series?",
-      hi: 'टेस्ट सीरीज़ में क्या-क्या शामिल है?',
+      en: "What's included in the Pro access?",
+      hi: 'प्रो एक्सेस में क्या-क्या शामिल है?',
     },
     answer: {
-      en: 'Topic-wise tests, Unit tests, Full Length Tests (100Q), CSAT papers, PYQ papers (2020-2025), smart explanations, and Analytics dashboard.',
-      hi: 'टॉपिक वाइज़ टेस्ट, यूनिट टेस्ट, फुल लेंथ टेस्ट (100 प्रश्न), CSAT पेपर, PYQ पेपर (2020-2025), स्मार्ट एक्सप्लेनेशन और एनालिटिक्स डैशबोर्ड।',
+      en: '1000+ GK Revision One-Liners, Subject-wise Special Tests, Full Length Mock Tests (100Q), Previous Year Papers, Smart explanations, and Analytics dashboard.',
+      hi: '1000+ GK रिवीज़न वन-लाइनर्स, विषय-वार स्पेशल टेस्ट, फुल लेंथ मॉक टेस्ट (100 प्रश्न), पुराने पेपर, स्मार्ट एक्सप्लेनेशन और एनालिटिक्स डैशबोर्ड।',
     },
   },
 ];
@@ -132,8 +132,8 @@ export function SupportChat() {
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Show ONLY on the Home page to reduce clutter, especially on mobile
-  if (pathname !== '/') return null;
+  // Show ONLY on the Home page and Thank You page to reduce clutter, especially on mobile
+  if (pathname !== '/' && pathname !== '/thank-you') return null;
 
   const handleWhatsApp = () => {
     const message = 'Hi, I need help with the MP Police App. My query is:';

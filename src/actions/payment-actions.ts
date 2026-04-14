@@ -82,41 +82,21 @@ export async function startPayment(input: StartPaymentInput) {
     let userId: string;
     if (existingUser) {
       // Existing user: update name/phone/metadata only
-      //
-      // 🛡️ SAFE METADATA PARSING
-      // ─────────────────────────────────────────────────────────────
-      // DB mein `metadata` column TEXT hai. Par value teen tarah ka ho sakta hai:
-      //
-      //   1. STRING: '{"source":"google"}'  → JSON.parse se object banao
-      //   2. OBJECT: {source:"google"}      → directly use karo (kisi route ne
-      //      bina stringify kiye store kiya hoga)
-      //   3. null/undefined                 → empty object {}
-      //
-      // Purana code: JSON.parse(metadata as string)
-      //   → Case 2 pe CRASH! JSON.parse ko string chahiye, object nahi.
-      //   → Payment start flow break ho jaata tha! 💥
-      //
-      // Fix: typeof check pehle karo, try-catch bhi rakho safety ke liye
-      let existingMeta: Record<string, unknown> = {};
-      const raw = existingUser.metadata;
-      if (raw) {
-        if (typeof raw === 'string') {
-          try {
-            existingMeta = JSON.parse(raw);
-          } catch {
-            existingMeta = {};
-          }
-        } else if (typeof raw === 'object' && raw !== null && !Array.isArray(raw)) {
-          existingMeta = raw as Record<string, unknown>;
-        }
-      }
+      // 🛡️ Pro-Fix: Use object-based metadata (Drizzle mode: 'json' handles serialization)
+      const existingMeta =
+        typeof existingUser.metadata === 'object' && existingUser.metadata !== null
+          ? (existingUser.metadata as Record<string, any>)
+          : {};
 
       await db
         .update(mppscUsers)
         .set({
           name: name.trim(),
           phone: phone.trim(),
-          metadata: JSON.stringify({ ...existingMeta, source }),
+          metadata: {
+            ...existingMeta,
+            source,
+          },
         })
         .where(eq(mppscUsers.id, existingUser.id));
       userId = existingUser.id;
@@ -132,7 +112,7 @@ export async function startPayment(input: StartPaymentInput) {
         password: tempPassword,
         isActive: false,
         role: 'guest',
-        metadata: JSON.stringify({ source }),
+        metadata: { source },
         planTier: 'free',
         examType: examType,
       });
