@@ -8,21 +8,16 @@ import { PRICING_DEFAULTS, type PricingData } from '@/config/pricing';
 /**
  * 💰 Get Pricing Data (Server Action)
  *
- * Fetches current pricing configuration from database.
+ * Fetches current pricing configuration from database for a specific exam.
+ * Defaults to 'mppolice' for this repo.
  * Falls back to defaults if not found.
- * DB columns can be null, so we coerce to PricingData with defaults.
- *
- * Benefits over API route:
- * - No API endpoint visible
- * - Type-safe
- * - Automatic caching
  */
-export async function getPricingData(): Promise<{ pricing: PricingData }> {
+export async function getPricingData(examType: 'upsc' | 'mppsc' | 'mppolice' = 'mppolice'): Promise<{ pricing: PricingData }> {
   try {
     const pricingRows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, examType))
       .limit(1);
 
     if (pricingRows.length > 0) {
@@ -46,6 +41,7 @@ export async function getPricingData(): Promise<{ pricing: PricingData }> {
       return { pricing };
     }
 
+    // If row not found, return defaults (maybe it hasn't been seeded)
     return { pricing: PRICING_DEFAULTS };
   } catch (error) {
     // Fallback to defaults on error

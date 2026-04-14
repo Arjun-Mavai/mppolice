@@ -31,11 +31,11 @@ const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://mppolice.zenscroll.
 
 export const metadata: Metadata = {
   title: {
-    default: 'Mindful MP Police - Crack MP Police 2026 | Bilingual Tests & Mnemonics',
-    template: '%s | Mindful MP Police',
+    default: 'MP Police Elite - Crack MP Police 2026 | Bilingual Tests & PYQs',
+    template: '%s | MP Police Elite',
   },
   description:
-    'MP Police Constable Paper I (100 MCQs, 120 minutes, no negative marking): GK & reasoning, mental ability, science & simple arithmetic — bilingual practice, PYQs, dashboard, and structured explanations.',
+    'MP Police Constable Paper I: GK & reasoning, mental ability, science & simple arithmetic — bilingual practice, PYQs, dashboard, and structured explanations with Indian Tiranga inspired design.',
   keywords: [
     'MP Police Constable Paper I',
     'MP Police 2026 syllabus',
@@ -47,24 +47,24 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_IN',
     url: baseUrl,
-    title: 'MP Police 2026 Elite Test Series | नवीनतम पैटर्न पर आधारित सर्वश्रेष्ठ अभ्यास',
+    title: 'MP Police 2026 Elite Test Series | सर्वोत्तम अभ्यास 👮‍♂️',
     description:
       'MP Police Constable Paper I prep: official 40+30+30 sections, bilingual MCQs, PYQ hub, dashboard & test history.',
-    siteName: 'Mindful MP Police',
+    siteName: 'MP Police Elite',
     images: [
       {
-        url: '/og-hero.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Mindful MP Police - Crack MP Police 2026',
+        url: '/mp-police-logo.png',
+        width: 1024,
+        height: 1024,
+        alt: 'MP Police Elite - Crack MP Police 2026',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Mindful MP Police | Best App for MP Police 2026',
+    title: 'MP Police Elite | Best App for MP Police 2026',
     description: 'Bilingual MP Police Constable Paper I practice: PYQs, analytics, and smart explanations.',
-    images: ['/og-hero.webp'],
+    images: ['/mp-police-logo.png'],
   },
   manifest: '/manifest.json',
   icons: {
@@ -109,7 +109,7 @@ export default async function RootLayout({
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Mindful MP Police',
+    name: 'MP Police Elite',
     url: baseUrl,
     description: 'MP Police Constable Paper I — bilingual tests, PYQs, dashboard, and structured explanations.',
   };

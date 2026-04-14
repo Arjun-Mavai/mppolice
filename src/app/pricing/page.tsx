@@ -123,7 +123,7 @@ export default function PricingPage() {
   // 🔒 Fetch pricing with React Query + Server Action
   const { data: pricingData, isLoading } = useQuery({
     queryKey: ['pricing'],
-    queryFn: async () => await getPricingData(),
+    queryFn: async () => await getPricingData('mppolice'),
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 

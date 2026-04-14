@@ -28,7 +28,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
   // 🔒 Dynamic pricing — Server Action + React Query (no API visible!)
   const { data: pricingData, isLoading } = useQuery({
     queryKey: ['pricing'],
-    queryFn: getPricingData,
+    queryFn: () => getPricingData('mppolice'),
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 

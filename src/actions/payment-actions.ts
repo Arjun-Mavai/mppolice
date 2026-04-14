@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { mppscUsers, pricingConfig, payments } from '@/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and } from 'drizzle-orm';
 import { PRICING_DEFAULTS } from '@/config/pricing';
 import { verifyAuth } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,6 +11,7 @@ import Razorpay from 'razorpay';
 import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import { z } from 'zod';
+import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 💳 START PAYMENT (Register + Create Order)
@@ -22,6 +23,7 @@ const startPaymentSchema = z.object({
   phone: z.string().min(10, 'Phone must be at least 10 digits').max(20),
   source: z.string().optional(),
   planType: z.enum(['lite', 'pro', 'upgrade']),
+  examType: z.enum(['upsc', 'mppsc', 'mppolice']).default('mppolice'),
 });
 
 type StartPaymentInput = z.infer<typeof startPaymentSchema>;
@@ -48,12 +50,15 @@ export async function startPayment(input: StartPaymentInput) {
       };
     }
 
-    const { name, email, phone, source, planType } = validatedInput.data;
+    const { name, email, phone, source, planType, examType } = validatedInput.data;
     const normalizedEmail = email.toLowerCase().trim();
 
     // ── PHASE 1: Find existing user by email (case-insensitive)
     const existingUser = await db.query.mppscUsers.findFirst({
-      where: sql`LOWER(${mppscUsers.email}) = ${normalizedEmail}`,
+      where: and(
+        sql`LOWER(${mppscUsers.email}) = ${normalizedEmail}`,
+        eq(mppscUsers.examType, examType)
+      ),
     });
 
     const currentSession = await verifyAuth();
@@ -129,7 +134,7 @@ export async function startPayment(input: StartPaymentInput) {
         role: 'guest',
         metadata: JSON.stringify({ source }),
         planTier: 'free',
-        examType: 'mppolice',
+        examType: examType,
       });
     }
 
@@ -141,7 +146,7 @@ export async function startPayment(input: StartPaymentInput) {
     const rows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, examType))
       .limit(1);
     const p = rows[0] || PRICING_DEFAULTS;
 
@@ -164,7 +169,7 @@ export async function startPayment(input: StartPaymentInput) {
     const order = await instance.orders.create({
       amount,
       currency: 'INR',
-      notes: { planType, userId },
+      notes: { planType, userId, examType },
     });
 
     return {
@@ -309,10 +314,14 @@ export async function verifyPayment(input: VerifyPaymentInput) {
     // After fix: Keep paise throughout. Compare against pricing × 100.
     // ─────────────────────────────────────────────────────────────────────
     const amountInPaise = Number(order.amount); // Already paise from Razorpay
+    
+    // Recover examType from order notes (fallback to user's examType or mppsc)
+    const examType = (order.notes?.examType as 'upsc' | 'mppsc' | 'mppolice') || 'mppsc';
+
     const rows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, examType))
       .limit(1);
     const p = rows[0] || PRICING_DEFAULTS;
 
@@ -337,8 +346,6 @@ export async function verifyPayment(input: VerifyPaymentInput) {
       return { error: 'Payment amount does not match any valid plan' };
     }
 
-import { sendTelegramNotification } from '@/lib/telegram';
-
     // 💾 Step 5: Atomic Transaction (Payment + User Update)
     // DB columns: orderId, paymentId, signature, planTier, status (enum: created/captured/failed)
     // amount stored in PAISE (integer column, Razorpay standard)
@@ -352,6 +359,7 @@ import { sendTelegramNotification } from '@/lib/telegram';
         amount: amountInPaise, // ✅ Store paise (integer), NOT rupees
         planTier,
         status: 'captured', // Razorpay marks successful payments as 'captured'
+        examType,
       });
 
       await tx
@@ -373,8 +381,8 @@ import { sendTelegramNotification } from '@/lib/telegram';
       });
 
       const message = `💰 <b>Payment Successful!</b>\n\n` +
-        `👤 User: ${userResult?.name || 'Unknown'}\n` +
-        `📧 Email: ${userResult?.email || 'N/A'}\n` +
+        `👤 User: ${escapeHTML(userResult?.name || 'Unknown')}\n` +
+        `📧 Email: ${escapeHTML(userResult?.email || 'N/A')}\n` +
         `📞 Phone: ${userResult?.phone || 'N/A'}\n` +
         `🎟️ Plan: ${planTier.toUpperCase()}\n` +
         `💵 Amount: ₹${amountInRupees}\n` +

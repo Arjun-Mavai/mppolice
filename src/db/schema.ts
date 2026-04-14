@@ -728,7 +728,7 @@ export const verificationTokens = sqliteTable(
 // No deploy needed to change prices!
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 export const pricingConfig = sqliteTable('pricing_config', {
-  id: text('id').primaryKey().default('default'), // Single row — always 'default'
+  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice'] }).primaryKey(),
   // Lite plan pricing
   litePrice: integer('lite_price').default(99), // Current price ₹99
   liteOriginalPrice: integer('lite_original_price').default(299), // Strikethrough ₹299

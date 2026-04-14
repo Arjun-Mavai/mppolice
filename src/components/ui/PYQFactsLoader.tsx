@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Brain, BookOpen, Trophy, Zap, Lightbulb, Globe } from 'lucide-react';
+import Image from 'next/image';
 
 // ─── Shared facts pool ────────────────────────────────────────────────────────
 const FACTS = [
@@ -11,9 +12,9 @@ const FACTS = [
     title: 'BAFTA 2026 – भारत का गर्व',
     hi: 'मणिपुर की फिल्म "Boong" ने BAFTA 2026 में Best Children\'s & Family Film award जीता। यह इस category में जीतने वाली पहली Indian film है।',
     en: 'Manipur\'s "Boong" won BAFTA 2026 Best Children\'s & Family Film — first Indian film in this category. Director: Lakshmipriya Devi.',
-    color: 'from-amber-500/20 to-yellow-500/20',
-    border: 'border-amber-500/30',
-    badge: 'bg-amber-500/10 text-amber-400',
+    color: 'from-orange-500/20 to-amber-500/20',
+    border: 'border-orange-500/30',
+    badge: 'bg-orange-500/10 text-orange-400',
   },
   {
     emoji: '🌊',
@@ -41,9 +42,9 @@ const FACTS = [
     title: 'Tiger State of India',
     hi: 'मध्यप्रदेश को "Tiger State of India" कहा जाता है — देश में सबसे अधिक बाघ यहाँ हैं। कान्हा और बांधवगढ़ प्रसिद्ध Tiger Reserves हैं।',
     en: 'MP has the highest tiger population in India and is called "Tiger State". Kanha & Bandhavgarh are famous Project Tiger reserves.',
-    color: 'from-orange-500/20 to-amber-500/20',
-    border: 'border-orange-500/30',
-    badge: 'bg-orange-500/10 text-orange-400',
+    color: 'from-emerald-500/20 to-green-500/20',
+    border: 'border-emerald-500/30',
+    badge: 'bg-emerald-500/10 text-emerald-400',
   },
   {
     emoji: '⚖️',
@@ -61,9 +62,9 @@ const FACTS = [
     title: 'G20 Summit 2023 – India',
     hi: 'भारत ने 2023 में G20 की अध्यक्षता की। New Delhi Summit का theme था "वसुधैव कुटुम्बकम"। African Union को स्थायी सदस्य बनाया गया।',
     en: 'India held G20 Presidency in 2023. "Vasudhaiva Kutumbakam" was the theme. African Union admitted as permanent G20 member.',
-    color: 'from-emerald-500/20 to-teal-500/20',
-    border: 'border-emerald-500/30',
-    badge: 'bg-emerald-500/10 text-emerald-400',
+    color: 'from-orange-500/20 to-emerald-500/20', // Tiranga feel
+    border: 'border-orange-500/30',
+    badge: 'bg-orange-500/10 text-orange-400',
   },
   {
     emoji: '🏛️',
@@ -88,19 +89,45 @@ const FACTS = [
 ];
 
 const STEPS = [Brain, BookOpen, Trophy, Zap];
-const STEP_LABELS = ['Fetching data...', 'Processing...', 'Building insights...', 'Almost ready!'];
+const STEP_LABELS = ['Authenticating...', 'Syncing Portal...', 'Readying Insights...', 'Jai Hind!'];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface PYQFactsLoaderProps {
-  /**
-   * "page"    – full-screen, used as a Next.js loading.tsx fallback (default)
-   * "overlay" – fixed overlay on top of existing content (quiz submission etc.)
-   */
   variant?: 'page' | 'overlay';
-  /** Short status text below the spinner */
   label?: string;
-  /** Color scheme */
   theme?: 'dark' | 'light';
+}
+
+// ─── Splash Component ───────────────────────────────────────────────────────
+function SplashContent({ isDark }: { isDark: boolean }) {
+  return (
+    <div className="relative flex flex-col items-center gap-8 animate-in fade-in zoom-in duration-1000">
+      <div className="relative h-48 w-48 overflow-hidden rounded-full border-4 border-orange-500/50 p-2 shadow-2xl shadow-orange-500/20">
+        <div className="absolute inset-0 bg-gradient-to-tr from-orange-500/20 via-white/10 to-green-500/20 animate-pulse" />
+        <Image
+          src="/mp-police-logo.png"
+          alt="MP Police Logo"
+          width={200}
+          height={200}
+          className="relative z-10 animate-pulse"
+        />
+      </div>
+      
+      <div className="text-center">
+        <h2 className={`text-2xl font-black tracking-widest uppercase ${isDark ? 'text-white' : 'text-slate-900'}`}>
+          MP Police <span className="text-orange-500">Elite</span>
+        </h2>
+        <div className="mt-2 flex items-center justify-center gap-2">
+          <div className="h-1 w-12 bg-orange-500 rounded-full" />
+          <div className="h-1 w-12 bg-white rounded-full" />
+          <div className="h-1 w-12 bg-green-500 rounded-full" />
+        </div>
+        <p className={`mt-4 text-sm font-bold tracking-widest uppercase ${isDark ? 'text-orange-400/80' : 'text-orange-600/80'}`}>
+          सत्यमेव जयते
+        </p>
+      </div>
+    </div>
+  );
 }
 
 // ─── Inner fact card (shared between variants) ────────────────────────────────
@@ -164,7 +191,7 @@ function FactCard({
                 key={i}
                 className={`h-1 rounded-full transition-all duration-300 ${
                   i === factIdx
-                    ? `w-4 ${isDark ? 'bg-indigo-400' : 'bg-indigo-500'}`
+                    ? `w-4 ${isDark ? 'bg-orange-500' : 'bg-orange-600'}`
                     : `w-1 ${isDark ? 'bg-white/15' : 'bg-slate-200'}`
                 }`}
               />
@@ -176,7 +203,7 @@ function FactCard({
             }`}
           >
             <Globe className="h-3 w-3" />
-            MP Police Fact
+            MP Police Elite
           </div>
         </div>
       </div>
@@ -200,17 +227,17 @@ function SpinnerBlock({
         <div
           className={`h-16 w-16 animate-spin rounded-full border-4 shadow-lg ${
             isDark
-              ? 'border-indigo-500/20 border-t-indigo-500 shadow-indigo-500/20'
-              : 'border-slate-200 border-t-indigo-500'
+              ? 'border-orange-500/20 border-t-orange-500 shadow-orange-500/20'
+              : 'border-slate-200 border-t-orange-600'
           }`}
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          <Brain className={`h-7 w-7 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
+          <Image src="/mp-police-logo.png" alt="Logo" width={30} height={30} className="animate-pulse" />
         </div>
       </div>
 
       <div className="text-center">
-        <p className={`text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+        <p className={`text-sm font-semibold tracking-wide ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
           {STEP_LABELS[step]}
         </p>
         <p className={`mt-0.5 text-xs ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>{label}</p>
@@ -222,7 +249,7 @@ function SpinnerBlock({
             <div
               className={`flex h-7 w-7 items-center justify-center rounded-full transition-all duration-500 ${
                 i <= step
-                  ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/30'
+                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/30'
                   : isDark
                     ? 'bg-white/10 text-slate-600'
                     : 'bg-slate-100 text-slate-400'
@@ -233,7 +260,7 @@ function SpinnerBlock({
             {i < STEPS.length - 1 && (
               <div
                 className={`h-px w-6 transition-all duration-700 ${
-                  i < step ? 'bg-indigo-500' : isDark ? 'bg-white/10' : 'bg-slate-200'
+                  i < step ? 'bg-orange-500' : isDark ? 'bg-white/10' : 'bg-slate-200'
                 }`}
               />
             )}
@@ -247,17 +274,25 @@ function SpinnerBlock({
 // ─── Main export ──────────────────────────────────────────────────────────────
 export function PYQFactsLoader({
   variant = 'page',
-  label = 'Loading...',
+  label = 'Initialising Elite Portal...',
   theme = 'dark',
 }: PYQFactsLoaderProps) {
   const [factIdx, setFactIdx] = useState(() => Math.floor(Math.random() * FACTS.length));
   const [visible, setVisible] = useState(true);
   const [step, setStep] = useState(0);
+  const [isSplash, setIsSplash] = useState(true);
 
   const isDark = theme === 'dark';
 
   useEffect(() => {
-    const id = setInterval(() => {
+    // 1. Splash first
+    const splashTimer = setTimeout(() => {
+      setIsSplash(false);
+    }, 2500);
+
+    // 2. Fact rotation loop
+    const rotationId = setInterval(() => {
+      if (isSplash) return;
       setVisible(false);
       setTimeout(() => {
         setFactIdx((currentIdx) => {
@@ -270,19 +305,29 @@ export function PYQFactsLoader({
         setVisible(true);
         setStep((s) => Math.min(s + 1, STEPS.length - 1));
       }, 350);
-    }, 3000);
-    return () => clearInterval(id);
-  }, []);
+    }, 3500);
+
+    return () => {
+      clearTimeout(splashTimer);
+      clearInterval(rotationId);
+    };
+  }, [isSplash]);
 
   const fact = FACTS[factIdx];
 
   // ── overlay variant ────────────────────────────────────────────────────────
   if (variant === 'overlay') {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-md">
-        <div className="flex w-full max-w-md flex-col items-center gap-6">
-          <SpinnerBlock step={step} label={label} isDark={true} />
-          <FactCard fact={fact} visible={visible} isDark={true} factIdx={factIdx} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 p-4 backdrop-blur-xl">
+        <div className="flex w-full max-w-md flex-col items-center gap-10">
+          {isSplash ? (
+             <SplashContent isDark={true} />
+          ) : (
+            <>
+              <SpinnerBlock step={step} label={label} isDark={true} />
+              <FactCard fact={fact} visible={visible} isDark={true} factIdx={factIdx} />
+            </>
+          )}
         </div>
       </div>
     );
@@ -291,15 +336,21 @@ export function PYQFactsLoader({
   // ── page variant (default) ─────────────────────────────────────────────────
   return (
     <div
-      className={`flex min-h-screen flex-col items-center justify-center gap-10 px-4 py-16 ${
-        isDark ? 'bg-slate-950 text-white' : 'bg-white text-slate-900'
+      className={`flex min-h-screen flex-col items-center justify-center gap-12 px-4 py-16 ${
+        isDark ? 'bg-slate-950 text-white' : 'bg-gray-50 text-slate-900'
       }`}
     >
-      <SpinnerBlock step={step} label={label} isDark={isDark} />
-      <FactCard fact={fact} visible={visible} isDark={isDark} factIdx={factIdx} />
+      {isSplash ? (
+         <SplashContent isDark={isDark} />
+      ) : (
+        <>
+          <SpinnerBlock step={step} label={label} isDark={isDark} />
+          <FactCard fact={fact} visible={visible} isDark={isDark} factIdx={factIdx} />
+        </>
+      )}
     </div>
   );
 }
 
-// Default export alias so existing `GlobalLoader` import in /app/loading.tsx keeps working
 export default PYQFactsLoader;
+
