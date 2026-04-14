@@ -60,17 +60,19 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
   const hi = language === 'hi';
 
   const subjectParam = searchParams.get('subject') || initialSubject;
-  const isKnown =
-    subjectParam === 'All' ||
-    MPPOLICE_ONELINER_SUBJECTS.includes(subjectParam as (typeof MPPOLICE_ONELINER_SUBJECTS)[number]);
-  const activeSubject = !isKnown ? 'General Knowledge' : subjectParam === 'All' ? 'All' : subjectParam;
+  // 🗺️ SUBJECT LOGIC: Default to 'All' if unknown or empty
+  const activeSubject = (subjectParam === 'All' || MPPOLICE_ONELINER_SUBJECTS.includes(subjectParam as any)) 
+    ? subjectParam 
+    : 'All';
 
   // States
   const [facts, setFacts] = useState<MppoliceOneLinerRow[]>(() => initialFacts.slice(0, PAGE_SIZE));
   const [batchIndex, setBatchIndex] = useState(0);
   const [viewMode, setViewMode] = useState<'list' | 'flip'>('flip');
   const [revisionMap, setRevisionMap] = useState<Record<string, number>>({});
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  
+  // 🪗 ACCORDION: Only one item can be expanded at once
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [loadingBatch, setLoadingBatch] = useState(false);
   const [stats, setStats] = useState({ revisedFactsCount: 0, totalFacts: 0 });
   const [isFocusMode, setIsFocusMode] = useState(false);
@@ -123,7 +125,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
       const offset = newIndex * PAGE_SIZE;
       const nextBatch = await getPublishedMppoliceOneLiners(activeSubject, PAGE_SIZE, offset);
       setFacts(nextBatch);
-      setExpanded(new Set());
+      setExpandedId(null); // Reset expansion on batch change
       await loadRevisionData(nextBatch.map(f => f.id));
       window.scrollTo({ top: 0, behavior: 'instant' });
     } catch (err) {
@@ -155,12 +157,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
   }, [hi, refreshStats]);
 
   const toggleExpand = useCallback((id: string) => {
-    setExpanded((prev) => {
-      const n = new Set(prev);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
-      return n;
-    });
+    setExpandedId((prev) => (prev === id ? null : id));
   }, []);
 
   const title = activeSubject === 'All' 
@@ -238,7 +235,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                  <div className="flex items-center gap-2 w-full sm:w-auto">
-                   <div className="w-full sm:w-[240px]">
+                   <div className="w-full sm:w-[260px]">
                      <Select
                        value={String(batchIndex)}
                        onValueChange={(v) => handleBatchChange(Number(v))}
@@ -249,7 +246,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                             <SelectValue placeholder={hi ? 'बैच चुनें' : 'Select Batch'} />
                          </div>
                        </SelectTrigger>
-                       <SelectContent className="rounded-2xl border-slate-200 shadow-2xl max-h-[300px] overflow-y-auto">
+                       <SelectContent className="rounded-2xl border-slate-200 bg-white shadow-2xl max-h-[300px] overflow-y-auto">
                          {Array.from({ length: totalBatches }).map((_, i) => (
                            <SelectItem 
                              key={i} 
@@ -263,6 +260,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                      </Select>
                    </div>
 
+                   {/* 🏷️ REVERTED: View Toggles with text labels */}
                    <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1">
                       <button
                         onClick={() => setViewMode('list')}
@@ -272,6 +270,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                         )}
                       >
                         <LayoutList size={16} />
+                        <span>{hi ? 'लिस्ट' : 'List'}</span>
                       </button>
                       <button
                         onClick={() => setViewMode('flip')}
@@ -281,29 +280,14 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                         )}
                       >
                         <RotateCw size={16} />
+                        <span>{hi ? 'कार्ड्स' : 'Cards'}</span>
                       </button>
                    </div>
                  </div>
                  
-                 {/* 🏷️ Expansion & Progress Circle */}
+                 {/* 📊 PROGRESS & STATS */}
                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => {
-                        const allIds = facts.map(f => f.id);
-                        const isAllExpanded = allIds.every(id => expanded.has(id));
-                        if (isAllExpanded) setExpanded(new Set());
-                        else setExpanded(new Set(allIds));
-                      }}
-                      className="flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-[11px] font-black uppercase tracking-widest text-slate-600 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
-                    >
-                      {facts.length > 0 && facts.every(f => expanded.has(f.id)) ? (
-                        <><ChevronUp size={14} /> {hi ? 'कम करें' : 'Collapse'}</>
-                      ) : (
-                        <><ChevronDown size={14} /> {hi ? 'विस्तार' : 'Expand All'}</>
-                      )}
-                    </button>
-
-                    <div className="flex items-center gap-3 rounded-full bg-slate-900 px-4 py-2 border border-slate-800 shadow-lg">
+                    <div className="flex items-center gap-3 rounded-full bg-slate-900 px-5 py-2 border border-slate-800 shadow-lg">
                         <div className="relative h-7 w-7 flex items-center justify-center">
                             <svg className="h-full w-full rotate-[-90deg]">
                                 <circle cx="14" cy="14" r="12" stroke="currentColor" strokeWidth="2.5" fill="transparent" className="text-slate-800" />
@@ -311,9 +295,13 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                             </svg>
                             <span className="absolute text-[8px] font-black text-white">{progressPercent}%</span>
                         </div>
-                        <div className="hidden min-[450px]:block">
-                            <p className="text-[10px] font-black text-white leading-tight">{stats.revisedFactsCount}/{stats.totalFacts}</p>
-                            <p className="text-[7px] font-black uppercase tracking-widest text-slate-400">{hi ? 'पूर्ण' : 'Done'}</p>
+                        <div className="flex flex-col items-center">
+                            <p className="text-[12px] font-black text-white leading-tight">
+                              {stats.revisedFactsCount} / {stats.totalFacts}
+                            </p>
+                            <p className="text-[7px] font-black uppercase tracking-widest text-slate-400">
+                              {hi ? 'पूरा हुआ' : 'Facts Revised'}
+                            </p>
                         </div>
                     </div>
                  </div>
@@ -343,7 +331,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                  >
                    {facts.map((f, idx) => {
                      const globalIdx = batchIndex * PAGE_SIZE + idx + 1;
-                     const isExpanded = expanded.has(f.id);
+                     const isExpanded = expandedId === f.id;
                      const revCount = revisionMap[f.id] || 0;
                      const color = colorVariants[idx % 4];
 
@@ -375,7 +363,6 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                                {hi ? f.stemHi : f.stemEn || f.stemHi}
                              </p>
                              
-                             {/* 🚀 ALWAYS SHOW ANSWER IN LIST VIEW */}
                              <motion.p 
                                className={cn("mt-2 text-lg font-black sm:text-xl", color.text)}
                              >
@@ -491,7 +478,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                              extendedData={f.extendedData}
                              showFooter={false}
                              language={language as 'hi' | 'en'}
-                             frontClassName={cn("border-2", color.border)}
+                             frontClassName={cn("border-2", color.bg, color.border)}
                              className={cn("h-[480px] shadow-2xl rounded-[3rem] border-2", color.border)}
                              frontActions={(
                                <div className="flex flex-col items-center gap-3 w-full">
