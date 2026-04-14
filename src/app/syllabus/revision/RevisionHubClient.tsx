@@ -16,7 +16,11 @@ import {
   Eye,
   Loader2,
   Clock,
-  Filter
+  Filter,
+  Trophy,
+  Medal,
+  Award,
+  Crown
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -63,6 +67,14 @@ const colorVariants = [
 
 type TabType = 'all' | 'revised' | 'pending';
 
+// 🎖️ Badge Definitions
+const BADGES = [
+  { name: 'Beginner', icon: <Medal size={20} />, minPercent: 0.1, color: 'text-slate-400', bg: 'bg-slate-50', border: 'border-slate-200' },
+  { name: 'Consistent', icon: <Award size={20} />, minPercent: 25, color: 'text-indigo-500', bg: 'bg-indigo-50', border: 'border-indigo-200' },
+  { name: 'Master', icon: <Trophy size={20} />, minPercent: 50, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
+  { name: 'Champion', icon: <Crown size={20} />, minPercent: 100, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+];
+
 export function RevisionHubClient({ allFacts, initialRevisionMap, stats }: RevisionHubClientProps) {
   const router = useRouter();
   const { language } = useSettingsStore();
@@ -71,31 +83,36 @@ export function RevisionHubClient({ allFacts, initialRevisionMap, stats }: Revis
   const [batchIndex, setBatchIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('all');
-  
-  // 🪗 ACCORDION: Only one open at a time
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [revisionMap, setRevisionMap] = useState<Record<string, number>>(initialRevisionMap);
   const [loadingBatch, setLoadingBatch] = useState(false);
 
-  // 📈 PROGRESS STATS: High precision fix
+  // 📈 PROGRESS STATS
   const progressPercentRaw = (stats.revisedFactsCount / (stats.totalFacts || 1)) * 100;
   const progressPercent = Math.min(100, Math.round(progressPercentRaw));
   const progressPercentDisplay = progressPercentRaw > 0 && progressPercentRaw < 1 
     ? progressPercentRaw.toFixed(1) 
     : progressPercent.toString();
 
-  // 🗂️ BATCHING & SEARCH & TABS
+  // 🗂️ TABS CALCULATION
+  const counts = useMemo(() => {
+    const revised = allFacts.filter(f => (revisionMap[f.id] || 0) > 0).length;
+    return {
+      all: allFacts.length,
+      revised: revised,
+      pending: allFacts.length - revised
+    };
+  }, [allFacts, revisionMap]);
+
+  // 🗂️ FILTERED LIST
   const filteredAll = useMemo(() => {
     let result = allFacts;
-
-    // 1. Tab Filter
     if (activeTab === 'revised') {
       result = result.filter(f => (revisionMap[f.id] || 0) > 0);
     } else if (activeTab === 'pending') {
       result = result.filter(f => (revisionMap[f.id] || 0) === 0);
     }
 
-    // 2. Search Filter
     if (!searchQuery) return result;
     const q = searchQuery.toLowerCase();
     return result.filter(f => 
@@ -111,7 +128,6 @@ export function RevisionHubClient({ allFacts, initialRevisionMap, stats }: Revis
     return filteredAll.slice(batchIndex * PAGE_SIZE, (batchIndex + 1) * PAGE_SIZE);
   }, [filteredAll, batchIndex]);
 
-  // Load Revision Map for current batch
   const loadRevisionData = useCallback(async (ids: string[]) => {
     if (ids.length === 0) return;
     try {
@@ -182,14 +198,36 @@ export function RevisionHubClient({ allFacts, initialRevisionMap, stats }: Revis
                 <Zap className="h-32 w-32 text-white" />
             </div>
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-                <div className="space-y-2">
-                    <h2 className="text-2xl font-black text-white">{isHindi ? 'कुल रिवीज़न प्रogress' : 'Overall Progress'}</h2>
-                    <p className="text-slate-400 font-medium">{isHindi ? `${stats.revisedFactsCount}/${stats.totalFacts} तथ्य पूरे हुए` : `${stats.revisedFactsCount}/${stats.totalFacts} facts mastered`}</p>
+                <div className="space-y-4">
+                    <div className="space-y-1">
+                        <h2 className="text-2xl font-black text-white">{isHindi ? 'कुल रिवीज़न प्रोग्रेस' : 'Overall Progress'}</h2>
+                        <p className="text-slate-400 font-medium">{isHindi ? `${stats.revisedFactsCount}/${stats.totalFacts} तथ्य पूरे हुए` : `${stats.revisedFactsCount}/${stats.totalFacts} facts mastered`}</p>
+                    </div>
+
+                    {/* 🎖️ BADGES MINI-STRIP */}
+                    <div className="flex gap-2">
+                       {BADGES.map((b) => {
+                         const isUnlocked = progressPercentRaw >= b.minPercent;
+                         return (
+                           <div 
+                             key={b.name}
+                             className={cn(
+                               "flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-500",
+                               isUnlocked ? cn(b.bg, b.border, b.color, "shadow-lg scale-110") : "bg-white/5 border-white/10 text-white/20 grayscale"
+                             )}
+                             title={b.name}
+                           >
+                             {b.icon}
+                           </div>
+                         );
+                       })}
+                    </div>
                 </div>
-                <div className="flex items-center gap-6">
-                    <div className="relative h-20 w-20 flex items-center justify-center group" role="progressbar" aria-valuenow={progressPercent} aria-valuemin={0} aria-valuemax={100}>
+
+                <div className="flex items-center gap-6 bg-white/5 p-6 rounded-[2rem] border border-white/10 backdrop-blur-md">
+                    <div className="relative h-20 w-20 flex items-center justify-center group" role="progressbar">
                         <svg className="h-full w-full rotate-[-90deg]">
-                            <circle cx="40" cy="40" r="34" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-800" />
+                            <circle cx="40" cy="40" r="34" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-white/10" />
                             <circle cx="40" cy="40" r="34" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray={213.6} strokeDashoffset={213.6 - (213.6 * progressPercentRaw) / 100} strokeLinecap="round" className="text-emerald-500 transition-all duration-1000" />
                         </svg>
                         <span className="absolute text-lg font-black text-white">{progressPercentDisplay}%</span>
@@ -202,18 +240,24 @@ export function RevisionHubClient({ allFacts, initialRevisionMap, stats }: Revis
             </div>
         </div>
 
-        {/* 🗂️ STATUS TABS */}
-        <div className="flex items-center gap-1 p-1 mb-8 bg-slate-100 rounded-2xl w-fit">
+        {/* 🗂️ STATUS TABS WITH COUNTS */}
+        <div className="flex flex-wrap items-center gap-2 p-1.5 mb-8 bg-slate-100 rounded-2xl w-fit">
            {(['all', 'revised', 'pending'] as TabType[]).map((t) => (
              <button
                key={t}
                onClick={() => { setActiveTab(t); setBatchIndex(0); }}
                className={cn(
-                 "px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all",
-                 activeTab === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                 "flex items-center gap-2 px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all",
+                 activeTab === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600 hover:bg-white/50"
                )}
              >
                {t === 'all' ? (isHindi ? 'सभी' : 'All') : t === 'revised' ? (isHindi ? 'रिवाइज्ड' : 'Revised') : (isHindi ? 'बाकी' : 'Pending')}
+               <span className={cn(
+                 "px-2 py-0.5 rounded-lg text-[9px] font-bold",
+                 activeTab === t ? "bg-slate-100 text-slate-600" : "bg-slate-200 text-slate-400"
+               )}>
+                 {counts[t]}
+               </span>
              </button>
            ))}
         </div>
@@ -228,7 +272,6 @@ export function RevisionHubClient({ allFacts, initialRevisionMap, stats }: Revis
                 >
                   <SelectTrigger 
                     className="h-12 w-full rounded-full border-slate-200 bg-white px-5 text-[12px] font-bold text-slate-900 shadow-sm focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                    aria-label={isHindi ? 'बैच बदलें' : 'Change batch'}
                   >
                     <div className="flex items-center gap-2">
                        <Layers size={14} className="text-slate-400" />
@@ -254,8 +297,7 @@ export function RevisionHubClient({ allFacts, initialRevisionMap, stats }: Revis
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input 
                 type="text" 
-                placeholder={isHindi ? 'तथ्य या विषय खोजें...' : 'Search facts or subjects...'}
-                aria-label={isHindi ? 'खोजें' : 'Search'}
+                placeholder={isHindi ? 'तथ्य या विषय खोजें...' : 'Search facts...'}
                 value={searchQuery}
                 onChange={(e) => {
                     setSearchQuery(e.target.value);
@@ -271,7 +313,7 @@ export function RevisionHubClient({ allFacts, initialRevisionMap, stats }: Revis
            {loadingBatch ? (
              <div className="flex flex-col items-center justify-center py-32 space-y-4">
                 <Loader2 className="h-12 w-12 animate-spin text-indigo-600" />
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">{isHindi ? 'तथ्य लोड ho rahe hain...' : 'Loading...'}</p>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">{isHindi ? 'लोड हो रहा है...' : 'Loading...'}</p>
              </div>
            ) : currentBatch.length > 0 ? (
              currentBatch.map((f, idx) => {
@@ -283,9 +325,7 @@ export function RevisionHubClient({ allFacts, initialRevisionMap, stats }: Revis
                return (
                  <motion.div 
                    key={f.id} 
-                   initial={{ opacity: 0, y: 10 }}
-                   animate={{ opacity: 1, y: 0 }}
-                   transition={{ delay: idx * 0.05 }}
+                   layout
                    className={cn(
                      "overflow-hidden rounded-[2.5rem] border transition-all duration-300",
                      color.bg,
@@ -406,18 +446,18 @@ export function RevisionHubClient({ allFacts, initialRevisionMap, stats }: Revis
              })
            ) : (
              <div className="py-32 text-center bg-white rounded-[3rem] border border-slate-100 shadow-sm">
-                <div className="mx-auto h-24 w-24 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6">
-                   <Zap size={48} />
-                </div>
-                <h3 className="text-2xl font-black text-slate-900">{isHindi ? 'कोई तथ्य नहीं मिला' : 'No facts found'}</h3>
-                <p className="text-slate-500 max-w-sm mx-auto mt-3 font-medium">
-                   {isHindi ? 'आपकी वर्तमान खोज के लिए कोई तथ्य उपलब्ध नहीं है।' : 'No facts matching your criteria were found.'}
+                 <div className="mx-auto h-24 w-24 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6">
+                    <Zap size={48} />
+                 </div>
+                 <h3 className="text-2xl font-black text-slate-900">{isHindi ? 'कोई तथ्य नहीं मिला' : 'No facts found'}</h3>
+                 <p className="text-slate-500 max-w-sm mx-auto mt-3 font-medium">
+                    {isHindi ? 'आपकी वर्तमान खोज के लिए कोई तथ्य उपलब्ध नहीं है।' : 'No facts matching your criteria were found.'}
                  </p>
                  <button 
                    onClick={() => setSearchQuery('')}
                    className="mt-8 inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-3.5 rounded-full text-sm font-black uppercase tracking-widest transition-all active:scale-95 shadow-xl"
                  >
-                    {isHindi ? 'खoz saaf karein' : 'Clear Search'}
+                    {isHindi ? 'खोज साफ़ करें' : 'Clear Search'}
                  </button>
               </div>
             )}

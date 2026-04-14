@@ -60,16 +60,14 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
   const hi = language === 'hi';
 
   const subjectParam = searchParams.get('subject') || initialSubject;
-  // 🗺️ SUBJECT LOGIC: Default to 'All'
-  const isKnown =
-    subjectParam === 'All' ||
-    MPPOLICE_ONELINER_SUBJECTS.includes(subjectParam as (typeof MPPOLICE_ONELINER_SUBJECTS)[number]);
-  const activeSubject = !isKnown ? 'All' : subjectParam;
+  const isKnown = subjectParam === 'All' || MPPOLICE_ONELINER_SUBJECTS.includes(subjectParam as any);
+  const activeSubject = isKnown ? subjectParam : 'All';
 
   // States
   const [facts, setFacts] = useState<MppoliceOneLinerRow[]>(() => initialFacts.slice(0, PAGE_SIZE));
   const [batchIndex, setBatchIndex] = useState(0);
-  const [viewMode, setViewMode] = useState<'list' | 'flip'>('flip');
+  // 🏷️ UI DEFAULT: Set to 'list' view by default
+  const [viewMode, setViewMode] = useState<'list' | 'flip'>('list');
   const [revisionMap, setRevisionMap] = useState<Record<string, number>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [loadingBatch, setLoadingBatch] = useState(false);
@@ -90,7 +88,6 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
     refreshStats();
   }, [refreshStats]);
 
-  // 🛠️ BUG FIX: Use precision for progress percentage
   const progressPercentRaw = (stats.revisedFactsCount / (stats.totalFacts || 1)) * 100;
   const progressPercent = Math.min(100, Math.round(progressPercentRaw));
   const progressPercentDisplay = progressPercentRaw > 0 && progressPercentRaw < 1 
@@ -187,7 +184,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
               </p>
             </div>
             
-            {/* 🎯 Focus Mode Toggle */}
+            {/* 🎯 Focus Mode Toggle (HIDE/SHOW LABEL) */}
             <button
               onClick={() => setIsFocusMode(!isFocusMode)}
               className={cn(
@@ -196,7 +193,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
               )}
             >
               {isFocusMode ? <Eye size={16} /> : <EyeOff size={16} />}
-              <span className="hidden sm:inline">{isFocusMode ? (hi ? 'शो' : 'Show') : (hi ? 'फोकस' : 'Focus Mode')}</span>
+              <span className="inline">{isFocusMode ? (hi ? 'दिखाएं' : 'Show Header') : (hi ? 'छिपाएं' : 'Hide Header')}</span>
             </button>
           </div>
         </div>
@@ -314,7 +311,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
         {loadingBatch ? (
           <div className="flex flex-col items-center justify-center py-32 space-y-4">
             <Loader2 className="h-12 w-12 animate-spin text-indigo-600" />
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">{hi ? 'तथ्य लोड ho rahe hain...' : 'Loading Facts...'}</p>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">{hi ? 'तथ्य लोड हो रहे हैं...' : 'Loading Facts...'}</p>
           </div>
         ) : (
           <div className="will-change-transform">
@@ -452,7 +449,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                    })}
                  </motion.div>
                ) : (
-                 /* 🎴 CARDS VIEW (DEFAULT) */
+                 /* 🎴 CARDS VIEW */
                  <motion.div 
                     key="cards-view"
                     initial={{ opacity: 0, scale: 0.95 }}

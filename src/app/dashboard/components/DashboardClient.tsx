@@ -3,9 +3,9 @@
 import React from 'react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { DashboardHeader } from './DashboardHeader';
-import { SyllabusProgressWidget } from '@/features/analytics/components/SyllabusProgressWidget';
 import { SubjectMasteryWidget } from '@/features/analytics/components/SubjectMasteryWidget';
 import { DashboardActionCard } from './DashboardActionCard';
+import { RevisionHeroCard } from './RevisionHeroCard';
 import AnalyticsDashboardWrapper from '@/app/syllabus/analytics/AnalyticsDashboardWrapper';
 
 interface DashboardClientProps {
@@ -18,7 +18,7 @@ interface DashboardClientProps {
   totalTopics: number;
 }
 
-export function DashboardClient({ user, analyticsData, syllabusProgress, totalTopics }: DashboardClientProps) {
+export function DashboardClient({ user, analyticsData, syllabusProgress }: DashboardClientProps) {
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
 
@@ -48,6 +48,9 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                 </p>
               </div>
             </div>
+
+            {/* 🏅 TOP PRIORITY: One-Liner Revision Progress (Hero Card) */}
+            <RevisionHeroCard stats={syllabusProgress?.oneLinerStats} />
             
             <AnalyticsDashboardWrapper 
               analytics={analyticsData} 
@@ -69,16 +72,17 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                 <SubjectMasteryWidget mastery={analyticsData?.mastery || []} />
               </div>
 
-              {/* Progress Pod */}
-              <div className="group relative">
-                <div className="mb-4 space-y-2">
-                  <h3 className="text-xs font-black tracking-[0.2em] text-slate-500 uppercase">
-                    {isHindi ? 'सिलेबस की प्रगति' : 'Syllabus Progress'}
-                  </h3>
-                  <div className="h-1 w-6 rounded-full bg-indigo-500/20" />
-                </div>
-                
-                <SyllabusProgressWidget data={syllabusProgress} totalTopics={totalTopics} />
+              {/* Tips / Achievements Column */}
+              <div className="rounded-[2rem] bg-indigo-600 p-8 text-white shadow-xl shadow-indigo-200">
+                  <h4 className="flex items-center gap-2 text-lg font-black tracking-tight">
+                     <Sparkles className="h-5 w-5 text-indigo-300" />
+                     {isHindi ? 'आज का मंत्र' : 'Daily Mantra'}
+                  </h4>
+                  <p className="mt-4 text-sm font-medium leading-relaxed text-indigo-100 opacity-90">
+                     {isHindi 
+                       ? 'कोशिश करने वालों की कभी हार नहीं होती। अपनी रिवीजन जर्नी को जारी रखें और रोजाना कम से कम 50 वन-लाइनर्स पूरे करें।' 
+                       : 'Keep pushing! Completing just 50 one-liners a day can significantly boost your final exam performance.'}
+                  </p>
               </div>
             </div>
           </div>
@@ -87,3 +91,5 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
     </div>
   );
 }
+
+import { Sparkles } from 'lucide-react';
