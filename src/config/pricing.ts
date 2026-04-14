@@ -28,8 +28,8 @@ export const PRICING_DEFAULTS: PricingData = {
   liteMonths: 8,
   proPrice: 199,
   proOriginalPrice: 999,
-  proValidityText: 'Valid for 6 Months',
-  proMonths: 6,
+  proValidityText: 'Valid for 12 Months',
+  proMonths: 12,
   upgradePrice: 199,
   upgradeOriginalPrice: 299,
   urgencyText: 'Special pricing for first 100 students',
@@ -50,42 +50,45 @@ export interface PlanFeatureWithIcon extends PlanFeature {
 // ── Lite Plan Features ────────────────────────────────────
 export const LITE_FEATURES: PlanFeatureWithIcon[] = [
   {
-    en: '6 Years PYQs with Detailed Analysis',
-    hi: '6 वर्षों के PYQ पेपर्स (सटीक Analysis के साथ)',
+    en: 'Limited PYQs with Analysis',
+    hi: 'सीमित PYQ पेपर्स (Analysis के साथ)',
     icon: 'BookOpen',
   },
-  { en: 'CSAT Mock Papers ×2', hi: 'CSAT मॉक पेपर ×2', icon: 'BookOpen' },
-  { en: 'Full Length Tests ×2', hi: 'फुल लेंथ टेस्ट ×2', icon: 'FileText' },
-  // { en: '2 Topic Tests per Unit', hi: '2 टॉपिक टेस्ट प्रति यूनिट', icon: 'Target' },
-  { en: 'Limited Tests in Topic-wise', hi: 'टॉपिक वाइज़ में सीमित टेस्ट', icon: 'Target' },
+  { en: 'Full Length Test ×1', hi: 'फुल लेंथ टेस्ट ×1', icon: 'FileText' },
+  { en: 'Limited Chapter-wise Tests', hi: 'सीमित चैप्टर-वाइज टेस्ट', icon: 'Target' },
   {
     en: 'Limited Syllabus Topics Analysis',
     hi: 'सीमित सिलेबस टॉपिक्स एनालिसिस',
     icon: 'BarChart3',
   },
   { en: 'Premium Study Blogs (Limited)', hi: 'प्रीमियम स्टडी ब्लॉग्स (सीमित)', icon: 'FileText' },
-  // { en: '5+ Years PYQs (With Explanations)', hi: '5+ साल के PYQ (उत्तर सहित)', icon: 'History' },
 ];
 
 // ── Pro Plan Features ─────────────────────────────────────
 export const PRO_FEATURES: PlanFeatureWithIcon[] = [
-  { en: 'Unlimited Topic & Unit Tests', hi: 'अनलिमिटेड टॉपिक और यूनिट टेस्ट', icon: 'Target' },
-  { en: 'Full Length Mock Tests (100Q)', hi: 'फुल लेंथ मॉक टेस्ट (100 प्रश्न)', icon: 'FileText' },
-  { en: 'CSAT Mock Papers', hi: 'CSAT मॉक पेपर', icon: 'BookOpen' },
-  { en: 'PYQ Papers (2020-2025)', hi: 'PYQ पेपर (2020-2025)', icon: 'BookOpen' },
-  {
-    en: 'PYQ Intelligence: Topic Trends, Weightage & Exam DNA',
-    hi: 'PYQ इंटेलिजेंस: टॉपिक ट्रेंड, वेटेज और एग्जाम DNA',
-    icon: 'BarChart3',
+  { 
+    en: '1000+ One-Liners with Detailed Explanation', 
+    hi: '1000+ वन-लाइनर्स (विस्तृत व्याख्या सहित)', 
+    icon: 'Zap' 
+  },
+  { 
+    en: 'Best-in-class PYQ with Step-by-Step Logic', 
+    hi: 'सर्वश्रेष्ठ PYQ समाधान (स्टेप-बाय-स्टेप लॉजिक)', 
+    icon: 'BookOpen' 
+  },
+  { 
+    en: 'Chapter-wise & Subject-wise Tests', 
+    hi: 'चैप्टर-वाइज और विषय-वार टेस्ट', 
+    icon: 'Target' 
+  },
+  { 
+    en: 'Full Length Mock Tests (Latest Pattern)', 
+    hi: 'फुल लेंथ मॉक टेस्ट (नवीनतम पैटर्न)', 
+    icon: 'FileText' 
   },
   { en: 'Smart Analytics Dashboard', hi: 'स्मार्ट एनालिटिक्स डैशबोर्ड', icon: 'BarChart3' },
-  { en: 'Premium Study Blogs', hi: 'प्रीमियम स्टडी ब्लॉग्स', icon: 'FileText' },
+  { en: 'Premium Study Blogs & Strategy', hi: 'प्रीमियम स्टडी ब्लॉग्स और रणनीति', icon: 'FileText' },
   { en: 'Test History for Revision', hi: 'रिवीज़न के लिए टेस्ट हिस्ट्री', icon: 'History' },
-  {
-    en: '1000+ revision one-liners (rolling release — coming soon)',
-    hi: '1000+ रिवीज़न वन-लाइनर्स (धीरे-धीरे जोड़े जाएँगे — जल्द)',
-    icon: 'Zap',
-  },
 ];
 
 // Helper: compute discount percentage

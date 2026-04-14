@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 import { sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 
-import { validateAdmin } from '@/lib/auth-admin';
+import { requireAdmin } from '@/lib/auth-admin';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 👥 ADMIN USERS LIST API — Saare users with stats
@@ -22,7 +22,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     // ── Admin Auth ──────────────────────────────────────────────
-    await validateAdmin();
+    await requireAdmin();
 
     // ── Fetch All Users (password excluded for security) ────────
     const allUsers = await db
@@ -99,7 +99,7 @@ export async function DELETE(req: Request) {
     const { userId } = await req.json();
 
     // ── Admin Auth ──────────────────────────────────────────────
-    const adminUser = await validateAdmin();
+    const adminUser = await requireAdmin();
 
     if (!userId) return NextResponse.json({ error: 'User ID required' }, { status: 400 });
 

@@ -24,11 +24,6 @@ const SubjectMasterySection = dynamic(() =>
     default: m.SubjectMasterySection,
   }))
 );
-const ContentSuiteSection = dynamic(() =>
-  import('@/components/home/ContentSuiteSection').then((m) => ({
-    default: m.ContentSuiteSection,
-  }))
-);
 const AppInstallGuide = dynamic(() =>
   import('@/components/home/AppInstallGuide').then((m) => ({ default: m.AppInstallGuide }))
 );
@@ -59,7 +54,6 @@ export default function UpgradePage() {
       <PYQShowcaseSection />
       <InstantFeedbackSection />
       <SubjectMasterySection />
-      <ContentSuiteSection />
 
       <AppInstallGuide />
       <DualLanguageShowcase />

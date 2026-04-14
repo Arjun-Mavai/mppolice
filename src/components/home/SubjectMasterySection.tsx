@@ -1,136 +1,135 @@
 'use client';
 
 /**
- * SubjectMasterySection — Analytics preview section bhai!
- * Yeh dikhata hai ki AI kaise subject-wise performance track karta hai.
- * Dark card mein progress bars — History, Polity, Geography sab dikhaate hain.
+ * RevisionCenterSection — Flashcards aur Revision History ka jalwa bhai!
+ * Yeh section users ko batata hai ki kaise wo apne weak points ko revise kar sakte hain.
  */
 
 import React from 'react';
-import { BarChart3, BrainCircuit } from 'lucide-react';
+import { History, Zap, RotateCw, CheckCircle2, Layout, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 export function SubjectMasterySection() {
   const { language } = useSettingsStore();
+  const hi = language === 'hi';
 
   return (
-    <section className="relative py-32">
+    <section className="relative overflow-hidden bg-slate-50 py-24 md:py-32">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="grid items-center gap-20 lg:grid-cols-2">
-          <div className="space-y-8">
+        <div className="grid items-center gap-16 lg:grid-cols-2">
+          {/* Left Side: Content */}
+          <div className="order-2 space-y-8 lg:order-1">
             <Badge
               variant="outline"
-              className="border-emerald-200 bg-emerald-50 px-4 py-1 text-sm text-emerald-700"
+              className="border-indigo-200 bg-indigo-50 px-4 py-1.5 text-xs font-black tracking-widest text-indigo-700 uppercase"
             >
-              {language === 'hi' ? 'गहरी अंतर्दृष्टि' : 'Deep Insights'}
+              {hi ? 'स्मार्ट रिवीजन' : 'Smart Revision'}
             </Badge>
-            <h2 className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
-              {language === 'hi' ? 'विषयवार प्रवीणता' : 'Subject-wise Mastery.'}
+            <h2 className="text-4xl font-black tracking-tight text-slate-900 md:text-6xl">
+              {hi ? (
+                <>
+                  भूलना अब <span className="text-indigo-600">मुमकिन नहीं।</span>
+                </>
+              ) : (
+                <>
+                  Forgetting is <span className="text-indigo-600">Impossible.</span>
+                </>
+              )}
             </h2>
-            <p className="text-lg leading-relaxed font-medium text-slate-600">
-              {language === 'hi'
-                ? 'सिर्फ मेहनत नहीं, स्मार्ट स्टडी करें। हमारा Smart Coach हर विषय में आपकी परफॉरमेंस को ट्रैक करता है, ताकि आप अपनी कमजोरियों को ताकत बना सकें।'
-                : "Don't just study hard, study smart. Our Smart Coach analyzes your performance in every subject to tell you exactly where to focus."}
+            <p className="text-lg leading-relaxed font-medium text-slate-600 md:text-xl">
+              {hi
+                ? 'सिर्फ पढ़ना काफी नहीं, याद रखना असली चुनौती है। हमारा रिवीजन सेंटर और इंटरैक्टिव फ्लैशकार्ड्स आपको हर तथ्य को लंबे समय तक याद रखने में मदद करते हैं।'
+                : 'Studying is easy, remembering is the challenge. Our Revision Center and Interactive Flashcards help you retain every fact for the long run.'}
             </p>
-            <div className="flex flex-wrap gap-2">
-              {[
-                'History (इतिहास)',
-                'Polity (राजव्यवस्था)',
-                'Geography (भूगोल)',
-                'Science (विज्ञान)',
-              ].map((tag) => (
-                <div
-                  key={tag}
-                  className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600"
-                >
-                  {tag}
-                </div>
-              ))}
+
+            <div className="grid gap-6 sm:grid-cols-2">
+               <div className="space-y-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+                     <History className="h-5 w-5 text-indigo-500" />
+                  </div>
+                  <h4 className="text-lg font-black text-slate-900">{hi ? 'रिवीजन हिस्ट्री' : 'Revision History'}</h4>
+                  <p className="text-sm font-medium text-slate-500">
+                     {hi ? 'आपने क्या पढ़ा, कब पढ़ा और क्या भूल रहे हैं - सब एक जगह।' : 'Track what you studied, when you studied, and what you might be forgetting.'}
+                  </p>
+               </div>
+               <div className="space-y-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+                     <RotateCw className="h-5 w-5 text-emerald-500" />
+                  </div>
+                  <h4 className="text-lg font-black text-slate-900">{hi ? 'एक्टिव रिकॉल' : 'Active Recall'}</h4>
+                  <p className="text-sm font-medium text-slate-500">
+                     {hi ? 'फ्लैशकार्ड्स के साथ दिमाग पर जोर दें और याददाश्त तेज करें।' : 'Challenge your brain with flashcards to build rock-solid memory.'}
+                  </p>
+               </div>
             </div>
           </div>
 
-          {/* Visual */}
-          <div className="flex justify-center lg:justify-end">
+          {/* Right Side: Interactive UI Preview */}
+          <div className="order-1 flex justify-center lg:order-2">
             <div className="relative w-full max-w-lg">
-              <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-r from-emerald-500 to-teal-500 opacity-20 blur-xl"></div>
-              <Card className="relative z-10 space-y-8 rounded-[2rem] border-slate-800 bg-slate-900 p-8 text-white shadow-2xl">
-                <div className="flex items-end justify-between">
-                  <div>
-                    <div className="mb-1 font-medium text-slate-400">
-                      {language === 'hi' ? 'कुल स्कोर' : 'Overall Strength'}
-                    </div>
-                    <div className="flex items-center gap-2 text-4xl font-bold text-white">
-                      74%{' '}
-                      <span className="rounded bg-emerald-500/10 px-2 py-1 text-sm font-bold text-emerald-400">
-                        +12%
-                      </span>
-                    </div>
-                  </div>
-                  <BarChart3 className="h-8 w-8 text-slate-600" />
+              <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-r from-indigo-500 to-purple-600 opacity-10 blur-2xl animate-pulse" />
+              
+              <Card className="relative z-10 space-y-6 overflow-hidden rounded-[2.5rem] border-0 bg-white p-6 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.12)]">
+                {/* Mock Dashboard Header */}
+                <div className="flex items-center justify-between border-b border-slate-50 pb-4">
+                   <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-slate-900 flex items-center justify-center text-white font-black text-xs">MP</div>
+                      <div>
+                         <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">{hi ? 'डैशबोर्ड' : 'Dashboard'}</div>
+                         <div className="text-sm font-black text-slate-900">{hi ? 'प्रगति रिपोर्ट' : 'Progress Report'}</div>
+                      </div>
+                   </div>
+                   <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
                 </div>
 
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-bold text-slate-300">
-                        {language === 'hi' ? 'MP इतिहास' : 'MP History'}
-                      </span>
-                      <span className="font-bold text-emerald-400">
-                        {language === 'hi' ? 'उत्कृष्ट (85%)' : 'Excellent (85%)'}
-                      </span>
-                    </div>
-                    <Progress
-                      value={85}
-                      className="h-3 bg-slate-800"
-                      indicatorClassName="bg-gradient-to-r from-emerald-500 to-emerald-400"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-bold text-slate-300">
-                        {language === 'hi' ? 'भारतीय राजव्यवस्था' : 'Indian Polity'}
-                      </span>
-                      <span className="font-bold text-amber-400">
-                        {language === 'hi' ? 'अच्छा (65%)' : 'Good (65%)'}
-                      </span>
-                    </div>
-                    <Progress
-                      value={65}
-                      className="h-3 bg-slate-800"
-                      indicatorClassName="bg-gradient-to-r from-amber-500 to-amber-400"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-bold text-slate-300">
-                        {language === 'hi' ? 'भूगोल' : 'Geography'}
-                      </span>
-                      <span className="font-bold text-red-400">
-                        {language === 'hi' ? 'कमजोर (42%)' : 'Weak (42%)'}
-                      </span>
-                    </div>
-                    <Progress
-                      value={42}
-                      className="h-3 bg-slate-800"
-                      indicatorClassName="bg-gradient-to-r from-red-500 to-red-400"
-                    />
-                  </div>
+                {/* Revision Card Preview */}
+                <div className="space-y-4">
+                   <div className="flex items-center justify-between">
+                      <span className="text-xs font-black uppercase tracking-widest text-slate-400">{hi ? 'हालिया रिवीजन' : 'Recent Revisions'}</span>
+                      <span className="text-[10px] font-bold text-indigo-600">{hi ? 'सभी देखें' : 'View All'}</span>
+                   </div>
+                   
+                   {[
+                     { title: hi ? 'सिंधु घाटी सभ्यता' : 'Indus Valley Civilization', date: '2 min ago', color: 'bg-emerald-50 text-emerald-700' },
+                     { title: hi ? 'म.प्र. की नदियां' : 'Rivers of MP', date: '1 hour ago', color: 'bg-blue-50 text-blue-700' },
+                     { title: hi ? 'कोडिंग-डिकोडिंग' : 'Coding-Decoding', date: 'Yesterday', color: 'bg-purple-50 text-purple-700' }
+                   ].map((item, i) => (
+                     <motion.div 
+                       key={i}
+                       initial={{ opacity: 0, x: 20 }}
+                       whileInView={{ opacity: 1, x: 0 }}
+                       transition={{ delay: i * 0.1 }}
+                       className="flex items-center justify-between rounded-2xl bg-slate-50 p-4 transition-all hover:bg-slate-100"
+                     >
+                        <div className="flex items-center gap-3">
+                           <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-black", item.color)}>
+                              <CheckCircle2 className="h-4 w-4" />
+                           </div>
+                           <span className="text-sm font-bold text-slate-700">{item.title}</span>
+                        </div>
+                        <span className="text-[10px] font-medium text-slate-400">{item.date}</span>
+                     </motion.div>
+                   ))}
                 </div>
 
-                <div className="flex items-start gap-4 rounded-xl border border-white/10 bg-white/5 p-4">
-                  <BrainCircuit className="h-6 w-6 shrink-0 text-purple-400" />
-                  <p className="text-sm leading-relaxed text-slate-300">
-                    <span className="font-bold text-purple-400">Smart Suggestion:</span>{' '}
-                    {language === 'hi' ? 'यूनिट 3 के  भूगोल' : 'Focus on Geography'}{' '}
-                    {language === 'hi'
-                      ? 'प्रश्नों पर ध्यान दें। "नदियां और पर्वत" में आपकी सटीकता औसत से कम है।'
-                      : 'questions. Your accuracy is below average in "Rivers & Mountains".'}
-                  </p>
+                {/* Floating Flashcard Demo Overlay */}
+                <div className="absolute bottom-4 right-4 left-4">
+                   <Card className="flex items-center justify-between bg-slate-900 p-4 text-white shadow-2xl rounded-2xl border-slate-800">
+                      <div className="flex items-center gap-3">
+                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
+                            <RotateCw className="h-5 w-5 text-emerald-400" />
+                         </div>
+                         <div>
+                            <div className="text-[9px] font-black uppercase tracking-widest text-slate-500">{hi ? 'फ्लैशकार्ड' : 'Flashcard'}</div>
+                            <div className="text-xs font-bold">{hi ? 'अगले कार्ड के लिए स्वाइप करें' : 'Swipe for next card'}</div>
+                         </div>
+                      </div>
+                      <Sparkles className="h-5 w-5 text-amber-400 animate-pulse" />
+                   </Card>
                 </div>
               </Card>
             </div>

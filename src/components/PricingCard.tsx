@@ -94,12 +94,12 @@ export function PricingCard({
   const title = isLite ? 'Lite' : isPro ? 'Pro' : hi ? 'प्रो में अपग्रेड' : 'Upgrade to Pro';
   const subtitle = isLite
     ? hi
-      ? 'स्मार्ट शुरुआत — प्रीलिम्स तक'
-      : 'Smart start — till Prelims'
+      ? 'स्मार्ट शुरुआत — MP Police 2026'
+      : 'Smart start — MP Police 2026'
     : isPro
       ? hi
-        ? 'पूरी ताकत — मेन्स तक'
-        : 'Full power — till Mains'
+        ? 'पूरी ताकत — MP Police 2026'
+        : 'Full power — MP Police 2026'
       : hi
         ? 'लाइट से प्रो — सिर्फ़ अंतर भरें'
         : 'Lite → Pro — Just pay the difference';
@@ -237,10 +237,8 @@ export function PricingCard({
                 />
                 <span>
                   {hi
-                    ? isLite
-                      ? 'MP Police 2026 प्रीलिम्स तक वैध'
-                      : 'MP Police 2026 मेन्स तक वैध'
-                    : validityText}
+                    ? 'MP Police 2026 परीक्षा तक वैध'
+                    : 'Valid till MP Police 2026 Exam'}
                 </span>
               </li>
             )}

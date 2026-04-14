@@ -2,21 +2,21 @@
 
 /**
  * ExamSimulationSection — Real Exam Simulation wala dark section bhai!
- * Yeh ek interactive mock test demo hai — 4 questions ka mini quiz.
- * Intro → Active (answering) → Result — teen states hain.
- * All mock quiz state is self-contained inside this component.
+ * Updated to reflect Three Sections. One Paper. Full Syllabus logic.
  */
 
 import React from 'react';
-import { Trophy, CheckCircle2, X, Loader2 } from 'lucide-react';
+import { Trophy, CheckCircle2, X, Loader2, Sparkles, Zap, Brain, Sigma } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { calculateScore } from '@/lib/quiz-scoring';
 
 export function ExamSimulationSection() {
   const { language } = useSettingsStore();
+  const hi = language === 'hi';
 
   const [mockStep, setMockStep] = React.useState<'intro' | 'active' | 'result'>('intro');
   const [mockQIndex, setMockQIndex] = React.useState(0);
@@ -28,44 +28,34 @@ export function ExamSimulationSection() {
   const mockQuestions = [
     {
       id: 1,
-      q: 'As of 2024, what is the total number of districts in Madhya Pradesh?',
-      q_hi: '2024 तक मध्य प्रदेश में कुल जिलों की संख्या कितनी है?',
-      options: ['52', '53', '54', '55'],
-      options_hi: ['52', '53', '54', '55'],
-      correct: 3,
+      type: 'GK',
+      q: 'Which ruler of the Holkar dynasty moved the capital from Indore to Maheshwar?',
+      q_hi: 'होल्कर वंश के किस शासक ने राजधानी को इंदौर से महेश्वर स्थानांतरित किया था?',
+      options: ['Ahilyabai Holkar', 'Malhar Rao Holkar', 'Yashwant Rao Holkar', 'Tukoji Rao Holkar'],
+      options_hi: ['अहिल्याबाई होल्कर', 'मल्हार राव होल्कर', 'यशवंत राव होल्कर', 'तुकोजी राव होल्कर'],
+      correct: 0,
+      explanation: hi ? 'देवी अहिल्याबाई होल्कर ने 1767 में महेश्वर को अपनी राजधानी बनाया और इसे एक सांस्कृतिक केंद्र के रूप में विकसित किया।' : 'Devi Ahilyabai Holkar made Maheshwar her capital in 1767 and developed it as a cultural center.'
     },
     {
       id: 2,
-      q: 'Which Article of the Constitution empowers the High Court to issue writs for the enforcement of Fundamental Rights?',
-      q_hi: 'संविधान का कौन सा अनुच्छेद उच्च न्यायालय को मौलिक अधिकारों के प्रवर्तन के लिए रिट जारी करने की शक्ति देता है?',
-      options: ['Article 32', 'Article 226', 'Article 131', 'Article 214'],
-      options_hi: ['अनुच्छेद 32', 'अनुच्छेद 226', 'अनुच्छेद 131', 'अनुच्छेद 214'],
-      correct: 1,
+      type: 'Reasoning',
+      q: 'If South-East becomes North, North-East becomes West and so on. What will West become?',
+      q_hi: 'यदि दक्षिण-पूर्व उत्तर बन जाता है, उत्तर-पूर्व पश्चिम बन जाता है और इसी तरह। तो पश्चिम क्या बन जाएगा?',
+      options: ['South-East', 'South-West', 'North-East', 'North-West'],
+      options_hi: ['दक्षिण-पूर्व', 'दक्षिण-पश्चिम', 'उत्तर-पूर्व', 'उत्तर-पश्चिम'],
+      correct: 0,
+      explanation: hi ? 'दिशाओं को 135° वामावर्त (anti-clockwise) घुमाया जा रहा है। पश्चिम 135° घूमने पर दक्षिण-पूर्व बन जाएगा।' : 'Directions are rotated 135° anti-clockwise. West rotated 135° becomes South-East.'
     },
     {
       id: 3,
-      q: 'The "Patalkot" region of Chhindwara is primarily inhabited by which tribe?',
-      q_hi: 'छिंदवाड़ा का "पातालकोट" क्षेत्र मुख्य रूप से किस जनजाति द्वारा बसा हुआ है?',
-      options: ['Bhil', 'Gond', 'Bharia', 'Sahariya'],
-      options_hi: ['भील', 'गोंड', 'भारिया', 'सहरिया'],
-      correct: 2,
-    },
-    {
-      id: 4,
-      q: 'Who appoints the Judges of the Supreme Court of India under Article 124(2)?',
-      q_hi: 'अनुच्छेद 124(2) के तहत भारत के सर्वोच्च न्यायालय के न्यायाधीशों की नियुक्ति कौन करता है?',
-      options: ['Chief Justice of India', 'Prime Minister', 'President of India', 'Law Minister'],
-      options_hi: ['भारत के मुख्य न्यायाधीश', 'प्रधानमंत्री', 'भारत के राष्ट्रपति', 'कानून मंत्री'],
-      correct: 2,
-    },
-    {
-      id: 5,
-      q: 'Which is the newly formed 55th district of Madhya Pradesh?',
-      q_hi: 'मध्य प्रदेश का नवनिर्मित 55वां जिला कौन सा है?',
-      options: ['Mauganj', 'Maihar', 'Pandhurna', 'Niwari'],
-      options_hi: ['मऊगंज', 'मैहर', 'पांढुर्णा', 'निवाड़ी'],
+      type: 'Maths',
+      q: 'A train 150m long is running at 54 km/hr. How much time will it take to cross a platform 250m long?',
+      q_hi: '150 मीटर लंबी एक ट्रेन 54 किमी/घंटा की गति से चल रही है। 250 मीटर लंबे प्लेटफॉर्म को पार करने में उसे कितना समय लगेगा?',
+      options: ['20 sec', '26.6 sec', '24 sec', '28 sec'],
+      options_hi: ['20 सेकंड', '26.6 सेकंड', '24 सेकंड', '28 सेकंड'],
       correct: 1,
-    },
+      explanation: hi ? 'कुल दूरी = 150+250 = 400m. गति = 54 * 5/18 = 15 m/s. समय = 400/15 = 26.6 सेकंड।' : 'Total Distance = 150+250 = 400m. Speed = 54 * 5/18 = 15 m/s. Time = 400/15 = 26.6 sec.'
+    }
   ];
 
   const handleMockStart = () => {
@@ -97,203 +87,138 @@ export function ExamSimulationSection() {
       } else {
         setMockStep('result');
       }
-    }, 800);
+    }, 1500); // More time to show feedback
   };
 
   const results = calculateScore(mockQuestions.length, correctCount, wrongCount);
 
   return (
-    <section className="relative overflow-hidden bg-slate-900 py-32 text-white">
+    <section className="relative overflow-hidden bg-[#0F172A] py-32 text-white">
       {/* Background Mesh */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-slate-900 to-slate-950"></div>
-      <div className="pointer-events-none absolute top-0 right-0 h-[600px] w-[600px] rounded-full bg-rose-500/10 blur-[100px]"></div>
-
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-[#0F172A] to-[#020617]"></div>
+      
       <div className="relative z-10 mx-auto max-w-7xl px-6">
         <div className="grid items-center gap-20 lg:grid-cols-2">
+          {/* Interactive Mock Preview */}
           <div className="order-2 flex justify-center lg:order-1 lg:justify-start">
             <div className="relative w-full max-w-lg">
-              <div className="absolute -inset-1 animate-pulse rounded-3xl bg-gradient-to-r from-rose-500 to-pink-600 opacity-75 blur-md"></div>
-              <Card className="relative z-10 flex min-h-[500px] flex-col overflow-hidden rounded-3xl border-0 bg-white text-slate-900 shadow-2xl transition-all duration-300">
+              <div className="absolute -inset-1 animate-pulse rounded-[2.5rem] bg-gradient-to-r from-emerald-500 to-teal-600 opacity-50 blur-lg"></div>
+              <Card className="relative z-10 flex min-h-[550px] flex-col overflow-hidden rounded-[2.5rem] border-0 bg-white text-slate-900 shadow-2xl">
                 {/* HEADER */}
-                <div className="flex shrink-0 items-center justify-between bg-slate-950 bg-[url('/grid.svg')] p-6 text-white">
+                <div className="flex shrink-0 items-center justify-between bg-slate-950 p-6 text-white">
                   <div className="flex items-center gap-3">
-                    <div
-                      className={cn(
-                        'h-2 w-2 rounded-full',
-                        mockStep === 'active' ? 'animate-ping bg-red-500' : 'bg-slate-500'
-                      )}
-                    />
-                    <span className="text-sm font-bold tracking-widest text-slate-300 uppercase">
-                      {mockStep === 'result'
-                        ? language === 'hi'
-                          ? 'टेस्ट परिणाम'
-                          : 'Test Result'
-                        : language === 'hi'
-                          ? 'लाइव मॉक टेस्ट'
-                          : 'Live Mock Test'}
+                    <div className={cn('h-2 w-2 rounded-full bg-emerald-500 animate-pulse')} />
+                    <span className="text-[10px] font-black tracking-widest text-slate-300 uppercase">
+                      {mockStep === 'result' ? (hi ? 'परिणाम' : 'Result') : (hi ? 'लाइव सिम्युलेटर' : 'Live Simulator')}
                     </span>
                   </div>
+                  {mockStep === 'active' && (
+                    <div className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                       Question {mockQIndex + 1}/3
+                    </div>
+                  )}
                 </div>
 
                 {/* BODY */}
                 <div className="flex flex-1 flex-col justify-center p-8">
-                  {/* INTRO STATE */}
                   {mockStep === 'intro' && (
-                    <div className="animate-in fade-in zoom-in space-y-6 text-center duration-300">
-                      <div className="mx-auto mb-2 flex h-20 w-20 items-center justify-center rounded-full bg-rose-100">
-                        <Trophy className="h-10 w-10 text-rose-600" />
+                    <div className="space-y-8 text-center">
+                      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-emerald-50 rotate-3 shadow-inner">
+                        <Zap className="h-10 w-10 text-emerald-600 fill-emerald-600" />
                       </div>
                       <div>
-                        <h3 className="text-2xl font-bold text-slate-900">
-                          {language === 'hi' ? 'चुनौती के लिए तैयार हैं?' : 'Ready to Challenge?'}
+                        <h3 className="text-2xl font-black text-slate-900">
+                          {hi ? 'एग्जाम मोड ऑन करें?' : 'Turn on Exam Mode?'}
                         </h3>
-                        <p className="mt-2 text-slate-500">
-                          {language === 'hi'
-                            ? 'अपनी तैयारी के स्तर को जांचने के लिए 5-प्रश्नों का डेमो टेस्ट लें।'
-                            : 'Take a quick 5-question demo to see your preparation level.'}
+                        <p className="mt-2 text-sm font-medium text-slate-500 leading-relaxed">
+                          {hi
+                            ? 'GK, रीजनिंग और मैथ्स के चुनिंदा प्रश्नों के साथ अपनी गति और सटीकता को अभी परखें।'
+                            : 'Test your speed and accuracy with curated questions from GK, Reasoning, and Maths.'}
                         </p>
                       </div>
                       <Button
                         onClick={handleMockStart}
-                        disabled={isPreparing}
-                        className="h-12 w-full rounded-xl bg-rose-600 font-bold text-white shadow-lg shadow-rose-200 transition-all hover:bg-rose-700 active:scale-95"
+                        className="h-14 w-full rounded-2xl bg-emerald-600 text-sm font-black uppercase tracking-widest text-white shadow-xl shadow-emerald-200 transition-all hover:bg-emerald-700 active:scale-95"
                       >
-                        {isPreparing ? (
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                        ) : language === 'hi' ? (
-                          'डेमो टेस्ट शुरू करें'
-                        ) : (
-                          'Start Demo Test'
-                        )}
+                        {isPreparing ? <Loader2 className="h-5 w-5 animate-spin" /> : (hi ? 'सिम्युलेटर शुरू करें' : 'Start Simulator')}
                       </Button>
                     </div>
                   )}
 
-                  {/* ACTIVE STATE */}
                   {mockStep === 'active' && (
-                    <div className="animate-in slide-in-from-right fade-in w-full space-y-6 duration-300">
-                      <div className="mb-2 flex gap-2">
-                        {mockQuestions.map((_, idx) => (
-                          <div
-                            key={idx}
-                            className={cn(
-                              'h-1 flex-1 rounded-full transition-colors duration-300',
-                              idx <= mockQIndex ? 'bg-rose-500' : 'bg-slate-100'
-                            )}
-                          />
-                        ))}
+                    <div className="w-full space-y-6">
+                      <div className="flex items-center gap-2 mb-4">
+                         {mockQuestions[mockQIndex].type === 'GK' && <Brain className="h-4 w-4 text-purple-500" />}
+                         {mockQuestions[mockQIndex].type === 'Reasoning' && <Zap className="h-4 w-4 text-amber-500" />}
+                         {mockQuestions[mockQIndex].type === 'Maths' && <Sigma className="h-4 w-4 text-blue-500" />}
+                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{mockQuestions[mockQIndex].type}</span>
                       </div>
 
-                      <h3 className="flex min-h-[5rem] items-center text-lg leading-snug font-bold">
-                        {language === 'hi'
-                          ? (mockQuestions[mockQIndex] as any).q_hi
-                          : mockQuestions[mockQIndex].q}
+                      <h3 className="text-lg leading-snug font-black text-slate-900">
+                        {hi ? mockQuestions[mockQIndex].q_hi : mockQuestions[mockQIndex].q}
                       </h3>
 
-                      <div className="grid grid-cols-1 gap-3">
-                        {(language === 'hi'
-                          ? (mockQuestions[mockQIndex] as any).options_hi
-                          : mockQuestions[mockQIndex].options
-                        ).map((opt: string, idx: number) => (
+                      <div className="grid gap-3">
+                        {(hi ? mockQuestions[mockQIndex].options_hi : mockQuestions[mockQIndex].options).map((opt: string, idx: number) => (
                           <div
                             key={idx}
                             onClick={() => handleMockAnswer(idx)}
                             className={cn(
-                              'relative cursor-pointer overflow-hidden rounded-xl border border-slate-200 p-4 text-sm font-medium transition-all',
+                              'relative cursor-pointer overflow-hidden rounded-2xl border-2 p-4 text-sm font-bold transition-all',
                               mockSelected === null
-                                ? 'hover:border-slate-900 hover:bg-slate-50'
+                                ? 'border-slate-100 hover:border-emerald-500 hover:bg-emerald-50'
                                 : mockSelected === idx
                                   ? idx === mockQuestions[mockQIndex].correct
-                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
-                                    : 'border-red-500 bg-red-50 text-red-900'
-                                  : 'opacity-50'
+                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-900 shadow-inner'
+                                    : 'border-rose-500 bg-rose-50 text-rose-900 shadow-inner'
+                                  : 'opacity-50 border-slate-50'
                             )}
                           >
                             {opt}
-                            {mockSelected === idx && (
-                              <div className="absolute top-3.5 right-3">
-                                {idx === mockQuestions[mockQIndex].correct ? (
-                                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                                ) : (
-                                  <X className="h-5 w-5 text-red-600" />
-                                )}
-                              </div>
-                            )}
                           </div>
                         ))}
                       </div>
+
+                      {mockSelected !== null && (
+                         <div className="mt-4 rounded-xl bg-slate-50 p-4 border border-slate-100 animate-in fade-in slide-in-from-bottom-2">
+                            <p className="text-xs font-bold leading-relaxed text-slate-600">
+                               <span className="text-emerald-600 font-black uppercase tracking-tighter mr-2">{hi ? 'व्याख्या:' : 'Expl:'}</span>
+                               {mockQuestions[mockQIndex].explanation}
+                            </p>
+                         </div>
+                      )}
                     </div>
                   )}
 
-                  {/* RESULT STATE */}
                   {mockStep === 'result' && (
-                    <div className="animate-in zoom-in fade-in space-y-6 text-center duration-500">
+                    <div className="space-y-8 text-center">
                       <div className="relative inline-block">
-                        <div className="absolute -inset-4 animate-pulse rounded-full bg-emerald-500/20 blur-xl"></div>
-                        <div className="relative flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-slate-900 shadow-xl">
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-emerald-400">
-                              {results.totalScore}
-                              <span className="text-sm text-slate-500">/{results.maxMarks}</span>
-                            </div>
-                            <div className="text-[10px] font-bold text-slate-400 uppercase">
-                              Marks
-                            </div>
-                          </div>
-                        </div>
+                        <Trophy className="h-20 w-20 text-amber-500 mx-auto" />
                       </div>
-
-                      <div className="space-y-2">
-                        <h3 className="text-2xl font-bold text-slate-900">
-                          {correctCount === 4
-                            ? language === 'hi'
-                              ? 'शानदार!'
-                              : 'Outstanding!'
-                            : correctCount >= 2
-                              ? language === 'hi'
-                                ? 'बहुत अच्छे!'
-                                : 'Good Job!'
-                              : language === 'hi'
-                                ? 'सुधार की आवश्यकता है'
-                                : 'Needs Work'}
+                      <div>
+                        <h3 className="text-2xl font-black text-slate-900">
+                           {correctCount === 3 ? (hi ? 'शानदार स्कोर!' : 'Perfect Score!') : (hi ? 'अच्छा प्रयास!' : 'Good Effort!')}
                         </h3>
-                        <p className="text-sm text-slate-500">
-                          {language === 'hi'
-                            ? 'आप असली परीक्षा के लिए तैयार हैं। अब पूर्ण 100-प्रश्नों के मॉक टेस्ट अनलॉक करें।'
-                            : "You're ready for the real deal. Unlock full 100-question mock tests now."}
+                        <p className="mt-2 text-sm font-medium text-slate-500">
+                           {hi ? 'MP Police 2026 के नए पैटर्न के लिए आप तैयार हैं।' : 'You are getting ready for the new MP Police 2026 pattern.'}
                         </p>
                       </div>
-
-                      <div className="flex justify-around rounded-xl border border-slate-100 bg-slate-50 p-3 text-center">
-                        <div>
-                          <div className="text-xl font-bold text-slate-900">
-                            {results.percentage}%
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            {language === 'hi' ? 'सटीकता' : 'Accuracy'}
-                          </div>
-                        </div>
-                        <div className="w-px bg-slate-200"></div>
-                        <div>
-                          <div className="text-xl font-bold text-slate-900">
-                            {results.percentage >= 80
-                              ? 'Top 5%'
-                              : results.percentage >= 50
-                                ? 'Top 25%'
-                                : 'Top 60%'}
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            {language === 'hi' ? 'रैंक' : 'Rank'}
-                          </div>
-                        </div>
+                      <div className="flex gap-4">
+                         <div className="flex-1 rounded-2xl bg-slate-50 p-4 text-center">
+                            <div className="text-xl font-black text-slate-900">{results.percentage}%</div>
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{hi ? 'सटीकता' : 'Accuracy'}</div>
+                         </div>
+                         <div className="flex-1 rounded-2xl bg-emerald-600 p-4 text-center text-white">
+                            <div className="text-xl font-black">{correctCount}/3</div>
+                            <div className="text-[10px] font-black opacity-80 uppercase tracking-widest">{hi ? 'सही' : 'Correct'}</div>
+                         </div>
                       </div>
-
                       <Button
-                        onClick={handleMockStart}
+                        onClick={() => setMockStep('intro')}
                         variant="ghost"
-                        className="text-sm text-slate-400 hover:text-slate-900"
+                        className="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-900"
                       >
-                        {language === 'hi' ? 'पुनः प्रयास करें' : 'Try Again'}
+                        {hi ? 'पुनः प्रयास करें' : 'Try Again'}
                       </Button>
                     </div>
                   )}
@@ -302,31 +227,46 @@ export function ExamSimulationSection() {
             </div>
           </div>
 
-          <div className="order-1 space-y-8 lg:order-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-sm font-bold text-rose-300">
-              <Trophy size={14} /> {language === 'hi' ? 'परीक्षा तैयारी' : 'Exam Readiness'}
-            </div>
-            <h2 className="text-4xl font-extrabold tracking-tight text-white md:text-5xl">
-              {language === 'hi' ? 'वास्तविक परीक्षा सिमुलेशन।' : 'Real Exam Simulation.'}
-            </h2>
-            <p className="text-lg leading-relaxed font-medium text-slate-400">
-              {language === 'hi'
-                ? 'MP Police 2026 के नए पैटर्न (3 अंक/प्रश्न, 1/3 नेगेटिव मार्किंग) पर आधारित लेटेस्ट सिमुलेशन। नए 300-अंकों वाले फॉर्मेट में अपनी तैयारी परखें।'
-                : 'Master the new MP Police 2026 pattern: 3 marks per question with 1/3rd negative marking. Real-time simulation for the latest 300-mark format.'}
-            </p>
-            <Button
-              onClick={handleMockStart}
-              disabled={isPreparing}
-              className="h-14 rounded-full bg-rose-600 px-8 text-lg font-bold text-white shadow-lg shadow-rose-600/20 transition-all hover:bg-rose-500 active:scale-95"
-            >
-              {isPreparing ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
-              ) : language === 'hi' ? (
-                'फ्री मॉक टेस्ट शुरू करें'
+          {/* Text Content */}
+          <div className="order-1 space-y-10 lg:order-2">
+            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 px-4 py-1.5 text-xs font-black tracking-widest uppercase">
+               <Sparkles size={14} className="mr-2" />
+               {hi ? 'पूर्ण पाठ्यक्रम' : 'Full Syllabus Coverage'}
+            </Badge>
+            <h2 className="text-5xl font-black tracking-tight text-white md:text-7xl">
+              {hi ? (
+                <>
+                  तीन सेक्शन। <br />
+                  एक पेपर। <br />
+                  <span className="text-emerald-500">पूरा सिलेबस।</span>
+                </>
               ) : (
-                'Start Free Mock Test'
+                <>
+                  Three Sections. <br />
+                  One Paper. <br />
+                  <span className="text-emerald-500">Full Syllabus.</span>
+                </>
               )}
-            </Button>
+            </h2>
+            <p className="text-lg leading-relaxed font-medium text-slate-400 md:text-xl">
+              {hi
+                ? 'MP Police के नए 300-अंकों वाले पैटर्न के हर पहलू को कवर करता है। GK-Science, Reasoning और Maths के लिए विशेष रूप से तैयार किया गया कंटेंट।'
+                : "Covers every aspect of the new 300-mark MP Police pattern. Specialized content tailored for GK-Science, Reasoning, and Maths."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+               <div className="flex items-center gap-3 rounded-2xl bg-white/5 p-4 border border-white/10">
+                  <div className="h-8 w-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                     <Brain className="h-4 w-4 text-purple-400" />
+                  </div>
+                  <span className="text-sm font-bold text-slate-300">{hi ? '1000+ वन-लाइनर्स' : '1000+ One-Liners'}</span>
+               </div>
+               <div className="flex items-center gap-3 rounded-2xl bg-white/5 p-4 border border-white/10">
+                  <div className="h-8 w-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                     <Sigma className="h-4 w-4 text-blue-400" />
+                  </div>
+                  <span className="text-sm font-bold text-slate-300">{hi ? 'गणित समाधान' : 'Maths Solutions'}</span>
+               </div>
+            </div>
           </div>
         </div>
       </div>

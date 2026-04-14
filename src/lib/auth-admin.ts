@@ -10,7 +10,7 @@ import { eq } from 'drizzle-orm';
  * Centralized security check for all /api/admin routes.
  * Returns the admin user object if valid, throws error otherwise.
  */
-export async function validateAdmin() {
+export async function requireAdmin() {
   const cookieStore = await cookies();
   const token = cookieStore.get('mppolice_token')?.value;
 

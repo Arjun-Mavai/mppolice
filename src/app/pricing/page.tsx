@@ -174,20 +174,20 @@ export default function PricingPage() {
 
       {/* ── Hero Header ──────────────────────────────────── */}
       <section className="relative z-10 px-4 pt-24 pb-4 text-center md:pt-32 md:pb-8">
-        <Badge className="mb-6 cursor-default border-amber-200 bg-amber-50 px-5 py-2 text-xs font-black tracking-widest text-amber-800 uppercase shadow-sm">
+        <Badge className="mb-6 cursor-default border-emerald-200 bg-emerald-50 px-5 py-2 text-xs font-black tracking-widest text-emerald-800 uppercase shadow-sm">
           MP Police 2026 Special
         </Badge>
         <h1 className="font-display mb-4 text-4xl leading-tight font-black tracking-tight text-slate-900 md:text-6xl">
           {hi ? (
-             <>अपनी <span className="text-amber-600">MP Police सफलता</span> में निवेश करें</>
+             <>अपनी <span className="text-emerald-600">MP Police सफलता</span> में निवेश करें</>
           ) : (
-             <>Invest in Your <span className="text-amber-600">MP Police Success</span></>
+             <>Invest in Your <span className="text-emerald-600">MP Police Success</span></>
           )}
         </h1>
         <p className="mx-auto mb-2 max-w-2xl text-lg font-bold text-slate-600 md:text-xl">
           {hi
-            ? 'डैशबोर्ड, टेस्ट हिस्ट्री, और हर खंड में सब्जेक्ट-वाइज प्रश्न — उसी JSON-स्टाइल व्याख्या के साथ जो प्लेटफ़ॉर्म पर अपलोड होती है।'
-            : 'Dashboard, test history, and subject-wise questions across every Paper I section — with the same JSON-style explanations you get in-app.'}
+            ? 'डैशबोर्ड, टेस्ट हिस्ट्री, और हर खंड में चैप्टर-वाइज प्रश्न — सर्वश्रेष्ठ व्याख्या और ट्रिक्स के साथ।'
+            : 'Dashboard, test history, and chapter-wise questions across every section — with best-in-class explanations and tricks.'}
         </p>
       </section>
 
@@ -218,7 +218,7 @@ export default function PricingPage() {
                <h2 className="text-2xl font-black text-slate-900 md:text-3xl tracking-tight">
                 {hi ? 'आपको क्या मिलता है?' : 'What do you get?'}
               </h2>
-              <div className="h-1.5 w-20 rounded-full bg-amber-500" />
+              <div className="h-1.5 w-20 rounded-full bg-emerald-500" />
             </div>
             
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
@@ -229,53 +229,34 @@ export default function PricingPage() {
                   sub: hi ? 'प्रगति, पुराने प्रयास, रिवीज़न लूप' : 'Progress, past attempts, revision loop',
                   highlight: true,
                 },
-                {
-                  icon: BarChart3,
-                  label: hi ? 'PYQ इंटेलिजेंस' : 'PYQ intelligence',
-                  sub: hi ? 'ट्रेंड, वेटेज, टॉपिक हीटमैप' : 'Trends, weightage, topic heatmaps',
-                  highlight: true,
-                },
+               
                 {
                   icon: Target,
-                  label: hi ? 'पेपर I — तीन खंड' : 'Paper I — three sections',
-                  sub: hi ? 'GK+तर्क · मानसिक · विज्ञान+अंक' : 'GK+reasoning · mental · science+arithmetic',
+                  label: hi ? 'पेपर I — तीनों खंड' : 'Paper I — All 3 Sections',
+                  sub: hi ? 'सामान्य ज्ञान, तर्कशक्ति, विज्ञान एवं गणित' : 'GK, Reasoning, Science & Maths',
                   highlight: true,
                 },
                 {
                   icon: BookOpen,
-                  label: hi ? 'सब्जेक्ट-वाइज बेस्ट व्याख्या' : 'Subject-wise best explanations',
-                  sub: hi ? 'gk_science / reasoning / math_quant' : 'gk_science / reasoning / math_quant',
+                  label: hi ? 'चैप्टर-वाइज विस्तृत व्याख्या' : 'Chapter-wise Detailed Explanations',
+                  sub: hi ? 'हर प्रश्न के पीछे का सटीक लॉजिक' : 'Step-by-step logic for every answer',
                   highlight: true,
                 },
                 {
                   icon: Zap,
-                  label: hi ? '1000+ वन-लाइनर्स (जल्द)' : '1000+ one-liners (soon)',
-                  sub: hi ? 'तेज रिवीज़न — धीरे-धीरे जोड़े जाएँगे' : 'Fast revision — rolling release',
-                },
-                {
-                  icon: Sparkles,
-                  label: hi ? 'प्रीमियम फैक्ट्स लाइब्रेरी' : 'Premium facts library',
-                  sub: hi ? 'हाई-यील्ड MCQ हुक' : 'High-yield MCQ hooks',
+                  label: hi ? '1000+ वन-लाइनर्स' : '1000+ One-Liners',
+                  sub: hi ? 'तेज रिवीज़न के लिए व्याख्या सहित' : 'With explanations for fast revision',
                   highlight: true,
                 },
                 {
                   icon: FileText,
                   label: hi ? 'फुल मॉक टेस्ट' : 'Full mock tests',
-                  sub: hi ? '100 प्रश्न · 120 मिनट पैटर्न' : '100Q · 120 min pattern',
-                },
-                {
-                  icon: History,
-                  label: hi ? '2020–2025 PYQ' : '2020–2025 PYQs',
-                  sub: hi ? 'वर्ष-वार · खंड-वार · टॉपिक-टैग' : 'Year-wise · section-wise · topic tags',
-                  badges: hi
-                    ? ['वर्ष-वार', 'खंड-वार', 'टॉपिक-वार']
-                    : ['Year-wise', 'Section-wise', 'Topic-wise'],
-                  highlight: true,
+                  sub: hi ? 'लेटेस्ट पैटर्न पर आधारित' : 'Based on the latest exam pattern',
                 },
                 {
                   icon: Newspaper,
                   label: hi ? 'प्रीमियम ब्लॉग्स' : 'Premium blogs',
-                  sub: hi ? 'MP Police सिलेबस की गहरी समझ' : 'Deep dives aligned to MP Police syllabus',
+                  sub: hi ? 'MP Police के लिए विशेष रणनीति' : 'Exclusive strategies for MP Police',
                 },
               ].map((item) => {
                 const { icon: Icon, label, sub, highlight } = item;
