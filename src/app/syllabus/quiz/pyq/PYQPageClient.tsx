@@ -284,7 +284,7 @@ export default function PYQPageClient({
             {/* Collections + 4-tab buckets */}
             <div className="mt-4 flex flex-col gap-3">
               {collectionOptions.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-1">
+                <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                   {collectionOptions.map((c) => (
                     <button
                       key={c}
@@ -296,13 +296,13 @@ export default function PYQPageClient({
                         });
                       }}
                       className={cn(
-                        'shrink-0 rounded-full border px-3 py-1 text-xs font-semibold',
+                        'shrink-0 rounded-full border px-4 py-1.5 text-xs font-bold transition-all duration-200',
                         collection === c
-                          ? 'border-blue-500 bg-blue-50 text-blue-800'
-                          : 'border-slate-200 bg-white text-slate-600'
+                          ? 'border-slate-900 bg-white text-slate-900 shadow-sm ring-1 ring-slate-900'
+                          : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
                       )}
                     >
-                      {c === 'all' ? (hi ? 'सभी' : 'All collections') : c}
+                      {c === 'all' ? (hi ? 'सभी' : 'All') : c}
                     </button>
                   ))}
                 </div>
@@ -318,10 +318,10 @@ export default function PYQPageClient({
                       syncHubQuery({ bucket: b.id });
                     }}
                     className={cn(
-                      'rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors',
+                      'rounded-xl border px-4 py-2 text-xs font-black uppercase tracking-widest transition-all duration-200',
                       uiBucket === b.id
-                        ? 'border-slate-800 bg-slate-800 text-white'
-                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                        ? 'border-slate-950 bg-slate-950 text-white shadow-xl scale-[1.02]'
+                        : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50'
                     )}
                   >
                     {hi ? b.labelHi : b.labelEn}

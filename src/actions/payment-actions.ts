@@ -337,6 +337,8 @@ export async function verifyPayment(input: VerifyPaymentInput) {
       return { error: 'Payment amount does not match any valid plan' };
     }
 
+import { sendTelegramNotification } from '@/lib/telegram';
+
     // 💾 Step 5: Atomic Transaction (Payment + User Update)
     // DB columns: orderId, paymentId, signature, planTier, status (enum: created/captured/failed)
     // amount stored in PAISE (integer column, Razorpay standard)
@@ -361,6 +363,28 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         })
         .where(eq(mppscUsers.id, userId));
     });
+
+    // 🚀 Step 6: Notify via Telegram (Bina kisi secure info ke)
+    try {
+      const amountInRupees = amountInPaise / 100;
+      const userResult = await db.query.mppscUsers.findFirst({
+        where: eq(mppscUsers.id, userId),
+        columns: { name: true, email: true, phone: true }
+      });
+
+      const message = `💰 <b>Payment Successful!</b>\n\n` +
+        `👤 User: ${userResult?.name || 'Unknown'}\n` +
+        `📧 Email: ${userResult?.email || 'N/A'}\n` +
+        `📞 Phone: ${userResult?.phone || 'N/A'}\n` +
+        `🎟️ Plan: ${planTier.toUpperCase()}\n` +
+        `💵 Amount: ₹${amountInRupees}\n` +
+        `🆔 Payment ID: ${razorpay_payment_id.slice(-6)} (Masked)\n` +
+        `✅ Access granted instantly.`;
+
+      await sendTelegramNotification(message);
+    } catch (err) {
+      logger.error('Telegram notification failed for payment', { err });
+    }
 
     logger.info('Payment verified successfully', {
       category: 'payment',

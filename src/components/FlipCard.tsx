@@ -153,6 +153,7 @@ const FlipCard: React.FC<FlipCardProps> = ({
             'flex flex-col items-center justify-between p-8 sm:p-10',
             'transition-all duration-500 group-hover:border-slate-200 group-hover:shadow-slate-500/10',
             isLocked && 'opacity-90 grayscale-[0.8]',
+            flipped && 'pointer-events-none', // 🛡️ Prevent click-through when flipped
             frontClassName
           )}
         >
@@ -209,6 +210,7 @@ const FlipCard: React.FC<FlipCardProps> = ({
             'absolute h-full w-full rotate-y-180 rounded-[2.5rem] backface-hidden',
             'border border-slate-800 bg-[#0F172A] shadow-2xl shadow-slate-950/20', // Darker premium bg
             'flex flex-col justify-between overflow-hidden p-8',
+            !flipped && 'pointer-events-none', // 🛡️ Prevent accidental clicks when showing front
             backClassName
           )}
         >
