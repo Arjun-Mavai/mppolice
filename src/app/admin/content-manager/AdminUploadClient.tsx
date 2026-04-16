@@ -52,41 +52,49 @@ const parseJSONRobust = (jsonString: string) => {
     }
   }
 
+  // Pass 1: Remove trailing commas (common in AI outputs)
+  cleaned = cleaned.replace(/,\s*([\]}])/g, '$1');
+
   try {
     return JSON.parse(cleaned);
   } catch (initialError) {
-    // If standard parse fails, perform aggressive sanitization for control characters
+    // Pass 2: Aggressive sanitization for control characters and invalid escapes
     let inString = false;
     let escape = false;
     let sanitized = '';
 
     for (let i = 0; i < cleaned.length; i++) {
       const char = cleaned[i];
+      const nextChar = cleaned[i + 1];
+
+      // Toggle inString on unescaped quotes
       if (char === '"' && !escape) {
         inString = !inString;
       }
 
-      if (inString) {
-        if (char === '\n') {
-          sanitized += '\\n';
-          escape = false;
-          continue;
+      if (inString && !escape) {
+        if (char === '\\') {
+          // Valid JSON escapes: \", \\, \/, \b, \f, \n, \r, \t, \uXXXX
+          const validEscapes = '"\\/bfnrtu';
+          if (!nextChar || !validEscapes.includes(nextChar)) {
+            // Found a "naked" backslash or invalid escape (\_ \  \*)
+            // Escape the backslash so it becomes a literal backslash in the string
+            sanitized += '\\\\';
+            continue;
+          } else {
+            // This is a valid escape sequence starting character
+            sanitized += '\\';
+            escape = true; // Next character is part of this escape sequence
+            continue;
+          }
         }
-        if (char === '\r') {
-          sanitized += '\\r';
-          escape = false;
-          continue;
-        }
-        if (char === '\t') {
-          sanitized += '\\t';
-          escape = false;
-          continue;
-        }
-      }
-
-      if (char === '\\' && !escape) {
-        escape = true;
-      } else {
+        
+        // Handle literal control characters that might be unescaped inside strings
+        if (char === '\n') { sanitized += '\\n'; continue; }
+        if (char === '\r') { sanitized += '\\r'; continue; }
+        if (char === '\t') { sanitized += '\\t'; continue; }
+      } else if (escape) {
+        // We just processed a backslash that started a valid escape
         escape = false;
       }
 
@@ -96,6 +104,7 @@ const parseJSONRobust = (jsonString: string) => {
     try {
       return JSON.parse(sanitized);
     } catch (fallbackError: any) {
+      logger.error(`Robust JSON Parse Failed. Original length: ${cleaned.length}`, fallbackError, { category: 'admin' });
       throw new Error(`Syntax Error: ${fallbackError.message}. Please verify the JSON structure.`);
     }
   }
