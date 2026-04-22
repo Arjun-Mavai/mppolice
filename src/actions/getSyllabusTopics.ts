@@ -1,12 +1,13 @@
 'use server';
 
 import { db } from '@/db';
-import { syllabusTopics, tests, userAttempts as userAttemptsTable } from '@/db/schema';
-import { asc, eq, inArray, and, sql } from 'drizzle-orm';
+import { tests, userAttempts as userAttemptsTable } from '@/db/schema';
+import { eq, inArray, and, sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { unstable_cache } from 'next/cache';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 import { verifyAuth } from '@/lib/auth';
+import { getMppoliceFlattenedTopics } from '@/data/mppoliceSyllabus';
 
 /**
  * Same pattern as getCachedFLTTests — 60s revalidate, tag 'tests'
@@ -15,24 +16,41 @@ import { verifyAuth } from '@/lib/auth';
 const getCachedBaseSyllabusData = unstable_cache(
   async () => {
     try {
-      const topics = await db.query.syllabusTopics.findMany({
-        where: eq(syllabusTopics.examType, 'mppolice'),
-        orderBy: [asc(syllabusTopics.order)],
-      });
+      // MP Police uses hardcoded picker topic IDs in admin uploads.
+      // So chapter-wise mapping must use the same picker as source-of-truth.
+      const pickerTopics = getMppoliceFlattenedTopics();
+      if (pickerTopics.length === 0) return { topics: [], relatedTests: [] };
 
-      if (topics.length === 0) return { topics: [], relatedTests: [] };
+      const topics = pickerTopics.map((t, idx) => ({
+        id: t.id,
+        unitId: t.sectionId,
+        order: idx + 1,
+        title: t.front,
+        titleEn: t.frontEn || null,
+        description: null,
+        descriptionEn: null,
+      }));
 
       const topicIds = topics.map((t) => t.id);
       const relatedTests = await db
         .select({
           id: tests.id,
           topicId: tests.topicId,
+          unitId: tests.unitId,
+          type: tests.type,
           isFreeAccess: tests.isFreeAccess,
           isLiteAccess: tests.isLiteAccess,
           isProAccess: tests.isProAccess,
         })
         .from(tests)
-        .where(and(inArray(tests.topicId, topicIds), eq(tests.isHidden, false)));
+        .where(
+          and(
+            eq(tests.type, 'TOPIC'),
+            inArray(tests.topicId, topicIds),
+            eq(tests.isHidden, false),
+            eq(tests.examType, 'mppolice')
+          )
+        );
 
       return { topics, relatedTests };
     } catch (error) {
@@ -40,7 +58,7 @@ const getCachedBaseSyllabusData = unstable_cache(
       throw error;
     }
   },
-  ['syllabus-base-data-v3'],
+  ['syllabus-base-data-mppolice-v1'],
   { revalidate: 60, tags: ['tests'] }
 );
 
@@ -63,14 +81,15 @@ export async function getSyllabusTopics() {
     const maxRetries = attemptLimits['TOPIC'] ?? null;
 
     // 1. Create a map of topicId -> test info
+    // If multiple tests exist for one topicId, we pick the first one (they are ordered by createdAt desc by default in base query usually, or we can just pick one)
     const topicTestMap = relatedTests.reduce(
       (acc, curr) => {
-        if (curr.topicId) {
+        if (curr.topicId && (!acc[curr.topicId] || curr.type === 'TOPIC')) {
           acc[curr.topicId] = {
             testId: curr.id,
             isFreeAccess: !!curr.isFreeAccess,
             isLiteAccess: !!curr.isLiteAccess,
-            isProAccess: curr.isProAccess ?? true, // Default true for pro
+            isProAccess: curr.isProAccess ?? true,
           };
         }
         return acc;

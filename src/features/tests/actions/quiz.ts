@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { tests, userAttempts } from '@/db/schema';
-import { eq, and, sql, inArray, asc } from 'drizzle-orm';
+import { eq, and, sql, inArray, asc, desc } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { verifyAuth } from '@/lib/auth';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
@@ -14,11 +14,17 @@ const getCachedUnitTests = unstable_cache(
       .select()
       .from(tests)
       .where(
-        and(eq(tests.type, 'UNIT'), eq(tests.isHidden, false), eq(tests.examType, 'mppolice'))
+        and(
+          // Full-tests hub "Syllabus/Subject" tab should only show UNIT tests.
+          // Chapter-wise TOPIC tests have a dedicated screen (/syllabus/quiz/chapters).
+          inArray(tests.type, ['UNIT']),
+          eq(tests.isHidden, false),
+          eq(tests.examType, 'mppolice')
+        )
       )
-      .orderBy(asc(tests.displayOrder));
+      .orderBy(asc(tests.displayOrder), desc(tests.createdAt));
   },
-  ['unit-tests-list'],
+  ['unit-tests-list-v2'],
   { revalidate: 60, tags: ['tests'] }
 );
 

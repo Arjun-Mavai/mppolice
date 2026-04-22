@@ -1,20 +1,24 @@
 import {
   getCachedPYQTests,
   getCachedMppoliceMockTests,
+  getCachedFLTTests,
   getUserAttempts,
 } from '@/features/tests/actions/submission';
-import { getSubjectWisePYQStats } from '@/features/tests/actions/pyq-analytics'; // Back to original
 import PYQPageClient from './PYQPageClient';
 import { verifyAuth } from '@/lib/auth';
 import { getUserTier, hasAccessToContent } from '@/lib/access-control';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 import { Suspense } from 'react';
 import { QuizListSkeleton } from '@/components/QuizListSkeleton';
+import {
+  isMbtByCollectionTags,
+  isFltFamilyHubType,
+} from '@/lib/mppolice/pyq-hub-filters';
 
 export default async function PYQPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ mode?: string; tab?: string; bucket?: string; collection?: string }>;
+  searchParams?: Promise<{ mode?: string; tab?: string; collection?: string }>;
 }) {
   const params = searchParams ? await searchParams : {};
 
@@ -24,7 +28,6 @@ export default async function PYQPage({
         <PYQPageData
           mode={params.mode}
           initialTab={params.tab}
-          initialBucket={params.bucket}
           initialCollection={params.collection}
         />
       </Suspense>
@@ -47,24 +50,53 @@ function QuizListFallback() {
 async function PYQPageData({
   mode,
   initialTab,
-  initialBucket,
   initialCollection,
 }: {
   mode?: string;
   initialTab?: string;
-  initialBucket?: string;
   initialCollection?: string;
 }) {
   const userPromise = verifyAuth();
-  const [user, pyqTests, mockTests, attemptLimits, subjectStats] = await Promise.all([
+  const [user, pyqTests, mockTests, fltOnlyRows, attemptLimits] = await Promise.all([
     userPromise,
     getCachedPYQTests(),
     getCachedMppoliceMockTests(),
+    getCachedFLTTests(),
     getCachedAttemptLimits(),
-    getSubjectWisePYQStats(),
   ]);
 
-  const allIds = [...pyqTests.map((t) => t.id), ...mockTests.map((t) => t.id)];
+  /** Ensure every FLT row is in the hub list (tags + MBT routing stay in sync with DB). */
+  const mockTestsMerged = (() => {
+    const byId = new Map(mockTests.map((t) => [t.id, t]));
+    for (const f of fltOnlyRows) {
+      if (byId.has(f.id)) continue;
+      byId.set(f.id, {
+        id: f.id,
+        title: f.title,
+        titleEn: f.titleEn,
+        description: f.description,
+        slug: f.slug,
+        durationMinutes: f.durationMinutes,
+        totalQuestions: f.totalQuestions,
+        totalMarks: f.totalMarks,
+        type: f.type,
+        isPro: f.isPro,
+        isFreeAccess: f.isFreeAccess,
+        isLiteAccess: f.isLiteAccess,
+        isProAccess: f.isProAccess,
+        displayOrder: f.displayOrder,
+        createdAt: f.createdAt,
+        tags: f.tags,
+        examType: f.examType,
+        year:
+          f.title?.match(/\d{4}/)?.[0] ||
+          (f.createdAt ? new Date(f.createdAt).getFullYear().toString() : ''),
+      });
+    }
+    return Array.from(byId.values());
+  })();
+
+  const allIds = [...pyqTests.map((t) => t.id), ...mockTestsMerged.map((t) => t.id)];
   const attempts =
     user && allIds.length > 0
       ? await getUserAttempts(allIds, user.id)
@@ -90,6 +122,9 @@ async function PYQPageData({
 
     return {
       ...test,
+      type: test.type,
+      tags: test.tags,
+      examType: test.examType ?? 'mppolice',
       questions: test.totalQuestions ?? 0,
       totalQuestions: test.totalQuestions ?? 0,
       isLocked: !hasAccess && !(test.isFreeAccess ?? false),
@@ -100,7 +135,7 @@ async function PYQPageData({
     };
   });
 
-  const enrichedMocks = mockTests.map((test) => {
+  const enrichedMocks = mockTestsMerged.map((test) => {
     const hasAccess =
       user?.role === 'admin' ||
       hasAccessToContent(
@@ -120,6 +155,10 @@ async function PYQPageData({
 
     return {
       ...test,
+      type: test.type,
+      tags: test.tags,
+      examType: test.examType ?? 'mppolice',
+      isHidden: false,
       questions: test.totalQuestions ?? 0,
       totalQuestions: test.totalQuestions ?? 0,
       isLocked: !hasAccess && !(test.isFreeAccess ?? false),
@@ -130,15 +169,26 @@ async function PYQPageData({
     };
   });
 
+  /** MBT list built on server from DB `tags` + `type` (same rules as hub; avoids client-only drops). */
+  const initialMbtTests = (() => {
+    const fromPyq = enrichedTests.filter((t) => isMbtByCollectionTags(t.tags));
+    const fromFlt = enrichedMocks.filter(
+      (t) => isMbtByCollectionTags(t.tags) && isFltFamilyHubType(t.type)
+    );
+    const map = new Map<string, (typeof enrichedTests)[number]>();
+    for (const t of fromPyq) map.set(t.id, t);
+    for (const t of fromFlt) map.set(t.id, t);
+    return Array.from(map.values());
+  })();
+
   return (
     <PYQPageClient
       initialTests={enrichedTests}
       initialMockTests={enrichedMocks}
-      subjectStats={subjectStats}
+      initialMbtTests={initialMbtTests}
       isLoggedIn={!!user}
       mode={mode}
       initialTab={initialTab}
-      initialBucket={initialBucket}
       initialCollection={initialCollection}
     />
   );

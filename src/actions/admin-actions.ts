@@ -3,8 +3,9 @@
 import { db } from '@/db';
 import { tests, questions, contentBlogs, paymentExitReasons, guests } from '@/db/schema';
 import { nanoid } from 'nanoid';
-import { revalidatePath } from 'next/cache';
-import { eq, sql, desc } from 'drizzle-orm';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { eq, sql, desc, and } from 'drizzle-orm';
+import { CACHE } from '@/lib/cache';
 import { AdminDashboardResponse } from '@/types/admin';
 import { logger } from '@/lib/logger';
 import { requireAdmin } from '@/lib/auth-admin';
@@ -299,7 +300,41 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         .where(eq(tests.id, testId || ''));
     }
 
+    // Existing-test JSON uploads never applied `collectionTag` before — merge into `tests.tags` so
+    // PYQ/FLT + `collection:memory` shows under MBT on the quiz hub.
+    if (mode === 'existing' && testId) {
+      const collectionFromForm = formData.get('collectionTag');
+      if (typeof collectionFromForm === 'string' && collectionFromForm.trim()) {
+        const [testRow] = await db.select({ tags: tests.tags }).from(tests).where(eq(tests.id, testId));
+        const rawTags = testRow?.tags;
+        let tagList: string[] = [];
+        if (Array.isArray(rawTags)) {
+          tagList = rawTags.map((t) => String(t));
+        } else if (rawTags && typeof rawTags === 'object') {
+          tagList = Object.values(rawTags as Record<string, unknown>).map((v) => String(v));
+        } else if (typeof rawTags === 'string') {
+          try {
+            const p = JSON.parse(rawTags) as unknown;
+            if (Array.isArray(p)) tagList = p.map((t) => String(t));
+          } catch {
+            tagList = [];
+          }
+        }
+        const trimmed = collectionFromForm.trim();
+        const withoutCollection = tagList.filter((t) => !/^collection\s*:/i.test(t));
+        withoutCollection.push(`collection:${trimmed}`);
+        await db
+          .update(tests)
+          .set({ tags: withoutCollection, updatedAt: new Date() })
+          .where(eq(tests.id, testId));
+      }
+    }
+
+    revalidateTag(CACHE.TESTS.TAGS.ALL, { expire: 0 });
+    revalidateTag('tests-list', { expire: 0 });
+    revalidateTag('syllabus-topics', { expire: 0 });
     revalidatePath('/tests');
+    revalidatePath('/admin/dashboard');
     const dupMsg = duplicatesCount > 0 ? ` (${duplicatesCount} duplicates skipped)` : '';
     return {
       success: true,

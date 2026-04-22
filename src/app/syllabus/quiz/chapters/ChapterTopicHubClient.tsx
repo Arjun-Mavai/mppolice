@@ -17,6 +17,7 @@ import {
   topicMatchesChapterFilter,
   type ChapterCategoryId,
 } from '@/lib/mppolice/chapter-topic-category';
+import { getSectionLabel } from '@/data/mppoliceSyllabus';
 
 interface Topic {
   id: string;
@@ -75,16 +76,17 @@ export default function ChapterTopicHubClient({ initialDbData }: ChapterTopicHub
   }, [catParam]);
 
   const flatTopics = useMemo(() => {
-    const rows: (Topic & { unitIndex: number })[] = [];
+    const rows: (Topic & { sectionOrder: number })[] = [];
     if (!initialDbData) return rows;
     for (const [unitId, topics] of Object.entries(initialDbData)) {
-      const unitIndex = parseInt(unitId.replace('unit_', ''), 10) || 0;
+      const sectionOrder =
+        unitId === 'sec_gk_reasoning' ? 1 : unitId === 'sec_mental_ability' ? 2 : unitId === 'sec_science_arithmetic' ? 3 : 9;
       for (const t of topics) {
-        rows.push({ ...t, unitIndex });
+        rows.push({ ...t, sectionOrder });
       }
     }
     return rows.sort((a, b) => {
-      if (a.unitIndex !== b.unitIndex) return a.unitIndex - b.unitIndex;
+      if (a.sectionOrder !== b.sectionOrder) return a.sectionOrder - b.sectionOrder;
       return a.order - b.order;
     });
   }, [initialDbData]);
@@ -107,7 +109,7 @@ export default function ChapterTopicHubClient({ initialDbData }: ChapterTopicHub
     });
   }, [filtered, router]);
 
-  const handleTopicClick = (topic: Topic & { unitIndex: number }) => {
+  const handleTopicClick = (topic: Topic & { sectionOrder: number }) => {
     const isAdmin = (user as { role?: string })?.role === 'admin';
     const effectiveTier = getUserTier(user);
 
@@ -204,7 +206,7 @@ export default function ChapterTopicHubClient({ initialDbData }: ChapterTopicHub
                 topic.isFreeAccess;
               const isLocked = !hasAccess;
 
-              const unitLabel = hi ? `यूनिट ${topic.unitIndex}` : `Unit ${topic.unitIndex}`;
+              const unitLabel = getSectionLabel(topic.unitId, hi ? 'hi' : 'en');
               const primaryTitle = hi ? topic.title : topic.titleEn || topic.title;
               const altLine = (hi ? topic.titleEn?.trim() : topic.title?.trim()) || '';
               const cardSubtitle = [unitLabel, altLine && altLine !== primaryTitle ? altLine : '']

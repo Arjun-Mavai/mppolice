@@ -1,5 +1,3 @@
-'use client';
-
 import { motion } from 'framer-motion';
 import { LucideIcon, Plus, Sparkles, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -19,36 +17,36 @@ interface PYQCardProps {
 
 const VARIANTS = {
   blue: {
-    bg: 'bg-blue-50',
-    text: 'text-blue-600',
-    icon: 'text-blue-400',
-    border: 'border-blue-100',
-    shadow: 'shadow-blue-200/40',
-    gradient: 'from-blue-500 to-blue-600',
+    bg: 'bg-blue-50/80',
+    text: 'text-blue-700',
+    iconColor: 'text-blue-500',
+    border: 'border-blue-200/60',
+    shadow: 'shadow-blue-200/50',
+    gradient: 'from-blue-600 to-blue-700',
   },
   pink: {
-    bg: 'bg-pink-50',
-    text: 'text-pink-600',
-    icon: 'text-pink-400',
-    border: 'border-pink-100',
-    shadow: 'shadow-pink-200/40',
-    gradient: 'from-pink-500 to-pink-600',
+    bg: 'bg-pink-50/80',
+    text: 'text-pink-700',
+    iconColor: 'text-pink-500',
+    border: 'border-pink-200/60',
+    shadow: 'shadow-pink-200/50',
+    gradient: 'from-pink-600 to-pink-700',
   },
   emerald: {
-    bg: 'bg-emerald-50',
-    text: 'text-emerald-600',
-    icon: 'text-emerald-400',
-    border: 'border-emerald-100',
-    shadow: 'shadow-emerald-200/40',
-    gradient: 'from-emerald-500 to-emerald-600',
+    bg: 'bg-emerald-50/80',
+    text: 'text-emerald-700',
+    iconColor: 'text-emerald-500',
+    border: 'border-emerald-200/60',
+    shadow: 'shadow-emerald-200/50',
+    gradient: 'from-emerald-600 to-emerald-700',
   },
   amber: {
-    bg: 'bg-amber-50',
-    text: 'text-amber-600',
-    icon: 'text-amber-400',
-    border: 'border-amber-100',
-    shadow: 'shadow-amber-200/40',
-    gradient: 'from-amber-500 to-amber-600',
+    bg: 'bg-amber-50/80',
+    text: 'text-amber-700',
+    iconColor: 'text-amber-500',
+    border: 'border-amber-200/60',
+    shadow: 'shadow-amber-200/50',
+    gradient: 'from-amber-600 to-amber-700',
   },
 };
 
@@ -69,82 +67,82 @@ export function PYQCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay }}
-      whileHover={{ y: -8, scale: 1.01 }}
-      whileTap={{ scale: 0.96 }}
+      transition={{ delay, duration: 0.4 }}
+      whileHover={{ y: -6, scale: 1.02 }}
+      whileTap={{ scale: 0.97 }}
       onClick={onClick}
       className={cn(
-        'group relative flex h-[320px] w-full cursor-pointer flex-col justify-between overflow-hidden rounded-[2.5rem] border p-6 transition-all duration-300',
+        'group relative flex h-[310px] w-full cursor-pointer flex-col justify-between overflow-hidden rounded-[2.5rem] border p-6 transition-all duration-300',
         style.bg,
         style.border,
-        'shadow-sm hover:shadow-2xl',
+        'shadow-md hover:shadow-2xl active:shadow-sm',
         style.shadow,
-        isLocked && 'opacity-80 grayscale-[0.6]'
+        isLocked && 'opacity-60 grayscale-[0.5]'
       )}
     >
+      {/* Dynamic Background Noise/Glow */}
+      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] pointer-events-none" />
+      <div className={cn("absolute -top-10 -right-10 h-32 w-32 rounded-full blur-[60px] opacity-20", style.bg.split('/')[0])} />
+
       {/* Top Bar: Search Pill + Plus Icon */}
       <div className="relative z-10 flex items-center justify-between">
-        <div className="flex items-center gap-2 rounded-full border border-white bg-white/80 px-3 py-1.5 shadow-sm backdrop-blur-sm">
-          <FolderOpen className={cn('h-3.5 w-3.5', style.icon)} />
-          <span className="text-[10px] font-black tracking-wider text-slate-800 uppercase">
+        <div className="flex items-center gap-2 rounded-full border border-white/60 bg-white/90 px-3 py-1.5 shadow-sm backdrop-blur-md">
+          <FolderOpen className={cn('h-3.5 w-3.5', style.iconColor)} />
+          <span className="text-[10px] font-black tracking-wider text-slate-900 uppercase">
             {hi ? 'विषय' : 'Topics'}
           </span>
         </div>
 
         <div
-          className={cn('rounded-full p-2 transition-colors group-hover:bg-white/50', style.text)}
+          className={cn('rounded-full bg-white/40 p-2 border border-white/60 transition-all duration-500 group-hover:bg-white group-hover:shadow-lg', style.text)}
         >
           <Plus className="h-5 w-5 transition-transform duration-500 group-hover:rotate-90" />
         </div>
       </div>
 
       {/* Centered Visual (Floating Icon) */}
-      <div className="relative -mt-4 flex flex-1 items-center justify-center">
-        <div className="relative flex h-32 w-32 items-center justify-center">
-          {/* Floating Decorative Rings */}
+      <div className="relative -mt-2 flex flex-1 items-center justify-center">
+        <div className="relative flex h-28 w-28 items-center justify-center">
           <div
             className={cn(
-              'absolute inset-0 rounded-full opacity-20 blur-2xl',
-              style.bg.replace('50', '200') // Darker blur
+              'absolute inset-0 rounded-full opacity-30 blur-2xl',
+              style.bg.split(' ')[0].replace('50', '300')
             )}
           />
 
-          <div className="animate-float relative z-10 text-slate-900 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6">
+          <div className="relative z-10 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6">
             <div
               className={cn(
-                'flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br shadow-xl',
+                'flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-gradient-to-br shadow-2xl ring-4 ring-white/50',
                 style.gradient
               )}
             >
-              <Icon className="h-10 w-10 text-white" />
+              <Icon className="h-10 w-10 text-white drop-shadow-md" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Bottom Content: Title & Stats */}
-      <div className="relative z-10 space-y-3">
+      <div className="relative z-10 space-y-4">
         <div>
-          <h3 className="line-clamp-2 text-2xl leading-none font-black text-slate-900 transition-colors group-hover:text-slate-800">
+          <h3 className="line-clamp-2 text-2xl leading-none font-black text-slate-950 transition-colors">
             {title}
           </h3>
           {description && (
-            <p className="mt-1 line-clamp-1 text-xs font-medium text-slate-500">{description}</p>
+            <p className="mt-1 line-clamp-1 text-xs font-bold text-slate-600/80">{description}</p>
           )}
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="inline-flex items-center rounded-lg border border-white bg-white px-2.5 py-1 text-[9px] font-black tracking-widest text-slate-600 uppercase shadow-sm">
-            <Sparkles className={cn('mr-1.5 h-3 w-3', style.icon)} />
+          <div className="inline-flex items-center rounded-xl border border-white/60 bg-white/90 px-3 py-1.5 text-[10px] font-black tracking-widest text-slate-800 uppercase shadow-sm backdrop-blur-sm">
+            <Sparkles className={cn('mr-2 h-3 w-3', style.iconColor)} />
             {count} {hi ? 'प्रश्न' : 'Questions'}
           </div>
         </div>
       </div>
-
-      {/* Background Glows (Subtle) */}
-      <div className="absolute -right-10 -bottom-10 h-40 w-40 rounded-full bg-white/40 blur-3xl" />
     </motion.div>
   );
 }

@@ -33,10 +33,15 @@ export const getCachedPYQTests = unstable_cache(
         isHidden: tests.isHidden,
         createdAt: tests.createdAt,
         tags: tests.tags,
+        examType: tests.examType,
       })
       .from(tests)
       .where(
-        and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false), eq(tests.examType, 'mppolice'))
+        and(
+          eq(tests.type, 'PYQ'),
+          eq(tests.isHidden, false),
+          or(eq(tests.examType, 'mppolice'), eq(tests.examType, 'all'))
+        )
       )
       .orderBy(asc(tests.displayOrder), desc(tests.createdAt));
 
@@ -45,7 +50,7 @@ export const getCachedPYQTests = unstable_cache(
       year: test.title.match(/\d{4}/)?.[0] || new Date(test.createdAt!).getFullYear().toString(),
     }));
   },
-  ['pyq-tests-list-v4'],
+  ['pyq-tests-list-v7'],
   { revalidate: 60, tags: ['tests'] }
 );
 
@@ -70,12 +75,13 @@ export const getCachedMppoliceMockTests = unstable_cache(
         displayOrder: tests.displayOrder,
         createdAt: tests.createdAt,
         tags: tests.tags,
+        examType: tests.examType,
       })
       .from(tests)
       .where(
         and(
           eq(tests.isHidden, false),
-          eq(tests.examType, 'mppolice'),
+          or(eq(tests.examType, 'mppolice'), eq(tests.examType, 'all')),
           inArray(tests.type, ['FLT', 'POLICE_CONSTABLE', 'POLICE_SI', 'UNIT', 'TOPIC', 'CSAT'])
         )
       )
@@ -86,7 +92,7 @@ export const getCachedMppoliceMockTests = unstable_cache(
       year: test.title.match(/\d{4}/)?.[0] || new Date(test.createdAt!).getFullYear().toString(),
     }));
   },
-  ['mppolice-mock-tests-v1'],
+  ['mppolice-mock-tests-v4'],
   { revalidate: 60, tags: ['tests'] }
 );
 
@@ -96,11 +102,15 @@ export const getCachedFLTTests = unstable_cache(
       .select()
       .from(tests)
       .where(
-        and(eq(tests.type, 'FLT'), eq(tests.isHidden, false), eq(tests.examType, 'mppolice'))
+        and(
+          eq(tests.type, 'FLT'),
+          eq(tests.isHidden, false),
+          or(eq(tests.examType, 'mppolice'), eq(tests.examType, 'all'))
+        )
       )
       .orderBy(asc(tests.displayOrder));
   },
-  ['flt-tests-list'],
+  ['flt-tests-list-v2'],
   { revalidate: 60, tags: ['tests'] }
 );
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, type ChangeEvent } from 'react';
+import React, { useState, useEffect, useMemo, type ChangeEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,7 +18,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { uploadBlog } from '@/actions/blog-actions';
 import { uploadTestFromJSON, getExistingTests } from '@/actions/admin-actions';
 import { toast } from 'sonner';
-import { Loader2, Upload, BookOpen, FileText, CheckCircle2, Plus, Database, Copy, Sparkles, MessageSquare, ExternalLink, ArrowRight } from 'lucide-react';
+import { Loader2, Upload, BookOpen, FileText, CheckCircle2, Plus, Database, Copy, Sparkles, MessageSquare, ExternalLink, ArrowRight, Zap, Layers } from 'lucide-react';
 import {
   MPPOLICE_SECTION_IDS,
   getMppoliceTopicsForSection,
@@ -145,6 +145,7 @@ export default function AdminUploadPage() {
 
   // Prompt Generator State
   const [promptBucket, setPromptBucket] = useState('');
+  const [promptMode, setPromptMode] = useState<'standard' | 'pyp' | 'subject_variety' | 'chapter_10q' | 'flt_expert'>('standard');
   const [generatedPrompt, setGeneratedPrompt] = useState('');
 
   const generateAIPrompt = () => {
@@ -153,6 +154,13 @@ export default function AdminUploadPage() {
       return;
     }
 
+    // 1. DYNAMIC TOPIC DETECTION
+    const unitLabel = getSectionLabel(testData.unitId, topicLang);
+    const selectedTopic = findTopicById(testData.topicId);
+    const targetTopicFull = selectedTopic 
+      ? `${unitLabel}: ${selectedTopic.front}` 
+      : (testData.subjectTag || unitLabel);
+
     // Determine the stream based on the subject/bucket
     let streamType = 'gk_science';
     let isMixed = false;
@@ -160,8 +168,7 @@ export default function AdminUploadPage() {
     if (promptBucket === 'quantitative_aptitude') streamType = 'math_quant';
     if (promptBucket === 'auto_mixed' || promptBucket === 'mp_general_knowledge') {
       isMixed = true;
-      // Default fallback for mixed
-      streamType = 'auto (gk_science, reasoning, or math_quant)';
+      streamType = 'auto'; // Will be detected by AI per question
     }
 
     const testTypeContext = testData.type === 'TOPIC' ? 'Chapter-wise Topic Test' 
@@ -170,86 +177,93 @@ export default function AdminUploadPage() {
                           : testData.type === 'PYQ' ? 'Previous Year Paper'
                           : testData.type;
 
-    const streamInstructions = isMixed 
-      ? `5. DEEP EXPLANATION FORMAT (AUTO-DETECT): Since this is a mixed test (e.g. FLT/PYP/MBT), YOU MUST ANALYZE EACH QUESTION individually.
-   - If the question is Math/Quant, strictly use stream: "math_quant"
-   - If the question is Logical Reasoning, strictly use stream: "reasoning"
-   - If the question is GK/Science, strictly use stream: "gk_science"
-   You must provide the correct keys in the explanation depending on the stream chosen (see EXPLANATION KEY MAPPING below).`
-      : `5. DEEP EXPLANATION FORMAT: Every single question MUST include the "extendedData.explanation" JSON block with stream: "${streamType}". This brings the Instant Mode to life.`;
+    // --- MODE SPECIFIC INSTRUCTIONS ---
+    let modeInstructions = '';
+    let countInstruction = '';
+    let rolePersonaSnippet = '';
 
-    const explanationKeyMapping = isMixed
-      ? `EXPLANATION KEY MAPPING (Based on Stream chosen):
-For "gk_science":
-{ "stream": "gk_science", "facts": ["Point 1 (Hi/En)", "Point 2"], "factsEn": ["Point 1 En", "Point 2 En"], "mnemonics": ["Short trick or way to remember"], "related": ["Related concept"], "memoryTip": "Friendly teacher tip (e.g. इसे हमेशा ऐसे याद रखो...)" }
+    if (promptMode === 'pyp') {
+      rolePersonaSnippet = 'Reconstruct the provided Memory-Based paper with 100% accuracy.';
+      modeInstructions = `TASK: Accurate Memory-Based Reconstruction. 
+- Analyize the raw text and reconstruct it as a formal MP Police Constable Paper.
+- Ensure the weightage matching VYAPAM/ESB standards.
+- Maintain the original pattern strictly.`;
+      countInstruction = 'Reconstruct all questions provided in the raw text.';
+    } else {
+      // SELF-GENERATION MODES (CHAPTER / SUBJECT / FLT)
+      rolePersonaSnippet = 'Assume the role of an MP POLICE CONSTABLE EXAM EXPERT. Generate original, high-quality questions strictly based on the latest VYAPAM/ESB patterns (2023-2024).';
+      
+      if (promptMode === 'subject_variety') {
+        modeInstructions = `TASK: Subject-Wise Expert Generation.
+- RESEARCH: Deeply analyze MP Police Constable patterns. Questions must be 10th/12th standard level. 
+- VARIETY: Generate 20 UNIQUE (unless specified) questions. ${streamType === 'reasoning' ? 'Include at least 1-2 "Situation Reaction Test (SRT) / Police Ethics" questions.' : ''}
+- LEVEL: Strictly MP Police Constable grade. Do not use UPSC/SSC CGL level.`;
+        countInstruction = 'Generate 20 high-quality original questions.';
+      } else if (promptMode === 'chapter_10q') {
+        modeInstructions = `TASK: Chapter-Wise Expert Deep Dive.
+- COUNT: Generate EXACTLY 10 QUESTIONS.
+- FOCUS: Cover every single subtype of this specific chapter (from basic to trap questions).`;
+        countInstruction = 'Generate exactly 10 high-quality original questions.';
+      } else if (promptMode === 'flt_expert') {
+        modeInstructions = `TASK: Full Length Mock (100Q) / Mirror Test.
+- BALANCE: 40 (GK/Reasoning) + 30 (Intellectual/Mental) + 30 (Science/Arithmetic).
+- SIMULATION: Create a "Mirror Test" of a real MP Police Shift. ${promptBucket === 'auto' ? 'Use a balanced mix of all subjects.' : ''}`;
+        countInstruction = 'Generate a complete balanced paper (suggest 100Q unless specified otherwise).';
+      }
+    }
 
-For "reasoning":
-{ "stream": "reasoning", "chain": ["Step 1 clear thought", "Step 2"], "chainEn": ["Step 1 En", "Step 2 En"], "pattern": "The exact logic/pattern used", "elimination": "Why 3 other options are instantly wrong", "memoryTip": "Shortcut to see this logic next time" }
+    // Dynamic Explanation Key Mapping based on Stream
+    const explanationConfig = isMixed 
+      ? `DEEP EXPLANATION FORMAT (AUTO-DETECT):
+For "gk_science": { "stream": "gk_science", "facts": [], "factsEn": [], "mnemonics": [], "related": [], "memoryTip": "" }
+For "reasoning": { "stream": "reasoning", "chain": [], "chainEn": [], "pattern": "", "elimination": "", "memoryTip": "" }
+For "math_quant": { "stream": "math_quant", "steps": [], "stepsEn": [], "shortcut": "", "trap": "", "memoryTip": "" }`
+      : `MANDATORY EXPLANATION FORMAT (STREAM: ${streamType}):
+${streamType === 'gk_science' ? '{ "stream": "gk_science", "facts": [], "factsEn": [], "mnemonics": [], "related": [], "memoryTip": "" }' : 
+  streamType === 'reasoning' ? '{ "stream": "reasoning", "chain": [], "chainEn": [], "pattern": "", "elimination": "", "memoryTip": "" }' : 
+  '{ "stream": "math_quant", "steps": [], "stepsEn": [], "shortcut": "", "trap": "", "memoryTip": "" }'}`;
 
-For "math_quant":
-{ "stream": "math_quant", "steps": ["Step 1 calculation", "Step 2"], "stepsEn": ["Step 1 metric", "Step 2"], "shortcut": "The 10-second mental math trick", "trap": "Calculative trap where students fail", "memoryTip": "Formula / Golden rule" }`
-      : `MANDATORY JSON FORMAT (Array of objects):
+    const prompt = `EXPERT PERSONA: MP Police Constable Syllabus & Exam Specialist.
+${rolePersonaSnippet}
+
+${modeInstructions}
+
+YOUR MISSION:
+1. ${countInstruction}
+2. 4 Options + Correct Index (1-4).
+3. Bilingual: Standard Hindi (Main) + English (Support) parallelly for both question and options.
+4. DEEP EXPLANATION: Every question MUST have the "extendedData.explanation" block matching the stream patterns below.
+
+${explanationConfig}
+
+MANDATORY JSON FORMAT:
 [
   {
-    "questionText": "Original Question in Hindi",
-    "questionTextEn": "Original Question in English",
-    "options": ["Option 1 (Hi/En)", "Option 2 (Hi/En)", "Option 3 (Hi/En)", "Option 4 (Hi/En)"],
+    "questionText": "Question in Hindi?",
+    "questionTextEn": "English version?",
+    "options": ["1) Opt / Hin-Eng", "2) Opt / Hin-Eng", "3) Opt / Hin-Eng", "4) Opt / Hin-Eng"],
     "correctAnswer": "1",
     "extendedData": {
       "explanation": {
-        "stream": "${streamType}",
-        ${streamType === 'gk_science' ? '"facts": ["Point 1 (Hi/En)", "Point 2", "Point 3"],\n        "factsEn": ["Point 1 En", "Point 2 En"],\n        "mnemonics": ["Short trick or way to remember"],\n        "related": ["Related concept"],\n        "memoryTip": "Friendly teacher tip (e.g. इसे हमेशा ऐसे याद रखो...)"' : streamType === 'reasoning' ? '"chain": ["Step 1 clear thought", "Step 2"],\n        "chainEn": ["Step 1 En", "Step 2 En"],\n        "pattern": "The exact logic/pattern used",\n        "elimination": "Why 3 other options are instantly wrong",\n        "memoryTip": "Shortcut to see this logic next time"' : '"steps": ["Step 1 calculation", "Step 2"],\n        "stepsEn": ["Step 1 metric", "Step 2"],\n        "shortcut": "The 10-second mental math trick",\n        "trap": "Calculative trap where students fail",\n        "memoryTip": "Formula / Golden rule"'}
+        // Correct stream properties here
       }
     }
   }
-]`;
-
-    const mixedMandatoryFormat = isMixed 
-      ? `MANDATORY JSON FORMAT STRUCTURE:
-[
-  {
-    "questionText": "Original Question in Hindi",
-    "questionTextEn": "Original Question in English",
-    "options": ["Option 1 (Hi/En)", ...],
-    "correctAnswer": "1",
-    "extendedData": {
-      "explanation": {
-        // Output properties based on the selected stream (map shown above)
-      }
-    }
-  }
-]`
-      : ``;
-
-    const prompt = `TASK: Formatter & MP Police AI Expert.
-I will outline some raw questions below.
-
-YOUR JOB:
-1. Keep the ONLY questions I provide exactly the SAME (DO NOT change them, do not generate new questions unless asked).
-2. Generate 4 highly relevant options matching the MP Police Constable pattern.
-3. Determine the correct answer (1, 2, 3, or 4).
-4. Bilingual: Ensure questionText / options are in BOTH Hindi and English appropriately.
-${streamInstructions}
-
-CONTEXT / EXAM: MP Police Constable Paper I (${testTypeContext})
-
-VOICE (Human Coach):
-- Hindi: Spoken like a teacher ("पहले देखो...", "इसका मतलब...").
-- English: Natural, friendly tutor.
-
-${explanationKeyMapping}
-${mixedMandatoryFormat}
+]
 
 RULES:
-- Return ONLY valid JSON block. NO markdown wrapping inside data, NO introductory text.
-${!isMixed ? `- Follow the EXACT explanation keys for '${streamType}'.` : `- Strictly follow the Explanation Key Mapping depending on which stream you use for each question.`}
+- Return ONLY a valid JSON array. No markdown wrapping.
+- Level: MP Police Constable (State Level). No over-complex UPSC stuff.
 
-RAW QUESTIONS TO PROCESS:
-<PASTE YOUR QUESTIONS HERE>
+TARGET TOPIC/CHAPTER: ${targetTopicFull}
+COUNT: ${promptMode === 'chapter_10q' ? '10' : promptMode === 'subject_variety' ? '20' : 'Manual'}
+
+RAW TEXT (IF ANY):
+<PASTE RAW TEXT BELOW IF IN PYP MODE>
 `;
     
     setGeneratedPrompt(prompt);
-    toast.success('Universal JSON prompt generated!');
+    toast.success(`${promptMode.toUpperCase()} prompt generated for ${targetTopicFull}!`);
   };
 
   const copyToClipboard = (text: string) => {
@@ -343,6 +357,15 @@ RAW QUESTIONS TO PROCESS:
   // --- SUBMIT TEST ---
   const handleTestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 🛡️ VALIDATION: If Topic mode is on, a topicId is MUST.
+    if (testData.type === 'TOPIC' && !testData.topicId) {
+      toast.error('❌ Syllabus Error: Selection Required', {
+        description: 'Please select a specific Chapter / Topic from the syllabus dropdown below for Path A.',
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -403,6 +426,10 @@ RAW QUESTIONS TO PROCESS:
         }
       } else {
         formData.append('existingTestId', testData.existingTestId);
+        // Same as new mode: so MBT `collection:memory` (etc.) actually persists on the row
+        if (collectionTag.trim()) {
+          formData.append('collectionTag', collectionTag.trim());
+        }
       }
 
       const res = await uploadTestFromJSON(null, formData);
@@ -647,16 +674,41 @@ RAW QUESTIONS TO PROCESS:
                     >
                       AI master prompt
                     </a>
-                    {' · '}
-                    <a
-                      href="/docs/mp-police-syllabus-reference"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-semibold underline underline-offset-2"
-                    >
-                      Syllabus topic IDs
-                    </a>
                   </span>
+                </CardDescription>
+                <CardDescription className="flex flex-col gap-2">
+                  <span>
+                    Upload structured JSON or raw text. Use the AI Prompt Generator below to convert
+                    any text with 100% precision.
+                  </span>
+                  
+                  {/* 🗺️ WORKFLOW HUB */}
+                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
+                    <WorkflowQuickLink 
+                      icon={<BookOpen className="h-4 w-4" />} 
+                      title="Path A: Chapter" 
+                      subtitle="Self-Gen (Blue)" 
+                      path="/docs/mppolice-ai-workflow-master.md#path-a-chapter-coverage-expert-mode"
+                    />
+                    <WorkflowQuickLink 
+                      icon={<Sparkles className="h-4 w-4" />} 
+                      title="Path B: Subject" 
+                      subtitle="Self-Gen (Green)" 
+                      path="/docs/mppolice-ai-workflow-master.md#path-b-subject-variety-expert-mode"
+                    />
+                    <WorkflowQuickLink 
+                      icon={<Database className="h-4 w-4" />} 
+                      title="Path C: PYP" 
+                      subtitle="Manual (Amber)" 
+                      path="/docs/mppolice-ai-workflow-master.md#path-c-pyp--memory-re-entry"
+                    />
+                    <WorkflowQuickLink 
+                      icon={<Zap className="h-4 w-4" />} 
+                      title="Path D: FLT" 
+                      subtitle="Self-Gen (Rose)" 
+                      path="/docs/mppolice-ai-workflow-master.md#path-d-full-length-tests-mock-expert"
+                    />
+                  </div>
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6">
@@ -667,39 +719,123 @@ RAW QUESTIONS TO PROCESS:
                           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 shadow-lg shadow-emerald-200">
                              <Sparkles className="h-5 w-5 text-white" />
                           </div>
-                          <div>
-                             <h4 className="text-base font-black tracking-tight text-emerald-900 uppercase">Universal AI JSON Formatter</h4>
-                             <p className="text-xs font-medium text-emerald-600">Pates your questions, output deeply synced structured JSON</p>
-                          </div>
+                           <div>
+                              <h4 className="text-base font-black tracking-tight text-emerald-900 uppercase">Universal AI JSON Formatter</h4>
+                              <p className="text-xs font-medium text-emerald-600">Pates your questions, output deeply synced structured JSON</p>
+                              <p className="text-[9px] font-black italic text-emerald-500 mt-0.5">
+                                ✨ Select Topic/Unit below first to auto-inject in prompt.
+                              </p>
+                           </div>
                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                       <div className="space-y-1.5">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Subject Strip (Sets Explanation Format)</Label>
-                          <Select value={promptBucket} onValueChange={setPromptBucket}>
-                             <SelectTrigger className="border-emerald-200 bg-white shadow-sm focus:ring-emerald-500">
-                                <SelectValue placeholder="Select Subject to sync explanation stream" />
-                             </SelectTrigger>
-                             <SelectContent>
-                                <SelectItem value="general_knowledge">General Knowledge (Facts, Mnemonics)</SelectItem>
-                                <SelectItem value="general_science">General Science (Facts, Mnemonics)</SelectItem>
-                                <SelectItem value="logical_reasoning">Logical Reasoning (Chain, Pattern)</SelectItem>
-                                <SelectItem value="quantitative_aptitude">Quantitative Aptitude (Steps, Shortcut, Trap)</SelectItem>
-                                <SelectItem value="auto_mixed">🔥 Auto-Detect Mixed (FLT / PYP / MBT)</SelectItem>
-                                <SelectItem value="mp_general_knowledge">MP General Knowledge</SelectItem>
-                             </SelectContent>
-                          </Select>
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                       <div className="space-y-4">
+                          <div className="space-y-1.5">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-emerald-700">1. Workflow Mode</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                              {[
+                                { id: 'standard', label: 'Standard Clean', icon: FileText, color: 'bg-slate-500' },
+                                { id: 'pyp', label: 'PYP (Needs Text)', icon: Database, color: 'bg-amber-600' },
+                                { id: 'subject_variety', label: 'Subject Expert (Self-Gen)', icon: Sparkles, color: 'bg-emerald-600' },
+                                { id: 'chapter_10q', label: 'Chapter Expert (Self-Gen)', icon: BookOpen, color: 'bg-blue-600' },
+                                { id: 'flt_expert', label: 'FLT Expert (Self-Gen)', icon: Zap, color: 'bg-rose-600' },
+                              ].map((mode) => (
+                                <Button
+                                  key={mode.id}
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => {
+                                      setPromptMode(mode.id as any);
+                                      if (mode.id === 'chapter_10q') setTestData(p => ({ ...p, type: 'TOPIC' }));
+                                      if (mode.id === 'subject_variety') setTestData(p => ({ ...p, type: 'MISC' }));
+                                      if (mode.id === 'pyp') setTestData(p => ({ ...p, type: 'PYQ' }));
+                                      if (mode.id === 'flt_expert') setTestData(p => ({ ...p, type: 'FLT' }));
+                                  }}
+                                  className={`h-9 justify-start px-3 text-[10px] font-bold transition-all ${
+                                    promptMode === mode.id 
+                                      ? `border-transparent ${mode.color} text-white shadow-md` 
+                                      : 'border-emerald-100 bg-white text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50'
+                                  }`}
+                                >
+                                  <mode.icon className="mr-2 h-3.5 w-3.5" />
+                                  {mode.label}
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                             <Label className="text-[10px] font-black uppercase tracking-widest text-emerald-700">2. Subject Strip (Explanations)</Label>
+                             <Select value={promptBucket} onValueChange={setPromptBucket}>
+                                <SelectTrigger className="border-emerald-200 bg-white shadow-sm focus:ring-emerald-500">
+                                   <SelectValue placeholder="Select Subject to sync explanation stream" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                   <SelectItem value="general_knowledge">General Knowledge (Facts, Mnemonics)</SelectItem>
+                                   <SelectItem value="general_science">General Science (Facts, Mnemonics)</SelectItem>
+                                   <SelectItem value="logical_reasoning">Logical Reasoning (Chain, Pattern)</SelectItem>
+                                   <SelectItem value="quantitative_aptitude">Quantitative Aptitude (Steps, Shortcut, Trap)</SelectItem>
+                                   <SelectItem value="auto_mixed">🔥 Auto-Detect Mixed (FLT / PYP / MBT)</SelectItem>
+                                   <SelectItem value="mp_general_knowledge">MP General Knowledge</SelectItem>
+                                </SelectContent>
+                             </Select>
+                          </div>
                        </div>
 
-                       <div className="flex items-end">
+                       <div className="flex flex-col justify-end gap-3">
+                          <div className="rounded-xl border border-emerald-100 bg-white p-4 shadow-sm space-y-4">
+                            <p className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-emerald-900">
+                              <Layers className="h-4 w-4" /> Workflow Quick Guides
+                            </p>
+                            
+                            <div className="space-y-3">
+                              {/* FLOW A */}
+                              <div className="space-y-1">
+                                <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[9px] font-black text-blue-700 uppercase">Flow A: Chapter-wise</span>
+                                <p className="text-[10px] text-slate-500 leading-tight">
+                                  Select <strong>Chapter (10Q)</strong> + Subject → Select <strong>Topic Check</strong> → Select <strong>Topic ID</strong> → Upload. 
+                                  <span className="block italic text-emerald-600 font-bold mt-1">Appears in: All strips + Subject strip.</span>
+                                </p>
+                              </div>
+
+                              {/* FLOW B */}
+                              <div className="space-y-1">
+                                <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-black text-amber-700 uppercase">Flow B: Subject Variety</span>
+                                <p className="text-[10px] text-slate-500 leading-tight">
+                                  Select <strong>Subject Variety</strong> + Subject → Select <strong>Free Quiz (MISC)</strong> → Upload.
+                                  <span className="block italic text-emerald-600 font-bold mt-1">Appears in: specific Subject strip (e.g. Science).</span>
+                                </p>
+                              </div>
+
+                              {/* FLOW C */}
+                              <div className="space-y-1">
+                                <span className="inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-[9px] font-black text-rose-700 uppercase">Flow C: PYP / Memory</span>
+                                <p className="text-[10px] text-slate-500 leading-tight">
+                                  Select <strong>PYP (Memory)</strong> + Auto Mixed → Select <strong>PYQ</strong> → Upload.
+                                  <span className="block italic text-emerald-600 font-bold mt-1">Appears in: PYP Dashboard / Intelligence Hub.</span>
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="border-t border-emerald-50 pt-3">
+                               <a 
+                                 href="/docs/mppolice-ai-workflow-master.md" 
+                                 target="_blank" 
+                                 className="flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 py-2 text-[10px] font-black text-white hover:bg-emerald-700 transition-all shadow-md"
+                               >
+                                 <BookOpen className="h-3 w-3" /> READ MASTER FLOW GUIDE
+                               </a>
+                            </div>
+                          </div>
+
                           <Button 
                             type="button"
                             onClick={generateAIPrompt}
-                            className="w-full bg-emerald-700 font-bold shadow-md hover:bg-emerald-800 transition-all active:scale-95"
+                            className="h-12 w-full bg-emerald-700 text-sm font-black shadow-lg hover:bg-emerald-800 transition-all active:scale-95 uppercase tracking-wide"
                             disabled={!promptBucket}
                           >
-                             Generate Master JSON Prompt
+                             Generate Master AI Prompt
                           </Button>
                        </div>
                     </div>
@@ -838,7 +974,7 @@ RAW QUESTIONS TO PROCESS:
                               value={testData.topicId}
                               onValueChange={(v) => setTestData((p) => ({ ...p, topicId: v }))}
                             >
-                              <SelectTrigger>
+                              <SelectTrigger className={!testData.topicId ? "ring-2 ring-emerald-500 animate-pulse border-emerald-500" : "border-emerald-200"}>
                                 <SelectValue placeholder="Choose a topic..." />
                               </SelectTrigger>
                               <SelectContent>
@@ -965,10 +1101,17 @@ RAW QUESTIONS TO PROCESS:
                       </div>
                       <div className="space-y-2">
                         <Label>Collection tag (optional)</Label>
+                        <p className="text-[11px] leading-relaxed text-slate-600">
+                          MP Police quiz hub: type <span className="font-mono font-semibold">memory</span> → MBT
+                          tab (<span className="font-mono">collection:memory</span>). Leave empty or use{' '}
+                          <span className="font-mono">pyp</span> / <span className="font-mono">pyq</span> for normal
+                          PYP papers (not MBT). Saved on the test row as{' '}
+                          <span className="font-mono">collection:yourvalue</span>.
+                        </p>
                         <Input
                           value={collectionTag}
                           onChange={(e) => setCollectionTag(e.target.value)}
-                          placeholder="e.g. pyp, memory, full-tests"
+                          placeholder="memory | pyp | pyq | (leave empty for default PYP)"
                         />
                       </div>
                       {testData.type !== 'TOPIC' && (
@@ -1060,5 +1203,24 @@ RAW QUESTIONS TO PROCESS:
         </Tabs>
       </div>
     </div>
+  );
+}
+
+function WorkflowQuickLink({ icon, title, subtitle, path }: { icon: React.ReactNode, title: string, subtitle: string, path: string }) {
+  return (
+    <a 
+      href={path} 
+      target="_blank" 
+      rel="noopener noreferrer"
+      className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-3 shadow-sm hover:border-emerald-200 hover:bg-emerald-50 transition-all group"
+    >
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-600 transition-colors group-hover:bg-emerald-100 group-hover:text-emerald-600 [&_svg]:h-4 [&_svg]:w-4">
+        {icon}
+      </div>
+      <div>
+        <p className="text-[10px] font-black text-slate-800 uppercase tracking-tighter">{title}</p>
+        <p className="text-[9px] font-bold text-slate-400 group-hover:text-emerald-500">{subtitle}</p>
+      </div>
+    </a>
   );
 }

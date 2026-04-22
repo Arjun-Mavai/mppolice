@@ -21,8 +21,10 @@ export function ContentSuiteSection() {
     getTopicTestStats().then((res) => {
       if (res.success && res.data) {
         let total = 0;
-        Object.values(res.data).forEach((topics) => {
-          total += topics.filter((t) => t.questionCount > 0).length;
+        const coverageData = res.data as any;
+        const sections = coverageData.sections || coverageData;
+        Object.values(sections).forEach((topics: any) => {
+          total += topics.filter((t: any) => t.questionCount > 0).length;
         });
         setTopicCount(total);
       }

@@ -1,17 +1,15 @@
 import { Suspense } from 'react';
-import { getCachedFLTTests, getUserAttemptsByType } from '@/features/tests/actions/submission';
-import { getAvailableUnitTests } from '@/features/tests/actions/quiz';
 import { verifyAuth } from '@/lib/auth';
-import { getUserTier, hasAccessToContent } from '@/lib/access-control';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 import { PYQFactsLoader } from '@/components/ui/PYQFactsLoader';
 import FullTestsHubClient from './FullTestsHubClient';
-import type { TestWithAccess } from '@/app/syllabus/quiz/full-length/FLTPageClient';
+import { getCachedFreeQuizzes } from '@/app/free-quiz/actions';
+import { getUserAttempts } from '@/features/tests/actions/submission';
 
 export default async function FullTestsHubPage() {
   return (
     <div className="relative min-h-screen bg-[#fafbfc] font-sans">
-      <Suspense fallback={<PYQFactsLoader label="Loading full tests…" theme="dark" />}>
+      <Suspense fallback={<PYQFactsLoader label="Loading subject-wise tests…" theme="dark" />}>
         <FullTestsHubData />
       </Suspense>
     </div>
@@ -20,47 +18,34 @@ export default async function FullTestsHubPage() {
 
 async function FullTestsHubData() {
   const userPromise = verifyAuth();
-  const [user, tests, attemptLimits, attempts, unitRows] = await Promise.all([
+  const [user, attemptLimits, miscTestsRaw] = await Promise.all([
     userPromise,
-    getCachedFLTTests(),
     getCachedAttemptLimits(),
-    (async () => {
-      const resolvedUser = await userPromise;
-      const userId = resolvedUser?.id;
-      return userId ? getUserAttemptsByType('FLT', userId) : ({} as Record<string, number>);
-    })(),
-    getAvailableUnitTests(),
+    getCachedFreeQuizzes(),
   ]);
 
-  const tier = getUserTier(user);
-  const maxRetries = attemptLimits['FLT'] ?? null;
+  const miscIds = miscTestsRaw.map((t) => t.id);
+  const miscAttempts =
+    user && miscIds.length > 0 ? await getUserAttempts(miscIds, user.id) : ({} as Record<string, number>);
+  const maxRetriesMisc = (attemptLimits as Record<string, number | null>)['MISC'] ?? null;
 
-  const enrichedFlt: TestWithAccess[] = tests.map((test) => {
-    const hasAccess =
-      user?.role === 'admin' ||
-      hasAccessToContent(
-        {
-          isFreeAccess: test.isFreeAccess,
-          isLiteAccess: test.isLiteAccess,
-          isProAccess: test.isProAccess,
-        },
-        tier
-      );
-    const isLocked = !hasAccess;
-    const attemptsCount = attempts[test.id] || 0;
-    const attemptsLeft = maxRetries != null ? Math.max(0, maxRetries - attemptsCount) : null;
-
+  const enrichedMisc = miscTestsRaw.map((t) => {
+    const attemptsCount = miscAttempts[t.id] || 0;
+    const attemptsLeft = maxRetriesMisc != null ? Math.max(0, maxRetriesMisc - attemptsCount) : null;
     return {
-      ...test,
-      totalQuestions: test.totalQuestions || 0,
-      isLocked: isLocked && !(test.isFreeAccess ?? false),
-      isCompleted: attemptsLeft === 0,
-      attemptsCount,
-      attemptsLeft: user ? (attemptsLeft ?? 9999) : null,
-      maxRetries: user ? maxRetries : null,
-      isFree: (test.isFreeAccess ?? false) && !user,
+      id: t.id,
+      title: t.title,
+      titleEn: t.titleEn,
+      slug: t.slug,
+      totalQuestions: t.totalQuestions ?? 0,
+      durationMinutes: Math.max(1, Math.ceil((t.totalQuestions ?? 0) * 1.2)),
+      isLocked: false,
+      isFree: true,
+      attemptsLeft: user ? attemptsLeft : null,
+      maxRetries: user ? maxRetriesMisc : null,
+      tags: t.tags,
     };
   });
 
-  return <FullTestsHubClient fltTests={enrichedFlt} unitTests={unitRows} />;
+  return <FullTestsHubClient miscTests={enrichedMisc} />;
 }
