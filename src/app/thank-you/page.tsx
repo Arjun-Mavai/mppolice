@@ -373,8 +373,8 @@ function ThankYouContent() {
             asChild
             className="h-12 flex-1 rounded-2xl bg-slate-900 font-black text-white hover:bg-slate-800 shadow-xl shadow-slate-900/10"
           >
-            <Link href={isUpgrade ? "/dashboard" : "/login"}>
-              {isUpgrade ? (hi ? 'डैशबोर्ड खोलें' : 'Open Dashboard') : (hi ? 'लॉगिन करें' : 'Login Now')} 
+            <Link href={isUpgrade ? "/syllabus/quiz/full-tests" : "/login"}>
+              {isUpgrade ? (hi ? 'तैयारी शुरू करें' : 'Start Preparation') : (hi ? 'लॉगिन करें' : 'Login Now')} 
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>

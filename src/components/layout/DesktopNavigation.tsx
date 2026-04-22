@@ -32,7 +32,7 @@ export const DesktopNavigation = memo(function DesktopNavigation({
       {navItems
         .filter((item) => {
           // Hide Dashboard if user is not logged in
-          if (item.name === 'Dashboard') return !!user;
+          if (item.name === 'Test Hub') return !!user;
           // Test History & About Us — sidebar only, not in desktop top nav
           if (item.name === 'Test History' || item.name === 'About Us') return false;
           return true;

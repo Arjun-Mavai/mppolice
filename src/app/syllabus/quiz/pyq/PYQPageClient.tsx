@@ -130,15 +130,16 @@ export default function PYQPageClient({
 
   const syncHubQuery = useCallback(
     (next: Partial<{ tab: HubTab }>) => {
-      const p = new URLSearchParams(searchParams?.toString() || '');
+      const p = new URLSearchParams(window.location.search);
       if (next.tab !== undefined) {
         p.set('tab', next.tab);
       }
       const qs = p.toString();
-      const base = pathname || '/syllabus/quiz/pyq';
-      router.replace(qs ? `${base}?${qs}` : base);
+      const base = window.location.pathname;
+      const newUrl = qs ? `${base}?${qs}` : base;
+      window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
     },
-    [router, searchParams, pathname]
+    []
   );
 
   const tabDefs = useMemo(
@@ -175,7 +176,7 @@ export default function PYQPageClient({
       <div className="pointer-events-none absolute bottom-[20%] left-[-150px] h-[400px] w-[400px] rounded-full bg-teal-50/25 blur-[100px]" />
 
       {/* Header */}
-      <div className="sticky top-0 z-30 border-b border-slate-200 bg-white/85 backdrop-blur-md transition-all md:top-[89px]">
+      <div className="sticky top-0 z-30 border-b border-slate-200 bg-white/85 backdrop-blur-md md:top-[89px]">
         <div className="mx-auto max-w-5xl px-4 pt-10 pb-4 sm:px-6 md:py-4 lg:px-8">
           <div className="flex flex-col gap-4">
             {/* Top Row: Back + Title */}
@@ -188,7 +189,7 @@ export default function PYQPageClient({
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <div>
+              {/* <div>
                 <h1 className="text-xl font-bold leading-snug text-slate-900 sm:text-2xl">
                   {hi ? 'MP Police — पेपर व टेस्ट सीरीज' : 'MP Police — Papers & test series'}
                 </h1>
@@ -197,7 +198,7 @@ export default function PYQPageClient({
                     ? 'PYP = PYQ + `collection:memory` नहीं। MBT = `collection:memory`। FLT = FLT टाइप + memory नहीं।'
                     : 'PYP = PYQ without `collection:memory`. MBT = `collection:memory`. FLT = FLT-type mock without `collection:memory`.'}
                 </p>
-              </div>
+              </div> */}
             </div>
 
             {isAdmin && (
@@ -258,7 +259,7 @@ export default function PYQPageClient({
                           <motion.div
                             layoutId="pyq-hub-tab-pill-active"
                             className="absolute inset-0 rounded-xl bg-slate-950 shadow-md"
-                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 38 }}
                           />
                         )}
                         <div className="relative z-10">
@@ -267,7 +268,7 @@ export default function PYQPageClient({
                           </span>
                           <span
                             className={cn(
-                              'mt-0.5 block text-[10px] font-medium leading-tight',
+                              'mt-0.5 block text-[10px] font-medium leading-tight transition-opacity duration-300',
                               on ? 'opacity-90' : 'opacity-60'
                             )}
                           >
@@ -287,60 +288,61 @@ export default function PYQPageClient({
       <div className="relative z-10 mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
         {/* ── Hub content (3 tabs) — list layout matches /syllabus/quiz/chapters ── */}
         <section className="space-y-4">
-          <div className="flex flex-col gap-1 border-b border-slate-200 pb-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
-                {activeTab === 'pyp'
-                  ? hi
-                    ? 'पिछले वर्ष के पेपर (PYP)'
-                    : 'Previous year papers (PYP)'
-                  : activeTab === 'mbt'
-                    ? hi
-                      ? 'मेमोरी बेस्ड टेस्ट (MBT)'
-                      : 'Memory based tests (MBT)'
-                    : hi
-                      ? 'फुल मॉक टेस्ट (FLT)'
-                      : 'Full mock tests (FLT)'}
-              </h2>
-              <p className="text-xs text-slate-500 sm:text-sm">
-                {activeTab === 'pyp'
-                  ? hi
-                    ? 'PYP पेपर — टाइप PYQ, बिना `collection:memory`।'
-                    : 'PYP papers — type PYQ, no `collection:memory` tag.'
-                  : activeTab === 'mbt'
-                    ? hi
-                      ? 'एडमिन में Collection tag `memory` रखो → DB में `collection:memory` (PYQ या FLT दोनों दिख सकते हैं)।'
-                      : 'Admin: set Collection tag to `memory` → stored as `collection:memory` (shows for PYQ or FLT uploads).'
-                    : hi
-                      ? 'फुल सिलेबस FLT मॉक — बिना `collection:memory`।'
-                      : 'Full-syllabus FLT mocks — no `collection:memory` tag.'}
-              </p>
-            </div>
-            <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-              {activeTab === 'pyp'
-                ? `${filteredPyqTests.length} ${hi ? 'पेपर' : 'papers'}`
-                : activeTab === 'mbt'
-                  ? `${mbtTabRows.length} ${hi ? 'टेस्ट' : 'tests'}`
-                  : `${filteredFltTests.length} ${hi ? 'टेस्ट' : 'tests'}`}
-            </span>
-          </div>
-
-          <div className="relative min-h-[200px]">
-            <AnimatePresence mode="popLayout">
+          <div className="relative min-h-[400px]">
+            <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.2 }}
-                className="space-y-3 pb-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="space-y-4"
               >
-                {(activeTab === 'pyp'
-                  ? filteredPyqTests
-                  : activeTab === 'mbt'
-                    ? mbtTabRows
-                    : filteredFltTests
-                ).map((test, idx) => {
+                <div className="flex flex-col gap-1 border-b border-slate-200 pb-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+                      {activeTab === 'pyp'
+                        ? hi
+                          ? 'पिछले वर्ष के पेपर (PYP)'
+                          : 'Previous year papers (PYP)'
+                        : activeTab === 'mbt'
+                          ? hi
+                            ? 'मेमोरी बेस्ड टेस्ट (MBT)'
+                            : 'Memory based tests (MBT)'
+                          : hi
+                            ? 'फुल मॉक टेस्ट (FLT)'
+                            : 'Full mock tests (FLT)'}
+                    </h2>
+                    <p className="text-xs text-slate-500 sm:text-sm">
+                      {activeTab === 'pyp'
+                        ? hi
+                          ? 'PYP पेपर — टाइप PYQ, बिना `collection:memory`।'
+                          : 'PYP papers — type PYQ, no `collection:memory` tag.'
+                        : activeTab === 'mbt'
+                          ? hi
+                            ? 'एडमिन में Collection tag `memory` रखो → DB में `collection:memory` (PYQ या FLT दोनों दिख सकते हैं)।'
+                            : 'Admin: set Collection tag to `memory` → stored as `collection:memory` (shows for PYQ or FLT uploads).'
+                          : hi
+                            ? 'फुल सिलेबस FLT मॉक — बिना `collection:memory`।'
+                            : 'Full-syllabus FLT mocks — no `collection:memory` tag.'}
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                    {activeTab === 'pyp'
+                      ? `${filteredPyqTests.length} ${hi ? 'पेपर' : 'papers'}`
+                      : activeTab === 'mbt'
+                        ? `${mbtTabRows.length} ${hi ? 'टेस्ट' : 'tests'}`
+                        : `${filteredFltTests.length} ${hi ? 'टेस्ट' : 'tests'}`}
+                  </span>
+                </div>
+
+                <div className="space-y-3 pb-4">
+                  {(activeTab === 'pyp'
+                    ? filteredPyqTests
+                    : activeTab === 'mbt'
+                      ? mbtTabRows
+                      : filteredFltTests
+                  ).map((test, idx) => {
                   const primary = hi ? test.title : test.titleEn || test.title;
                   const alt = (hi ? test.titleEn?.trim() : test.title?.trim()) || '';
                   const subtitle =
@@ -427,11 +429,12 @@ export default function PYQPageClient({
                     </p>
                   </div>
                 )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </section>
-      </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </section>
+    </div>
 
       {/* Paywall Modal */}
       <SyllabusLockModal open={paywallOpen} onOpenChange={setPaywallOpen} />

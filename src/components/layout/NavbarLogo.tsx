@@ -11,7 +11,7 @@ export const NavbarLogo = memo(function NavbarLogo({ user }: NavbarLogoProps) {
   
   const handleLogoClick = useCallback(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    router.push(user ? '/dashboard' : '/');
+    router.push(user ? '/syllabus/quiz/full-tests' : '/');
   }, [router, user]);
 
   return (

@@ -91,12 +91,12 @@ export function HeroSection() {
               </div>
             </button>
           ) : (
-            <Link href="/dashboard" className="group relative w-full">
+            <Link href="/syllabus/quiz/full-tests" className="group relative w-full">
               <div className="relative flex h-16 w-full transform items-center justify-center overflow-hidden rounded-2xl bg-white transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_20px_40px_rgba(255,255,255,0.1)] group-active:scale-[0.98] md:h-24 md:rounded-[2.5rem]">
                 <div className="relative z-10 flex h-full w-full items-center justify-center gap-4 px-6 md:gap-8 md:px-14">
                    <Trophy className="h-6 w-6 text-slate-900 md:h-8 md:w-8" />
                   <span className="text-sm font-black tracking-[0.15em] text-slate-900 uppercase md:text-2xl md:tracking-[0.2em]">
-                    {language === 'hi' ? 'डैशबोर्ड' : 'Dashboard'}
+                    {language === 'hi' ? 'टेस्ट डैशबोर्ड' : 'Test Dashboard'}
                   </span>
                   <ArrowLeft
                     className="h-6 w-6 rotate-180 text-slate-900 transition-transform duration-500 group-hover:translate-x-2 md:h-8 md:w-8"
