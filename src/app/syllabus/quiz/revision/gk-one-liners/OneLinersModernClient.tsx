@@ -16,7 +16,8 @@ import {
   RotateCw,
   Sparkles,
   Zap,
-  Info
+  Info,
+  ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -44,6 +45,7 @@ interface Props {
   facts: MppoliceOneLinerRow[];
   counts: Record<string, number>;
   initialSubject: string;
+  isFreeDemo?: boolean;
 }
 
 const colorVariants = [
@@ -53,7 +55,7 @@ const colorVariants = [
   { bg: 'bg-amber-50', border: 'border-amber-100', text: 'text-amber-700', icon: 'text-amber-400', shadow: 'shadow-amber-200/30' },
 ];
 
-export default function OneLinersModernClient({ facts: initialFacts, counts, initialSubject }: Props) {
+export default function OneLinersModernClient({ facts: initialFacts, counts, initialSubject, isFreeDemo = false }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { language } = useSettingsStore();
@@ -179,9 +181,11 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
             </button>
             <div className="min-w-0 flex-1">
               <h1 className="truncate text-lg font-black tracking-tight sm:text-xl">{title}</h1>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 sm:text-xs">
-                {totalPossible} {hi ? 'तथ्य' : 'facts'}
-              </p>
+              {!isFreeDemo && (
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 sm:text-xs">
+                  {totalPossible} {hi ? 'तथ्य' : 'facts'}
+                </p>
+              )}
             </div>
             
             {/* 🎯 Focus Mode Toggle (HIDE/SHOW LABEL) */}
@@ -236,30 +240,32 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                  <div className="flex items-center gap-2 w-full sm:w-auto">
-                   <div className="w-full sm:w-[260px]">
-                     <Select
-                       value={String(batchIndex)}
-                       onValueChange={(v) => handleBatchChange(Number(v))}
-                     >
-                       <SelectTrigger className="h-12 w-full rounded-full border-slate-200 bg-white px-5 text-[12px] font-bold text-slate-900 shadow-sm focus:ring-2 focus:ring-indigo-500/20 transition-all">
-                         <div className="flex items-center gap-2">
-                            <Layers size={14} className="text-slate-400" />
-                            <SelectValue placeholder={hi ? 'बैच चुनें' : 'Select Batch'} />
-                         </div>
-                       </SelectTrigger>
-                       <SelectContent position="popper" className="rounded-2xl border-slate-200 bg-white shadow-2xl max-h-[300px] overflow-y-auto">
-                         {Array.from({ length: totalBatches }).map((_, i) => (
-                           <SelectItem 
-                             key={i} 
-                             value={String(i)}
-                             className="py-3 text-[12px] font-bold text-slate-700 focus:bg-indigo-50 focus:text-indigo-700"
-                           >
-                             {hi ? `बैच` : `Batch`} {i + 1} ({i * PAGE_SIZE + 1} - {Math.min((i + 1) * PAGE_SIZE, totalPossible)})
-                           </SelectItem>
-                         ))}
-                       </SelectContent>
-                     </Select>
-                   </div>
+                   {!isFreeDemo && (
+                     <div className="w-full sm:w-[260px]">
+                       <Select
+                         value={String(batchIndex)}
+                         onValueChange={(v) => handleBatchChange(Number(v))}
+                       >
+                         <SelectTrigger className="h-12 w-full rounded-full border-slate-200 bg-white px-5 text-[12px] font-bold text-slate-900 shadow-sm focus:ring-2 focus:ring-indigo-500/20 transition-all">
+                           <div className="flex items-center gap-2">
+                              <Layers size={14} className="text-slate-400" />
+                              <SelectValue placeholder={hi ? 'बैच चुनें' : 'Select Batch'} />
+                           </div>
+                         </SelectTrigger>
+                         <SelectContent position="popper" className="rounded-2xl border-slate-200 bg-white shadow-2xl max-h-[300px] overflow-y-auto">
+                           {Array.from({ length: totalBatches }).map((_, i) => (
+                             <SelectItem 
+                               key={i} 
+                               value={String(i)}
+                               className="py-3 text-[12px] font-bold text-slate-700 focus:bg-indigo-50 focus:text-indigo-700"
+                             >
+                               {hi ? `बैच` : `Batch`} {i + 1} ({i * PAGE_SIZE + 1} - {Math.min((i + 1) * PAGE_SIZE, totalPossible)})
+                             </SelectItem>
+                           ))}
+                         </SelectContent>
+                       </Select>
+                     </div>
+                   )}
 
                    <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1">
                       <button
@@ -285,21 +291,23 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                    </div>
                  </div>
                  
-                 <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-3 rounded-full bg-slate-900 px-5 py-2 border border-slate-800 shadow-lg">
-                        <div className="relative h-7 w-7 flex items-center justify-center">
-                            <svg className="h-full w-full rotate-[-90deg]">
-                                <circle cx="14" cy="14" r="12" stroke="currentColor" strokeWidth="2.5" fill="transparent" className="text-slate-800" />
-                                <circle cx="14" cy="14" r="12" stroke="currentColor" strokeWidth="2.5" fill="transparent" strokeDasharray={75.4} strokeDashoffset={75.4 - (75.4 * progressPercent) / 100} strokeLinecap="round" className="text-emerald-500 transition-all duration-1000" />
-                            </svg>
-                            <span className="absolute text-[8px] font-black text-white">{progressPercentDisplay}%</span>
-                        </div>
-                        <div className="flex flex-col items-center">
-                            <p className="text-[12px] font-black text-white leading-tight">{stats.revisedFactsCount}/{stats.totalFacts}</p>
-                            <p className="text-[7px] font-black uppercase tracking-widest text-slate-400">{hi ? 'पूर्ण' : 'Done'}</p>
-                        </div>
-                    </div>
-                 </div>
+                 {!isFreeDemo && (
+                   <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 rounded-full bg-slate-900 px-5 py-2 border border-slate-800 shadow-lg">
+                          <div className="relative h-7 w-7 flex items-center justify-center">
+                              <svg className="h-full w-full rotate-[-90deg]">
+                                  <circle cx="14" cy="14" r="12" stroke="currentColor" strokeWidth="2.5" fill="transparent" className="text-slate-800" />
+                                  <circle cx="14" cy="14" r="12" stroke="currentColor" strokeWidth="2.5" fill="transparent" strokeDasharray={75.4} strokeDashoffset={75.4 - (75.4 * progressPercent) / 100} strokeLinecap="round" className="text-emerald-500 transition-all duration-1000" />
+                              </svg>
+                              <span className="absolute text-[8px] font-black text-white">{progressPercentDisplay}%</span>
+                          </div>
+                          <div className="flex flex-col items-center">
+                              <p className="text-[12px] font-black text-white leading-tight">{stats.revisedFactsCount}/{stats.totalFacts}</p>
+                              <p className="text-[7px] font-black uppercase tracking-widest text-slate-400">{hi ? 'पूर्ण' : 'Done'}</p>
+                          </div>
+                      </div>
+                   </div>
+                 )}
               </div>
             </div>
           </motion.div>
@@ -431,15 +439,17 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                                      </div>
                                    )}
 
-                                   <div className="flex justify-end pt-2">
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); handleMarkRevised(f.id); }}
-                                        className="group flex items-center gap-2 rounded-full bg-slate-950 px-7 py-3 text-[11px] font-black uppercase tracking-widest text-white shadow-xl transition-all hover:bg-emerald-600 active:scale-95"
-                                      >
-                                        <CheckCircle2 size={16} />
-                                        {hi ? 'रिवाइज्ड मार्क करें' : 'Mark as Revised'}
-                                      </button>
-                                   </div>
+                                   {!isFreeDemo && (
+                                     <div className="flex justify-end pt-2">
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); handleMarkRevised(f.id); }}
+                                          className="group flex items-center gap-2 rounded-full bg-slate-950 px-7 py-3 text-[11px] font-black uppercase tracking-widest text-white shadow-xl transition-all hover:bg-emerald-600 active:scale-95"
+                                        >
+                                          <CheckCircle2 size={16} />
+                                          {hi ? 'रिवाइज्ड मार्क करें' : 'Mark as Revised'}
+                                        </button>
+                                     </div>
+                                   )}
                                 </div>
                              </motion.div>
                            )}
@@ -477,13 +487,15 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                              className={cn("h-[480px] shadow-2xl rounded-[3rem] border-2", color.border)}
                              frontActions={(
                                <div className="flex flex-col items-center gap-3 w-full">
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); handleMarkRevised(f.id); }}
-                                    className="flex items-center gap-3 rounded-full bg-slate-950 px-8 py-4 text-[12px] font-black uppercase tracking-widest text-white shadow-2xl transition-all hover:scale-105 active:scale-95 hover:bg-emerald-600"
-                                  >
-                                    <CheckCircle2 size={18} />
-                                    {hi ? 'रिवाइज्ड मार्क करें' : 'Mark Revised'}
-                                  </button>
+                                  {!isFreeDemo && (
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); handleMarkRevised(f.id); }}
+                                      className="flex items-center gap-3 rounded-full bg-slate-950 px-8 py-4 text-[12px] font-black uppercase tracking-widest text-white shadow-2xl transition-all hover:scale-105 active:scale-95 hover:bg-emerald-600"
+                                    >
+                                      <CheckCircle2 size={18} />
+                                      {hi ? 'रिवाइज्ड मार्क करें' : 'Mark Revised'}
+                                    </button>
+                                  )}
                                   <div className="flex items-center gap-2">
                                      {revCount > 0 && (
                                        <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-indigo-600 bg-white border border-indigo-100 px-3 py-1 rounded-full shadow-lg">
@@ -514,6 +526,39 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                  </motion.div>
                )}
             </AnimatePresence>
+
+            {/* 💎 CTA FOR FREE USERS - Premium Dark/Amber Theme */}
+            {isFreeDemo && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-12 flex flex-col items-center justify-center p-8 text-center rounded-[3rem] bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] border border-slate-700/50 shadow-2xl shadow-slate-900/40 relative overflow-hidden group"
+              >
+                {/* Decorative Background Elements */}
+                <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-amber-500/10 blur-[60px]" />
+                <div className="absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-indigo-500/10 blur-[60px]" />
+
+                <div className="relative mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-500/20 shadow-inner">
+                  <Sparkles size={32} className="text-amber-400" />
+                </div>
+                <h3 className="mb-3 text-2xl font-black text-white sm:text-3xl">
+                  {hi ? '1000+ और ऐसे तथ्य अनलॉक करें' : 'Unlock 1000+ More Facts'}
+                </h3>
+                <p className="mb-8 max-w-md text-sm font-bold text-indigo-100/80 leading-relaxed uppercase tracking-widest">
+                  {hi 
+                    ? 'अपनी MP Police तैयारी को प्रो प्लान के साथ सुपरचार्ज करें।' 
+                    : 'Supercharge your MP Police preparation with the Pro Plan.'}
+                </p>
+                <button
+                  onClick={() => router.push('/pricing')}
+                  className="group relative flex items-center gap-3 rounded-full bg-amber-500 px-10 py-5 text-[14px] font-black uppercase tracking-[0.2em] text-slate-900 shadow-[0_20px_50px_rgba(245,158,11,0.2)] transition-all hover:bg-amber-400 hover:scale-105 active:scale-95"
+                >
+                  <Zap size={18} className="fill-slate-900" />
+                  {hi ? 'प्रो एक्सेस प्राप्त करें' : 'Get Pro Access'}
+                  <ChevronRight size={18} className="transition-transform group-hover:translate-x-1" strokeWidth={3} />
+                </button>
+              </motion.div>
+            )}
           </div>
         )}
       </div>

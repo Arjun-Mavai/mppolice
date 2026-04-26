@@ -430,42 +430,26 @@ export default function AnalyticsDashboardClient({
 
       {/* 📜 Recent Activity History */}
       <Card className="overflow-hidden border border-slate-200 bg-white shadow-sm">
-        <CardHeader className="border-b border-slate-100 bg-slate-50/50 p-6">
+        <CardHeader className="border-b border-slate-100 bg-white p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <History className="h-5 w-5 text-indigo-500" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                  <History className="h-4 w-4" />
+                </div>
                 <CardTitle className="text-lg font-black tracking-tight text-slate-900">
                   {hi ? 'हालिया प्रयास' : 'Recent Attempts'}
                 </CardTitle>
               </div>
-
-              {/* 🔗 VIEW ALL BUTTON — Bhai ke liye shortcut! */}
-              <button
-                onClick={() => router.push('/syllabus/test-history')}
-                className="group flex items-center gap-1 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[10px] font-black tracking-widest text-indigo-700 uppercase transition-all hover:bg-indigo-600 hover:text-white"
-              >
-                {hi ? 'सभी देखें' : 'View All'}
-                <ChevronRight size={12} className="transition-transform group-hover:translate-x-0.5" />
-              </button>
             </div>
-
-            <div className="no-scrollbar flex gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1">
-              {['ALL', 'UNIT', 'TOPIC', 'CSAT', 'PYQ'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={cn(
-                    'rounded-lg px-3 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all',
-                    activeTab === tab
-                      ? 'bg-white text-indigo-600 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-900'
-                  )}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+            
+            <button
+              onClick={() => router.push('/syllabus/test-history')}
+              className="group flex items-center gap-1 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-[11px] font-black tracking-widest text-slate-600 uppercase transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 shadow-sm"
+            >
+              {hi ? 'सभी देखें' : 'View All'}
+              <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+            </button>
           </div>
         </CardHeader>
         <CardContent className="p-0">

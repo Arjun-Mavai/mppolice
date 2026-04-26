@@ -113,12 +113,10 @@ export interface AccessResult {
 /** Client API returns plan_tier (snake_case); server DB has planTier (camelCase). Support both. */
 function getPlanTierFromUser(user: AccessControlUser): PlanTier | null {
   if (!user) return null;
-  // Handle string cast to allow planTier/plan_tier flexibility
-  // Cast needed because types are loosely defined as string | null but we want stricter PlanTier where possible
   const u = user as { planTier?: string | null; plan_tier?: string | null };
-  const rawTier = u.planTier ?? u.plan_tier ?? null;
+  const rawTier = (u.planTier ?? u.plan_tier ?? '').toLowerCase().trim();
 
-  if (rawTier === 'pro') return 'pro';
+  if (rawTier === 'pro' || rawTier === 'premium') return 'pro';
   if (rawTier === 'lite') return 'lite';
   if (rawTier === 'free') return 'free';
   return null;
@@ -136,11 +134,17 @@ export function getUserTier(user: AccessControlUser | null): PlanTier | 'guest' 
   if (user.role === 'admin') return 'pro';
 
   // ───────────────────────────────────────────────────────────────
-  // CASE 3: Subscribed User (isSubscribed / is_subscribed)
+  // CASE 3: Subscribed User (isSubscribed / is_subscribed OR valid plan)
   // ───────────────────────────────────────────────────────────────
   const isSubscribed = !!(user.isSubscribed ?? user.is_subscribed);
+  const plan = getPlanTierFromUser(user);
+  
+  // If they have a valid plan (pro/lite), respect it even if isSubscribed is missing/false.
+  if (plan === 'pro' || plan === 'lite') {
+    return plan;
+  }
+
   if (isSubscribed) {
-    const plan = getPlanTierFromUser(user);
     if (plan === 'free') return 'lite'; // legacy: subscribed but plan free
     return plan || 'lite';
   }

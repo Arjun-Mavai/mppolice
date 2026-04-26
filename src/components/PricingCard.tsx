@@ -192,7 +192,7 @@ export function PricingCard({
 
             <p className="mt-1.5 flex items-center gap-1 text-[11px] text-slate-400">
               <Clock className="h-3 w-3" />
-              {hi ? `एक बार भुगतान • ${validityText}` : `One-time payment • ${validityText}`}
+              {hi ? `एक बार भुगतान ` : `One-time payment `}
             </p>
           </div>
 

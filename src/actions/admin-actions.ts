@@ -157,6 +157,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       'general_science',
       'logical_reasoning',
       'quantitative_aptitude',
+      'mp_general_knowledge',
     ];
     if (uiBucketRaw && validBuckets.includes(uiBucketRaw as UiBucket)) {
       tagsBase.push(uiBucketToTag(uiBucketRaw as Exclude<UiBucket, 'all'>));
@@ -176,6 +177,8 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         '-' +
         nanoid(4);
 
+      const isFreeAccessFlag = formData.get('isFreeAccess') === 'true';
+
       await db.insert(tests).values({
         id: testId,
         title: resolvedTitle,
@@ -189,8 +192,8 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         totalQuestions: n,
         durationMinutes,
         examType: 'mppolice',
-        // MISC type = free quiz → isFreeAccess ON by default
-        isFreeAccess: type === 'MISC' ? true : false,
+        // Now using the explicit toggle from the admin panel
+        isFreeAccess: isFreeAccessFlag,
         tags: tagsBase,
         createdAt: new Date(),
         updatedAt: new Date(),

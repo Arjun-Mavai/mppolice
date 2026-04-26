@@ -106,15 +106,9 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
 
   // ✅ PERFORMANCE: Memoized navigation items (Synchronized with ce94fbf but removed Syllabus per request)
   const navItems = useMemo(() => [
-    { name: 'Test Hub', href: '/syllabus/quiz/full-tests', icon: LayoutDashboard, color: 'text-slate-700' },
-    {
-      name: 'Test Series',
-      href: '/syllabus/quiz/pyq',
-      icon: GraduationCap,
-      color: 'text-amber-600',
-    },
+    { name: 'Dashboard', href: '/syllabus/analytics', icon: LayoutDashboard, color: 'text-indigo-600' },
+    { name: 'Test Hub', href: '/syllabus/quiz/full-tests', icon: GraduationCap, color: 'text-slate-700' },
     { name: 'Free Daily Quiz', href: '/free-quiz', icon: Zap, color: 'text-orange-500' },
-    { name: 'Blogs', href: '/blogs', icon: BookOpen, color: 'text-sky-600' },
     {
       name: 'Test History',
       href: '/syllabus/test-history',
@@ -356,7 +350,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                   <div className="flex-1 space-y-1 overflow-y-auto px-4 py-5">
                     {navItems
                       .filter((item) => {
-                        if (item.name === 'Test Hub' || item.name === 'Test History')
+                        if (item.name === 'Dashboard' || item.name === 'Test History')
                           return !!user;
                         if (item.name === 'About Us') return !!user;
                         return true;

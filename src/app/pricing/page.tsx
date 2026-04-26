@@ -224,6 +224,18 @@ export default function PricingPage() {
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {[
                 {
+                  icon: Sparkles,
+                  label: hi ? 'टीचर जैसी विस्तृत व्याख्या' : 'Teacher-like Explanations',
+                  sub: hi ? 'Maths, Science, GK/GS के बेस्ट सॉल्यूशन बिल्कुल आसान भाषा में' : 'Best solutions for Maths, Science, GK/GS in simple words',
+                  highlight: true,
+                },
+                {
+                  icon: Zap,
+                  label: hi ? 'इंस्टेंट मोड (Instant Mode)' : 'Instant Mode',
+                  sub: hi ? 'सबमिट का इंतज़ार नहीं, तुरंत सही उत्तर और व्याख्या देखें' : 'No waiting for submit, see correct answers & explanations instantly',
+                  highlight: true,
+                },
+                {
                   icon: LayoutDashboard,
                   label: hi ? 'डैशबोर्ड और टेस्ट हिस्ट्री' : 'Dashboard & test history',
                   sub: hi ? 'प्रगति, पुराने प्रयास, रिवीज़न लूप' : 'Progress, past attempts, revision loop',
@@ -237,12 +249,12 @@ export default function PricingPage() {
                 },
                 {
                   icon: BookOpen,
-                  label: hi ? 'चैप्टर-वाइज विस्तृत व्याख्या' : 'Chapter-wise Detailed Explanations',
-                  sub: hi ? 'हर प्रश्न के पीछे का सटीक लॉजिक' : 'Step-by-step logic for every answer',
+                  label: hi ? 'चैप्टर-वाइज अभ्यास' : 'Chapter-wise Practice',
+                  sub: hi ? 'हर टॉपिक के लिए विशेष प्रश्न' : 'Specialized questions for every topic',
                   highlight: true,
                 },
                 {
-                  icon: Zap,
+                  icon: Flame,
                   label: hi ? '1000+ वन-लाइनर्स' : '1000+ One-Liners',
                   sub: hi ? 'तेज रिवीज़न के लिए व्याख्या सहित' : 'With explanations for fast revision',
                   highlight: true,
@@ -251,11 +263,6 @@ export default function PricingPage() {
                   icon: FileText,
                   label: hi ? 'फुल मॉक टेस्ट' : 'Full mock tests',
                   sub: hi ? 'लेटेस्ट पैटर्न पर आधारित' : 'Based on the latest exam pattern',
-                },
-                {
-                  icon: Newspaper,
-                  label: hi ? 'प्रीमियम ब्लॉग्स' : 'Premium blogs',
-                  sub: hi ? 'MP Police के लिए विशेष रणनीति' : 'Exclusive strategies for MP Police',
                 },
               ].map((item) => {
                 const { icon: Icon, label, sub, highlight } = item;

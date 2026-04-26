@@ -141,12 +141,14 @@ export default function AdminUploadPage() {
     description: '',
     existingTestId: '',
     questionsJson: '',
+    isFreeAccess: false,
   });
 
   // Prompt Generator State
   const [promptBucket, setPromptBucket] = useState('');
   const [promptMode, setPromptMode] = useState<'standard' | 'pyp' | 'subject_variety' | 'chapter_10q' | 'flt_expert'>('standard');
   const [generatedPrompt, setGeneratedPrompt] = useState('');
+  const [miscSetNumber, setMiscSetNumber] = useState(1);
 
   const generateAIPrompt = () => {
     if (!promptBucket) {
@@ -194,11 +196,27 @@ export default function AdminUploadPage() {
       rolePersonaSnippet = 'Assume the role of an MP POLICE CONSTABLE EXAM EXPERT. Generate original, high-quality questions strictly based on the latest VYAPAM/ESB patterns (2023-2024).';
       
       if (promptMode === 'subject_variety') {
-        modeInstructions = `TASK: Subject-Wise Expert Generation.
+        let subjectGuidance = '';
+        if (promptBucket === 'general_knowledge') {
+          subjectGuidance = 'Focus on Indian History, Indian Geography, Indian Polity, Art & Culture, Economy, and Current Affairs. Avoid MP-specific questions here.';
+        } else if (promptBucket === 'general_science') {
+          subjectGuidance = 'Focus on Physics, Chemistry, Biology, and Environment/Ecology (10th/12th standard level).';
+        } else if (promptBucket === 'mp_general_knowledge') {
+          subjectGuidance = 'Strictly focus on MP History, MP Geography, MP Polity, MP Economy, MP Arts & Culture, and MP Current Affairs.';
+        } else if (promptBucket === 'quantitative_aptitude') {
+          subjectGuidance = 'Focus on Number System, Percentage, Profit/Loss, Time/Work, Speed/Distance, CI/SI, Mensuration, and basic Algebra/Geometry.';
+        } else if (promptBucket === 'logical_reasoning') {
+          subjectGuidance = 'Focus on Coding-Decoding, Number/Alphabet Series, Syllogism, Blood Relation, Direction, Dice, and Non-Verbal Reasoning.';
+        } else {
+          subjectGuidance = 'Mixed subjects from MP Police Constable syllabus.';
+        }
+
+        modeInstructions = `TASK: Subject-Wise Expert Generation (20 Questions Set).
+- SUBJECT FOCUS: ${subjectGuidance}
 - RESEARCH: Deeply analyze MP Police Constable patterns. Questions must be 10th/12th standard level. 
-- VARIETY: Generate 20 UNIQUE (unless specified) questions. ${streamType === 'reasoning' ? 'Include at least 1-2 "Situation Reaction Test (SRT) / Police Ethics" questions.' : ''}
+- VARIETY & UNIQUENESS: Generate exactly 20 UNIQUE questions. Make sure the questions have high variety. If the user generates this multiple times, ensure the next 20 questions are completely different so they can make 5 different tests. ${streamType === 'reasoning' ? 'Include at least 1-2 "Situation Reaction Test (SRT) / Police Ethics" questions.' : ''}
 - LEVEL: Strictly MP Police Constable grade. Do not use UPSC/SSC CGL level.`;
-        countInstruction = 'Generate 20 high-quality original questions.';
+        countInstruction = 'Generate exactly 20 high-quality original questions for the selected subject.';
       } else if (promptMode === 'chapter_10q') {
         modeInstructions = `TASK: Chapter-Wise Expert Deep Dive.
 - COUNT: Generate EXACTLY 10 QUESTIONS.
@@ -424,6 +442,7 @@ RAW TEXT (IF ANY):
         if (testData.type === 'MISC' && testData.subjectTag) {
           formData.append('subjectTag', testData.subjectTag);
         }
+        formData.append('isFreeAccess', testData.isFreeAccess ? 'true' : 'false');
       } else {
         formData.append('existingTestId', testData.existingTestId);
         // Same as new mode: so MBT `collection:memory` (etc.) actually persists on the row
@@ -436,7 +455,20 @@ RAW TEXT (IF ANY):
 
       if (res.success) {
         toast.success(res.message);
-        setTestData((prev) => ({ ...prev, questionsJson: '', title: '' }));
+        
+        if (testData.type === 'MISC' && testData.subjectTag) {
+          const nextSet = miscSetNumber + 1;
+          setMiscSetNumber(nextSet);
+          setTestData((prev) => ({ 
+            ...prev, 
+            questionsJson: '', 
+            title: `${prev.subjectTag} अभ्यास - Set ${nextSet}`,
+            titleEn: `${prev.subjectTag} Practice - Set ${nextSet}`
+          }));
+        } else {
+          setTestData((prev) => ({ ...prev, questionsJson: '', title: '' }));
+        }
+        
         // Refresh existing tests
         getExistingTests().then(setExistingTests);
       } else {
@@ -847,14 +879,26 @@ RAW TEXT (IF ANY):
                                 <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                                 <span className="text-[10px] font-black tracking-widest text-emerald-800 uppercase">AI Master Prompt (Copy to Gemini/GPT-4o)</span>
                              </div>
-                             <Button 
-                               variant="outline" 
-                               size="sm" 
-                               onClick={() => copyToClipboard(generatedPrompt)}
-                               className="h-8 border-emerald-300 bg-white px-3 text-[10px] font-black text-emerald-700 shadow-sm hover:bg-emerald-50 hover:text-emerald-800"
-                             >
-                                <Copy className="mr-1.5 h-3.5 w-3.5" /> COPY MASTER PROMPT
-                             </Button>
+                             <div className="flex items-center gap-2">
+                               {promptMode === 'subject_variety' && (
+                                 <Button 
+                                   variant="outline" 
+                                   size="sm" 
+                                   onClick={() => copyToClipboard("Generate 1 more set of 20 completely new and unique questions for the same subject.")}
+                                   className="h-8 border-indigo-300 bg-white px-3 text-[10px] font-black text-indigo-700 shadow-sm hover:bg-indigo-50 hover:text-indigo-800"
+                                 >
+                                    <Copy className="mr-1.5 h-3.5 w-3.5" /> COPY NEXT SET PROMPT
+                                 </Button>
+                               )}
+                               <Button 
+                                 variant="outline" 
+                                 size="sm" 
+                                 onClick={() => copyToClipboard(generatedPrompt)}
+                                 className="h-8 border-emerald-300 bg-white px-3 text-[10px] font-black text-emerald-700 shadow-sm hover:bg-emerald-50 hover:text-emerald-800"
+                               >
+                                  <Copy className="mr-1.5 h-3.5 w-3.5" /> COPY MASTER PROMPT
+                               </Button>
+                             </div>
                           </div>
                           <div className="relative group">
                              <pre className="max-h-[220px] overflow-y-auto rounded-xl border border-emerald-200 bg-white/80 p-5 text-[11px] leading-relaxed text-slate-700 shadow-inner scrollbar-thin scrollbar-thumb-emerald-200 indent-0">
@@ -928,7 +972,25 @@ RAW TEXT (IF ANY):
                         {/* Dynamic Fields based on Type */}
                         {(testData.type === 'TOPIC' || testData.type === 'UNIT' || testData.type === 'MISC') && (
                           <div className="space-y-2">
-                            <Label>Select Unit</Label>
+                            <div className="flex items-center justify-between">
+                              <Label>Select Unit</Label>
+                              <div className="flex rounded-md bg-slate-100 p-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setTopicLang('hi')}
+                                  className={`rounded px-2 py-0.5 text-xs transition-all ${topicLang === 'hi' ? 'bg-white font-bold text-indigo-600 shadow' : 'text-slate-500'}`}
+                                >
+                                  हिंदी
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setTopicLang('en')}
+                                  className={`rounded px-2 py-0.5 text-xs transition-all ${topicLang === 'en' ? 'bg-white font-bold text-indigo-600 shadow' : 'text-slate-500'}`}
+                                >
+                                  EN
+                                </button>
+                              </div>
+                            </div>
                             <Select
                               value={testData.unitId}
                               onValueChange={(v) =>
@@ -951,25 +1013,7 @@ RAW TEXT (IF ANY):
 
                         {testData.type === 'TOPIC' && (
                           <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Label>Select Topic (from Syllabus)</Label>
-                              <div className="flex rounded-md bg-slate-100 p-1">
-                                <button
-                                  type="button"
-                                  onClick={() => setTopicLang('hi')}
-                                  className={`rounded px-2 py-0.5 text-xs transition-all ${topicLang === 'hi' ? 'bg-white font-bold text-indigo-600 shadow' : 'text-slate-500'}`}
-                                >
-                                  हिंदी
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setTopicLang('en')}
-                                  className={`rounded px-2 py-0.5 text-xs transition-all ${topicLang === 'en' ? 'bg-white font-bold text-indigo-600 shadow' : 'text-slate-500'}`}
-                                >
-                                  EN
-                                </button>
-                              </div>
-                            </div>
+                            <Label>Select Topic (from Syllabus)</Label>
                             <Select
                               value={testData.topicId}
                               onValueChange={(v) => setTestData((p) => ({ ...p, topicId: v }))}
@@ -996,7 +1040,30 @@ RAW TEXT (IF ANY):
                             <Label>Subject Tag (Filter me dikhega)</Label>
                             <Select
                               value={testData.subjectTag}
-                              onValueChange={(v) => setTestData((p) => ({ ...p, subjectTag: v }))}
+                              onValueChange={(v) => {
+                                // Calculate next set number from DB (existingTests)
+                                let nextSet = 1;
+                                const subjectTests = existingTests.filter(t => t.type === 'MISC' && t.title.includes(v));
+                                if (subjectTests.length > 0) {
+                                  let max = 0;
+                                  subjectTests.forEach(t => {
+                                    const match = t.title.match(/Set (\d+)/i);
+                                    if (match && match[1]) {
+                                      const num = parseInt(match[1], 10);
+                                      if (num > max) max = num;
+                                    }
+                                  });
+                                  nextSet = max + 1;
+                                }
+
+                                setMiscSetNumber(nextSet);
+                                setTestData((p) => ({ 
+                                  ...p, 
+                                  subjectTag: v,
+                                  title: `${v} अभ्यास - Set ${nextSet}`,
+                                  titleEn: `${v} Practice - Set ${nextSet}`
+                                }));
+                              }}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Subject choose karo..." />
@@ -1040,6 +1107,19 @@ RAW TEXT (IF ANY):
                                 ? 'Optional — topic se auto (या JSON में testTitleEn)'
                                 : 'English title (optional)'
                             }
+                          />
+                        </div>
+                        
+                        <div className="flex flex-row items-center justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                          <div className="space-y-0.5">
+                            <Label className="text-base font-bold text-slate-900">Free Access / Demo</Label>
+                            <p className="text-xs text-slate-500">
+                              Turn this ON to make the test free for everyone. Leave OFF to make it Premium (Locked).
+                            </p>
+                          </div>
+                          <Switch
+                            checked={testData.isFreeAccess}
+                            onCheckedChange={(v) => setTestData((p) => ({ ...p, isFreeAccess: v }))}
                           />
                         </div>
                       </div>

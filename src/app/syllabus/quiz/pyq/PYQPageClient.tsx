@@ -129,8 +129,7 @@ export default function PYQPageClient({
   };
 
   const syncHubQuery = useCallback(
-    (next: Partial<{ tab: HubTab }>) => {
-      const p = new URLSearchParams(window.location.search);
+    (next: Partial<{ tab: HubTab }>) => {   const p = new URLSearchParams(window.location.search);
       if (next.tab !== undefined) {
         p.set('tab', next.tab);
       }

@@ -155,11 +155,11 @@ export default function ChapterTopicHubClient({ initialDbData }: ChapterTopicHub
           <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
             {hi ? 'अध्यायवार टॉपिक टेस्ट' : 'Chapter-wise topic tests'}
           </h1>
-          <p className="mx-auto max-w-lg text-sm font-medium text-slate-500">
+          {/* <p className="mx-auto max-w-lg text-sm font-medium text-slate-500">
             {hi
               ? 'साइंस, GK, तर्क, गणित, MP GK — जैसा फ्रंट पर दिखता है, वैसे ही फ़िल्टर।'
               : 'Same buckets as the app: Science, GK, Reasoning, Quant, MP GK — pick a strip, then a topic.'}
-          </p>
+          </p> */}
         </motion.div>
 
         {/* Category pills — horizontal scroll on mobile */}

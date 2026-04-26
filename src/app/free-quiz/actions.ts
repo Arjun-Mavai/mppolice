@@ -13,7 +13,7 @@
 
 import { db } from '@/db';
 import { tests, questions, freeQuizAttempts } from '@/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, asc } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { logger } from '@/lib/logger';
 import { sendTelegramNotification } from '@/lib/telegram';
@@ -91,7 +91,7 @@ export async function recordGuestAttempt(data: {
 export const getCachedFreeQuizzes = unstable_cache(
   async () => {
     try {
-      console.log('--- DEBUG: Fetching Free Quizzes from DB ---');
+      logger.info('--- Fetching Free Quizzes from DB ---');
       const result = await db
         .select({
           id: tests.id,
@@ -115,16 +115,58 @@ export const getCachedFreeQuizzes = unstable_cache(
         )
         .orderBy(desc(tests.createdAt));
       
-      console.log(`--- DEBUG: Successfully fetched ${result.length} quizzes ---`);
+      logger.info(`--- Successfully fetched ${result.length} quizzes ---`);
       return result;
     } catch (error) {
-      console.error('--- CRITICAL DB ERROR in getCachedFreeQuizzes ---');
-      console.error('Error Details:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+      logger.error('--- CRITICAL DB ERROR in getCachedFreeQuizzes ---', error);
       
       return [];
     }
   },
   ['free-tests-list-v4'],
+  { revalidate: 60, tags: ['tests'] }
+);
+
+/**
+ * getCachedSubjectWiseTests — unstable_cache se cached MISC tests (ALL)
+ * This fetches ALL MISC tests regardless of whether they are free or premium.
+ * Used for the Subject-wise practice hub.
+ */
+export const getCachedSubjectWiseTests = unstable_cache(
+  async () => {
+    try {
+      const result = await db
+        .select({
+          id: tests.id,
+          title: tests.title,
+          titleEn: tests.titleEn,
+          slug: tests.slug,
+          description: tests.description,
+          totalQuestions: tests.totalQuestions,
+          unitId: tests.unitId,
+          tags: tests.tags,
+          createdAt: tests.createdAt,
+          isFreeAccess: tests.isFreeAccess,
+          isLiteAccess: tests.isLiteAccess,
+          isProAccess: tests.isProAccess,
+        })
+        .from(tests)
+        .where(
+          and(
+            eq(tests.type, 'MISC'),
+            eq(tests.isHidden, false),
+            eq(tests.examType, 'mppolice')
+          )
+        )
+        .orderBy(asc(tests.createdAt));
+      
+      return result;
+    } catch (error) {
+      logger.error('CRITICAL DB ERROR in getCachedSubjectWiseTests', error);
+      return [];
+    }
+  },
+  ['subject-wise-tests-list-v2'],
   { revalidate: 60, tags: ['tests'] }
 );
 

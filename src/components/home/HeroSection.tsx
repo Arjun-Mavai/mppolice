@@ -8,11 +8,16 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
 
+import { getUserTier } from '@/lib/access-control';
+
 export function HeroSection() {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isPendingFreeTest, setIsPendingFreeTest] = useState(false);
+  const [isPendingOneLiners, setIsPendingOneLiners] = useState(false);
   const { language, user: globalUser } = useSettingsStore();
-  const oneLinersHref = '/syllabus/quiz/revision/gk-one-liners';
+  const tier = getUserTier(globalUser);
+  const isPro = tier === 'pro';
+  const oneLinersHref = isPro ? '/syllabus/quiz/revision/gk-one-liners' : '/free-one-liners';
 
   return (
     <section className="relative flex min-h-[90vh] flex-col justify-center overflow-hidden bg-[#020617] px-4 pt-24 pb-14 md:min-h-screen md:px-6 md:pt-48 md:pb-32">
@@ -65,9 +70,8 @@ export function HeroSection() {
                     location: 'home_page_hero_section',
                     user_status: 'guest',
                   });
-                  startTransition(() => {
-                    router.push('/free-quiz');
-                  });
+                  setIsPendingFreeTest(true);
+                  router.push('/free-quiz');
                 }}
                 onMouseEnter={() => router.prefetch('/free-quiz')}
                 className="group relative w-full focus:outline-none"
@@ -75,7 +79,7 @@ export function HeroSection() {
                 {/* Premium Button Container */}
                 <div className="relative flex h-16 w-full transform items-center justify-center overflow-hidden rounded-2xl bg-amber-600 transition-all duration-500 group-hover:-translate-y-1 group-hover:bg-amber-500 group-hover:shadow-[0_0_40px_rgba(245,158,11,0.4)] group-active:scale-[0.98] md:h-24 md:rounded-[2.5rem]">
                   <div className="relative z-10 flex h-full w-full items-center justify-center gap-4 px-6 md:gap-8 md:px-10">
-                    {isPending ? (
+                    {isPendingFreeTest ? (
                       <Loader2 className="h-6 w-6 animate-spin text-white md:h-8 md:w-8" />
                     ) : (
                       <Zap className="h-6 w-6 fill-white text-white md:h-8 md:w-8" />
@@ -99,16 +103,19 @@ export function HeroSection() {
                     location: 'home_page_hero_section',
                     user_status: 'guest',
                   });
-                  startTransition(() => {
-                    router.push(oneLinersHref);
-                  });
+                  setIsPendingOneLiners(true);
+                  router.push(oneLinersHref);
                 }}
                 onMouseEnter={() => router.prefetch(oneLinersHref)}
                 className="group relative w-full focus:outline-none"
               >
                 <div className="relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-500 group-hover:-translate-y-0.5 group-hover:border-amber-500/40 group-hover:bg-amber-500/10 group-hover:shadow-[0_0_40px_rgba(245,158,11,0.12)] group-active:scale-[0.99] md:h-24 md:rounded-[2.5rem]">
                   <div className="relative z-10 flex h-full w-full items-center justify-center gap-3 px-6 md:gap-6 md:px-10">
-                    <Target className="h-5 w-5 text-amber-400 md:h-7 md:w-7" />
+                    {isPendingOneLiners ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-amber-400 md:h-7 md:w-7" />
+                    ) : (
+                      <Target className="h-5 w-5 text-amber-400 md:h-7 md:w-7" />
+                    )}
                     <span className="text-[11px] font-black tracking-[0.15em] whitespace-nowrap text-white/90 uppercase md:text-lg md:tracking-[0.2em]">
                       {language === 'hi' ? 'GK वन-लाइनर्स प्रैक्टिस' : 'Practice One-Liners'}
                     </span>
@@ -147,11 +154,16 @@ export function HeroSection() {
                     location: 'home_page_hero_section',
                     user_status: 'logged_in',
                   });
+                  setIsPendingOneLiners(true);
                 }}
               >
                 <div className="relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-500 group-hover:-translate-y-0.5 group-hover:border-amber-500/40 group-hover:bg-amber-500/10 group-hover:shadow-[0_0_40px_rgba(245,158,11,0.12)] group-active:scale-[0.99] md:h-24 md:rounded-[2.5rem]">
                   <div className="relative z-10 flex h-full w-full items-center justify-center gap-3 px-6 md:gap-6 md:px-10">
-                    <Target className="h-5 w-5 text-amber-500 md:h-7 md:w-7" />
+                    {isPendingOneLiners ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-amber-500 md:h-7 md:w-7" />
+                    ) : (
+                      <Target className="h-5 w-5 text-amber-500 md:h-7 md:w-7" />
+                    )}
                     <span className="text-[11px] font-black tracking-[0.15em] whitespace-nowrap text-white/90 uppercase md:text-lg md:tracking-[0.2em]">
                       {language === 'hi' ? 'GK वन-लाइनर्स प्रैक्टिस' : 'Practice One-Liners'}
                     </span>

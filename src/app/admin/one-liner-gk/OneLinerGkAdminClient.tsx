@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Loader2, Copy, Upload, BarChart3, Database } from 'lucide-react';
+import { Loader2, Copy, Upload, BarChart3, Database, Sparkles } from 'lucide-react';
 import { importMppoliceOneLinersJson, publishAllDraftMppoliceOneLiners, getMppoliceOneLinerStats } from '@/actions/mppolice-one-liners-admin';
 import { MPPOLICE_ONELINER_SUBJECTS } from '@/features/revision/constants/mppolice-one-liners';
 
@@ -184,9 +184,22 @@ export default function OneLinerGkAdminClient() {
                 <Button type="button" variant="outline" size="sm" onClick={() => copy(DEMO_JSON, 'Demo JSON copied')}>
                   <Copy className="mr-1 h-3 w-3" /> Copy demo JSON
                 </Button>
+                <Button 
+                  type="button" 
+                  variant="default" 
+                  size="sm" 
+                  className="bg-indigo-600 hover:bg-indigo-700"
+                  onClick={async () => {
+                    const res = await fetch('/prompts/mppolice-one-liners-ai-batch.md');
+                    const text = await res.text();
+                    copy(text, 'AI Prompt copied! Paste in ChatGPT/Claude.');
+                  }}
+                >
+                  <Sparkles className="mr-1 h-3 w-3" /> Copy Generation Prompt
+                </Button>
                 <Button type="button" variant="outline" size="sm" asChild>
                   <a href="/prompts/mppolice-one-liners-ai-batch.md" target="_blank" rel="noopener noreferrer">
-                    Open AI prompt
+                    View Prompt MD
                   </a>
                 </Button>
               </div>

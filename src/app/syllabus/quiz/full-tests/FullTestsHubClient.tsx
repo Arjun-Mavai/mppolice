@@ -11,6 +11,7 @@ import { parseUiBucketFromTags } from '@/data/mppoliceSyllabus';
 import { QuizListItem } from '@/components/QuizListItem';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { Button } from '@/components/ui/button';
+import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 
 const BUCKET_PILLS: { id: UiBucket; labelEn: string; labelHi: string }[] = [
   { id: 'all', labelEn: 'All', labelHi: 'सभी' },
@@ -46,6 +47,7 @@ export default function FullTestsHubClient({ miscTests }: FullTestsHubClientProp
   const hi = language === 'hi';
   const [, startTransition] = useTransition();
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [paywallOpen, setPaywallOpen] = useState(false);
 
   const bucketQuery = searchParams.get('bucket');
   const [uiBucket, setUiBucket] = useState<UiBucket>(() => {
@@ -106,11 +108,11 @@ export default function FullTestsHubClient({ miscTests }: FullTestsHubClientProp
           <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
             {hi ? 'विषयवार अभ्यास' : 'Subject-wise practice'}
           </h1>
-          <p className="mx-auto max-w-lg text-sm font-medium text-slate-500">
+          {/* <p className="mx-auto max-w-lg text-sm font-medium text-slate-500">
             {hi
               ? 'नीचे की सूची अध्याय वाले पेज जैसी है — स्ट्रिप से विषय चुनो। टाइप MISC (एडमिन अपलोड)।'
               : 'Same list layout as chapter-wise topic tests — pick a subject strip. Tests are type MISC from Admin.'}
-          </p>
+          </p> */}
         </motion.div>
 
         <div className="no-scrollbar mb-6 flex gap-2 overflow-x-auto pb-1">
@@ -135,7 +137,7 @@ export default function FullTestsHubClient({ miscTests }: FullTestsHubClientProp
         </div>
 
         <div className="flex flex-col gap-1 border-b border-slate-200 pb-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
+          {/* <div>
             <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
               {hi ? 'विषयवार क्विज़' : 'Subject-wise quizzes'}
             </h2>
@@ -144,7 +146,7 @@ export default function FullTestsHubClient({ miscTests }: FullTestsHubClientProp
                 ? `स्ट्रिप: ${pillLabel(uiBucket)} · \`ui_bucket:\` टैग से मैच`
                 : `Strip: ${pillLabel(uiBucket)} · matches \`ui_bucket:\` tags`}
             </p>
-          </div>
+          </div> */}
           <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
             {filteredMisc.length} {hi ? 'क्विज़' : 'quizzes'}
           </span>
@@ -196,7 +198,10 @@ export default function FullTestsHubClient({ miscTests }: FullTestsHubClientProp
                     colorVariant={(['amber', 'emerald', 'pink', 'blue', 'indigo'] as const)[idx % 5]}
                     isLoading={loadingId === t.id}
                     onClick={() => {
-                      if (t.isLocked) return;
+                      if (t.isLocked) {
+                        setPaywallOpen(true);
+                        return;
+                      }
                       setLoadingId(t.id);
                       startTransition(() => {
                         router.push(`/syllabus/quiz/play?mode=full&testId=${t.id}`);
@@ -232,6 +237,8 @@ export default function FullTestsHubClient({ miscTests }: FullTestsHubClientProp
           )}
         </div>
       </div>
+
+      <SyllabusLockModal open={paywallOpen} onOpenChange={setPaywallOpen} />
     </div>
   );
 }

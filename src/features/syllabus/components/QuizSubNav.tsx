@@ -13,7 +13,7 @@ const NAV_ITEMS = [
   {
     id: 'full-tests',
     label: { en: 'Full tests', hi: 'फुल टेस्ट' },
-    shortLabel: { en: 'Mocks', hi: 'मॉक' },
+    shortLabel: { en: 'Sub-wise', hi: 'विषय-वार' },
     title: {
       en: '100-Q MBT mocks and subject-wise unit tests',
       hi: '100 प्रश्न MBT मॉक और विषयवार यूनिट टेस्ट',
@@ -23,19 +23,7 @@ const NAV_ITEMS = [
     color: 'bg-amber-500 border-amber-500',
     activeText: 'text-amber-600',
   },
-  {
-    id: 'pyq',
-    label: { en: 'PYQ', hi: 'PYQ' },
-    shortLabel: { en: 'PYQ', hi: 'PYQ' },
-    title: {
-      en: 'Previous-year papers, mocks & PYQ intelligence',
-      hi: 'पिछले वर्ष के पेपर, मॉक और विश्लेषण',
-    },
-    icon: Clock,
-    href: '/syllabus/quiz/pyq',
-    color: 'bg-slate-900 border-slate-900',
-    activeText: 'text-slate-900',
-  },
+  
   {
     id: 'chapters',
     label: { en: 'Chapters', hi: 'अध्याय' },
@@ -62,7 +50,22 @@ const NAV_ITEMS = [
     color: 'bg-emerald-600 border-emerald-600',
     activeText: 'text-emerald-600',
   },
+  {
+    id: 'pyq',
+    label: { en: 'PYQ', hi: 'PYQ' },
+    shortLabel: { en: 'PYQ', hi: 'PYQ' },
+    title: {
+      en: 'Previous-year papers, mocks & PYQ intelligence',
+      hi: 'पिछले वर्ष के पेपर, मॉक और विश्लेषण',
+    },
+    icon: Clock,
+    href: '/syllabus/quiz/pyq',
+    color: 'bg-slate-900 border-slate-900',
+    activeText: 'text-slate-900',
+  }
 ];
+
+import { getUserTier } from '@/lib/access-control';
 
 // Pages where bottom nav should be hidden (PYQ sub-pages)
 const HIDDEN_BOTTOM_NAV_PATHS = [
@@ -76,13 +79,16 @@ const HIDDEN_BOTTOM_NAV_PATHS = [
 export function QuizSubNav() {
   const router = useRouter();
   const pathname = usePathname();
-  const { language } = useSettingsStore();
+  const { language, user: globalUser } = useSettingsStore();
   const hi = language === 'hi';
   const [isPending] = useTransition();
 
+  const tier = getUserTier(globalUser);
+  const isPro = tier === 'pro';
+
   const activeHref = useMemo(() => {
-    if (pathname.startsWith('/syllabus/quiz/revision')) {
-      return '/syllabus/quiz/revision/gk-one-liners';
+    if (pathname.startsWith('/syllabus/quiz/revision') || pathname === '/free-one-liners') {
+      return isPro ? '/syllabus/quiz/revision/gk-one-liners' : '/free-one-liners';
     }
     if (pathname.startsWith('/syllabus/quiz/pyq')) {
       return '/syllabus/quiz/pyq';
@@ -123,16 +129,17 @@ export function QuizSubNav() {
         <div className="mb-12 hidden w-full items-center justify-center md:flex">
           <div className="no-scrollbar flex max-w-full items-center gap-1.5 overflow-x-auto rounded-[2rem] border border-slate-200 bg-white p-1.5 shadow-sm">
             {NAV_ITEMS.map((item) => {
-              const isActive = activeHref === item.href;
+              const finalHref = (item.id === 'one-liners' && !isPro) ? '/free-one-liners' : item.href;
+              const isActive = activeHref === finalHref;
               return (
                 <Link
                   key={item.id}
-                  href={item.href}
+                  href={finalHref}
                   title={hi ? item.title.hi : item.title.en}
                   prefetch={true}
                   scroll={false}
-                  onMouseEnter={() => router.prefetch(item.href)}
-                  onTouchStart={() => router.prefetch(item.href)}
+                  onMouseEnter={() => router.prefetch(finalHref)}
+                  onTouchStart={() => router.prefetch(finalHref)}
                   className={cn(
                     'relative rounded-full px-5 py-2.5 text-xs font-black tracking-widest whitespace-nowrap uppercase transition-all outline-none',
                     isActive
@@ -164,11 +171,12 @@ export function QuizSubNav() {
         <div className="safe-area-bottom fixed right-0 bottom-0 left-0 z-[100] border-t border-slate-200/50 bg-white/80 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] backdrop-blur-xl md:hidden">
           <div className="mx-auto flex max-w-md items-center justify-around gap-1 px-4 py-3">
             {NAV_ITEMS.map((item) => {
-              const isActive = activeHref === item.href;
+              const finalHref = (item.id === 'one-liners' && !isPro) ? '/free-one-liners' : item.href;
+              const isActive = activeHref === finalHref;
               return (
                 <Link
                   key={item.id}
-                  href={item.href}
+                  href={finalHref}
                   title={hi ? item.title.hi : item.title.en}
                   prefetch={true}
                   scroll={false}

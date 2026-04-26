@@ -104,12 +104,21 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
     });
   }, [filteredQuizzes, router]);
 
-  // Unit ka display name — "Unit 1" ya "यूनिट 1"
-  const getUnitLabel = (unitId: string | null): string => {
-    if (!unitId) return '';
+  const renderUnitBadge = (unitId: string | null) => {
+    if (!unitId) return null;
     const unit = MP_Police_UNITS.find((u) => u.id === unitId);
-    if (!unit) return unitId.replace('unit_', 'U');
-    return hi ? unit.subjectHi : unit.subject;
+    if (unit) {
+      return `🏛️ Unit ${unitId.replace('unit_', '')} · ${hi ? unit.subjectHi : unit.subject}`;
+    }
+    
+    // Human readable fallback for sec_ tags
+    let label = unitId;
+    if (unitId.startsWith('sec_')) {
+      label = unitId.replace('sec_', '').split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    } else if (unitId.startsWith('unit_')) {
+      label = `Unit ${unitId.replace('unit_', '')}`;
+    }
+    return `🏛️ ${label}`;
   };
 
   return (
@@ -170,7 +179,7 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
                   variant="outline"
                   className="gap-1 rounded-full border-amber-200 bg-amber-50 px-2.5 py-1 text-xs text-amber-700"
                 >
-                  Unit {selectedUnit.replace('unit_', '')}
+                  {renderUnitBadge(selectedUnit)?.replace('🏛️ ', '')}
                   <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedUnit(null)} />
                 </Badge>
               )}
@@ -214,7 +223,6 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
           ) : (
             filteredQuizzes.map((quiz, idx) => {
               const subject = getTestSubject(quiz);
-              const unitLabel = getUnitLabel(quiz.unitId);
 
               return (
                 <div key={quiz.id} className="relative">
@@ -248,8 +256,7 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
                     )}
                     {quiz.unitId && (
                       <span className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                        🏛️ Unit {quiz.unitId.replace('unit_', '')}
-                        {unitLabel ? ` · ${unitLabel}` : ''}
+                        {renderUnitBadge(quiz.unitId)}
                       </span>
                     )}
                   </div>

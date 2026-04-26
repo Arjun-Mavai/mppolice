@@ -87,7 +87,7 @@ export const PRO_FEATURES: PlanFeatureWithIcon[] = [
     icon: 'FileText' 
   },
   { en: 'Smart Analytics Dashboard', hi: 'स्मार्ट एनालिटिक्स डैशबोर्ड', icon: 'BarChart3' },
-  { en: 'Premium Study Blogs & Strategy', hi: 'प्रीमियम स्टडी ब्लॉग्स और रणनीति', icon: 'FileText' },
+  // { en: 'Premium Study Blogs & Strategy', hi: 'प्रीमियम स्टडी ब्लॉग्स और रणनीति', icon: 'FileText' },
   { en: 'Test History for Revision', hi: 'रिवीज़न के लिए टेस्ट हिस्ट्री', icon: 'History' },
 ];
 
