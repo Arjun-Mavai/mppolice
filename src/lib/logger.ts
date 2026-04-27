@@ -20,6 +20,7 @@ export type LogCategory =
   | 'system'
   | 'admin'
   | 'ui'
+  | 'guest'
   | 'error-boundary'
   | 'production-error';
 
