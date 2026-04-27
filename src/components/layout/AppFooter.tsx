@@ -31,9 +31,37 @@ export function AppFooter() {
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 px-6 md:flex-row md:gap-6">
         {/* Brand Section */}
         <div className="order-last w-full text-center md:order-first md:w-auto md:text-left">
-          <p className="text-lg font-bold text-slate-900">Mindful MP Police</p>
+          <p className="text-lg font-bold text-slate-900">MP Police Elite</p>
           <p className="mt-1 text-sm text-slate-500">© 2026 All rights reserved.</p>
-          <p className="mt-2 text-[10px] font-medium text-slate-400">Made with ❤️ for MP</p>
+          <div className="mt-4 flex items-center justify-center gap-4 md:justify-start">
+            <a
+              href="https://t.me/mppolice_26"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full bg-sky-100 p-2 text-sky-600 transition-all hover:bg-sky-200 hover:scale-110"
+              title="Join Telegram"
+            >
+              <Send size={18} />
+            </a>
+            <a
+              href="https://www.youtube.com/@MPPOLICEZen-h2s"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full bg-red-100 p-2 text-red-600 transition-all hover:bg-red-200 hover:scale-110"
+              title="YouTube Channel"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                stroke="none"
+                width="18"
+                height="18"
+              >
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+              </svg>
+            </a>
+          </div>
+          <p className="mt-4 text-[10px] font-medium text-slate-400 uppercase tracking-widest">सत्यमेव जयते</p>
         </div>
 
         {/* Mobile Grid Layout (Icons + Text) */}
