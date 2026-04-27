@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { mppscUsers } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { mppscUsers, verificationTokens } from '@/db/schema';
+import { eq, sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { v4 as uuidv4 } from 'uuid';
+import { addHours } from 'date-fns';
+import { Resend } from 'resend';
+import PasswordResetTemplate from '@/components/password-reset-template';
+import { appPath } from '@/lib/app-url';
 
 export async function POST(request: Request) {
   try {
@@ -30,18 +35,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    // --- CHECK EMAIL EXISTENCE EFFICIENTLY ---
-    const dbUsers = await db
-      .select({ id: mppscUsers.id })
-      .from(mppscUsers)
-      .where(eq(mppscUsers.email, email))
-      .limit(1);
+    const normalizedEmail = email.toLowerCase().trim();
 
-    const user = dbUsers[0];
+    // --- CHECK USER EXISTENCE ---
+    const user = await db.query.mppscUsers.findFirst({
+      where: eq(sql`LOWER(${mppscUsers.email})`, normalizedEmail),
+    });
 
     if (!user) {
       // SECURITY: Don't reveal if user exists or not.
-      // Always return success to prevent Email Enumeration.
       // Fake delay to mimic processing time
       await new Promise((resolve) => setTimeout(resolve, 500 + Math.random() * 500));
       return NextResponse.json({
@@ -50,14 +52,39 @@ export async function POST(request: Request) {
       });
     }
 
-    // --- SEND EMAIL LOGIC (Simulated) ---
-    // In a real app, you would generate a token, save to DB, and send email via Resend/SendGrid.
-    // For now, logging it as requested.
+    // --- GENERATE TOKEN & SEND EMAIL ---
+    try {
+      const token = uuidv4();
+      const expires = addHours(new Date(), 24); // 24 hours for password reset
 
-    logger.info(`[Password Reset] Requested for user: ${user.id} (${email})`);
+      await db.insert(verificationTokens).values({
+        identifier: user.id,
+        token,
+        expires,
+      });
 
-    // Simulate Email Sending Delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const fromName = process.env.EMAIL_FROM_NAME || 'MP POLICE ZEN';
+      const fromAddress = process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'mppolice@zenscroll.app';
+      const fromEmail = `${fromName} <${fromAddress}>`;
+      const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
+
+      const { error: emailError } = await resend.emails.send({
+        from: fromEmail,
+        to: [user.email],
+        subject: '🔒 Reset Your MP POLICE ZEN Password',
+        react: PasswordResetTemplate({ name: user.name || 'Student', actionUrl }),
+      });
+
+      if (emailError) {
+        logger.error('Failed to send password reset email', emailError, { category: 'email', userId: user.id });
+      } else {
+        logger.info(`Password reset email sent to: ${normalizedEmail}`, { category: 'auth', userId: user.id });
+      }
+    } catch (err) {
+      logger.error('Token generation or email delivery failed', err, { category: 'auth', userId: user.id });
+      // We still return success to the user
+    }
 
     return NextResponse.json({
       success: true,

@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/db';
-import { mppscUsers, pricingConfig, payments } from '@/db/schema';
+import { mppscUsers, pricingConfig, payments, verificationTokens } from '@/db/schema';
 import { eq, sql, and } from 'drizzle-orm';
 import { PRICING_DEFAULTS } from '@/config/pricing';
 import { verifyAuth } from '@/lib/auth';
@@ -12,6 +12,11 @@ import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
+import { Resend } from 'resend';
+import EmailTemplate from '@/components/email-template';
+import { addHours } from 'date-fns';
+import { appPath } from '@/lib/app-url';
+import { notifyAdminOnPayment, notifyAdminOnEmailFailure } from '@/lib/admin-notify';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 💳 START PAYMENT (Register + Create Order)
@@ -352,32 +357,94 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         .where(eq(mppscUsers.id, userId));
     });
 
-    // 🚀 Step 6: Notify via Telegram (Bina kisi secure info ke)
-    try {
-      const amountInRupees = amountInPaise / 100;
-      const userResult = await db.query.mppscUsers.findFirst({
-        where: eq(mppscUsers.id, userId),
-        columns: { name: true, email: true, phone: true }
-      });
-
-      const message = `💰 <b>Payment Successful!</b>\n\n` +
-        `👤 User: ${escapeHTML(userResult?.name || 'Unknown')}\n` +
-        `📧 Email: ${escapeHTML(userResult?.email || 'N/A')}\n` +
-        `📞 Phone: ${userResult?.phone || 'N/A'}\n` +
-        `🎟️ Plan: ${planTier.toUpperCase()}\n` +
-        `💵 Amount: ₹${amountInRupees}\n` +
-        `🆔 Payment ID: ${razorpay_payment_id.slice(-6)} (Masked)\n` +
-        `✅ Access granted instantly.`;
-
-      await sendTelegramNotification(message);
-    } catch (err) {
-      logger.error('Telegram notification failed for payment', { err });
-    }
-
     logger.info('Payment verified successfully', {
       category: 'payment',
       metadata: { userId, planTier, orderId: razorpay_order_id },
     });
+
+    // 🚀 Step 6: Post-Verification Flow (Non-blocking but vital)
+    // We run this in the background to keep the response snappy.
+    (async () => {
+      try {
+        const user = await db.query.mppscUsers.findFirst({
+          where: eq(mppscUsers.id, userId),
+        });
+        if (!user || !user.email) return;
+
+        const isUpgrade = order.notes?.planType === 'upgrade';
+
+        // 1. Generate 'Set Password' Token for New Users
+        if (!isUpgrade) {
+          const token = uuidv4();
+          const expires = addHours(new Date(), 1); // 1 hour expiry
+
+          await db.insert(verificationTokens).values({
+            identifier: userId,
+            token,
+            expires,
+          });
+
+          // 2. Send Welcome Email
+          const resend = new Resend(process.env.RESEND_API_KEY);
+          const fromName = process.env.EMAIL_FROM_NAME || 'MP POLICE ZEN';
+          const fromAddress = process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'mppolice@zenscroll.app';
+          const fromEmail = `${fromName} <${fromAddress}>`;
+          const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
+
+          const { error: emailError } = await resend.emails.send({
+            from: fromEmail,
+            to: [user.email],
+            subject: '🎉 Welcome to MP POLICE ZEN — Set Your Password',
+            react: EmailTemplate({ name: user.name || 'Student', actionUrl, planName: planTier.toUpperCase() }),
+          });
+
+          if (emailError) {
+            logger.error('Failed to send welcome email', emailError, { category: 'email', userId, metadata: { to: user.email } });
+            await notifyAdminOnEmailFailure({
+              userName: user.name || 'Unknown',
+              userEmail: user.email,
+              errorMessage: JSON.stringify(emailError),
+              paymentId: razorpay_payment_id,
+            });
+          }
+        }
+
+        // 3. Notify Admin on Payment
+        await notifyAdminOnPayment({
+          type: isUpgrade ? 'upgrade' : 'new_payment',
+          userName: user.name || 'Unknown',
+          userEmail: user.email,
+          planTier,
+          amountInRupees: amountInPaise / 100,
+          orderId: razorpay_order_id,
+          paymentId: razorpay_payment_id,
+          isUpgrade,
+        });
+
+        // 4. Log User Activity
+        try {
+          const { logUserActivity } = await import('@/app/actions/user-activity');
+          await logUserActivity({
+            userId,
+            userEmail: user.email,
+            userName: user.name,
+            adminId: 'system',
+            action: 'PLAN_CHANGE',
+            details: {
+              plan: planTier,
+              amount: amountInPaise / 100,
+              orderId: razorpay_order_id,
+              paymentId: razorpay_payment_id,
+              reason: isUpgrade ? 'Plan Upgrade' : 'Initial Payment',
+            },
+          });
+        } catch (actErr) {
+          logger.warn('Failed to log activity', { category: 'payment', metadata: { error: actErr, userId } });
+        }
+      } catch (flowErr) {
+        logger.error('Post-verification flow failed', flowErr, { category: 'payment', userId });
+      }
+    })();
 
     return { success: true, planTier };
   } catch (error: unknown) {

@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
+import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
 
 /**
  * 📧 ADMIN NOTIFICATION SYSTEM
@@ -45,9 +46,31 @@ interface EmailFailureNotification {
  */
 export async function notifyAdminOnPayment(data: PaymentNotification) {
   try {
+    const { type, userName, userEmail, planTier, amountInRupees, orderId, paymentId, isUpgrade } = data;
+
+    // 🚀 Send Telegram Notification (Primary)
+    try {
+      const statusEmoji = type === 'failed' ? '❌' : '💰';
+      const statusText = type === 'upgrade' ? 'PLAN UPGRADE' : type === 'failed' ? 'PAYMENT FAILED' : 'NEW PAYMENT';
+      const planEmoji = planTier === 'pro' ? '💎' : '🎫';
+
+      const tgMessage = `${statusEmoji} <b>${statusText} SUCCESS!</b>\n\n` +
+        `👤 <b>User:</b> ${escapeHTML(userName)}\n` +
+        `📧 <b>Email:</b> ${escapeHTML(userEmail)}\n` +
+        `Plan: ${planEmoji} ${planTier.toUpperCase()}${isUpgrade ? ' (UPGRADED)' : ''}\n` +
+        `💵 <b>Amount:</b> ₹${amountInRupees}\n` +
+        `🆔 <b>Order ID:</b> <code>${orderId}</code>\n` +
+        `🆔 <b>Payment ID:</b> <code>${paymentId}</code>\n\n` +
+        `✅ <i>Access granted instantly. Check dashboard for details.</i>`;
+      
+      await sendTelegramNotification(tgMessage);
+    } catch (tgErr) {
+      logger.error('Telegram payment notification failed', tgErr, { category: 'payment' });
+    }
+
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
-      logger.warn('RESEND_API_KEY not set, skipping admin notification', { category: 'email' });
+      logger.warn('RESEND_API_KEY not set, skipping admin email notification', { category: 'email' });
       return;
     }
 
@@ -56,8 +79,6 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
     const fromName = process.env.EMAIL_FROM_NAME || 'MP POLICE ZEN';
     const fromAddress = process.env.RESEND_FROM_EMAIL || 'mppolice@zenscroll.app';
     const fromEmail = `${fromName} <${fromAddress}>`;
-
-    const { type, userName, userEmail, planTier, amountInRupees, orderId, paymentId, isUpgrade } = data;
 
     // 📧 Different subject lines based on event type
     const subjects: Record<string, string> = {
@@ -134,16 +155,34 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
  */
 export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) {
   try {
+    const { userName, userEmail, errorMessage, paymentId } = data;
+
+    // 🚀 Telegram Notification (FALLBACK - Must always send)
+    try {
+      const tgMessage = `🚨 <b>USER EMAIL FAILED!</b>\n\n` +
+        `👤 <b>User:</b> ${escapeHTML(userName)}\n` +
+        `📧 <b>Email:</b> ${escapeHTML(userEmail)}\n` +
+        `🆔 <b>Payment ID:</b> <code>${paymentId}</code>\n` +
+        `❌ <b>Error:</b> <i>${escapeHTML(errorMessage)}</i>\n\n` +
+        `⚠️ <b>User ne pay kiya but unhe welcome email nahi gaya!</b>\n` +
+        `👉 <i>Action: Please manually send them the setup link from dashboard.</i>`;
+      
+      await sendTelegramNotification(tgMessage);
+    } catch (tgErr) {
+      logger.error('Telegram email failure notification failed', tgErr, { category: 'email' });
+    }
+
     const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) return;
+    if (!apiKey) {
+      logger.warn('RESEND_API_KEY missing, skipped admin email failure notice', { category: 'email' });
+      return;
+    }
 
     const resend = new Resend(apiKey);
 
     const fromName = process.env.EMAIL_FROM_NAME || 'MP POLICE ZEN';
     const fromAddress = process.env.RESEND_FROM_EMAIL || 'mppolice@zenscroll.app';
     const fromEmail = `${fromName} <${fromAddress}>`;
-
-    const { userName, userEmail, errorMessage, paymentId } = data;
 
     const html = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
@@ -194,6 +233,7 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
     // Last resort: Log to DB if even this fails
     logger.error('CRITICAL: Even admin notification failed!', error, { 
       category: 'email',
+      userId: 'system',
       metadata: { userEmail: data.userEmail, paymentId: data.paymentId }
     });
   }
@@ -210,6 +250,22 @@ export async function notifyAdminOnVerificationFailure(data: {
   paymentId?: string;
   error: string;
 }) {
+  const { userId, orderId, paymentId, error } = data;
+
+  // 🚀 Telegram Notification
+  try {
+    const tgMessage = `❌ <b>VERIFICATION FAILED!</b>\n\n` +
+      `👤 <b>User ID:</b> <code>${userId}</code>\n` +
+      `🆔 <b>Order ID:</b> <code>${orderId}</code>\n` +
+      `${paymentId ? `🆔 <b>Payment ID:</b> <code>${paymentId}</code>\n` : ''}` +
+      `⚠️ <b>Error:</b> <i>${escapeHTML(error)}</i>\n\n` +
+      `🚨 <b>Security Alert:</b> This could be a failed attempt or a mismatch. Check Razorpay dashboard.`;
+    
+    await sendTelegramNotification(tgMessage);
+  } catch (tgErr) {
+    logger.error('Telegram verification failure notification failed', tgErr);
+  }
+
   try {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) return;

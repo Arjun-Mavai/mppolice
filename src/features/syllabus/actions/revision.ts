@@ -21,15 +21,15 @@ export async function markTopicRevised(topicId: string, unitId: string) {
   }); // Debug log
 
   if (!userId) {
-    logger.error('markTopicRevised: No user ID found', { category: 'system' });
+    logger.error('markTopicRevised: No user ID found', undefined, { category: 'system' });
     return { error: 'Unauthorized' };
   }
 
   if (!topicId || !unitId) {
     logger.error(
       'markTopicRevised: Missing topicId or unitId',
-      { topicId, unitId },
-      { category: 'system' }
+      undefined,
+      { category: 'system', metadata: { topicId, unitId } }
     );
     return { error: 'Invalid data' };
   }

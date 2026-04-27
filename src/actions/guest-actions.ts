@@ -100,7 +100,7 @@ export async function createGuestEntry(data: GuestData) {
     return { success: true, guestId, isReturning: false };
     
   } catch (error) {
-    logger.error('Failed to create/update guest entry', { error, category: 'guest' });
+    logger.error('Failed to create/update guest entry', error, { category: 'guest' });
     return { error: 'Failed to save guest details' };
   }
 }
@@ -120,7 +120,7 @@ export async function getGuestByMobile(mobile: string) {
     
     return guest;
   } catch (error) {
-    logger.error('Failed to get guest by mobile', { error, category: 'guest' });
+    logger.error('Failed to get guest by mobile', error, { category: 'guest' });
     return null;
   }
 }

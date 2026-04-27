@@ -141,6 +141,15 @@ export default function EmailTemplate({
           <table style={{ width: '100%', fontSize: '14px', color: '#4b5563' }}>
             <tbody>
               <tr>
+                <td style={{ padding: '4px 0' }}>✅ 1000+ वन-लाइनर्स (रिवीज़न) धमाका!</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '4px 0' }}>✅ Memory Tips &amp; Tricks (Smart Revision)</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '4px 0' }}>✅ Expert Explanations (Teacher-like Clarity)</td>
+              </tr>
+              <tr>
                 <td style={{ padding: '4px 0' }}>✅ Topic-wise &amp; Unit-wise Tests</td>
               </tr>
               <tr>
