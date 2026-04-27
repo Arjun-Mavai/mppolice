@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Info, MessageSquare, Mail, Shield, FileText } from 'lucide-react';
+import { Info, MessageSquare, Mail, Shield, FileText, Send } from 'lucide-react';
 
 /**
  * AppFooter — Global Footer Component (Tapori Docs 🎬)

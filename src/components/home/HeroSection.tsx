@@ -1,13 +1,11 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { Sparkles, Zap, ChevronRight, ArrowLeft, Loader2, Target, Shield, Trophy, BookOpen, CheckCircle2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState } from 'react';
+import { Zap, ChevronRight, ArrowLeft, Loader2, Target, Shield, Trophy, BookOpen, CheckCircle2 } from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
-
 import { getUserTier } from '@/lib/access-control';
 
 export function HeroSection() {
@@ -23,19 +21,13 @@ export function HeroSection() {
     <section className="relative flex min-h-[90vh] flex-col justify-center overflow-hidden bg-[#020617] px-4 pt-24 pb-14 md:min-h-screen md:px-6 md:pt-48 md:pb-32">
       {/* 🎭 PREMIUM BACKGROUND LAYERS */}
       <div className="pointer-events-none absolute inset-0 z-0">
-        {/* Subtle Grid Texture */}
         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.05] [mask-image:radial-gradient(ellipse_at_center,black,transparent)]" />
-        
-        {/* Dynamic Glows */}
         <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-amber-500/10 blur-[120px] animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-orange-600/5 blur-[120px] animate-pulse delay-1000" />
-        
-        {/* Subtle Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020617]/50 to-[#020617]" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl space-y-12 text-center md:space-y-20">
-        {/* Unique Floating Badge */}
         <div className="flex justify-center">
             <div className="inline-flex items-center gap-3 rounded-full border border-amber-500/30 bg-amber-950/30 px-5 py-2 text-[10px] font-black tracking-widest text-amber-400 backdrop-blur-xl transition-all hover:border-amber-500/50 md:text-xs">
                 <Shield className="h-4 w-4 fill-amber-500/20" />
@@ -56,10 +48,14 @@ export function HeroSection() {
 
           <p className="mx-auto max-w-4xl px-2 text-lg leading-relaxed font-bold text-slate-400 md:text-3xl">
             {language === 'hi'
-              ? 'MP Police के नए पैटर्न पर आधारित 100+ प्रीमियम टेस्ट्स, PYQs और 1000+ One-Liners (व्याख्या सहित) के साथ सफलता सुनिश्चित करे�        <div className="mx-auto -mt-2 flex w-full max-w-[620px] flex-col items-center justify-center gap-8 px-4 md:mt-0">
+              ? 'MP Police के नए पैटर्न पर आधारित 100+ प्रीमियम टेस्ट्स, PYQs और 1000+ One-Liners (व्याख्या सहित) के साथ सफलता सुनिश्चित करें।'
+              : 'Ensure success with 100+ premium tests, PYQs and 1000+ One-Liners (with explanations) based on the new MP Police pattern.'}
+          </p>
+
+          <div className="mx-auto -mt-2 flex w-full max-w-[620px] flex-col items-center justify-center gap-8 px-4 md:mt-0">
           {!globalUser ? (
             <div className="flex w-full flex-col gap-3 md:flex-row md:gap-4">
-              {/* 🟠 PRIMARY: GK One-Liners (Promoted to Top/Primary) */}
+              {/* 🟠 PRIMARY: GK One-Liners (Top/Primary) */}
               <button
                 onClick={() => {
                   trackFbCustomEvent('hero_one_liners_clicked', {
@@ -90,7 +86,7 @@ export function HeroSection() {
                 </div>
               </button>
 
-              {/* ⚪️ SECONDARY: Free Mock Tests (Moved Down/Secondary) */}
+              {/* ⚪️ SECONDARY: Practice Free (Below/Secondary) */}
               <button
                 onClick={() => {
                   trackFbCustomEvent('hero_free_test_clicked', {
@@ -111,7 +107,7 @@ export function HeroSection() {
                       <Zap className="h-5 w-5 text-amber-400 md:h-7 md:w-7" />
                     )}
                     <span className="text-[11px] font-black tracking-[0.15em] whitespace-nowrap text-white/90 uppercase md:text-lg md:tracking-[0.2em]">
-                      {language === 'hi' ? 'प्रैक्टिस फ्री मॉक टेस्ट' : 'Practice Free Mock Tests'}
+                      {language === 'hi' ? 'फ्री प्रैक्टिस टेस्ट' : 'Practice Free'}
                     </span>
                     <ChevronRight
                       className="h-5 w-5 text-amber-400 transition-transform duration-500 group-hover:translate-x-1.5 md:h-7 md:w-7"
@@ -172,17 +168,8 @@ export function HeroSection() {
                 </div>
               </Link>
             </div>
-          )}00 group-hover:translate-x-1.5 md:h-7 md:w-7"
-                      strokeWidth={4}
-                    />
-                  </div>
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/10 to-transparent" />
-                </div>
-              </Link>
-            </div>
           )}
 
-          {/* Social Proof / Real Stats */}
           <div className="flex flex-col items-center gap-4">
              <div className="flex items-center gap-6 text-slate-500">
                 <div className="flex items-center gap-2">
@@ -206,7 +193,6 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* Subtle Bottom Glow */}
       <div className="absolute bottom-0 left-0 h-32 w-full bg-gradient-to-t from-amber-500/5 to-transparent" />
     </section>
   );
