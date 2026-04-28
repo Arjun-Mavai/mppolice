@@ -192,8 +192,9 @@ export function HeroSection() {
           </div>
         </div>
       </div>
+    </div>
 
-      <div className="absolute bottom-0 left-0 h-32 w-full bg-gradient-to-t from-amber-500/5 to-transparent" />
-    </section>
-  );
+    <div className="absolute bottom-0 left-0 h-32 w-full bg-gradient-to-t from-amber-500/5 to-transparent" />
+  </section>
+);
 }
