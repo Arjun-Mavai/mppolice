@@ -183,6 +183,7 @@ export function GuestEntryDialog({
   onExit,
 }: GuestEntryDialogProps) {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [mobileError, setMobileError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -197,9 +198,51 @@ export function GuestEntryDialog({
     return () => window.visualViewport?.removeEventListener('resize', handleResize);
   }, [open]);
 
+  // 🛡️ Advanced Mobile Validation
+  const validateMobile = (value: string) => {
+    const clean = value.replace(/\D/g, '');
+    
+    if (clean.length === 0) return null;
+    
+    // Length check
+    if (clean.length !== 10) {
+      return 'Mobile number must be 10 digits';
+    }
+    
+    // Indian starting digit check (6-9)
+    if (!/^[6-9]/.test(clean)) {
+      return 'Number must start with 6, 7, 8, or 9';
+    }
+    
+    // Fake pattern: All same digits (e.g., 9999999999)
+    if (/^(\d)\1{9}$/.test(clean)) {
+      return 'Please enter a valid mobile number';
+    }
+    
+    // Fake pattern: Repeating pairs (e.g., 9696969696)
+    if (/^(\d{2})\1{4}$/.test(clean)) {
+      return 'Please enter a valid mobile number';
+    }
+
+    // Fake pattern: Sequential digits
+    if ('0123456789.9876543210'.includes(clean)) {
+      return 'Please enter a valid mobile number';
+    }
+
+    return null;
+  };
+
   const isNameValid = guestName.trim().length > 0;
-  const isMobileValid = guestMobile.trim().length >= 10; // At least 10 digits
+  const currentError = validateMobile(guestMobile);
+  const isMobileValid = guestMobile.trim().length === 10 && !currentError;
   const isFormValid = isNameValid && isMobileValid;
+
+  // Handle mobile change with instant validation
+  const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+    onMobileChange(value);
+    setMobileError(validateMobile(value));
+  };
 
   // ✅ Memoize style calculation for performance
   const dialogStyle = useMemo(() => ({
@@ -207,7 +250,7 @@ export function GuestEntryDialog({
   }), [keyboardHeight]);
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
+    <Dialog open={open} onOpenChange={(val) => !val && onExit()}>
       <DialogContent
         showCloseButton={false}
         className="border-none p-0 sm:max-w-md"
@@ -225,9 +268,10 @@ export function GuestEntryDialog({
 
             <button
               onClick={onExit}
-              className="absolute right-4 top-4 z-10 rounded-full bg-white/80 p-2 text-slate-500 shadow-sm backdrop-blur-md transition-all hover:bg-slate-100 hover:text-slate-800 active:scale-90"
+              className="absolute right-2 top-2 z-[60] rounded-full bg-white/90 p-3 text-slate-500 shadow-md backdrop-blur-md transition-all hover:bg-slate-100 hover:text-slate-800 active:scale-90"
+              type="button"
             >
-              <X className="h-4 w-4 stroke-[2.5]" />
+              <X className="h-5 w-5 stroke-[3]" />
               <span className="sr-only">Close</span>
             </button>
 
@@ -269,16 +313,25 @@ export function GuestEntryDialog({
               <div className="animate-in fade-in-50 space-y-3 duration-200">
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    <label className="flex items-center gap-1 text-sm font-semibold text-slate-900">
-                      Mobile Number <span className="text-red-500">*</span>
+                    <label className="flex items-center justify-between text-sm font-semibold text-slate-900">
+                      <span>Mobile Number <span className="text-red-500">*</span></span>
+                      {mobileError && (
+                        <span className="animate-in fade-in slide-in-from-right-1 text-[11px] font-bold text-red-500">
+                          {mobileError}
+                        </span>
+                      )}
                     </label>
                     <Input
                       type="tel"
-                      placeholder="Enter your mobile number"
+                      placeholder="Enter 10 digit number"
                       value={guestMobile}
-                      onChange={(e) => onMobileChange(e.target.value)}
+                      onChange={handleMobileChange}
                       disabled={isSubmitting}
-                      className="h-11 border-slate-200 bg-white text-base font-medium shadow-sm transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                      className={`h-11 border-slate-200 bg-white text-base font-medium shadow-sm transition-all placeholder:text-slate-400 focus:ring-2 ${
+                        mobileError 
+                          ? 'border-red-300 focus:border-red-500 focus:ring-red-100' 
+                          : 'focus:border-indigo-500 focus:ring-indigo-200'
+                      }`}
                       autoComplete="tel"
                     />
                   </div>

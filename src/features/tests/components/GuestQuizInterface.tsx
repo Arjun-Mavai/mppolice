@@ -432,6 +432,19 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
         {!disablePalette && <QuizPaletteDesktop {...paletteProps} />}
       </div>
 
+      <GuestEntryDialog
+        open={showGuestEntryDialog && !showExitConfirm}
+        guestName={guestName}
+        guestEmail={guestEmail}
+        guestMobile={guestMobile}
+        isSubmitting={false}
+        onNameChange={setGuestName}
+        onEmailChange={setGuestEmail}
+        onMobileChange={setGuestMobile}
+        onSubmit={handleGuestEntrySubmit}
+        onExit={() => setShowExitConfirm(true)}
+      />
+
       <QuizExitDialog
         open={showExitConfirm}
         onOpenChange={setShowExitConfirm}
@@ -443,19 +456,6 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
           cancel: t.cancel,
           yesExit: t.yesExit,
         }}
-      />
-
-      <GuestEntryDialog
-        open={showGuestEntryDialog}
-        guestName={guestName}
-        guestEmail={guestEmail}
-        guestMobile={guestMobile}
-        isSubmitting={false}
-        onNameChange={setGuestName}
-        onEmailChange={setGuestEmail}
-        onMobileChange={setGuestMobile}
-        onSubmit={handleGuestEntrySubmit}
-        onExit={showExitModal}
       />
 
       <QuizSubmitDialog

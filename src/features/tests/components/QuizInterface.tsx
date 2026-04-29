@@ -151,20 +151,11 @@ export function QuizInterface(props: QuizInterfaceProps) {
 
   const handleExitCancel = useCallback(() => {
     setShowExitConfirm(false);
-    // 🔧 GUEST FLOW FIX: If exit is cancelled, show guest entry dialog if it was active
-    if (!userId && !localStorage.getItem('mppolice_guest_name')) {
-      setShowGuestEntryDialog(true);
-    }
 
     if (!isFullscreenActive() && !isSubmitted) {
       requestFullscreen();
     }
-  }, [isSubmitted, requestFullscreen, userId]);
-
-  const handleGuestExitAttempt = useCallback(() => {
-    setShowGuestEntryDialog(false);
-    setShowExitConfirm(true);
-  }, []);
+  }, [isSubmitted, requestFullscreen]);
 
   // ── Guest entry ──
   useEffect(() => {
@@ -438,7 +429,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
       />
 
       <GuestEntryDialog
-        open={showGuestEntryDialog}
+        open={showGuestEntryDialog && !showExitConfirm}
         guestName={guestName}
         guestEmail={guestEmail}
         guestMobile={guestMobile}
@@ -447,7 +438,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
         onEmailChange={setGuestEmail}
         onMobileChange={setGuestMobile}
         onSubmit={handleGuestEntrySubmit}
-        onExit={handleGuestExitAttempt}
+        onExit={() => setShowExitConfirm(true)}
       />
 
       <QuizSubmitDialog
