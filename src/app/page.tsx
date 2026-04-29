@@ -2,14 +2,53 @@
 // AppNavbar + UpgradePage + Testimonials = poora landing page
 import UpgradePage from './upgrade/page';
 import dynamic from 'next/dynamic';
+import Script from 'next/script';
 
 const Testimonials = dynamic(() =>
   import('@/components/home/Testimonials').then((m) => m.Testimonials)
 );
 
 export default function Home() {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppolice.zenscroll.app';
+  
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'What is the MP Police Constable Exam Pattern 2026?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'The exam consists of 100 questions for 100 marks, divided into General Knowledge & Reasoning, Mental Ability, and Science & Simple Arithmetic. There is typically no negative marking.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Does Mindful MP Police provide bilingual tests?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes, all test series and study materials are available in both Hindi and English (Bilingual).',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What are Mnemonics in MP Police Elite?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Mnemonics are specialized memory techniques used in our platform to help students easily remember complex facts, historical dates, and geographical data of Madhya Pradesh.',
+        },
+      },
+    ],
+  };
+
   return (
     <main>
+      <Script
+        id="faq-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       <h1 className="sr-only">
         Mindful MP Police - Crack MP Police Constable & SI 2026 with Bilingual Tests & Mnemonics
       </h1>

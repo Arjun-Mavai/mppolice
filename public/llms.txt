@@ -1,0 +1,34 @@
+# MP Police Elite - AI Discovery Context
+
+MP Police Elite (mppolice.zenscroll.app) is a specialized educational platform designed to help aspirants crack the MP Police Constable and Sub-Inspector (SI) Exams for the 2026 recruitment cycle.
+
+## Product Intent
+To provide high-quality, bilingual (Hindi & English) preparation materials, including test series, previous year question (PYQ) analysis, and memory-boosting mnemonics.
+
+## Target Audience
+- MP Police Constable & SI aspirants in Madhya Pradesh.
+- Students seeking bilingual (Hindi/English) study materials.
+- Candidates looking for structured, data-driven practice for the Paper I exam.
+
+## Core Features
+- **Bilingual Test Series:** 100+ topic-wise and full-length tests in both Hindi and English.
+- **PYQ Hub:** Deep analysis of 5+ years of Previous Year Papers to identify patterns.
+- **Smart Explanations:** Detailed, logical explanations for every question.
+- **Mnemonics & Flashcards:** Digital tools for fast fact retention.
+- **Performance Analytics:** Personal dashboard to track progress and speed.
+
+## Core Routes
+- **Home:** [https://mppolice.zenscroll.app/](https://mppolice.zenscroll.app/)
+- **Syllabus:** [/syllabus](https://mppolice.zenscroll.app/syllabus)
+- **Blogs/Articles:** [/blogs](https://mppolice.zenscroll.app/blogs)
+- **Test Series:** [/tests](https://mppolice.zenscroll.app/tests)
+- **Pricing:** [/pricing](https://mppolice.zenscroll.app/pricing)
+
+## Technical Specification
+- **Framework:** Next.js (App Router)
+- **Bilingual Support:** Full Hindi/English content across all modules.
+- **Accessibility:** Semantic HTML5 with focus on machine readability.
+
+## Sitemap & Robots
+- **Sitemap:** [https://mppolice.zenscroll.app/sitemap.xml](https://mppolice.zenscroll.app/sitemap.xml)
+- **Robots:** [https://mppolice.zenscroll.app/robots.txt](https://mppolice.zenscroll.app/robots.txt)

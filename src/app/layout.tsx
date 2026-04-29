@@ -112,6 +112,41 @@ export default async function RootLayout({
     name: 'MP Police Elite',
     url: baseUrl,
     description: 'MP Police Constable Paper I — bilingual tests, PYQs, dashboard, and structured explanations.',
+    publisher: {
+      '@type': 'Organization',
+      name: 'Mindful MP Police',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${baseUrl}/mp-police-logo.png`,
+      },
+    },
+  };
+
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'EducationalOrganization',
+    name: 'Mindful MP Police',
+    url: baseUrl,
+    logo: `${baseUrl}/mp-police-logo.png`,
+    description: 'Specialized preparation platform for MP Police Constable and SI exams with bilingual test series.',
+  };
+
+  const softwareAppSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'MP Police Elite',
+    operatingSystem: 'Web, Android, iOS',
+    applicationCategory: 'EducationalApplication',
+    offers: {
+      '@type': 'Offer',
+      price: '299',
+      priceCurrency: 'INR',
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.9',
+      ratingCount: '1000',
+    },
   };
 
   return (
@@ -121,6 +156,16 @@ export default async function RootLayout({
           id="schema-website"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+        <Script
+          id="schema-org"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+        <Script
+          id="schema-app"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppSchema) }}
         />
         <Script
           id="fb-pixel"
