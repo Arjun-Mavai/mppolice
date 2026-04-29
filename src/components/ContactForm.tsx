@@ -79,8 +79,8 @@ export function ContactForm() {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      name: user?.name || '',
-      email: user?.email || '',
+      name: '',
+      email: '',
       phone: '',
       category: 'general',
       message: '',
@@ -112,7 +112,6 @@ export function ContactForm() {
             id="name"
             placeholder={text.placeholderName}
             {...register('name', { required: true })}
-            defaultValue={user?.name || ''}
             className="h-12"
           />
           {errors.name && <span className="text-xs text-red-500">{text.required}</span>}
@@ -136,7 +135,6 @@ export function ContactForm() {
           type="email"
           placeholder={text.placeholderEmail}
           {...register('email', { required: true })}
-          defaultValue={user?.email || ''}
           className="h-12"
         />
         {errors.email && <span className="text-xs text-red-500">{text.required}</span>}
