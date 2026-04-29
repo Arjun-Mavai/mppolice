@@ -15,7 +15,7 @@ const TESTIMONIALS = [
     role: 'Aspirant',
     location: 'Gwalior',
     comment:
-      'Bhai 1000 one-liners wali PDF ekdum jabardast hai, revision me bahut help mili.',
+      'Bhai 1000 one-liners ekdum jabardast hai, revision me bahut help mili.',
     image: '/testimonials/arjun.png',
     stars: 5,
   },
