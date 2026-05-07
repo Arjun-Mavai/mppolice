@@ -57,6 +57,20 @@ async function FreeQuizDataFetcher({ searchParams }: { searchParams: Promise<{ t
         return null;
       }
 
+      // Same shaping as syllabus quiz play — structured explanation + image MCQs
+      let ext: unknown = q.extendedData;
+      if (typeof ext === 'string') {
+        try {
+          ext = JSON.parse(ext);
+        } catch {
+          ext = undefined;
+        }
+      }
+      const img =
+        ext && typeof ext === 'object' && ext !== null && 'questionImageUrl' in ext
+          ? (ext as { questionImageUrl?: string }).questionImageUrl
+          : undefined;
+
       return {
         id: q.id,
         question: q.questionText,
@@ -70,6 +84,8 @@ async function FreeQuizDataFetcher({ searchParams }: { searchParams: Promise<{ t
         matchPairs: (q.matchPairs as any) || undefined,
         negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING,
         marks: SCORING_CONFIG.MARKS_PER_QUESTION,
+        extendedData: ext,
+        questionImageUrl: img,
       };
     })
     .filter(Boolean) as Question[];
