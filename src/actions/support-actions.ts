@@ -6,6 +6,7 @@ import { eq, desc, or } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { logger } from '@/lib/logger';
+import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
 
 export async function submitSupportTicket(data: any) {
   try {
@@ -27,6 +28,21 @@ export async function submitSupportTicket(data: any) {
       examType: 'mppolice',
       createdAt: new Date(),
     });
+
+    // 🚀 Send Telegram Notification
+    try {
+      const tgMessage = `🎫 <b>NEW SUPPORT TICKET!</b>\n\n` +
+        `👤 <b>Name:</b> ${escapeHTML(name)}\n` +
+        `📧 <b>Email:</b> ${escapeHTML(email)}\n` +
+        `📞 <b>Phone:</b> ${phone ? escapeHTML(phone) : 'N/A'}\n` +
+        `🗂️ <b>Category:</b> ${escapeHTML(category || 'general').toUpperCase()}\n\n` +
+        `📝 <b>Message:</b>\n<i>"${escapeHTML(message)}"</i>\n\n` +
+        `📥 <i>Check Admin Dashboard to reply or close.</i>`;
+      
+      await sendTelegramNotification(tgMessage);
+    } catch (tgErr) {
+      logger.error('Telegram support ticket notification failed', tgErr);
+    }
 
     // revalidatePath('/admin/dashboard'); // If we show tickets there
     return { success: true };
