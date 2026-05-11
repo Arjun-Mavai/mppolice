@@ -106,7 +106,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
 
   // ✅ PERFORMANCE: Memoized navigation items (Synchronized with ce94fbf but removed Syllabus per request)
   const navItems = useMemo(() => [
-    { name: 'Dashboard', href: '/syllabus/analytics', icon: LayoutDashboard, color: 'text-indigo-600' },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, color: 'text-indigo-600' },
     { name: 'Test Hub', href: '/syllabus/quiz/full-tests', icon: GraduationCap, color: 'text-slate-700' },
     { name: 'Free Daily Quiz', href: '/free-quiz', icon: Zap, color: 'text-orange-500' },
     {

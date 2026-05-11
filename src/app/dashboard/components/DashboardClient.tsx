@@ -73,12 +73,18 @@ export function DashboardClient({ user, analyticsData, syllabusProgress }: Dashb
               </div>
 
               {/* Tips / Achievements Column */}
-              <div className="rounded-[2rem] bg-indigo-600 p-8 text-white shadow-xl shadow-indigo-200">
-                  <h4 className="flex items-center gap-2 text-lg font-black tracking-tight">
-                     <Sparkles className="h-5 w-5 text-indigo-300" />
-                     {isHindi ? 'आज का मंत्र' : 'Daily Mantra'}
+              <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl shadow-slate-200/50 group border border-slate-800">
+                  {/* Subtle golden/orange gradient glow in the corners */}
+                  <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-amber-500/10 blur-3xl transition-transform duration-700 group-hover:scale-125" />
+                  <div className="pointer-events-none absolute -left-10 -bottom-10 h-36 w-36 rounded-full bg-orange-500/10 blur-3xl transition-transform duration-700 group-hover:scale-125" />
+
+                  <h4 className="relative z-10 flex items-center gap-2.5 text-lg font-black tracking-tight">
+                     <Sparkles className="h-5 w-5 text-amber-400" />
+                     <span className="bg-gradient-to-r from-amber-200 to-orange-400 bg-clip-text text-transparent">
+                       {isHindi ? 'आज का मंत्र' : 'Daily Mantra'}
+                     </span>
                   </h4>
-                  <p className="mt-4 text-sm font-medium leading-relaxed text-indigo-100 opacity-90">
+                  <p className="relative z-10 mt-4 text-sm font-semibold leading-relaxed text-slate-300 opacity-95">
                      {isHindi 
                        ? 'कोशिश करने वालों की कभी हार नहीं होती। अपनी रिवीजन जर्नी को जारी रखें और रोजाना कम से कम 50 वन-लाइनर्स पूरे करें।' 
                        : 'Keep pushing! Completing just 50 one-liners a day can significantly boost your final exam performance.'}
