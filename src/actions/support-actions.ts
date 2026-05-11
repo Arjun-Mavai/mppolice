@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { supportTickets, mppscUsers } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, or } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { logger } from '@/lib/logger';
@@ -24,6 +24,7 @@ export async function submitSupportTicket(data: any) {
       category: category || 'general',
       message,
       status: 'open',
+      examType: 'mppolice',
       createdAt: new Date(),
     });
 
@@ -47,7 +48,16 @@ export async function getSupportTickets() {
   }
 
   try {
-    const tickets = await db.select().from(supportTickets).orderBy(desc(supportTickets.createdAt));
+    const tickets = await db
+      .select()
+      .from(supportTickets)
+      .where(
+        or(
+          eq(supportTickets.examType, 'mppolice'),
+          eq(supportTickets.examType, 'all')
+        )
+      )
+      .orderBy(desc(supportTickets.createdAt));
     return { success: true, tickets };
   } catch (error) {
     return { success: false, error: 'Failed to fetch tickets' };
