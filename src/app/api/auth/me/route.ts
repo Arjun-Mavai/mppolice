@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyAuth } from '@/lib/auth';
+import { verifyAuthWithMismatch } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 
 // Auth endpoint must NEVER be cached — stale auth = broken app
@@ -15,7 +15,16 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const user = await verifyAuth();
+    const { user, _mismatch } = await verifyAuthWithMismatch();
+
+    if (_mismatch) {
+      return NextResponse.json(
+        { user: null, reason: 'multi_device' },
+        {
+          headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
+        }
+      );
+    }
 
     if (!user) {
       return NextResponse.json(

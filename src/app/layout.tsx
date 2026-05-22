@@ -73,38 +73,15 @@ export const metadata: Metadata = {
   },
 };
 
-import { verifyAuth } from '@/lib/auth';
 import { AppNavbar } from '@/components/layout/AppNavbar';
 import { MainContentWrapper } from '@/components/layout/MainContentWrapper';
-import { redirect } from 'next/navigation';
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // 1. Fetch User on Server
-  const user = await verifyAuth();
-
-  // 🛡️ SECURITY: Exam Type Isolation
-  if (user && user.examType !== 'mppolice' && user.examType !== 'all') {
-     if (user.role !== 'admin') {
-        redirect('/dashboard');
-     }
-  }
-
-  // 2. Transform for Navbar
-  const navbarUser = user
-    ? {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        image: null,
-        role: user.role || undefined,
-        is_subscribed: user.isSubscribed ?? false,
-        plan_tier: user.planTier ?? 'free',
-      }
-    : null;
+  // User is handled entirely on the client-side to allow static layout rendering
 
   const websiteSchema = {
     '@context': 'https://schema.org',
@@ -179,7 +156,9 @@ export default async function RootLayout({
         <GlobalErrorBoundary>
           <PwaRegistry />
           <Providers>
-            <AppNavbar user={navbarUser} />
+            <Suspense fallback={null}>
+              <AppNavbar user={null} />
+            </Suspense>
             <MainContentWrapper>{children}</MainContentWrapper>
 
             <AppFooter />

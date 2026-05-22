@@ -7,7 +7,7 @@
  * - HTML pages: Network First, fallback to cache (always fresh auth state)
  */
 
-const CACHE_NAME = 'mppolice-cache-v4'; // Bumped to v4 for fresh icon and manifest alignment
+const CACHE_NAME = 'mppolice-cache-v5'; // Bumped to v5 for premium offline updates
 
 const urlsToCache = [
   '/',
@@ -80,7 +80,15 @@ self.addEventListener('fetch', (event) => {
 
   // RULE 1: Auth & API routes → ALWAYS go to network, NEVER cache
   if (shouldNeverCache(request.url)) {
-    event.respondWith(fetch(request));
+    event.respondWith(
+      fetch(request).catch((err) => {
+        // If the user is offline and requests a main page, serve the premium offline fallback
+        if (request.headers.get('accept')?.includes('text/html')) {
+          return caches.match('/offline');
+        }
+        throw err;
+      })
+    );
     return;
   }
 

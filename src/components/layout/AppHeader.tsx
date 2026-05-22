@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { verifyAuth } from '@/lib/auth';
 import { AppNavbar } from '@/components/layout/AppNavbar';
 
@@ -13,5 +14,9 @@ export async function AppHeader() {
       }
     : null;
 
-  return <AppNavbar user={userData} />;
+  return (
+    <Suspense fallback={null}>
+      <AppNavbar user={userData} />
+    </Suspense>
+  );
 }

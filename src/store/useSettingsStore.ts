@@ -19,12 +19,11 @@ interface SettingsState {
   language: Language;
   setLanguage: (lang: Language) => void;
   user: User | null;
-  isSubscribed: boolean;
   isLockModalOpen: boolean;
   setLockModalOpen: (isOpen: boolean) => void;
   authCheckStatus: 'idle' | 'loading' | 'checked';
   setAuthCheckStatus: (status: 'idle' | 'loading' | 'checked') => void;
-  setUser: (user: User | null, isSubscribed: boolean) => void;
+  setUser: (user: User | null) => void;
   uiMode: 'classic' | 'modern';
   setUiMode: (mode: 'classic' | 'modern') => void;
 }
@@ -32,22 +31,21 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      language: 'hi', // Default to Hindi as per user implied preference or common use
+      language: 'hi',
       setLanguage: (lang) => set({ language: lang }),
       user: null,
-      isSubscribed: false,
       isLockModalOpen: false,
       authCheckStatus: 'idle',
       setAuthCheckStatus: (status) => set({ authCheckStatus: status }),
       setLockModalOpen: (isOpen) => set({ isLockModalOpen: isOpen }),
       // On logout: caller must also localStorage.removeItem('settings-storage')
-      // to trigger cross-tab sync via the 'storage' event in AppNavbar
-      setUser: (user, isSubscribed) => set({ user, isSubscribed, authCheckStatus: 'checked' }),
+      // setUser simplified: isSubscribed is now inside the user object itself
+      setUser: (user) => set({ user, authCheckStatus: 'checked' }),
       uiMode: 'modern',
       setUiMode: (mode) => set({ uiMode: mode }),
     }),
     {
-      name: 'settings-storage', // localStorage key — removing this key triggers cross-tab logout
+      name: 'settings-storage',
     }
   )
 );
