@@ -71,7 +71,10 @@ export async function getPublishedMppoliceOneLiners(
         extendedData: r.extendedData ?? null,
       }));
     },
-    ['mppolice-one-liners', cacheKeySubject, String(safeLimit)],
+    // 🛡️ CRITICAL FIX: Added safeOffset to the cache key
+    // Bhai, pehle offset cache key me nahi tha, jis wajah se pagination kaam nahi kar rahi thi
+    // (saare batches me same data aa raha tha). Ab ye fix ho gaya h!
+    ['mppolice-one-liners', cacheKeySubject, String(safeLimit), String(safeOffset)],
     { revalidate: 300, tags: ['mppolice-one-liners'] }
   )();
 }

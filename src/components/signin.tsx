@@ -51,7 +51,7 @@ export default function LoginPage() {
       if (data.success && data.user) {
         setShowConfirmDialog(false);
         // Update Global Store with fresh user data
-        useSettingsStore.getState().setUser(data.user, true);
+        useSettingsStore.getState().setUser(data.user);
         toast.success('Welcome back!', {
           description: data.message || 'Accessing your dashboard...',
         });

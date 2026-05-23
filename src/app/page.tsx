@@ -1,16 +1,18 @@
-// Bhai ye home page h — SSG (Static Site Generation) se ultimate fast render hota h
-// AppNavbar + UpgradePage + Testimonials = poora landing page
+// 🚀 MP Police Elite - Landing Page (Static Site Generation)
+// Bhai, ye page SSG use karta h taaki load time bilkul zero lage.
+// SEO ke liye saara content server pe render hota h.
+
 import UpgradePage from './upgrade/page';
 import dynamic from 'next/dynamic';
 import Script from 'next/script';
 
+// Testimonials thode heavy hote h, isliye dynamic import with no SSR option (ya default lazy)
 const Testimonials = dynamic(() =>
   import('@/components/home/Testimonials').then((m) => m.Testimonials)
 );
 
 export default function Home() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppolice.zenscroll.app';
-  
+  // FAQ Schema: Google Search me 'Rich Snippets' dikhane ke liye useful h.
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -43,22 +45,26 @@ export default function Home() {
   };
 
   return (
-    <main>
+    <main className="overflow-x-hidden">
+      {/* 📝 Google SEO Schemas */}
       <Script
         id="faq-schema"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
+      
+      {/* 🔍 Hidden H1 for SEO weight */}
       <h1 className="sr-only">
         Mindful MP Police - Crack MP Police Constable & SI 2026 with Bilingual Tests & Mnemonics
       </h1>
 
+      {/* 🚀 UpgradePage me Hero aur main features hain */}
       <UpgradePage />
 
-      {/* SEO-Rich Content Section (Server Rendered) */}
+      {/* 📝 SEO-Rich Content Section: Bhai ye section Google Crawlers ke liye gold h */}
       <section className="bg-white py-16">
         <div className="mx-auto max-w-4xl px-6">
-          {/* English Section */}
+          {/* English SEO Block */}
           <div className="mb-12 border-b border-slate-100 pb-12">
             <h2 className="mb-8 text-3xl font-extrabold text-slate-900 md:text-4xl">
               Crack MP Police Constable & SI 2026: The Strategic Preparation Platform
@@ -96,7 +102,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Hindi SEO Section */}
+          {/* Hindi SEO Block: Local audience ke liye Hindi content must h */}
           <div className="mt-12">
             <h2 className="mb-8 text-3xl font-extrabold text-slate-900 md:text-4xl">
               MP Police कांस्टेबल और SI 2026 की तैयारी: एक स्मार्ट और वैज्ञानिक तरीका
@@ -139,7 +145,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* AppInstallGuide moved to UpgradePage */}
+      {/* 🎭 social proof: Reviews aur Testimonials lazy load ho rahe h */}
       <Testimonials />
     </main>
   );

@@ -1,3 +1,7 @@
+// 📚 Free GK One-Liners Demo Page
+// Bhai, ye page guests ke liye h taaki wo quality check kar sakein.
+// SSG caching use ki h (1 hour) taaki server pe baar baar load na pade.
+
 import { Suspense } from 'react';
 import {
   getPublishedMppoliceOneLiners,
@@ -5,25 +9,27 @@ import {
 } from '@/features/revision/actions/mppolice-one-liners';
 import OneLinersModernClient from '../syllabus/quiz/revision/gk-one-liners/OneLinersModernClient';
 
-export const revalidate = 3600; // Cache for 1 hour for guests
+// ⏱️ Cache for 1 hour for guests: Bhai baar baar database hit karne ki zaroorat nahi h.
+export const revalidate = 3600; 
 
 function OneLinersFallback() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F5F5F7] text-sm text-[#86868B]">
-      Loading…
+      Loading Facts…
     </div>
   );
 }
 
 export default async function FreeOneLinersPage() {
-  // Fetch only 10 facts for the free demo
+  // 🏎️ Parallel Fetching: Dono data ek saath fetch ho rahe h (Zero Waterfall)
   const [facts, counts] = await Promise.all([
-    getPublishedMppoliceOneLiners('All', 10),
+    getPublishedMppoliceOneLiners('All', 10), // Demo ke liye sirf top 10 facts
     getMppoliceOnelinerCountsBySubject(),
   ]);
 
   return (
     <Suspense fallback={<OneLinersFallback />}>
+      {/* 💻 Client component saara interaction handle karega */}
       <OneLinersModernClient 
         facts={facts} 
         counts={counts} 

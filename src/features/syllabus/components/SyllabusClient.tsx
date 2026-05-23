@@ -21,7 +21,8 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
-  const { user, isSubscribed, setUser, language, setLanguage } = useSettingsStore();
+  const { user, setUser, language, setLanguage } = useSettingsStore();
+  const isSubscribed = user?.isSubscribed;
 
   // Hydration fix for Persist middleware
   useEffect(() => {
