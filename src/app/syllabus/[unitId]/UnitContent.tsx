@@ -104,7 +104,8 @@ export default function UnitContent({
 
   // Premium/Lock State
   const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
-  const { isSubscribed, user } = useSettingsStore();
+  const { user } = useSettingsStore();
+  const isSubscribed = user?.isSubscribed;
 
   const isTopicLocked = (topic: TopicData, _filteredIndex: number) => {
     // Use the original index in rawTopics (not the filtered index) so

@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { questions, tests } from '@/db/schema';
-import { and, eq, or } from 'drizzle-orm';
+import { and, eq, or, inArray } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { normalizeMppolicePyqSubject } from '@/features/tests/utils/pyq-subject';
 
@@ -37,7 +37,8 @@ export const getSubjectWisePYQStats = unstable_cache(
         subject: questions.subject,
       })
       .from(questions)
-      .where(or(...pyqTestIds.map((id) => eq(questions.testId, id))));
+      // 🛡️ CRITICAL FIX: Use inArray instead of massive or() chain for better DB query planning
+      .where(inArray(questions.testId, pyqTestIds));
 
     // Step 3: Aggregate
     const stats: Record<string, number> = {};
@@ -108,7 +109,8 @@ const fetchQuestionsBySubjectData = async (subject: string): Promise<MixedQuesti
   const allQuestions = await db
     .select()
     .from(questions)
-    .where(or(...pyqTests.map((t) => eq(questions.testId, t.id))));
+    // 🛡️ CRITICAL FIX: Use inArray instead of massive or() chain
+    .where(inArray(questions.testId, pyqTests.map((t) => t.id)));
 
   // 3. Filter & Map in JS
   const filteredQuestions = allQuestions

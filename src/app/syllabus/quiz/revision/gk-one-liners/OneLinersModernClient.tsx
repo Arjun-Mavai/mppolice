@@ -160,7 +160,15 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
   }, [hi, refreshStats]);
 
   const toggleExpand = useCallback((id: string) => {
+    // Capture current absolute scroll coordinate before the DOM shifts
+    const scrollY = window.scrollY;
+    
     setExpandedId((prev) => (prev === id ? null : id));
+    
+    // Lock the position right before the next browser repaint
+    requestAnimationFrame(() => {
+      window.scrollTo(window.scrollX, scrollY);
+    });
   }, []);
 
   const title = activeSubject === 'All' 
@@ -331,6 +339,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     className={cn("space-y-6 transition-all duration-500", isFocusMode && "pt-4")}
+                    style={{ overflowAnchor: 'none' }}
                  >
                    {facts.map((f, idx) => {
                      const globalIdx = batchIndex * PAGE_SIZE + idx + 1;
@@ -349,6 +358,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                            "shadow-sm hover:shadow-xl",
                            color.shadow
                          )}
+                         style={{ overflowAnchor: 'none' }}
                        >
                          <button
                            onClick={() => toggleExpand(f.id)}

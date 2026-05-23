@@ -18,6 +18,7 @@ export const mppscUsers = sqliteTable(
     // Active flag — admin toggle. Inactive = can't login. Default ON.
     isActive: integer('is_active', { mode: 'boolean' }).default(true),
     // ── New Fields ────────────────────────────────────────────────
+    sessionVersion: integer('session_version').default(1),
     // Access expiry — after this timestamp, user can't access content
     // Default: 6 months from creation. Admin can extend per user.
     accessExpiresAt: integer('access_expires_at', { mode: 'timestamp' }),

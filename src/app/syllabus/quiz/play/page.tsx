@@ -1,6 +1,10 @@
+// 🎮 Quiz Play Page - The Engine of MP Police Elite
+// Bhai, ye page saare tests (PYQ, Topic, Full) ko execute karta h.
+// Lightning fast loading ke liye humne parallel fetching aur efficient mapping use ki h.
+
 import { redirect } from 'next/navigation';
 import { getTestWithQuestions, getUserAttempts } from '@/features/tests/actions/submission';
-import { getQuestionsBySubject } from '@/features/tests/actions/pyq-analytics'; // Back to original
+import { getQuestionsBySubject } from '@/features/tests/actions/pyq-analytics';
 import { QuizPlayClient } from './QuizPlayClient';
 import { verifyAuth } from '@/lib/auth';
 import { Question } from '@/types/quiz';
@@ -24,77 +28,52 @@ interface PageProps {
 
 export default async function QuizPlayPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  logger.debug('params', { params, category: 'system' });
   const { testId, mode, subject, completed } = params;
 
   if (completed === 'true') {
     redirect('/syllabus/quiz/pyq');
   }
 
-  // 📝 0. Validate Subject Whiteslist for Security
+  // 📝 0. Security Whitelist: Random subjects ko block karne ke liye.
   const ALLOWED_SUBJECTS = [
-    'General Knowledge',
-    'General Science',
-    'Logical Reasoning',
-    'Quantitative Aptitude',
-    'MP GK',
-    'History',
-    'Geography',
-    'Polity',
-    'Economy',
-    'Science',
-    'ICT',
-    'Current Affairs',
-    'Misc',
+    'General Knowledge', 'General Science', 'Logical Reasoning', 'Quantitative Aptitude',
+    'MP GK', 'History', 'Geography', 'Polity', 'Economy', 'Science', 'ICT', 'Current Affairs', 'Misc',
   ];
   if (subject && !ALLOWED_SUBJECTS.includes(subject)) {
-    // Prevent arbitrary subject injection
     redirect('/syllabus/quiz/pyq');
   }
 
-  // 1. Handle Subject Practice Mode (Mixed PYQ)
+  // 1. 🏗️ Handle Subject Practice Mode (Mixed PYQs from DB)
   if (mode === 'pyq-subject' && subject) {
     const user = await verifyAuth();
 
-    // Validate Pagination First (to calculate Part Access)
+    // Pagination Logic: Default 30 questions per part (Chunking)
     const rawLimit = Number(params.limit);
-    const limitDefault = 30; // Changed from 1000 to match CHUNK_SIZE default if not specified
-    const limit = Math.min(
-      Math.max(Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : limitDefault, 1),
-      limitDefault
-    );
+    const limitDefault = 30; 
+    const limit = Math.min(Math.max(Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : limitDefault, 1), limitDefault);
 
     const rawOffset = Number(params.offset);
     const offset = Math.max(Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0, 0);
 
-    // Determine Part Number using fixed CHUNK_SIZE
     const CHUNK_SIZE = 30;
     const partNum = Math.floor(offset / CHUNK_SIZE) + 1;
 
-    // 🔒 Granular Access Control (Check if this Part is Free/Unlocked)
+    // 🔒 Access Control: Check if this Part is Free/Unlocked for the user.
     const accessMap = await getSubjectPartAccess(subject);
     const partAccess = accessMap?.[partNum];
 
-    // Status: Locked if explicitly locked in DB, OR if generic practice (no part found) and user is Free tier
     let isLocked = false;
-
     if (partAccess) {
-      // Test exists for this part -> Respect its flags (free/paid/user-owned)
-      isLocked = partAccess.isLocked; // getSubjectPartAccess logic handles user/guest checks
+      isLocked = partAccess.isLocked; 
     } else {
-      // No specific part found -> Treat as generic Premium Practice
       const tier = user ? getUserTier(user) : 'free';
       isLocked = tier === 'free';
     }
 
-    if (isLocked) {
-      redirect('/pricing');
-    }
+    if (isLocked) redirect('/pricing');
 
-    // ✅ Access Granted - Fetch Questions
+    // ✅ Access Granted - Fetch & Map Questions
     const rawQuestions = await getQuestionsBySubject(subject);
-
-    // Slice questions for pagination (Chunking)
     const questionsSlice = rawQuestions.slice(offset, offset + limit);
 
     if (!questionsSlice || questionsSlice.length === 0) {
@@ -102,32 +81,23 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
         <div className="flex min-h-screen items-center justify-center bg-slate-50 pt-[80px]">
           <div className="space-y-4 text-center">
             <h1 className="text-2xl font-bold text-slate-900">No Questions Found</h1>
-            <p className="text-slate-500">No questions available for this selection.</p>
+            <p className="text-slate-500">Is subject ke liye questions abhi available nahi hain.</p>
           </div>
         </div>
       );
     }
 
+    // 🛠️ Map raw DB rows to clean UI Question type
     const questions: Question[] = questionsSlice.map((q: any) => {
-      const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-      let ext = q.extendedData;
-      if (typeof ext === 'string') {
-        try {
-          ext = JSON.parse(ext);
-        } catch {
-          ext = undefined;
-        }
-      }
-      const img =
-        ext && typeof ext === 'object' && ext !== null && 'questionImageUrl' in ext
-          ? (ext as { questionImageUrl?: string }).questionImageUrl
-          : undefined;
+      const opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+      let ext = typeof q.extendedData === 'string' ? (JSON.parse(q.extendedData) || {}) : (q.extendedData || {});
+      
       return {
         id: q.id,
         question: q.questionText,
         questionEn: q.questionTextEn || undefined,
-        correctAnswer: correctAnswerToOptionIndex(q.correctAnswer, parsedOptions),
-        options: parsedOptions as string[],
+        correctAnswer: correctAnswerToOptionIndex(q.correctAnswer, opts),
+        options: opts as string[],
         explanation: q.explanation || undefined,
         explanationEn: q.explanationEn || undefined,
         subject: `PYQ ${q.year}`,
@@ -136,99 +106,72 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
         negativeMarks: q.negativeMarks ?? QUIZ_CONSTANTS.NEGATIVE_MARKING,
         marks: q.marks ?? QUIZ_CONSTANTS.MARKS_PER_QUESTION,
         extendedData: ext,
-        questionImageUrl: img,
+        questionImageUrl: ext?.questionImageUrl,
       };
     });
 
-    const userAttempts = 0; // No attempts tracking for practice mode yet
     const hasPaidPlan = user ? getUserTier(user) !== 'free' : false;
-
-    const seriesTitle = limit < 1000 ? `${subject} Part ${partNum}` : `${subject} Practice`;
-    // For free guests, show free mode UI
     const isProUI = hasPaidPlan || (partAccess && partAccess.isFree);
 
     return (
       <QuizPlayClient
         questions={questions}
-        mode="pyq" // Reuse 'pyq' mode for UI styling
+        mode="pyq"
         testId={`practice-${subject}-${offset}`}
-        title={seriesTitle}
+        title={`${subject} Part ${partNum}`}
         userId={user?.id || null}
         userName={user?.name || undefined}
-        maxRetries={null} // Unlimited
-        userAttempts={userAttempts}
+        maxRetries={null} 
+        userAttempts={0}
         isPro={!!isProUI}
         shouldShowPaywall={false}
       />
     );
   }
 
-  // 2. Standard Test Mode
-  if (!testId) {
-    redirect('/syllabus/quiz/pyq');
-  }
+  // 2. 🏛️ Standard Test Mode (Specific Test IDs)
+  if (!testId) redirect('/syllabus/quiz/pyq');
 
-  // Fetch Initial Data in Parallel (Reduces waterfall)
+  // 🏎️ Parallel Fetching (Main Waterfall Killer)
   const [testData, user, attemptLimits] = await Promise.all([
     getTestWithQuestions(testId),
     verifyAuth(),
     getCachedAttemptLimits(),
   ]);
 
-  // Only fetch attempts if user exists to avoid redundant DB call for guests
-  const attemptsMap = user
-    ? await getUserAttempts([testId], user.id)
-    : ({} as Record<string, number>);
-
   if (!testData) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 pt-[80px]">
         <div className="space-y-4 text-center">
           <h1 className="text-2xl font-bold text-slate-900">Test Not Found</h1>
-          <p className="text-slate-500">The requested test could not be found.</p>
+          <p className="text-slate-500">Ye test database me nahi mila. Check unit settings.</p>
         </div>
       </div>
     );
   }
 
+  // 🛡️ Global Access Check (Guest/User/Tier)
   const guestDenied = !user && !testData.isFreeAccess;
   const loggedInDenied = user && !canAccessTest(testData, user);
-  
-  if (guestDenied || loggedInDenied) {
-    redirect('/pricing');
-  }
+  if (guestDenied || loggedInDenied) redirect('/pricing');
 
-  const userId = user?.id;
-  const isTestingUser = user?.role === 'admin';
+  // Fetch attempts only if user is logged in
+  const attemptsMap = user ? await getUserAttempts([testId], user.id) : {};
+  const userAttemptsCount = (attemptsMap as any)[testId] || 0;
 
-  // Map Questions
+  // 🛠️ Map Questions for UI
   const questions: Question[] = testData.questions.map((q) => {
-    const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-    let ext = q.extendedData;
-    if (typeof ext === 'string') {
-      try {
-        ext = JSON.parse(ext);
-      } catch {
-        ext = undefined;
-      }
-    }
-    const img =
-      ext && typeof ext === 'object' && ext !== null && 'questionImageUrl' in ext
-        ? (ext as { questionImageUrl?: string }).questionImageUrl
-        : undefined;
-
+    const opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+    let ext = typeof q.extendedData === 'string' ? (JSON.parse(q.extendedData) || {}) : (q.extendedData || {});
+    
     return {
       id: q.id,
       question: q.questionText,
-      questionEn:
-        testData.type === 'CSAT' &&
-        (!q.questionTextEn ||
-          q.questionTextEn.trim().toLowerCase() === 'n/a' ||
-          q.questionTextEn.trim().toLowerCase() === 'na')
-          ? q.questionText
-          : q.questionTextEn || undefined,
-      correctAnswer: correctAnswerToOptionIndex(q.correctAnswer, parsedOptions),
-      options: parsedOptions as string[],
+      questionEn: (testData.type === 'CSAT' && (!q.questionTextEn || q.questionTextEn.toLowerCase() === 'n/a')) 
+        ? q.questionText 
+        : q.questionTextEn || undefined,
+      correctAnswer: correctAnswerToOptionIndex(q.correctAnswer, opts),
+      options: opts as string[],
       explanation: q.explanation || undefined,
       explanationEn: q.explanationEn || undefined,
       subject: q.subject || undefined,
@@ -237,21 +180,13 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
       negativeMarks: q.negativeMarks ?? QUIZ_CONSTANTS.NEGATIVE_MARKING,
       marks: q.marks ?? QUIZ_CONSTANTS.MARKS_PER_QUESTION,
       extendedData: ext,
-      questionImageUrl: img,
+      questionImageUrl: ext?.questionImageUrl,
     };
   });
 
-  const userAttemptsCount = user ? ((attemptsMap as any)[testId] || 0) : 0;
-  
-  // Override maxRetries for testing user
+  const isTestingUser = user?.role === 'admin';
   let maxRetries = attemptLimits[testData.type] ?? null;
-  if (isTestingUser) {
-    maxRetries = null; // Unlimited attempts for testing user
-  }
-
-  const tier = user ? getUserTier(user) : 'free';
-  const hasPaidPlan = tier === 'pro' || tier === 'lite';
-  const shouldShowPaywall = false;
+  if (isTestingUser) maxRetries = null; // Admins have unlimited retries
 
   return (
     <QuizPlayClient
@@ -263,8 +198,8 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
       userName={user?.name || undefined}
       maxRetries={maxRetries}
       userAttempts={userAttemptsCount}
-      isPro={hasPaidPlan}
-      shouldShowPaywall={shouldShowPaywall}
+      isPro={getUserTier(user) !== 'free'}
+      shouldShowPaywall={false}
     />
   );
 }

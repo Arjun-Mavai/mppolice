@@ -6,6 +6,39 @@ export const dynamic = 'force-dynamic';
 
 export async function POST() {
   const cookieStore = await cookies();
+  const token = cookieStore.get('mppolice_token');
+
+  if (token) {
+    try {
+      const { verifyToken } = await import('@/lib/jwt');
+      const decoded: any = verifyToken(token.value);
+      if (decoded && decoded.userId) {
+        const { db } = await import('@/db');
+        const { mppscUsers } = await import('@/db/schema');
+        const { eq } = await import('drizzle-orm');
+        const { touchAuthLogoutMetadata } = await import('@/lib/auth-session-metadata');
+
+        const users = await db.select({ 
+          metadata: mppscUsers.metadata,
+          sessionVersion: mppscUsers.sessionVersion 
+        }).from(mppscUsers).where(eq(mppscUsers.id, decoded.userId)).limit(1);
+        
+        if (users[0]) {
+          const dbVersion = users[0].sessionVersion || 1;
+          const tokenVersion = decoded.sessionVersion || 1;
+          
+          // Only update metadata and log out globally if this is the active session
+          if (dbVersion === tokenVersion) {
+            await db.update(mppscUsers)
+              .set({ metadata: touchAuthLogoutMetadata(users[0].metadata) })
+              .where(eq(mppscUsers.id, decoded.userId));
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore token verification errors on logout
+    }
+  }
 
   // Clear the JWT auth cookie
   cookieStore.delete('mppolice_token');

@@ -148,8 +148,7 @@ export async function getUserAttempts(testIds: string[], userId?: string) {
     })
     .from(userAttempts)
     .where(and(eq(userAttempts.userId, finalUserId), inArray(userAttempts.testId, testIds)))
-    .limit(100)
-
+    // 🛡️ CRITICAL FIX: Removed .limit(100) because it was truncating attempts if user took > 100 tests
     .groupBy(userAttempts.testId);
 
   // Return as a Record<string, number> for easy client-side mapping
@@ -178,7 +177,7 @@ export async function getUserAttemptsByType(
     .from(userAttempts)
     .innerJoin(tests, eq(userAttempts.testId, tests.id))
     .where(and(eq(userAttempts.userId, userId), eq(tests.type, type)))
-    .limit(1000)
+    // 🛡️ CRITICAL FIX: Removed .limit(1000) as users might have more attempts across many topic tests
     .groupBy(userAttempts.testId);
 
   return attempts.reduce(

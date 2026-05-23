@@ -278,7 +278,7 @@ export function PaymentModal({
               // If we have previous user object, update it
               // Fix TypeScript: Ensure planTier is properly typed
               const updatedPlan = (verifyResult.planTier as 'free' | 'lite' | 'pro') || 'pro';
-              setUser({ ...user, planTier: updatedPlan, isSubscribed: true }, true);
+              setUser({ ...user, planTier: updatedPlan, isSubscribed: true });
             }
             // 🔒 Server Action: Re-fetch user data (no API visible!)
             const meData = await getCurrentUser();
@@ -289,7 +289,7 @@ export function PaymentModal({
                 isSubscribed: meData.user.isSubscribed ?? undefined,
                 planTier: meData.user.planTier ?? undefined,
               };
-              setUser(u, true);
+              setUser(u);
             }
             router.refresh();
 

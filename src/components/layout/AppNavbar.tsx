@@ -63,24 +63,18 @@ interface AppNavbarProps {
 // Helper type to handle both Store (camelCase) and API/Prop (snake_case) user shapes
 type UnifiedUser = StoreUser & PropUser;
 
-// ✅ PERFORMANCE: Utility function to normalize user object
-const normalizeUser = (rawUser: UnifiedUser | null) => {
-  return rawUser
-    ? {
-        ...rawUser,
-        isSubscribed: rawUser.isSubscribed ?? rawUser.is_subscribed,
-        planTier: rawUser.planTier ?? rawUser.plan_tier,
-      }
-    : null;
+// ✅ PERFORMANCE: Unified utility function to normalize user object
+// Handles camelCase (Store) and snake_case (API/Props)
+const normalizeUser = (rawUser: any): StoreUser | null => {
+  if (!rawUser) return null;
+  return {
+    ...rawUser,
+    id: rawUser.id || rawUser.userId,
+    isSubscribed: rawUser.isSubscribed ?? rawUser.is_subscribed ?? false,
+    planTier: rawUser.planTier ?? rawUser.plan_tier ?? 'free',
+    role: rawUser.role ?? undefined,
+  };
 };
-
-// ✅ PERFORMANCE: Utility function to convert user to store format
-const createUserToStore = (user: any) => ({
-  ...user,
-  role: user.role ?? undefined,
-  isSubscribed: user.isSubscribed ?? user.is_subscribed ?? undefined,
-  planTier: user.planTier ?? user.plan_tier ?? undefined,
-});
 
 export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const pathname = usePathname();
@@ -101,10 +95,32 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const { isInstallable, installPwa, isIos } = usePwa();
 
   // Create a merged user object (prop + global), favoring global if updated
-  const rawUser = (globalUser || initialUser) as UnifiedUser | null;
-  const user = normalizeUser(rawUser);
+  const user = useMemo(() => normalizeUser(globalUser || initialUser), [globalUser, initialUser]);
 
-  // ✅ PERFORMANCE: Memoized navigation items (Synchronized with ce94fbf but removed Syllabus per request)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🚀 CROSS-TAB SYNC
+  // Listen for changes in other tabs (like logout)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'settings-storage') {
+        if (!e.newValue) {
+          // Store was cleared in another tab (Logout)
+          setUser(null);
+          window.location.href = '/login?reason=session_ended';
+        } else {
+          // Store updated in another tab (Login/Profile Update)
+          // The persist middleware usually handles this, but a refresh is safer for auth
+          router.refresh();
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [setUser, router]);
+
+  // ✅ PERFORMANCE: Memoized navigation items
   const navItems = useMemo(() => [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, color: 'text-indigo-600' },
     { name: 'Test Hub', href: '/syllabus/quiz/full-tests', icon: GraduationCap, color: 'text-slate-700' },
@@ -120,8 +136,14 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
 
   // ------------------------------------------------------------------
   // QUERY: SESSION RESTORATION (The "Hydration")
+  // Pure data fetching only — no side effects inside queryFn.
+  // Side effects (logout, toast) are handled in the Master useEffect below.
   // ------------------------------------------------------------------
-  const { data: sessionData, isLoading: isSessionLoading } = useQuery({
+  const {
+    data: sessionData,
+    isLoading: isSessionLoading,
+    refetch: refetchSession,
+  } = useQuery({
     queryKey: ['me'],
     queryFn: async () => {
       const result = await getCurrentUser();
@@ -134,54 +156,24 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
           },
         };
       }
+      // Pass reason through so useEffect can react
       return result;
     },
-    enabled: !initialUser && !globalUser,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
     retry: false,
   });
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    void refetchSession();
+  }, [pathname, refetchSession]);
 
-  useEffect(() => {
-    const needsSync = initialUser && (authCheckStatus === 'idle' || (initialUser.id && !globalUser?.id));
-    if (needsSync) {
-      const userToStore = createUserToStore(initialUser);
-      setUser(userToStore, true);
-    }
-  }, [initialUser, authCheckStatus, globalUser, setUser]);
 
-  useEffect(() => {
-    if (globalUser && authCheckStatus === 'idle') {
-      setAuthCheckStatus('checked');
-    }
-  }, [globalUser, authCheckStatus, setAuthCheckStatus]);
-
-  useEffect(() => {
-    if (globalUser) return;
-
-    if (sessionData) {
-      if (sessionData.user) {
-        logger.info('Session restored successfully');
-        const userToStore = createUserToStore(sessionData.user);
-        setUser(userToStore, true);
-      } else {
-        setAuthCheckStatus('checked');
-      }
-    } else if (!isSessionLoading && authCheckStatus === 'idle' && !initialUser) {
-      setAuthCheckStatus('checked');
-    }
-
-    if (isSessionLoading) {
-      setAuthCheckStatus('loading');
-    }
-  }, [sessionData, isSessionLoading, authCheckStatus, initialUser, globalUser, setUser, setAuthCheckStatus]);
-
-  const handleLogout = useCallback(async () => {
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // handleLogout — defined BEFORE useEffect so it's stable reference
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const handleLogout = useCallback(async (reason?: string | any) => {
     try {
-      setUser(null, false);
+      setUser(null);
       setAuthCheckStatus('checked');
       if (typeof window !== 'undefined') {
         localStorage.removeItem('settings-storage');
@@ -191,12 +183,87 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
         await Promise.all(cacheNames.map((name) => caches.delete(name)));
       }
       await fetch('/api/auth/mppolice-logout', { method: 'POST' });
-      window.location.href = '/';
+      const safeReason = typeof reason === 'string' ? reason : 'logged_out';
+      window.location.href = `/login?reason=${safeReason}`;
     } catch (error) {
       localStorage.removeItem('settings-storage');
-      window.location.href = '/';
+      window.location.href = '/login?reason=logged_out';
     }
   }, [setUser, setAuthCheckStatus]);
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🚀 MOUNT STATE
+  // Separated to avoid being part of the auth sync loop
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🚀 MASTER AUTHENTICATION SYNC
+  // Single effect = no race conditions, no effect chaining
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  useEffect(() => {
+    // 1. React Query returned data → trust server state first
+    if (sessionData) {
+      // 🚨 Security: kicked by new device login
+      if ((sessionData as any).reason === 'multi_device') {
+        toast.error('Security Alert', {
+          description: 'This session was logged out because your account was opened on another device.',
+          duration: 10000,
+        });
+        handleLogout('multi_device');
+        return;
+      }
+
+      if (sessionData.user) {
+        const newUser = normalizeUser(sessionData.user);
+        
+        // PERFORMANCE: Deep compare to prevent unnecessary re-renders/loops
+        if (JSON.stringify(newUser) !== JSON.stringify(globalUser)) {
+          logger.info('Session refreshed from server');
+          setUser(newUser);
+        } else if (authCheckStatus !== 'checked') {
+          setAuthCheckStatus('checked');
+        }
+      } else {
+        // Clear stale persisted user if server says no session
+        if (globalUser) {
+          logger.info('No active session, clearing stale data');
+          setUser(null);
+        } else if (authCheckStatus !== 'checked') {
+          setAuthCheckStatus('checked');
+        }
+      }
+      return;
+    }
+
+    // 2. React Query still fetching → show loading only if we don't have local data
+    if (isSessionLoading) {
+      if (!globalUser && authCheckStatus !== 'loading') {
+        setAuthCheckStatus('loading');
+      }
+      return;
+    }
+
+    // 3. Fallback for guest/offline or hydration
+    if (authCheckStatus === 'idle') {
+      if (initialUser && !globalUser) {
+        setUser(normalizeUser(initialUser));
+      } else if (!isSessionLoading) {
+        setAuthCheckStatus('checked');
+      }
+    }
+  }, [
+    globalUser,
+    initialUser,
+    sessionData,
+    isSessionLoading,
+    authCheckStatus,
+    setUser,
+    setAuthCheckStatus,
+    handleLogout,
+  ]);
 
   const handleManualRefresh = useCallback(async () => {
     try {
@@ -535,7 +602,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                           variant="ghost"
                           size="sm"
                           className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
-                          onClick={handleLogout}
+                          onClick={() => handleLogout()}
                         >
                           <LogOut size={16} className="mr-2" />
                           Logout

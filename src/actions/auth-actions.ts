@@ -7,6 +7,8 @@ import { eq, and, sql } from 'drizzle-orm';
 import { cookies, headers } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
+import { hasActiveAuthSession, touchAuthLoginMetadata } from '@/lib/auth-session-metadata';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * 🔐 Get Current User (Server Action)
@@ -20,7 +22,12 @@ import { logger } from '@/lib/logger';
  * - Automatic cookie handling
  */
 export async function getCurrentUser() {
-  const user = await verifyAuth();
+  const { verifyAuthWithMismatch } = await import('@/lib/auth');
+  const { user, _mismatch } = await verifyAuthWithMismatch();
+
+  if (_mismatch) {
+    return { user: null, reason: 'multi_device' };
+  }
 
   if (!user) {
     return { user: null };
@@ -42,6 +49,7 @@ export async function getCurrentUser() {
 interface LoginParams {
   email?: string;
   password?: string;
+  force?: boolean;
 }
 
 /**
@@ -51,7 +59,7 @@ interface LoginParams {
  * API route se move kiya gaya taaki security aur consistency bani rahe.
  */
 export async function loginUserAction(formData: LoginParams) {
-  const { email, password } = formData;
+  const { email, password, force } = formData;
 
   try {
     // ── Rate Limiting ───────────────────────────────────────────
@@ -139,11 +147,53 @@ export async function loginUserAction(formData: LoginParams) {
       return { error: 'Invalid credentials' };
     }
 
+    // ── Active Session Detection ────────────────────────────────
+    if (!force) {
+      if (hasActiveAuthSession(user.metadata)) {
+        return {
+          requiresConfirmation: true,
+          message:
+            'An active session was detected. Logging in here will disconnect your other devices. Continue?',
+        };
+      }
+    }
+
+    // ── Session Version Handling ────────────────────────────────
+    const newSessionVersion = (user.sessionVersion || 0) + 1;
+    await db
+      .update(mppscUsers)
+      .set({ 
+        sessionVersion: newSessionVersion,
+        metadata: touchAuthLoginMetadata(user.metadata),
+      })
+      .where(eq(mppscUsers.id, user.id));
+
+    if (newSessionVersion > 1) {
+      // Collect metadata for Telegram Notification
+      const userAgent = headersList.get('user-agent') || 'Unknown Device';
+      
+      // Async fire-and-forget telegram notification
+      import('@/lib/admin-notify')
+        .then(({ notifyAdminOnMultiDeviceLogin }) => notifyAdminOnMultiDeviceLogin({
+          email: user.email,
+          name: user.name || 'Anonymous',
+          phone: user.phone || 'Not Provided',
+          planTier: user.planTier || 'FREE',
+          isSubscribed: !!user.isSubscribed,
+          ip: ip,
+          userAgent: userAgent,
+          sessionVersion: newSessionVersion,
+          forced: !!force
+        }))
+        .catch(() => {});
+    }
+
     // ── Sign JWT Token ──────────────────────────────────────────
     const payload = {
       userId: user.id,
       email: user.email,
       role: user.role,
+      sessionVersion: newSessionVersion,
     };
 
     const { signToken } = await import('@/lib/jwt');
@@ -165,6 +215,9 @@ export async function loginUserAction(formData: LoginParams) {
 
     return {
       success: true,
+      message: force 
+        ? 'Login forced. All other sessions have been logged out.' 
+        : 'Logged in successfully.',
       user: {
         id: user.id,
         email: user.email,

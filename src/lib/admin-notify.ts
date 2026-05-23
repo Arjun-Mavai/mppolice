@@ -321,3 +321,43 @@ export async function logEmailAttempt(data: {
     logger.info('Email attempt logged', { category: 'email', metadata: data });
   }
 }
+
+/**
+ * 🚨 Notify Admin on Multi-Device Login
+ */
+export async function notifyAdminOnMultiDeviceLogin(data: {
+  email: string;
+  name: string;
+  phone: string;
+  planTier: string;
+  isSubscribed: boolean;
+  ip: string;
+  userAgent: string;
+  sessionVersion: number;
+  forced: boolean;
+}) {
+  try {
+    const timestamp = new Date().toLocaleString('en-IN', { 
+      timeZone: 'Asia/Kolkata', 
+      weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', 
+      hour: '2-digit', minute: '2-digit', second: '2-digit' 
+    });
+
+    const isPro = data.isSubscribed || data.planTier !== 'FREE';
+
+    const tgMessage = `🚨 <b>NEW LOGIN DETECTED</b> ${data.forced ? '(FORCED)' : ''}\n\n` +
+      `👤 <b>User:</b> ${escapeHTML(data.name)}\n` +
+      `📧 <b>Email:</b> ${escapeHTML(data.email)}\n` +
+      `📞 <b>Phone:</b> ${escapeHTML(data.phone)}\n` +
+      `🏆 <b>Plan:</b> ${escapeHTML(data.planTier.toUpperCase())} ${isPro ? '✅' : '❌'}\n\n` +
+      `📱 <b>Device:</b> ${escapeHTML(data.userAgent.slice(0, 100))}\n` +
+      `🌐 <b>IP:</b> ${escapeHTML(data.ip)}\n` +
+      `🔢 <b>Session v:</b> ${data.sessionVersion}\n` +
+      `⏱️ <b>Time:</b> ${timestamp} IST\n\n` +
+      `⚠️ <i>${data.forced ? 'User forcefully kicked other active sessions.' : 'Previous sessions on other devices have been invalidated automatically.'}</i>`;
+    
+    await sendTelegramNotification(tgMessage);
+  } catch (error) {
+    logger.error('Failed to send multi-device telegram alert', error);
+  }
+}

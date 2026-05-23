@@ -23,22 +23,23 @@ import { logger } from '@/lib/logger';
 // This prevents mid-session kicks which is bad UX.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-export const verifyAuth = cache(async () => {
+export const verifyAuthWithMismatch = cache(async () => {
   const cookieStore = await cookies();
   const token = cookieStore.get('mppolice_token');
 
   if (!token) {
-    return null;
+    return { user: null, _mismatch: false };
   }
 
   const { verifyToken } = await import('@/lib/jwt');
   const decoded: any = verifyToken(token.value);
 
   if (!decoded || !decoded.userId) {
-    return null;
+    return { user: null, _mismatch: false };
   }
 
   const userId = decoded.userId;
+  const tokenVersion = decoded.sessionVersion;
 
   try {
     // Only fetch active users — soft-deleted + inactive users are treated as non-existent
@@ -54,13 +55,30 @@ export const verifyAuth = cache(async () => {
         )
       )
       .limit(1);
-    return dbUsers[0] || null;
+    
+    const user = dbUsers[0] || null;
+
+    if (user) {
+      const dbVersion = user.sessionVersion || 1;
+      const tokVersion = tokenVersion || 1;
+      
+      if (dbVersion !== tokVersion) {
+        return { user: null, _mismatch: true };
+      }
+    }
+
+    return { user, _mismatch: false };
   } catch (error) {
     // DB errors → null (graceful degradation, user redirected to login)
     logger.error('Database error during auth verification:', error, {
       category: 'auth',
       userId,
     });
-    return null;
+    return { user: null, _mismatch: false };
   }
+});
+
+export const verifyAuth = cache(async () => {
+  const result = await verifyAuthWithMismatch();
+  return result.user;
 });
