@@ -160,7 +160,17 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
   }, [hi, refreshStats]);
 
   const toggleExpand = useCallback((id: string) => {
-    setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
+    setExpandedIds((prev) => {
+      const isExpanded =
+        Object.prototype.hasOwnProperty.call(prev, id) && prev[id] === true;
+
+      if (isExpanded) {
+        const { [id]: _removed, ...rest } = prev;
+        return rest;
+      }
+
+      return { ...prev, [id]: true };
+    });
   }, []);
 
   const title = activeSubject === 'All' 
