@@ -71,7 +71,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
   // 🏷️ UI DEFAULT: Set to 'list' view by default
   const [viewMode, setViewMode] = useState<'list' | 'flip'>('list');
   const [revisionMap, setRevisionMap] = useState<Record<string, number>>({});
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
   const [loadingBatch, setLoadingBatch] = useState(false);
   const [stats, setStats] = useState({ revisedFactsCount: 0, totalFacts: 0 });
   const [isFocusMode, setIsFocusMode] = useState(false);
@@ -128,7 +128,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
       const offset = newIndex * PAGE_SIZE;
       const nextBatch = await getPublishedMppoliceOneLiners(activeSubject, PAGE_SIZE, offset);
       setFacts(nextBatch);
-      setExpandedId(null);
+      setExpandedIds({});
       await loadRevisionData(nextBatch.map(f => f.id));
       window.scrollTo({ top: 0, behavior: 'instant' });
     } catch (err) {
@@ -160,7 +160,17 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
   }, [hi, refreshStats]);
 
   const toggleExpand = useCallback((id: string) => {
-    setExpandedId((prev) => (prev === id ? null : id));
+    setExpandedIds((prev) => {
+      const isExpanded =
+        Object.prototype.hasOwnProperty.call(prev, id) && prev[id] === true;
+
+      if (isExpanded) {
+        const { [id]: _removed, ...rest } = prev;
+        return rest;
+      }
+
+      return { ...prev, [id]: true };
+    });
   }, []);
 
   const title = activeSubject === 'All' 
@@ -335,7 +345,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                  >
                    {facts.map((f, idx) => {
                      const globalIdx = batchIndex * PAGE_SIZE + idx + 1;
-                     const isExpanded = expandedId === f.id;
+                     const isExpanded = !!expandedIds[f.id];
                      const revCount = revisionMap[f.id] || 0;
                      const color = colorVariants[idx % 4];
 
