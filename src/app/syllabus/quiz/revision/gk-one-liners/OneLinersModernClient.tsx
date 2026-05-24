@@ -160,15 +160,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
   }, [hi, refreshStats]);
 
   const toggleExpand = useCallback((id: string) => {
-    // Capture current absolute scroll coordinate before the DOM shifts
-    const scrollY = window.scrollY;
-    
     setExpandedId((prev) => (prev === id ? null : id));
-    
-    // Lock the position right before the next browser repaint
-    requestAnimationFrame(() => {
-      window.scrollTo(window.scrollX, scrollY);
-    });
   }, []);
 
   const title = activeSubject === 'All' 
@@ -339,7 +331,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     className={cn("space-y-6 transition-all duration-500", isFocusMode && "pt-4")}
-                    style={{ overflowAnchor: 'none' }}
+                    
                  >
                    {facts.map((f, idx) => {
                      const globalIdx = batchIndex * PAGE_SIZE + idx + 1;
@@ -350,15 +342,15 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                      return (
                        <motion.div 
                          key={f.id} 
-                         layout
+                         
                          className={cn(
-                           "overflow-hidden rounded-[2rem] border transition-all duration-300",
+                           "overflow-hidden rounded-[2rem] border transition-shadow duration-300",
                            color.bg,
                            color.border,
                            "shadow-sm hover:shadow-xl",
                            color.shadow
                          )}
-                         style={{ overflowAnchor: 'none' }}
+    
                        >
                          <button
                            onClick={() => toggleExpand(f.id)}
@@ -408,7 +400,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                                initial={{ height: 0, opacity: 0 }}
                                animate={{ height: 'auto', opacity: 1 }}
                                exit={{ height: 0, opacity: 0 }}
-                               className="border-t border-white/50 bg-white/30"
+                               transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }} className="border-t border-white/50 bg-white/30 overflow-hidden"
                              >
                                 <div className="p-5 sm:p-8 space-y-6">
                                    {f.extendedData ? (
