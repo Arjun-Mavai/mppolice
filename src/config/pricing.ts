@@ -95,11 +95,6 @@ export const PRO_FEATURES: PlanFeatureWithIcon[] = [
     en: 'Progress Tracking aur Test History', 
     hi: 'प्रोग्रेस ट्रैकिंग और टेस्ट हिस्ट्री', 
     icon: 'History' 
-  },
-  {
-    en: 'MP Police 2026 Exam Tak Access',
-    hi: 'MP Police 2026 परीक्षा तक एक्सेस',
-    icon: 'Clock'
   }
 ];
 

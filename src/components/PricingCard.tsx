@@ -220,25 +220,6 @@ export function PricingCard({
                 </li>
               );
             })}
-            {/* Validity Item if not in features already */}
-            {!isUpgrade && (
-              <li
-                className={cn(
-                  'flex items-start gap-3 text-sm font-medium',
-                  isPro || isUpgrade ? 'text-slate-900' : 'text-slate-700'
-                )}
-              >
-                <Clock
-                  className={cn(
-                    'mt-0.5 h-4.5 w-4.5 shrink-0',
-                    isLite ? 'text-blue-500' : 'text-amber-600'
-                  )}
-                />
-                <span>
-                  MP Police 2026 परीक्षा तक वैध
-                </span>
-              </li>
-            )}
           </ul>
 
           {/* Action Button */}

@@ -44,10 +44,10 @@ export function PricingSection() {
       <div className="mx-auto max-w-4xl px-4">
         {/* Header */}
         <h2 className="mb-2 text-center text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-          अपना प्लान चुनें
+          {hi ? 'अपना प्लान चुनें' : 'Choose Your Plan'}
         </h2>
         <p className="mb-4 text-center text-sm font-medium text-slate-500">
-          परीक्षा तक पूरी तैयारी
+          {hi ? 'परीक्षा तक पूरी तैयारी' : 'Complete preparation until the exam'}
         </p>
 
         {/* FOMO badge - "first 100 students" with joined count */}
@@ -81,7 +81,9 @@ export function PricingSection() {
         <div className="mt-8 flex items-center justify-center gap-2">
           <Shield className="h-4 w-4 text-slate-400" />
           <p className="text-xs font-medium text-slate-400">
-            सुरक्षित भुगतान • कोई ऑटो-रिन्यूअल नहीं • RazorPay से एक्टिवेट
+            {hi
+              ? 'सुरक्षित भुगतान • कोई ऑटो-रिन्यूअल नहीं • RazorPay से एक्टिवेट'
+              : 'Secure Payment • No Auto-Renewal • Activate via RazorPay'}
           </p>
         </div>
       </div>
