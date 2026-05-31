@@ -1,8 +1,33 @@
 import { NextResponse } from 'next/server';
 import { sendTelegramEventNotification, escapeHTML } from '@/lib/telegram';
+import { getTelemetryEnabled } from '@/lib/system-settings';
+
+const rateLimitMap = new Map<string, { count: number; timestamp: number }>();
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 5;
 
 export async function POST(req: Request) {
   try {
+    const isTelemetryEnabled = await getTelemetryEnabled();
+    if (!isTelemetryEnabled) {
+      return NextResponse.json({ success: true, skipped: true });
+    }
+
+    // Basic Rate Limiting
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const now = Date.now();
+    const rateData = rateLimitMap.get(ip) || { count: 0, timestamp: now };
+    
+    if (now - rateData.timestamp > RATE_LIMIT_WINDOW_MS) {
+      rateLimitMap.set(ip, { count: 1, timestamp: now });
+    } else {
+      rateData.count++;
+      if (rateData.count > MAX_REQUESTS_PER_WINDOW) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+      }
+      rateLimitMap.set(ip, rateData);
+    }
+
     const body = await req.json();
     const { modalType, path, user, guestName, device, userAgent } = body as {
       modalType: 'premium' | 'payment';

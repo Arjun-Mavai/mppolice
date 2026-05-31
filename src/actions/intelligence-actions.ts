@@ -57,7 +57,7 @@ export async function submitIntelligenceFeedback(data: IntelligenceFeedbackData)
     const reactionLabel = emojiMap[reaction] || reaction;
     
     let studentInfo = `<b>Student:</b> ${escapeHTML(userName || guestMobile || 'Anonymous Guest')}`;
-    if (userEmail) studentInfo += `\n<b>Email:</b> ${userEmail}`;
+    if (userEmail) studentInfo += `\n<b>Email:</b> ${escapeHTML(userEmail)}`;
 
     const now = new Date();
     const timeStr = now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: true });

@@ -68,9 +68,9 @@ export function QuickFeedback({
       source,
       unitInfo,
       userId: user?.id,
-      userName: user?.name || undefined,
+      userName: user?.name || (typeof localStorage !== 'undefined' ? (localStorage.getItem('mppolice_guest_name') || undefined) : undefined),
       userEmail: user?.email || undefined,
-      guestMobile: typeof localStorage !== 'undefined' ? (localStorage.getItem('APP_guest_name') || undefined) : undefined,
+      guestMobile: undefined,
     }).catch(e => console.error('Reaction failed', e));
   };
 
@@ -91,9 +91,9 @@ export function QuickFeedback({
       source,
       unitInfo,
       userId: user?.id,
-      userName: user?.name || undefined,
+      userName: user?.name || (typeof localStorage !== 'undefined' ? (localStorage.getItem('mppolice_guest_name') || undefined) : undefined),
       userEmail: user?.email || undefined,
-      guestMobile: typeof localStorage !== 'undefined' ? (localStorage.getItem('APP_guest_name') || undefined) : undefined,
+      guestMobile: undefined,
     }).catch(e => console.error('Comment failed', e));
     
     setFeedbackMsg('');

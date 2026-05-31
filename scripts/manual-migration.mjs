@@ -38,6 +38,16 @@ async function runMigration() {
     `);
     console.log('Successfully created intelligence_feedback table');
 
+    console.log('Creating system_settings table if not exists...');
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS system_settings (
+        "key" TEXT PRIMARY KEY NOT NULL,
+        "value" TEXT NOT NULL,
+        "updated_at" INTEGER DEFAULT (strftime('%s', 'now'))
+      );
+    `);
+    console.log('Successfully created system_settings table');
+
   } catch (error) {
     console.error('Migration failed:', error);
   } finally {

@@ -55,12 +55,11 @@ export async function fulfillOrder(input: FulfillmentInput) {
     } else if (amountInPaise === proPaise || amountInPaise === upgradePaise) {
       planTier = 'pro';
     } else {
-      // Fallback: If amount is higher than pro, grant pro
-      planTier = amountInPaise >= proPaise ? 'pro' : 'lite';
-      logger.warn('Payment amount mismatch, defaulted based on threshold', { 
+      logger.error('Payment amount mismatch, failing fulfillment', { 
         category: 'payment', 
-        metadata: { userId, amountInPaise, proPaise } 
+        metadata: { userId, amountInPaise, expectedLite: litePaise, expectedPro: proPaise, expectedUpgrade: upgradePaise } 
       });
+      throw new Error(`Invalid payment amount: ${amountInPaise}`);
     }
 
     const months = planTier === 'pro' 

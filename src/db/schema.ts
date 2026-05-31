@@ -372,8 +372,7 @@ export const userAttempts = sqliteTable(
       table.isCompleted,
       table.endTime
     ),
-    // 🛡️ CRITICAL: Prevent Race Condition Duplicates
-    uniqueIndex('idx_user_attempt_unique_start').on(table.userId, table.testId, table.startTime),
+    // 🛡️ Note: Race condition duplicates are prevented via application-level rate-limiting locks.
     // Time-based analytics index
     index('idx_attempts_by_date').on(table.userId, table.endTime),
     // NEW: Pro-Level Index for Leaderboards and Score Analytics

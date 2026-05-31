@@ -12,7 +12,7 @@ export function notifyLockModalOpen(modalType: 'premium' | 'payment') {
     sessionStorage.setItem(cacheKey, Date.now().toString());
 
     const { user } = useSettingsStore.getState();
-    const guestName = localStorage.getItem('APP_guest_name'); 
+    const guestName = localStorage.getItem('mppolice_guest_name'); 
 
     const getDeviceType = (): string => {
       const width = window.innerWidth;
