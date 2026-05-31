@@ -196,15 +196,15 @@ export function SupportChat() {
               className="fixed right-6 bottom-24 z-[100] flex max-h-[600px] w-[90vw] max-w-[380px] flex-col overflow-hidden overscroll-y-none rounded-2xl border border-indigo-100 bg-white shadow-2xl"
             >
               {/* Header */}
-              <div className="relative overflow-hidden bg-gradient-to-r from-[#00F0FF] to-[#00D1E0] p-6 text-slate-900">
-                <div className="absolute top-0 right-0 p-4 opacity-10">
+              <div className="relative overflow-hidden bg-gradient-to-r from-amber-400 to-orange-500 p-6 text-white">
+                <div className="absolute top-0 right-0 p-4 opacity-20">
                   <MessageCircle size={100} />
                 </div>
-                <h3 className="relative z-10 mb-1 font-sans text-xl font-bold text-slate-900">
+                <h3 className="relative z-10 mb-1 font-sans text-xl font-bold text-white">
                   {hi ? 'नमस्ते' : 'Hello'}
                   {displayName !== 'there' ? `, ${displayName}` : ''}! 👋
                 </h3>
-                <p className="relative z-10 text-sm font-medium text-slate-700">
+                <p className="relative z-10 text-sm font-medium text-white/90">
                   {hi
                     ? 'हम आमतौर पर कुछ ही घंटों में जवाब देते हैं।'
                     : 'We usually reply within a few hours.'}
@@ -392,7 +392,7 @@ export function SupportChat() {
               initial={{ opacity: 0, y: 10, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.9 }}
-              className="mr-1 mb-1 flex origin-bottom-right items-center gap-3 rounded-xl border border-indigo-100 bg-white px-4 py-3 shadow-xl"
+              className="mr-1 mb-1 flex origin-bottom-right items-center gap-3 rounded-xl border border-amber-200 bg-white px-4 py-3 shadow-xl"
             >
               <div className="relative flex h-3 w-3 shrink-0">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
@@ -430,8 +430,8 @@ export function SupportChat() {
           onMouseEnter={() => !isOpen} // Just for interaction tracking if needed
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
-            'group relative flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-indigo-600 text-white shadow-2xl shadow-indigo-500/40 transition-all duration-300 hover:scale-105 hover:bg-indigo-700 active:scale-95',
-            isOpen && 'rotate-90 border-slate-700 bg-slate-800'
+            'group relative flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-2xl shadow-orange-500/40 transition-all duration-300 hover:scale-105 hover:from-amber-600 hover:to-orange-700 active:scale-95',
+            isOpen && 'rotate-90 border-slate-700 from-slate-700 to-slate-800 bg-none bg-slate-800 shadow-none'
           )}
         >
           {isOpen ? (

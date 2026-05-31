@@ -370,6 +370,11 @@ export function QuizResult({
     [scorePercentage, language]
   );
 
+  useEffect(() => {
+    // Ensure we start at the top of the result page when mounting
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
   const [activeQuestionTab, setActiveQuestionTab] = useState<
     'all' | 'correct' | 'wrong' | 'skipped'
@@ -622,19 +627,12 @@ export function QuizResult({
                 </span>
               </div>
 
-              <div className="pt-2">
-                <div className="mb-4 flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
-                  <AlertCircle className="h-4 w-4" />{' '}
-                  {isHindi ? 'विस्तृत व्याख्या (टेक्स्ट + स्ट्रक्चर्ड)' : 'Explanation (text + structured)'}
-                </div>
-
-                <div className="px-1">
-                  <QuizExplanation
-                    question={q}
-                    language={language}
-                    translations={{ explanation: isHindi ? 'व्याख्या' : 'Explanation' }}
-                  />
-                </div>
+              <div className="pt-2 -mx-2 md:mx-0">
+                <QuizExplanation
+                  question={q}
+                  language={language}
+                  translations={{ explanation: isHindi ? 'व्याख्या' : 'Explanation' }}
+                />
               </div>
             </motion.div>
           )}
@@ -658,7 +656,7 @@ export function QuizResult({
           <div className="absolute bottom-0 left-0 -mb-20 -ml-20 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl"></div>
 
           <div className="relative z-10">
-            <div className="mb-2 flex items-center justify-between">
+            {/* <div className="mb-2 flex items-center justify-between">
               <div className="text-sm font-bold text-slate-400 capitalize flex items-center gap-2">
                 <Target className="h-4 w-4 text-amber-500" />
                 {title || 'Test Result'}
@@ -678,7 +676,7 @@ export function QuizResult({
                   </span>
                 </Link>
               )}
-            </div>
+            </div> */}
 
             <div className="mt-4 mb-8 flex flex-col items-center justify-between gap-6 sm:flex-row">
               <div>
@@ -691,9 +689,9 @@ export function QuizResult({
                    <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-black tracking-widest text-emerald-400 uppercase border border-emerald-500/10">
                       <Plus className="h-3 w-3" /> {SCORING_CONFIG.MARKS_PER_QUESTION} Correct
                    </div>
-                   <div className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 px-2.5 py-1 text-[10px] font-black tracking-widest text-rose-400 uppercase border border-rose-500/10">
+                   {/* <div className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 px-2.5 py-1 text-[10px] font-black tracking-widest text-rose-400 uppercase border border-rose-500/10">
                       <Minus className="h-3 w-3" /> {SCORING_CONFIG.NEGATIVE_MARKING} Penalty
-                   </div>
+                   </div> */}
                 </div>
               </div>
 
@@ -758,9 +756,9 @@ export function QuizResult({
                 <span className="flex items-center gap-1.5 text-slate-500">
                   <div className="h-2 w-2 rounded-full bg-slate-500 opacity-50" /> {isHindi ? 'चयन कट-ऑफ' : 'Target Cutoff'} ({CUTOFF_ESTIMATE})
                 </span>
-                <span className="flex items-center gap-1.5 text-rose-400">
+                {/* <span className="flex items-center gap-1.5 text-rose-400">
                   <div className="h-2 w-2 rounded-full bg-rose-500" /> Penalty (-{progressNegative})
-                </span>
+                </span> */}
               </div>
             </div>
 
@@ -1422,7 +1420,7 @@ export function QuizResult({
   return (
     <div className="min-h-screen bg-white">
       {/* 🚀 PREMIUM STICKY HEADER (Responsive & Clean) */}
-      <div className="sticky top-14 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
+      <div className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-4 py-4 md:px-6">
           <div className="flex items-center justify-between">
             {/* Breadcrumbs & Title */}
@@ -1472,8 +1470,14 @@ export function QuizResult({
             <TabsTrigger value="audit" className="flex-1 rounded-xl py-2.5 text-xs font-black tracking-widest uppercase transition-all data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md">
               {isHindi ? 'स्मार्ट ऑडिट' : 'Audit'}
             </TabsTrigger>
-            <TabsTrigger value="review" className="flex-1 rounded-xl py-2.5 text-xs font-black tracking-widest uppercase transition-all data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-md">
-              {isHindi ? 'रिव्यू' : 'Review'}
+            <TabsTrigger value="review" className="relative flex-1 rounded-xl py-2.5 text-xs font-black tracking-widest uppercase transition-all data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <span className="flex items-center justify-center gap-0.5">
+                {isHindi ? 'रिव्यू' : 'Review'}
+                <span className="md:hidden flex items-center animate-bounce pointer-events-none ml-0.5">
+                  <span className="text-pink-500 text-[10px] font-black leading-none tracking-tighter">◀—</span>
+                  <span className="text-sm leading-none">🚶‍♂️</span>
+                </span>
+              </span>
             </TabsTrigger>
             <TabsTrigger value="pyq" className="flex-1 rounded-xl py-2.5 text-xs font-black tracking-widest uppercase transition-all data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-md">
               {isHindi ? 'फ्लैशकार्ड' : 'Flashcards'}

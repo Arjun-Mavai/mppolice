@@ -175,19 +175,13 @@ export default function PricingPage() {
       {/* ── Hero Header ──────────────────────────────────── */}
       <section className="relative z-10 px-4 pt-24 pb-4 text-center md:pt-32 md:pb-8">
         <Badge className="mb-6 cursor-default border-emerald-200 bg-emerald-50 px-5 py-2 text-xs font-black tracking-widest text-emerald-800 uppercase shadow-sm">
-          MP Police 2026 Special
+          MP Police 2026 — विशेष ऑफर
         </Badge>
         <h1 className="font-display mb-4 text-4xl leading-tight font-black tracking-tight text-slate-900 md:text-6xl">
-          {hi ? (
-             <>अपनी <span className="text-emerald-600">MP Police सफलता</span> में निवेश करें</>
-          ) : (
-             <>Invest in Your <span className="text-emerald-600">MP Police Success</span></>
-          )}
+          अपनी <span className="text-emerald-600">MP Police नौकरी</span> में निवेश करें
         </h1>
         <p className="mx-auto mb-2 max-w-2xl text-lg font-bold text-slate-600 md:text-xl">
-          {hi
-            ? 'डैशबोर्ड, टेस्ट हिस्ट्री, और हर खंड में चैप्टर-वाइज प्रश्न — सर्वश्रेष्ठ व्याख्या और ट्रिक्स के साथ।'
-            : 'Dashboard, test history, and chapter-wise questions across every section — with best-in-class explanations and tricks.'}
+          डैशबोर्ड, टेस्ट हिस्ट्री और हर खंड में चैप्टर-वाइज़ प्रश्न — श्रेष्ठ व्याख्या और ट्रिक्स के साथ।
         </p>
       </section>
 
@@ -216,7 +210,7 @@ export default function PricingPage() {
           <div className="mx-auto mb-16 max-w-6xl">
             <div className="mb-8 flex flex-col items-center gap-2">
                <h2 className="text-2xl font-black text-slate-900 md:text-3xl tracking-tight">
-                {hi ? 'आपको क्या मिलता है?' : 'What do you get?'}
+                आपको क्या मिलता है?
               </h2>
               <div className="h-1.5 w-20 rounded-full bg-emerald-500" />
             </div>
@@ -225,45 +219,40 @@ export default function PricingPage() {
               {[
                 {
                   icon: Sparkles,
-                  label: hi ? 'टीचर जैसी विस्तृत व्याख्या' : 'Teacher-like Explanations',
-                  sub: hi ? 'Maths, Science, GK/GS के बेस्ट सॉल्यूशन बिल्कुल आसान भाषा में' : 'Best solutions for Maths, Science, GK/GS in simple words',
+                  label: 'शिक्षक जैसी व्याख्या',
+                  sub: 'सिर्फ उत्तर नहीं — लॉजिक समझो। गणित, विज्ञान और GK आसान भाषा में।',
                   highlight: true,
                 },
                 {
                   icon: Zap,
-                  label: hi ? 'इंस्टेंट मोड (Instant Mode)' : 'Instant Mode',
-                  sub: hi ? 'सबमिट का इंतज़ार नहीं, तुरंत सही उत्तर और व्याख्या देखें' : 'No waiting for submit, see correct answers & explanations instantly',
+                  label: 'इंस्टंट रिवीज़न मोड',
+                  sub: 'एक टैप में उत्तर और व्याख्या। तेज़ रिवीज़न के लिए परफेक्ट।',
                   highlight: true,
                 },
                 {
                   icon: LayoutDashboard,
-                  label: hi ? 'डैशबोर्ड और टेस्ट हिस्ट्री' : 'Dashboard & test history',
-                  sub: hi ? 'प्रगति, पुराने प्रयास, रिवीज़न लूप' : 'Progress, past attempts, revision loop',
+                  label: 'अपनी प्रगति जानो',
+                  sub: 'कौनसा टॉपिक कमज़ोर है। कौनसा मज़बूत। रिवीज़न स्मार्ट बनाओ।',
                   highlight: true,
                 },
                 {
                   icon: Target,
-                  label: hi ? 'पेपर I — तीनों खंड' : 'Paper I — All 3 Sections',
-                  sub: hi ? 'सामान्य ज्ञान, तर्कशक्ति, विज्ञान एवं गणित' : 'GK, Reasoning, Science & Maths',
+                  label: 'पूरा MP Police सिलेबस',
+                  sub: 'GK, रीज़निंग, विज्ञान, गणित, हिंदी — एक ही जगह।',
                   highlight: true,
                 },
                 {
                   icon: BookOpen,
-                  label: hi ? 'चैप्टर-वाइज अभ्यास' : 'Chapter-wise Practice',
-                  sub: hi ? 'हर टॉपिक के लिए विशेष प्रश्न' : 'Specialized questions for every topic',
+                  label: 'टॉपिक-वाइज़ अभ्यास',
+                  sub: 'हर चैप्टर पर फोकस्ड प्रश्न। कमज़ोर विषयों को मज़बूत बनाओ।',
                   highlight: true,
                 },
                 {
                   icon: Flame,
-                  label: hi ? '1000+ वन-लाइनर्स' : '1000+ One-Liners',
-                  sub: hi ? 'तेज रिवीज़न के लिए व्याख्या सहित' : 'With explanations for fast revision',
+                  label: 'रैपिड रिवीज़न वॉल्ट',
+                  sub: '1000+ महत्वपूर्ण तथ्य। व्याख्या सहित। परीक्षा से पहले तेज़ रिवीज़न।',
                   highlight: true,
-                },
-                {
-                  icon: FileText,
-                  label: hi ? 'फुल मॉक टेस्ट' : 'Full mock tests',
-                  sub: hi ? 'लेटेस्ट पैटर्न पर आधारित' : 'Based on the latest exam pattern',
-                },
+                }
               ].map((item) => {
                 const { icon: Icon, label, sub, highlight } = item;
                 const badges = (item as any).badges as string[] | undefined;
@@ -319,14 +308,14 @@ export default function PricingPage() {
           <div className="mb-10 flex justify-center">
             <div className="relative inline-flex items-center gap-3 rounded-full border border-amber-200 bg-amber-50/80 backdrop-blur-sm px-5 py-2.5 shadow-xl shadow-amber-500/5">
               <Flame className="h-4 w-4 text-orange-600 animate-pulse" />
-              <span className="text-sm font-black text-amber-900 uppercase tracking-tight">
-                {hi ? p.urgencyTextHi : p.urgencyText}
+              <span className="text-sm font-black text-amber-900 tracking-tight">
+                🚀 Early Bird Offer — 80% Off (सीमित समय)
               </span>
-              <div className="h-4 w-px bg-amber-200 mx-1" />
+              {/* <div className="h-4 w-px bg-amber-200 mx-1" />
               <Badge className="h-6 border-emerald-200 bg-emerald-100 px-2 py-0 text-xs font-black text-emerald-800 hover:bg-emerald-100">
                 <Users className="mr-1 h-3 w-3" />
                 {p.studentsBought || PRICING_DEFAULTS.studentsBought} joined
-              </Badge>
+              </Badge> */}
             </div>
           </div>
 
@@ -346,9 +335,7 @@ export default function PricingPage() {
           <div className="mt-8 flex items-center justify-center gap-2">
             <Shield className="h-4 w-4 text-slate-400" />
             <p className="text-xs font-medium text-slate-400">
-              {hi
-                ? 'सुरक्षित भुगतान • कोई ऑटो-रिन्यूअल नहीं • RazorPay से एक्टिवेट'
-                : 'Secure Payment • No Auto-Renewal • Activate via RazorPay'}
+              सुरक्षित भुगतान • कोई ऑटो-रिन्यूअल नहीं • RazorPay से एक्टिवेट
             </p>
           </div>
         </section>
@@ -358,14 +345,14 @@ export default function PricingPage() {
       <section className="px-4 pt-4 pb-20">
         <div className="mx-auto max-w-2xl">
           <h2 className="font-display mb-12 text-center text-2xl font-bold text-slate-900 md:text-3xl">
-            {hi ? 'अक्सर पूछे जाने वाले सवाल' : 'Frequently Asked Questions'}
+            अक्सर पूछे जाने वाले सवाल
           </h2>
           <div className="space-y-4">
             {faqData.map((item, i) => (
               <FaqItem
                 key={i}
-                question={hi ? item.q.hi : item.q.en}
-                answer={hi ? item.a.hi : item.a.en}
+                question={item.q.hi}
+                answer={item.a.hi}
               />
             ))}
           </div>

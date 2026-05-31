@@ -25,7 +25,7 @@ export function HeroSection() {
   const oneLinersHref = isPro ? '/syllabus/quiz/revision/gk-one-liners' : '/free-one-liners';
 
   return (
-    <section className="relative flex min-h-[90vh] flex-col justify-center overflow-hidden bg-[#020617] px-4 pt-24 pb-14 md:min-h-screen md:px-6 md:pt-48 md:pb-32">
+    <section className="relative flex min-h-[100dvh] flex-col justify-center overflow-hidden bg-[#020617] px-4 pt-16 pb-12 md:min-h-screen md:px-6 md:pt-48 md:pb-32">
       {/* 🎭 PREMIUM BACKGROUND: Grid aur Animated Glows */}
       <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.05] [mask-image:radial-gradient(ellipse_at_center,black,transparent)]" />
@@ -34,7 +34,7 @@ export function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020617]/50 to-[#020617]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl space-y-12 text-center md:space-y-20">
+      <div className="relative z-10 mx-auto max-w-7xl space-y-8 text-center md:space-y-20">
         {/* 👮 Exam Badge */}
         <div className="flex justify-center">
             <div className="inline-flex items-center gap-3 rounded-full border border-amber-500/30 bg-amber-950/30 px-5 py-2 text-[10px] font-black tracking-widest text-amber-400 backdrop-blur-xl transition-all hover:border-amber-500/50 md:text-xs">
@@ -45,20 +45,20 @@ export function HeroSection() {
         </div>
 
         {/* ✍️ Main Headlines: Big & Bold */}
-        <div className="space-y-6 md:space-y-10">
-          <div className="font-display flex flex-col items-center justify-center text-5xl leading-[1.05] font-black tracking-tight sm:text-7xl md:text-[8rem] lg:text-[10rem]">
+        <div className="space-y-4 md:space-y-10">
+          <div className="font-display flex flex-col items-center justify-center text-4xl leading-[1.05] font-black tracking-tight sm:text-5xl md:text-7xl lg:text-8xl">
             <span className="text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
-                {language === 'hi' ? 'तैयारी जीत की।' : 'Master the'}
+                {language === 'hi' ? 'इस बार सिर्फ तैयारी नहीं।' : 'Not Just Preparation.'}
             </span>
             <span className="animate-gradient-x bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 bg-[length:200%_auto] bg-clip-text pb-2 text-transparent drop-shadow-[0_0_40px_rgba(245,158,11,0.3)]">
-              {language === 'hi' ? 'आपका भविष्य।' : 'Future.'}
+              {language === 'hi' ? 'नौकरी तक पहुँचने की तैयारी।' : 'Preparation for the Job.'}
             </span>
           </div>
 
-          <p className="mx-auto max-w-4xl px-2 text-lg leading-relaxed font-bold text-slate-400 md:text-3xl">
+          <p className="mx-auto max-w-4xl px-2 text-lg leading-relaxed font-bold text-slate-400 md:text-2xl">
             {language === 'hi'
-              ? 'MP Police के नए पैटर्न पर आधारित 100+ प्रीमियम टेस्ट्स, PYQs और 1000+ One-Liners (व्याख्या सहित) के साथ सफलता सुनिश्चित करें।'
-              : 'Ensure success with 100+ premium tests, PYQs and 1000+ One-Liners (with explanations) based on the new MP Police pattern.'}
+              ? '1000+ Important Facts, PYQs और Topic-Wise Tests के साथ। Random PDFs से नहीं, structured revision और practice से exam ready बनो।'
+              : 'With 1000+ Important Facts, PYQs, and Topic-Wise Tests. Become exam-ready with structured revision and practice, not random PDFs.'}
           </p>
 
           {/* ⚡️ ACTION BUTTONS: Lightning Fast Interactions */}
@@ -66,54 +66,40 @@ export function HeroSection() {
             {!globalUser ? (
               <div className="flex w-full flex-col gap-3 md:flex-row md:gap-4">
                 {/* 🟠 PRIMARY: One-Liners Button */}
-                <button
-                  onClick={() => {
-                    trackFbCustomEvent('hero_one_liners_clicked', { location: 'home_hero', user: 'guest' });
-                    setIsPendingOneLiners(true);
-                    router.push(oneLinersHref);
-                  }}
-                  onMouseEnter={() => router.prefetch(oneLinersHref)}
+                <Link
+                  href={oneLinersHref}
+                  prefetch={true}
                   className="group relative w-full focus:outline-none"
+                  onClick={() => trackFbCustomEvent('hero_one_liners_clicked', { location: 'home_hero', user: 'guest' })}
                 >
                   <div className="relative flex h-16 w-full transform items-center justify-center overflow-hidden rounded-2xl bg-amber-600 transition-all duration-500 group-hover:-translate-y-1 group-hover:bg-amber-500 group-hover:shadow-[0_0_40px_rgba(245,158,11,0.4)] group-active:scale-[0.98] md:h-24 md:rounded-[2.5rem]">
                     <div className="relative z-10 flex h-full w-full items-center justify-center gap-4 px-6 md:gap-8 md:px-10">
-                      {isPendingOneLiners ? (
-                        <Loader2 className="h-6 w-6 animate-spin text-white md:h-8 md:w-8" />
-                      ) : (
-                        <Target className="h-6 w-6 fill-white text-white md:h-8 md:w-8" />
-                      )}
+                      <Target className="h-6 w-6 fill-white text-white md:h-8 md:w-8" />
                       <span className="text-xs font-black tracking-[0.15em] whitespace-nowrap text-white uppercase md:text-xl md:tracking-[0.2em]">
                         {language === 'hi' ? 'GK वन-लाइनर्स प्रैक्टिस' : 'Practice GK One-Liners'}
                       </span>
                       <ChevronRight className="h-6 w-6 text-white transition-transform duration-500 group-hover:translate-x-2 md:h-8 md:w-8" strokeWidth={4} />
                     </div>
                   </div>
-                </button>
+                </Link>
 
                 {/* ⚪️ SECONDARY: Free Test Button */}
-                <button
-                  onClick={() => {
-                    trackFbCustomEvent('hero_free_test_clicked', { location: 'home_hero', user: 'guest' });
-                    setIsPendingFreeTest(true);
-                    router.push('/free-quiz');
-                  }}
-                  onMouseEnter={() => router.prefetch('/free-quiz')}
+                <Link
+                  href="/free-quiz"
+                  prefetch={true}
                   className="group relative w-full focus:outline-none"
+                  onClick={() => trackFbCustomEvent('hero_free_test_clicked', { location: 'home_hero', user: 'guest' })}
                 >
                   <div className="relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-500 group-hover:-translate-y-0.5 group-hover:border-amber-500/40 group-hover:bg-amber-500/10 group-hover:shadow-[0_0_40px_rgba(245,158,11,0.12)] group-active:scale-[0.99] md:h-24 md:rounded-[2.5rem]">
                     <div className="relative z-10 flex h-full w-full items-center justify-center gap-3 px-6 md:gap-6 md:px-10">
-                      {isPendingFreeTest ? (
-                        <Loader2 className="h-5 w-5 animate-spin text-amber-400 md:h-7 md:w-7" />
-                      ) : (
-                        <Zap className="h-5 w-5 text-amber-400 md:h-7 md:w-7" />
-                      )}
+                      <Zap className="h-5 w-5 text-amber-400 md:h-7 md:w-7" />
                       <span className="text-[11px] font-black tracking-[0.15em] whitespace-nowrap text-white/90 uppercase md:text-lg md:tracking-[0.2em]">
                         {language === 'hi' ? 'फ्री प्रैक्टिस टेस्ट' : 'Practice Free'}
                       </span>
                       <ChevronRight className="h-5 w-5 text-amber-400 transition-transform duration-500 group-hover:translate-x-1.5 md:h-7 md:w-7" strokeWidth={4} />
                     </div>
                   </div>
-                </button>
+                </Link>
               </div>
             ) : (
               <div className="flex w-full flex-col gap-3 md:flex-row md:gap-4">

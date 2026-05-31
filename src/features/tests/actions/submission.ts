@@ -273,6 +273,10 @@ export async function getTestWithQuestions(testId: string) {
   }
 }
 
+import { canAttemptTest } from '@/lib/access-control';
+import { checkRateLimit, genApiLimiter } from '@/lib/rate-limit';
+import { headers } from 'next/headers';
+
 export async function submitTestAttempt(
   testId: string,
   userId: string,
@@ -282,40 +286,42 @@ export async function submitTestAttempt(
   testTitle?: string
 ) {
   try {
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // 🔒 IDOR Prevention: Verify userId from JWT matches parameter
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // Bhai, bina ye check ke koi Postman se kisi aur ka userId bhej ke
-    // uski attempt count badha sakta tha! Ab JWT se userId verify hota hai.
-    //
-    // Attack scenario (before fix):
-    //   POST /submitTestAttempt body: { userId: "victim-123", ... }
-    //   → Attacker's request inserts attempt for victim's account!
-    //
-    // Fix: JWT se nikalo asli userId, match karo parameter se
+    // 🚦 1. Rate Limiting (API Protection)
+    const headerList = await headers();
+    const ip = headerList.get('x-forwarded-for') ?? '127.0.0.1';
+    const { success: rateOk } = await checkRateLimit(genApiLimiter, `submit-${userId}-${ip}`);
+    if (!rateOk) return { error: 'Too many submissions. Relax, take a breath!' };
+
+    // 🔒 2. IDOR Prevention: Verify userId from JWT matches parameter
     const session = await verifyAuth();
     if (!session) {
       return { error: 'Unauthorized — please login to submit test' };
     }
     if (session.id !== userId) {
-      // 🚨 Someone tried to submit as a different user!
-      logger.warn('IDOR attempt: userId mismatch in test submission', {
-        category: 'system',
-        metadata: {
-          jwtUserId: session.id,
-          paramUserId: userId,
-          testId,
-        },
-      });
+      logger.warn('IDOR attempt blocked', { category: 'system', metadata: { jwtUserId: session.id, paramUserId: userId } });
       return { error: 'Unauthorized — userId mismatch' };
     }
 
-    // 🛡️ CRITICAL FIX: Prevent Double Submit (Race Condition Protection)
-    // Bhai, agar user ne 30 second pehle hi submit kiya hai, to dobara nahi hone denge!
-    // SQLite's datetime('now') uses UTC, which might mismatch DB if not careful.
-    // JS Date.now() is reliable for relative comparison.
-    const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
+    // 🛡️ 3. Fetch Test & Enforce Access Control (Gatekeeper)
+    const test = await db.query.tests.findFirst({ where: eq(tests.id, testId) });
+    if (!test) return { error: 'Test not found' };
 
+    // Check if user is actually allowed to attempt this (Plan Limits)
+    const currentAttemptsRows = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(userAttempts)
+      .where(and(eq(userAttempts.userId, userId), eq(userAttempts.testId, testId), eq(userAttempts.isCompleted, true)));
+    
+    const attemptsCount = Number(currentAttemptsRows[0]?.count || 0);
+    const access = canAttemptTest(test, session, attemptsCount);
+    
+    if (!access.allowed) {
+      logger.warn('Plan limit bypass attempt blocked', { category: 'auth', metadata: { userId, testId, attemptsCount } });
+      return { error: access.reason || 'Plan limit reached' };
+    }
+
+    // 🛡️ 4. Prevent Double Submit (Race Condition Soft-Check)
+    const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
     const recentAttempt = await db.query.userAttempts.findFirst({
       where: and(
         eq(userAttempts.userId, userId),
@@ -325,13 +331,7 @@ export async function submitTestAttempt(
       ),
     });
 
-    if (recentAttempt) {
-      logger.warn('Duplicate test submission attempt blocked', {
-        category: 'system',
-        metadata: { userId, testId, recentAttemptId: recentAttempt.id },
-      });
-      return { error: 'Test already submitted recently. Please wait.' };
-    }
+    if (recentAttempt) return { error: 'Test already submitted recently.' };
 
     // 1. Fetch Correct Answers from DB (Secure)
     const testQuestions = await db
@@ -344,7 +344,7 @@ export async function submitTestAttempt(
       .from(questions)
       .where(eq(questions.testId, testId));
 
-    if (testQuestions.length === 0) return { error: 'Test not found' };
+    if (testQuestions.length === 0) return { error: 'Test questions missing' };
 
     // 2. Calculate Score
     let totalScore = 0;
@@ -363,17 +363,15 @@ export async function submitTestAttempt(
       if (userAnswer !== undefined) {
         const isCorrect = String(userAnswer) === String(q.correctAnswer);
 
+        // 🛡️ Production-Ready Scoring: Use question marks with global fallback
+        const marks = q.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION;
+        const negativeMarking = q.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING;
+
         if (isCorrect) {
-          // Strict Scoring as per User Request ("Global Standard")
-          // Enforce Global Pattern (+3)
-          const marks = SCORING_CONFIG.MARKS_PER_QUESTION;
           totalScore += marks;
           correctCount++;
         } else {
-          // Strict Negative Marking
-          // Enforce Global Pattern (-1)
-          const deduction = SCORING_CONFIG.NEGATIVE_MARKING;
-          totalScore -= deduction;
+          totalScore -= negativeMarking;
           incorrectCount++;
         }
 
@@ -387,8 +385,7 @@ export async function submitTestAttempt(
     });
 
     // 🛡️ Server-Side Timer Validation (Prevent Time Manipulation)
-    // Bhai, client se jo time aaya hai wo sahi hai ya nahi check karo!
-    const test = await db.query.tests.findFirst({ where: eq(tests.id, testId) });
+    // Bhai, test already fetched above (line 306) — reuse karo, dobara DB call nahi!
     const maxDuration = (test?.durationMinutes || 60) * 60; // Convert to seconds
     const validDuration = Math.min(Math.max(durationSeconds, 0), maxDuration);
 
@@ -404,6 +401,8 @@ export async function submitTestAttempt(
       });
     }
 
+    const finalScore = parseFloat(totalScore.toFixed(2));
+
     // 3. Create Attempt Record
     const attemptId = crypto.randomUUID();
 
@@ -416,23 +415,12 @@ export async function submitTestAttempt(
         testId,
         startTime: new Date(Date.now() - validDuration * 1000), // Use validated duration
         endTime: new Date(),
-        score: parseFloat(totalScore.toFixed(2)),
+        score: finalScore,
         isCompleted: true,
       });
 
-      // Bulk Insert Answers (if supported by DB/Drizzle driver, otherwise loop)
+      // Bulk Insert Answers
       if (answersList.length > 0) {
-        // Drizzle supports bulk insert
-        // Need to map to table columns
-        /*
-                 export const attemptAnswers = sqliteTable('attempt_answers', {
-                    id: text('id').primaryKey(),
-                    attemptId: ...
-                    questionId: ...
-                    userAnswer: ...
-                    isCorrect: ...
-                    timeTakenSeconds: ...
-                 */
         await tx.insert(attemptAnswers).values(
           answersList.map((a) => ({
             id: crypto.randomUUID(),
@@ -447,8 +435,7 @@ export async function submitTestAttempt(
     });
 
     // 4. Parallelize post-submission tasks (Leaderboard, Analytics, Revalidation)
-    // Bhai, ye sab kaam parallel mein honge to user ko result 200-300ms jaldi dikhega
-    const postSubmissionTasks = [];
+    const postSubmissionTasks: Promise<any>[] = [];
 
     const totalTestMarks = testQuestions.reduce(
       (sum, q) => sum + (q.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION),
@@ -456,13 +443,12 @@ export async function submitTestAttempt(
     );
 
     if (session && session.name) {
-
       postSubmissionTasks.push(
         insertUserToLeaderboard({
           testId,
           userId,
           displayName: session.name,
-          score: parseFloat(totalScore.toFixed(2)),
+          score: finalScore,
           timeTaken: validDuration,
           totalMarks: totalTestMarks,
         })
@@ -470,7 +456,11 @@ export async function submitTestAttempt(
     }
 
     // Invalidate User Analytics Cache
-    postSubmissionTasks.push(revalidateTag(`analytics-${userId}`, { expire: 0 }));
+    try {
+      revalidateTag(`analytics-${userId}`,{expire: 0});
+    } catch (err) {
+      // Ignore cache errors
+    }
 
     // 🚀 Prepare Telegram Notification data
     const totalAttempted = correctCount + incorrectCount;
@@ -479,7 +469,7 @@ export async function submitTestAttempt(
     const telegramMessage = `🏆 <b>Test Completed</b>\n\n` +
       `<b>Test:</b> ${escapeHTML(testTitle || test?.title || 'N/A')}\n` +
       `<b>User:</b> ${escapeHTML(session?.name || 'Student')}\n` +
-      `<b>Score:</b> ${totalScore}/${totalTestMarks} (${accuracy}% accuracy)\n` +
+      `<b>Score:</b> ${finalScore}/${totalTestMarks} (${accuracy}% accuracy)\n` +
       `<b>Stats:</b> ✅${correctCount} | ❌${incorrectCount} | ⏱️${Math.floor(validDuration / 60)}m`;
 
     postSubmissionTasks.push(sendTelegramNotification(telegramMessage));
@@ -487,7 +477,7 @@ export async function submitTestAttempt(
     // Run all tasks in parallel
     await Promise.allSettled(postSubmissionTasks);
 
-    return { success: true, attemptId, score: parseFloat(totalScore.toFixed(2)) };
+    return { success: true, attemptId, score: finalScore };
   } catch (error) {
     logger.error('Error submitting test:', error);
     return { error: 'Failed to submit test' };

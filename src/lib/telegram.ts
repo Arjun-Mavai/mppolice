@@ -1,9 +1,6 @@
-import { getErrorName } from '@/lib/errors';
-
 /**
  * Simple HTML escape for Telegram messages
- * Bhai, agar user name mein '<' ya '&' ho, to Telegram API error de deta hai.
- * Isliye humein isse escape karna padega.
+ * Agar user name mein '<' ya '&' ho, Telegram API error de deta hai.
  */
 export function escapeHTML(str: string): string {
   return str
@@ -17,13 +14,15 @@ export async function sendTelegramNotification(message: string) {
   const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
   if (!BOT_TOKEN || !CHAT_ID) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(
+        '[Telegram] TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID missing; notification skipped'
+      );
+    }
     return;
   }
 
-  // Add Branding Header
-  const brandedMessage = `<b>👮 MP POLICE ZEN ALERT</b>\n\n${message}`;
-
-  // ⏱️ AbortController to prevent hanging (5s timeout)
+  // ⏱️ AbortController — 5s timeout, Telegram slow pe hang nahi karega
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 5000);
 
@@ -34,8 +33,8 @@ export async function sendTelegramNotification(message: string) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: CHAT_ID,
-        text: brandedMessage, // Message should be escaped by the caller where appropriate
-        parse_mode: 'HTML',
+        text: message,
+        parse_mode: 'HTML', // <b>, <code>, <i> work
       }),
       signal: controller.signal,
     });
@@ -43,11 +42,54 @@ export async function sendTelegramNotification(message: string) {
     if (!response.ok) {
       console.error('Telegram API Error:', await response.text());
     }
-  } catch (error: unknown) {
-    if (getErrorName(error) === 'AbortError') {
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
       console.error('Telegram notification timed out');
     } else {
       console.error('Failed to send Telegram notification:', error);
+    }
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+export async function sendTelegramEventNotification(message: string) {
+  const BOT_TOKEN = process.env.TELEGRAM_EVENTS_BOT_TOKEN;
+  const CHAT_ID = process.env.TELEGRAM_EVENTS_CHAT_ID;
+
+  if (!BOT_TOKEN || !CHAT_ID) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(
+        '[Telegram Events] TELEGRAM_EVENTS_BOT_TOKEN or TELEGRAM_EVENTS_CHAT_ID missing; event notification skipped'
+      );
+    }
+    return;
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: message,
+        parse_mode: 'HTML',
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      console.error('Telegram Events API Error:', await response.text());
+    }
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      console.error('Telegram events notification timed out');
+    } else {
+      console.error('Failed to send Telegram events notification:', error);
     }
   } finally {
     clearTimeout(timeoutId);

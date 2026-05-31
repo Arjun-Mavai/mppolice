@@ -29,6 +29,7 @@ import { checkEmailExists } from '@/actions/email-actions';
 import { getCurrentUser } from '@/actions/auth-actions';
 import { trackFbStandardEvent } from '@/lib/analytics/facebook-pixel';
 import { getErrorMessage } from '@/lib/errors';
+import { notifyLockModalOpen } from '@/lib/analytics/notifyLockModal';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -78,6 +79,12 @@ export function PaymentModal({
 }: PaymentModalProps) {
   const { user, setUser } = useSettingsStore();
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      notifyLockModalOpen('payment');
+    }
+  }, [open]);
 
   // Bhai, ye phases users ko batate h ki abhi background me kya chal raha h.
   // Transparancy = Trust. 🤝

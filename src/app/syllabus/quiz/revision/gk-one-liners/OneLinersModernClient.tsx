@@ -26,6 +26,7 @@ import { getPublishedMppoliceOneLiners, type MppoliceOneLinerRow } from '@/featu
 import { markOneLinerRevised, getOneLinerRevisionMap, getUserOneLinerProgress } from '@/features/revision/actions/mppolice-one-liner-revisions';
 import { MPPOLICE_ONELINER_SUBJECTS } from '@/features/revision/constants/mppolice-one-liners';
 import { toast } from 'sonner';
+import { QuickFeedback } from '@/components/QuickFeedback';
 
 // 🚀 PERFORMANCE: Lazy load heavy components
 const FlipCard = dynamic(() => import('@/components/FlipCard'), { 
@@ -462,6 +463,12 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                                         </button>
                                      </div>
                                    )}
+                                   <QuickFeedback 
+                                     questionId={f.id} 
+                                     questionText={f.stemHi} 
+                                     source="one_liner_list" 
+                                     unitInfo={f.subjectTag} 
+                                   />
                                 </div>
                              </motion.div>
                            )}
@@ -519,6 +526,12 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                                         {f.subjectTag}
                                      </span>
                                   </div>
+                                  <QuickFeedback 
+                                    questionId={f.id} 
+                                    questionText={f.stemHi} 
+                                    source="one_liner_card" 
+                                    unitInfo={f.subjectTag} 
+                                  />
                                </div>
                              )}
                              labels={{
@@ -554,19 +567,17 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                   <Sparkles size={32} className="text-amber-400" />
                 </div>
                 <h3 className="mb-3 text-2xl font-black text-white sm:text-3xl">
-                  {hi ? '1000+ और ऐसे तथ्य अनलॉक करें' : 'Unlock 1000+ More Facts'}
+                  परीक्षा हॉल में याद रहे। <br className="hidden sm:block" /> इसीलिए बनाया गया।
                 </h3>
-                <p className="mb-8 max-w-md text-sm font-bold text-indigo-100/80 leading-relaxed uppercase tracking-widest">
-                  {hi 
-                    ? 'अपनी MP Police तैयारी को प्रो प्लान के साथ सुपरचार्ज करें।' 
-                    : 'Supercharge your MP Police preparation with the Pro Plan.'}
+                <p className="mb-8 max-w-md text-sm font-bold text-indigo-100/80 leading-relaxed tracking-wide">
+                  फ्री PDF सेव करने से चयन नहीं होता।<br/>नियमित रिवीज़न और अभ्यास से होता है।<br/><br/>MP Police 2026 के लिए structured तैयारी अनलॉक करें।
                 </p>
                 <button
                   onClick={() => router.push('/pricing')}
                   className="group relative flex items-center gap-3 rounded-full bg-amber-500 px-10 py-5 text-[14px] font-black uppercase tracking-[0.2em] text-slate-900 shadow-[0_20px_50px_rgba(245,158,11,0.2)] transition-all hover:bg-amber-400 hover:scale-105 active:scale-95"
                 >
                   <Zap size={18} className="fill-slate-900" />
-                  {hi ? 'प्रो एक्सेस प्राप्त करें' : 'Get Pro Access'}
+                  ⚡ एक्सेस अनलॉक करें
                   <ChevronRight size={18} className="transition-transform group-hover:translate-x-1" strokeWidth={3} />
                 </button>
               </motion.div>

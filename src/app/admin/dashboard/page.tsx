@@ -79,6 +79,14 @@ const LiveActivityFeed = dynamic(
   }
 );
 
+const AdminTelemetryToggle = dynamic(
+  () => import('@/features/admin/components/AdminTelemetryToggle').then((mod) => mod.AdminTelemetryToggle),
+  {
+    loading: () => <div className="text-sm text-slate-500">Loading telemetry settings...</div>,
+    ssr: false,
+  }
+);
+
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminDashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -132,6 +140,9 @@ export default function AdminDashboardPage() {
             Live System Active
           </Badge>
         </div>
+
+        {/* System Settings / Telemetry Toggle */}
+        <AdminTelemetryToggle />
 
         {/* Stats Grid — 2 cols on mobile, scales up */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">

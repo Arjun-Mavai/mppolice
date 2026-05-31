@@ -52,15 +52,15 @@ export function PricingSection() {
 
         {/* FOMO badge - "first 100 students" with joined count */}
         <div className="mb-8 flex justify-center">
-          <div className="relative inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2">
-            <Flame className="h-3.5 w-3.5 text-red-500" />
-            <span className="text-xs font-semibold text-amber-800">
-              {hi ? p.urgencyTextHi : p.urgencyText}
+          <div className="relative inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 shadow-sm">
+            <Flame className="h-4 w-4 text-orange-600 animate-pulse" />
+            <span className="text-sm font-black text-amber-900 tracking-tight">
+              🚀 Early Bird Offer — 80% Off (सीमित समय)
             </span>
-            <Badge className="h-5 border-emerald-200 bg-emerald-100 px-1.5 py-0 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100">
+            {/* <Badge className="h-5 border-emerald-200 bg-emerald-100 px-1.5 py-0 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100">
               <Users className="mr-0.5 h-2.5 w-2.5" />
               {p.studentsBought || PRICING_DEFAULTS.studentsBought} joined
-            </Badge>
+            </Badge> */}
           </div>
         </div>
 
