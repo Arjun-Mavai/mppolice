@@ -91,18 +91,12 @@ export function PricingCard({
   ) : (
     <Star className="h-5 w-5 fill-amber-500 text-amber-500" />
   );
-  const title = isLite ? 'Lite' : isPro ? 'Pro' : hi ? 'प्रो में अपग्रेड' : 'Upgrade to Pro';
+  const title = isLite ? 'Lite' : isPro ? 'MP Police 2026 — पूरा एक्सेस' : 'प्रो में अपग्रेड करें';
   const subtitle = isLite
-    ? hi
-      ? 'स्मार्ट शुरुआत — MP Police 2026'
-      : 'Smart start — MP Police 2026'
+    ? 'स्मार्ट शुरुआत — MP Police 2026'
     : isPro
-      ? hi
-        ? 'पूरी ताकत — MP Police 2026'
-        : 'Full power — MP Police 2026'
-      : hi
-        ? 'लाइट से प्रो — सिर्फ़ अंतर भरें'
-        : 'Lite → Pro — Just pay the difference';
+      ? 'एक बार भुगतान • परीक्षा तक एक्सेस'
+      : 'लाइट से प्रो — सिर्फ़ अंतर भरें';
 
   return (
     <div className="group relative h-full">
@@ -115,12 +109,12 @@ export function PricingCard({
         {/* Most Popular Badge */}
         {isPopular && isPro && (
           <div className="absolute top-0 right-0 z-20 rounded-bl-lg bg-amber-600 px-4 py-1.5 text-[10px] font-black tracking-widest text-white uppercase">
-            {hi ? 'सबसे लोकप्रिय' : 'MOST POPULAR'}
+            सबसे लोकप्रिय
           </div>
         )}
         {isUpgrade && (
           <div className="absolute top-0 right-0 z-20 rounded-bl-lg bg-orange-600 px-4 py-1.5 text-[10px] font-black tracking-widest text-white uppercase">
-            {hi ? 'खास ऑफर' : 'SPECIAL OFFER'}
+            खास ऑफर
           </div>
         )}
 
@@ -160,20 +154,25 @@ export function PricingCard({
               <span className="text-4xl font-black tracking-tighter text-slate-900">₹{price}</span>
               {isUpgrade && (
                 <Badge className="ml-2 border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700">
-                  {hi ? `बचत ₹${originalPrice - price}` : `SAVE ₹${originalPrice - price}`}
+                  बचत ₹{originalPrice - price}
                 </Badge>
               )}
             </div>
 
             {!isUpgrade && (
-              <div className="mt-2 flex items-center gap-3">
-                <Badge className="border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700">
-                  {discount}% OFF
-                </Badge>
-                <span className="relative inline-flex items-center">
+              <div className="mt-2 flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Badge className="border-amber-200 bg-amber-50 text-xs font-bold text-amber-700">
+                    🔥 एक बार भुगतान
+                  </Badge>
+                  <Badge className="border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700">
+                    🕒 परीक्षा तक वैध
+                  </Badge>
+                </div>
+                <span className="relative inline-flex items-center self-start mt-1">
                   <span className="absolute inset-[-2] rounded-full bg-gradient-to-r from-red-500 via-pink-500 to-green-500 p-[1.5px]" />
-                  <span className="relative rounded-full bg-white px-2.5 py-0.5 text-[11px] font-bold text-slate-800">
-                    {hi ? `लगभग ₹${monthly}/mo` : `Effective ₹${monthly}/mo`}
+                  <span className="relative rounded-full bg-white px-3 py-1 text-[11px] font-bold text-slate-800">
+                    ₹{Math.ceil(price / (months * 4.33))} से भी कम प्रति सप्ताह
                   </span>
                 </span>
               </div>
@@ -192,7 +191,7 @@ export function PricingCard({
 
             <p className="mt-1.5 flex items-center gap-1 text-[11px] text-slate-400">
               <Clock className="h-3 w-3" />
-              {hi ? `एक बार भुगतान ` : `One-time payment `}
+              एक बार भुगतान
             </p>
           </div>
 
@@ -217,7 +216,7 @@ export function PricingCard({
                       isLite ? 'text-amber-500' : 'text-amber-600'
                     )}
                   />
-                  <span>{hi ? f.hi : f.en}</span>
+                  <span>{f.hi}</span>
                 </li>
               );
             })}
@@ -236,9 +235,7 @@ export function PricingCard({
                   )}
                 />
                 <span>
-                  {hi
-                    ? 'MP Police 2026 परीक्षा तक वैध'
-                    : 'Valid till MP Police 2026 Exam'}
+                  MP Police 2026 परीक्षा तक वैध
                 </span>
               </li>
             )}
@@ -260,16 +257,10 @@ export function PricingCard({
               >
                 <Link href={href} prefetch={true}>
                   {isLite
-                    ? hi
-                      ? `₹${price} में लाइट लें`
-                      : `Get Lite — ₹${price}`
+                    ? `₹${price} में लाइट लें`
                     : isUpgrade
-                      ? hi
-                        ? `₹${price} में प्रो लें`
-                        : `Upgrade to Pro — ₹${price}`
-                      : hi
-                        ? `₹${price} में प्रो लें`
-                        : `Get Pro — ₹${price}`}
+                      ? `⚡ ₹${price} में अपग्रेड करें`
+                      : `⚡ ₹${price} में एक्सेस अनलॉक करें`}
                 </Link>
               </Button>
             </motion.div>
@@ -287,18 +278,28 @@ export function PricingCard({
                 )}
               >
                 {isLite
-                  ? hi
                     ? `₹${price} में लाइट लें`
-                    : `Get Lite — ₹${price}`
-                  : isUpgrade
-                    ? hi
-                      ? `₹${price} में प्रो लें`
-                      : `Upgrade to Pro — ₹${price}`
-                    : hi
-                      ? `₹${price} में प्रो लें`
-                      : `Get Pro — ₹${price}`}
+                    : isUpgrade
+                      ? `⚡ ₹${price} में अपग्रेड करें`
+                      : `⚡ ₹${price} में एक्सेस अनलॉक करें`}
               </Button>
             </motion.div>
+          )}
+
+          {/* Kis Baat Ke info box */}
+          {(isPro || isUpgrade) && (
+            <div className="mt-6 rounded-xl bg-slate-50 p-4 border border-slate-100 text-left">
+              <h4 className="text-sm font-bold text-slate-900 mb-2">Exam Tak Yaad Rahe, Isi Liye.</h4>
+              <p className="text-xs font-medium text-slate-500 mb-3">
+                PDF के लिए नहीं। Notes के लिए नहीं। मोटिवेशन के लिए नहीं।<br/>इसके लिए:
+              </p>
+              <ul className="space-y-1.5 text-[11px] font-medium text-slate-700">
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> तेज़ी से रिवीज़न</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> बेहतर याददाश्त</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> ज़्यादा अभ्यास</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> परीक्षा के लिए पूरी तैयारी</li>
+              </ul>
+            </div>
           )}
         </CardContent>
       </Card>

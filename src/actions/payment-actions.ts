@@ -185,6 +185,10 @@ interface VerifyPaymentInput {
   userId?: string; // Fallback for new users who don't have JWT yet
 }
 
+import { fulfillOrder } from '@/services/payment-service';
+
+// ... (keep other imports, ensuring mppscUsers is there)
+
 /**
  * ✅ Verify Payment (Server Action)
  *
@@ -192,52 +196,29 @@ interface VerifyPaymentInput {
  * - JWT authentication (userId from session)
  * - Timing-safe signature comparison
  * - IDOR prevention (order ownership check)
- * - Atomic transaction (payment + user update)
+ * - Atomic transaction via Fulfillment Service
  * - Idempotency check
- *
- * Benefits over API route:
- * - No userId visible in Network tab
- * - Automatic JWT handling
- * - Type-safe
  */
 export async function verifyPayment(input: VerifyPaymentInput) {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = input;
 
-    // 🔒 Step 1: Get userId — JWT first, fallback to input (for new users)
-    // New users registered via startPayment don't have a JWT cookie yet,
-    // so we accept userId from the client as a fallback.
-    // Security: We ALWAYS verify this userId matches the Razorpay order's notes.userId (Step 4)
+    // 🔒 Step 1: Auth & IDOR Check
     const session = await verifyAuth();
     const userId = session?.id || input.userId;
-    if (!userId) {
-      return { error: 'Unauthorized — no session or userId provided' };
-    }
+    if (!userId) return { error: 'Unauthorized' };
 
-    // 🔒 Step 2: Timing-Safe Signature Verification
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    if (!secret) throw new Error('Razorpay secret missing');
+
+    // 🔒 Step 2: Signature Verification
     const generated_signature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+      .createHmac('sha256', secret)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
 
-    // 🛡️ CRASH PREVENTION: Validate signature format before timingSafeEqual
-    // ─────────────────────────────────────────────────────────────────────
-    // Bhai, timingSafeEqual THROW karta hai agar dono buffers ka length
-    // different ho! Attacker garbage signature bhej ke server crash kara sakta tha.
-    //
-    // Attack scenario: razorpay_signature = "abc" (odd-length, not valid hex)
-    //   → Buffer.from("abc", 'hex') = <Buffer ab> (1 byte, 'c' dropped!)
-    //   → generated_signature buffer = 32 bytes (SHA256)
-    //   → timingSafeEqual THROWS: "Input buffers must have the same length"
-    //   → Unhandled error = 500 response + potential info leak
-    //
-    // Fix: Check length match BEFORE calling timingSafeEqual
     const isValidHex = /^[a-f0-9]+$/i.test(razorpay_signature);
     if (!isValidHex || razorpay_signature.length !== generated_signature.length) {
-      logger.warn('Malformed payment signature rejected', {
-        category: 'payment',
-        metadata: { userId, orderId: razorpay_order_id, sigLength: razorpay_signature.length },
-      });
       return { error: 'Invalid signature format' };
     }
 
@@ -246,212 +227,52 @@ export async function verifyPayment(input: VerifyPaymentInput) {
       Buffer.from(razorpay_signature, 'hex')
     );
 
-    if (!isValidSignature) {
-      logger.warn('Invalid payment signature', {
-        category: 'payment',
-        metadata: { userId, orderId: razorpay_order_id },
-      });
-      return { error: 'Invalid signature' };
-    }
+    if (!isValidSignature) return { error: 'Invalid signature' };
 
     // 🔄 Step 3: Idempotency Check
-    // DB column is `orderId` (maps to `order_id` in SQLite)
     const existingPayment = await db.query.payments.findFirst({
       where: eq(payments.orderId, razorpay_order_id),
     });
 
     if (existingPayment) {
-      logger.info('Payment already verified (idempotent)', {
-        category: 'payment',
-        metadata: { userId, orderId: razorpay_order_id },
-      });
-      return {
-        message: 'Payment already verified',
-        planTier: existingPayment.planTier, // DB column is `planTier`
-      };
+      return { success: true, message: 'Already verified', planTier: existingPayment.planTier };
     }
 
-    // 🕵️ Step 4: Cross-Check with Razorpay API + IDOR Prevention
+    // 🕵️ Step 4: Cross-Check & Ownership
     const instance = new Razorpay({
       key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-      key_secret: process.env.RAZORPAY_KEY_SECRET!,
+      key_secret: secret,
     });
 
     const order = await instance.orders.fetch(razorpay_order_id);
     const orderUserId = order.notes?.userId;
 
     if (orderUserId && orderUserId !== userId) {
-      logger.warn('Payment verification failed: Order ownership mismatch', {
-        category: 'payment',
-        metadata: { orderUserId, requestUserId: userId, orderId: razorpay_order_id },
-      });
-      return { error: 'Order does not belong to this user' };
+      logger.warn('IDOR blocked: Order ownership mismatch', { category: 'payment', metadata: { orderUserId, userId } });
+      return { error: 'Order ownership mismatch' };
     }
 
-    // 💰 Determine plan tier from amount
-    // ─────────────────────────────────────────────────────────────────────
-    // IMPORTANT: order.amount is ALREADY in paise (Razorpay standard).
-    // DB column `payments.amount` is integer → store paise directly!
-    //
-    // Before fix: amount = order.amount / 100 → stored rupees in integer
-    //   column → 49900 paise became 499 rupees → DB stored 499 (truncated!)
-    //
-    // After fix: Keep paise throughout. Compare against pricing × 100.
-    // ─────────────────────────────────────────────────────────────────────
-    const amountInPaise = Number(order.amount); // Already paise from Razorpay
+    // 🚀 Step 5: Fulfill via Service
+    const examType = (order.notes?.examType as any) || 'mppolice';
+    const amountInPaise = Number(order.amount);
     
-    // Recover examType from order notes (fallback to user's examType or mppsc)
-    const examType = (order.notes?.examType as 'upsc' | 'mppsc' | 'mppolice') || 'mppsc';
+    // Check if it's an upgrade or new purchase
+    const user = await db.query.mppscUsers.findFirst({ where: eq(mppscUsers.id, userId) });
+    const isUpgrade = user?.isSubscribed && (order.notes?.planType === 'upgrade');
 
-    const rows = await db
-      .select()
-      .from(pricingConfig)
-      .where(eq(pricingConfig.examType, examType))
-      .limit(1);
-    const p = rows[0] || PRICING_DEFAULTS;
-
-    // Compare paise against expected prices (config stores rupees, ×100 for paise)
-    const litePaise = (p.litePrice ?? PRICING_DEFAULTS.litePrice) * 100;
-    const proPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
-    const upgradePaise = (p.upgradePrice ?? PRICING_DEFAULTS.upgradePrice) * 100;
-
-    let planTier: 'lite' | 'pro';
-    if (amountInPaise === litePaise) {
-      planTier = 'lite';
-    } else if (amountInPaise === proPaise || amountInPaise === upgradePaise) {
-      // 🛡️ Both pro purchase and lite→pro upgrade grant 'pro' tier
-      planTier = 'pro';
-    } else {
-      // 🚨 SECURITY: Reject unknown amounts instead of defaulting to pro!
-      // Before this fix, ANY amount → 'pro' tier (free pro for everyone!)
-      logger.warn('Unknown payment amount — does not match any plan', {
-        category: 'payment',
-        metadata: { userId, orderId: razorpay_order_id, amountInPaise },
-      });
-      return { error: 'Payment amount does not match any valid plan' };
-    }
-
-    // 💾 Step 5: Atomic Transaction (Payment + User Update)
-    // DB columns: orderId, paymentId, signature, planTier, status (enum: created/captured/failed)
-    // amount stored in PAISE (integer column, Razorpay standard)
-    await db.transaction(async (tx) => {
-      await tx.insert(payments).values({
-        id: uuidv4(),
-        userId,
-        orderId: razorpay_order_id,
-        paymentId: razorpay_payment_id,
-        signature: razorpay_signature,
-        amount: amountInPaise, // ✅ Store paise (integer), NOT rupees
-        planTier,
-        status: 'captured', // Razorpay marks successful payments as 'captured'
-        examType,
-      });
-
-      await tx
-        .update(mppscUsers)
-        .set({
-          planTier,
-          isSubscribed: true,
-          isActive: true,
-        })
-        .where(eq(mppscUsers.id, userId));
+    const result = await fulfillOrder({
+      userId,
+      orderId: razorpay_order_id,
+      paymentId: razorpay_payment_id,
+      signature: razorpay_signature,
+      amountInPaise,
+      examType,
+      isUpgrade: !!isUpgrade,
     });
 
-    logger.info('Payment verified successfully', {
-      category: 'payment',
-      metadata: { userId, planTier, orderId: razorpay_order_id },
-    });
-
-    // 🚀 Step 6: Post-Verification Flow (Non-blocking but vital)
-    // We run this in the background to keep the response snappy.
-    (async () => {
-      try {
-        const user = await db.query.mppscUsers.findFirst({
-          where: eq(mppscUsers.id, userId),
-        });
-        if (!user || !user.email) return;
-
-        const isUpgrade = order.notes?.planType === 'upgrade';
-
-        // 1. Generate 'Set Password' Token for New Users
-        if (!isUpgrade) {
-          const token = uuidv4();
-          const expires = addHours(new Date(), 1); // 1 hour expiry
-
-          await db.insert(verificationTokens).values({
-            identifier: userId,
-            token,
-            expires,
-          });
-
-          // 2. Send Welcome Email
-          const resend = new Resend(process.env.RESEND_API_KEY);
-          const fromName = process.env.EMAIL_FROM_NAME || 'MP POLICE ZEN';
-          const fromAddress = process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'mppolice@zenscroll.app';
-          const fromEmail = `${fromName} <${fromAddress}>`;
-          const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
-
-          const { error: emailError } = await resend.emails.send({
-            from: fromEmail,
-            to: [user.email],
-            subject: '🎉 Welcome to MP POLICE ZEN — Set Your Password',
-            react: EmailTemplate({ name: user.name || 'Student', actionUrl, planName: planTier.toUpperCase() }),
-          });
-
-          if (emailError) {
-            logger.error('Failed to send welcome email', emailError, { category: 'email', userId, metadata: { to: user.email } });
-            await notifyAdminOnEmailFailure({
-              userName: user.name || 'Unknown',
-              userEmail: user.email,
-              errorMessage: JSON.stringify(emailError),
-              paymentId: razorpay_payment_id,
-            });
-          }
-        }
-
-        // 3. Notify Admin on Payment
-        await notifyAdminOnPayment({
-          type: isUpgrade ? 'upgrade' : 'new_payment',
-          userName: user.name || 'Unknown',
-          userEmail: user.email,
-          planTier,
-          amountInRupees: amountInPaise / 100,
-          orderId: razorpay_order_id,
-          paymentId: razorpay_payment_id,
-          isUpgrade,
-        });
-
-        // 4. Log User Activity
-        try {
-          const { logUserActivity } = await import('@/app/actions/user-activity');
-          await logUserActivity({
-            userId,
-            userEmail: user.email,
-            userName: user.name,
-            adminId: 'system',
-            action: 'PLAN_CHANGE',
-            details: {
-              plan: planTier,
-              amount: amountInPaise / 100,
-              orderId: razorpay_order_id,
-              paymentId: razorpay_payment_id,
-              reason: isUpgrade ? 'Plan Upgrade' : 'Initial Payment',
-            },
-          });
-        } catch (actErr) {
-          logger.warn('Failed to log activity', { category: 'payment', metadata: { error: actErr, userId } });
-        }
-      } catch (flowErr) {
-        logger.error('Post-verification flow failed', flowErr, { category: 'payment', userId });
-      }
-    })();
-
-    return { success: true, planTier };
+    return { success: true, planTier: result.planTier };
   } catch (error: unknown) {
-    logger.error('Payment verification error:', error, {
-      category: 'payment',
-    });
-    const message = error instanceof Error ? error.message : 'Verification failed';
-    return { error: message };
+    logger.error('Payment verification error:', error, { category: 'payment' });
+    return { error: 'Verification failed' };
   }
 }

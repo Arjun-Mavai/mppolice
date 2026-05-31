@@ -281,7 +281,18 @@ function TestHistoryRow({
           {activity.timeTaken && <span className="text-slate-300">•</span>}
           {activity.timeTaken && (
             <span className="flex items-center gap-1 font-mono text-slate-400">
-              ⏱️ {activity.timeTaken}s
+              ⏱️ {(() => {
+                const secs = typeof activity.timeTaken === 'string'
+                  ? parseInt(activity.timeTaken)
+                  : activity.timeTaken;
+                if (isNaN(secs)) return activity.timeTaken;
+                if (secs >= 60) {
+                  const m = Math.floor(secs / 60);
+                  const s = secs % 60;
+                  return `${m}m ${s}s`;
+                }
+                return `${secs}s`;
+              })()}
             </span>
           )}
         </div>

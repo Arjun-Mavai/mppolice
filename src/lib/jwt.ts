@@ -11,16 +11,15 @@ function getJwtSecret(): string {
   return secret;
 }
 
-export function signToken(payload: object) {
+export interface JWTPayload {
+  userId: string;
+  email: string;
+  role?: string | null;
+  sessionVersion?: number;
+}
+
+export function signToken(payload: JWTPayload) {
   try {
-    // 🛡️ SECURITY FIX: JWT expiry must match cookie maxAge (30 days)
-    // Bhai, PEHLE JWT 7 days mein expire hota tha par cookie 30 days ki thi.
-    // Day 8 pe user ke paas cookie thi par JWT expired → silently logged out!
-    // User ko laga "bhai app kharab hai" par actually JWT expire ho gaya tha.
-    //
-    // Now both are 30 days → user stays logged in for full cookie lifetime.
-    // Cookie: maxAge = 60*60*24*30 (set in mppolice-login/route.ts)
-    // JWT:    expiresIn = '30d' (set here)
     return jwt.sign(payload, getJwtSecret(), { expiresIn: '30d' });
   } catch (error) {
     console.error('Token sign error:', error);
@@ -28,9 +27,9 @@ export function signToken(payload: object) {
   }
 }
 
-export function verifyToken(token: string) {
+export function verifyToken(token: string): JWTPayload | null {
   try {
-    return jwt.verify(token, getJwtSecret());
+    return jwt.verify(token, getJwtSecret()) as JWTPayload;
   } catch (error: unknown) {
     const msg = getErrorMessage(error);
     if (msg === 'jwt malformed' || msg === 'invalid token') {

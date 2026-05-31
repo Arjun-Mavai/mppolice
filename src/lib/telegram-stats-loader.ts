@@ -1,6 +1,6 @@
 import { db } from '@/db';
 import { guests, testFeedback } from '@/db/schema';
-import { count, avg, eq } from 'drizzle-orm';
+import { count, avg, eq, and } from 'drizzle-orm';
 
 /**
  * 📊 TELEGRAM STATS LOADER
@@ -13,30 +13,36 @@ import { count, avg, eq } from 'drizzle-orm';
  */
 export async function getTelegramStatsSummary() {
   try {
-    // 1. Total unique guest leads
-    const [leadsCount] = await db.select({ value: count() }).from(guests);
+    // 1. Total unique guest leads for mppolice
+    const [leadsCount] = await db.select({ value: count() })
+      .from(guests)
+      .where(eq(guests.examType, 'mppolice'));
     
-    // 2. Total feedback count and avg rating
+    // 2. Total feedback count and avg rating for mppolice
     const [feedbackStats] = await db
       .select({ 
         total: count(),
         average: avg(testFeedback.overallRating)
       })
-      .from(testFeedback);
+      .from(testFeedback)
+      .where(eq(testFeedback.examType, 'mppolice'));
       
-    // 3. Star distribution
-    const stars = [5, 4, 3, 2, 1];
-    const distribution: Record<number, number> = {};
-    
-    // Performance Note: We could do this in one query with group by, but for 5 values this is fine
-    for (const star of stars) {
-      const [res] = await db
-        .select({ value: count() })
-        .from(testFeedback)
-        .where(eq(testFeedback.overallRating, star));
-      distribution[star] = res.value;
-    }
+    // 3. Star distribution — Optimized with single GROUP BY
+    const distributionRows = await db
+      .select({ 
+        rating: testFeedback.overallRating,
+        count: count()
+      })
+      .from(testFeedback)
+      .where(eq(testFeedback.examType, 'mppolice'))
+      .groupBy(testFeedback.overallRating);
 
+    const distribution: Record<number, number> = {};
+    distributionRows.forEach(row => {
+      if (row.rating) distribution[row.rating] = row.count;
+    });
+
+    const stars = [5, 4, 3, 2, 1];
     const totalF = feedbackStats.total || 0;
     const avgR = feedbackStats.average ? parseFloat(String(feedbackStats.average)).toFixed(1) : '0';
 

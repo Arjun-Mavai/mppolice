@@ -13,6 +13,7 @@ import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { normalizeMppoliceQuestionInput } from '@/lib/mppolice/question-normalize';
 import { uiBucketToTag } from '@/data/mppoliceSyllabus';
 import type { UiBucket } from '@/lib/mppolice/syllabus-types';
+import { setTelemetryEnabled, getTelemetryEnabled } from '@/lib/system-settings';
 
 // Helper to fetch tests for the dropdown
 export async function getExistingTests() {
@@ -482,5 +483,25 @@ export async function getPaymentExitStats() {
   } catch (error) {
     logger.error('Failed to fetch payment exit stats:', error);
     return { success: false, error: 'Failed to fetch stats' };
+  }
+}
+
+export async function toggleTelemetryAction(enabled: boolean) {
+  await requireAdmin();
+  try {
+    await setTelemetryEnabled(enabled);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: 'Failed to update telemetry settings' };
+  }
+}
+
+export async function fetchTelemetryStateAction() {
+  await requireAdmin();
+  try {
+    const enabled = await getTelemetryEnabled();
+    return { success: true, enabled };
+  } catch {
+    return { success: false, enabled: false };
   }
 }

@@ -54,6 +54,7 @@ export const API = {
   // ── Webhooks ─────────────────────────────────────────
   WEBHOOKS: {
     DODO: '/api/webhooks/dodo',
+    RAZORPAY: '/api/webhooks/razorpay',
   },
 
   // ── Utilities ────────────────────────────────────────

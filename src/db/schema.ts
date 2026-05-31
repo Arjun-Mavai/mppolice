@@ -372,6 +372,8 @@ export const userAttempts = sqliteTable(
       table.isCompleted,
       table.endTime
     ),
+    // 🛡️ CRITICAL: Prevent Race Condition Duplicates
+    uniqueIndex('idx_user_attempt_unique_start').on(table.userId, table.testId, table.startTime),
     // Time-based analytics index
     index('idx_attempts_by_date').on(table.userId, table.endTime),
     // NEW: Pro-Level Index for Leaderboards and Score Analytics
@@ -799,3 +801,28 @@ export const testFeedbackRelations = relations(testFeedback, ({ one }) => ({
     references: [tests.id],
   }),
 }));
+
+// System Settings Table (Scalable and isolated configuration storage)
+export const systemSettings = sqliteTable('system_settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+  description: text('description'),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+});
+
+export const intelligenceFeedback = sqliteTable('intelligence_feedback', {
+  id: text('id').primaryKey(),
+  questionId: text('question_id').notNull(),
+  questionText: text('question_text'),
+  testId: text('test_id'),
+  reaction: text('reaction').notNull(),
+  message: text('message'),
+  isPro: integer('is_pro', { mode: 'boolean' }).default(false),
+  source: text('source'),
+  userId: text('user_id'),
+  userName: text('user_name'),
+  userMobile: text('user_mobile'),
+  userEmail: text('user_email'),
+  examType: text('exam_type').default('mppolice').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+});

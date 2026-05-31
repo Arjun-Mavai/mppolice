@@ -67,28 +67,40 @@ export const LITE_FEATURES: PlanFeatureWithIcon[] = [
 // ── Pro Plan Features ─────────────────────────────────────
 export const PRO_FEATURES: PlanFeatureWithIcon[] = [
   { 
-    en: '1000+ One-Liners with Detailed Explanation', 
-    hi: '1000+ वन-लाइनर्स (विस्तृत व्याख्या सहित)', 
+    en: '1000+ Important Facts Rapid Revision ke liye', 
+    hi: '1000+ महत्वपूर्ण तथ्य तेज़ रिवीज़न के लिए', 
     icon: 'Zap' 
   },
   { 
-    en: 'Best-in-class PYQ with Step-by-Step Logic', 
-    hi: 'सर्वश्रेष्ठ PYQ समाधान (स्टेप-बाय-स्टेप लॉजिक)', 
+    en: 'PYQs ke saath Exam Pattern samjho', 
+    hi: 'PYQs के साथ परीक्षा पैटर्न समझें', 
     icon: 'BookOpen' 
   },
   { 
-    en: 'Chapter-wise & Subject-wise Tests', 
-    hi: 'चैप्टर-वाइज और विषय-वार टेस्ट', 
+    en: 'Topic-Wise Tests Weak Areas Improve karne ke liye', 
+    hi: 'कमज़ोर क्षेत्रों को सुधारने के लिए टॉपिक-वाइज़ टेस्ट', 
     icon: 'Target' 
   },
   { 
-    en: 'Full Length Mock Tests (Latest Pattern)', 
-    hi: 'फुल लेंथ मॉक टेस्ट (नवीनतम पैटर्न)', 
+    en: 'Full Mock Tests Real Practice ke liye', 
+    hi: 'असली प्रैक्टिस के लिए फुल मॉक टेस्ट', 
     icon: 'FileText' 
   },
-  { en: 'Smart Analytics Dashboard', hi: 'स्मार्ट एनालिटिक्स डैशबोर्ड', icon: 'BarChart3' },
-  // { en: 'Premium Study Blogs & Strategy', hi: 'प्रीमियम स्टडी ब्लॉग्स और रणनीति', icon: 'FileText' },
-  { en: 'Test History for Revision', hi: 'रिवीज़न के लिए टेस्ट हिस्ट्री', icon: 'History' },
+  { 
+    en: 'Instant Explanation se Concepts Clear karo', 
+    hi: 'तुरंत व्याख्या से कॉन्सेप्ट क्लिअर करें', 
+    icon: 'BadgeCheck' 
+  },
+  { 
+    en: 'Progress Tracking aur Test History', 
+    hi: 'प्रोग्रेस ट्रैकिंग और टेस्ट हिस्ट्री', 
+    icon: 'History' 
+  },
+  {
+    en: 'MP Police 2026 Exam Tak Access',
+    hi: 'MP Police 2026 परीक्षा तक एक्सेस',
+    icon: 'Clock'
+  }
 ];
 
 // Helper: compute discount percentage

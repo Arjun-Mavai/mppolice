@@ -77,20 +77,18 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
       <div className="relative flex min-h-[500px] flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-slate-100/50 to-slate-50 p-4 text-center duration-200 md:p-8">
         <Badge className="mb-4 cursor-default border-amber-200 bg-amber-100 px-3 py-1 text-amber-700 transition-colors hover:bg-amber-200 md:mb-6">
           <Star className="mr-1 h-3 w-3 fill-current" />
-          {hi ? 'अपग्रेड उपलब्ध है' : 'UPGRADE AVAILABLE'}
+          अपग्रेड उपलब्ध है
         </Badge>
 
         <h2 className="font-display mb-2 text-3xl font-extrabold text-slate-900 md:text-4xl">
-          {hi ? 'अपनी तैयारी को' : 'Supercharge Your'} <br />
+          अपनी तैयारी को <br />
           <span className="bg-gradient-to-r from-slate-700 to-slate-900 bg-clip-text text-transparent">
-            {hi ? 'अगले स्तर पर ले जाएं' : 'Preparation'}
+            अगले स्तर पर ले जाएं
           </span>
         </h2>
 
         <p className="mx-auto mb-8 max-w-md text-lg leading-relaxed text-slate-500">
-          {hi
-            ? `प्रो प्लान पर अपग्रेड करें और अनलिमिटेड क्विज़, टेस्ट और स्मार्ट एनालिसिस अनलॉक करें। केवल ₹${p.upgradePrice} में।`
-            : `Upgrade to Pro and unlock Unlimited Quizzes, Tests, and Smart Analytics. Just pay the difference.`}
+          प्रो प्लान पर अपग्रेड करें और अनलिमिटेड क्विज़, टेस्ट और स्मार्ट एनालिसिस अनलॉक करें। केवल ₹{p.upgradePrice} में।
         </p>
 
         <div className="group relative w-full max-w-md">
@@ -117,23 +115,23 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
       {/* Header */}
       {/* Header */}
       <h2 className="font-display mb-3 text-2xl leading-tight font-black tracking-tighter text-slate-900 uppercase md:text-5xl">
-        {hi ? 'अपना MP Police सफलता प्लान' : 'Choose Your MP Police Success Plan'}
+        अपना MP Police सफलता प्लान
       </h2>
       <p className="mx-auto mb-6 max-w-lg px-4 text-sm font-medium text-slate-500 md:text-lg">
-        {hi ? 'छात्रों के साथ स्मार्ट तैयारी करें' : 'Join aspirants who are preparing smarter'}
+        छात्रों के साथ स्मार्ट तैयारी करें
       </p>
 
       {/* FOMO — first 100 students with joined count badge */}
       <div className="mb-8 flex justify-center">
-        <div className="relative inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2">
-          <Flame className="h-3.5 w-3.5 text-red-500" />
-          <span className="text-xs font-semibold text-amber-800">
-            {hi ? p.urgencyTextHi : p.urgencyText}
+        <div className="relative inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 shadow-sm">
+          <Flame className="h-4 w-4 text-orange-600 animate-pulse" />
+          <span className="text-sm font-black text-amber-900 tracking-tight">
+            🚀 Early Bird Offer — 80% Off (सीमित समय)
           </span>
-          <Badge className="h-5 border-emerald-200 bg-emerald-100 px-1.5 py-0 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100">
+          {/* <Badge className="h-5 border-emerald-200 bg-emerald-100 px-1.5 py-0 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100">
             <Users className="mr-0.5 h-2.5 w-2.5" />
             {p.studentsBought} joined
-          </Badge>
+          </Badge> */}
         </div>
       </div>
 

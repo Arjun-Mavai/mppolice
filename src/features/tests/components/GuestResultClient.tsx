@@ -49,6 +49,8 @@ export function GuestResultClient({ userId }: { userId?: string }) {
       type: q.type || 'standard',
       matchPairs: q.matchPairs,
       subject: q.subject,
+      extendedData: q.extendedData,
+      explanation_hi: q.explanation_hi,
     };
   });
 
