@@ -249,16 +249,23 @@ export function TestSeriesFeedbackModal({
                   type="submit"
                   disabled={!isReadyToSubmit}
                   className={cn(
-                    "group relative h-14 w-full overflow-hidden rounded-[1.25rem] font-black transition-all duration-300 active:scale-95 disabled:pointer-events-none",
+                    "group relative h-14 w-full overflow-hidden rounded-[1.25rem] font-black transition-all duration-300 active:scale-95",
                     isReadyToSubmit 
                       ? "bg-white text-slate-900 shadow-[0_20px_40px_-12px_rgba(255,255,255,0.2)]" 
-                      : "bg-white/5 text-slate-600 border border-white/5"
+                      : "bg-white/5 text-slate-600 border border-white/5 pointer-events-none"
                   )}
                 >
                   <div className="flex items-center justify-center gap-2">
                     <span>Submit Feedback</span>
                     <CheckCircle2 size={18} className={cn(isReadyToSubmit ? "text-emerald-500" : "text-slate-600")} />
                   </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full text-center text-xs font-bold text-slate-500 hover:text-white transition-colors"
+                >
+                  Skip for now
                 </button>
               </form>
         </div>
