@@ -156,7 +156,7 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
                 >
                   {hi
                     ? MP_Police_SUBJECTS.find((s) => s.value === selectedSubject)?.labelHi
-                    : selectedSubject}
+                    : MP_Police_SUBJECTS.find((s) => s.value === selectedSubject)?.label || selectedSubject}
                   <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedSubject(null)} />
                 </Badge>
               )}
@@ -237,7 +237,7 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
                         📚{' '}
                         {hi
                           ? MP_Police_SUBJECTS.find((s) => s.value === subject)?.labelHi || subject
-                          : subject}
+                          : MP_Police_SUBJECTS.find((s) => s.value === subject)?.label || subject}
                       </span>
                     )}
                     {quiz.unitId && (

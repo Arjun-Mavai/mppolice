@@ -5,8 +5,8 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export const MP_Police_SECTIONS = [
-  { id: 'sec_gk_reasoning', subject: 'GK & Reasoning', subjectHi: 'सामान्य ज्ञान एवं तर्कशक्ति' },
-  { id: 'sec_mental_ability', subject: 'Intellectual & Mental Ability', subjectHi: 'बौद्धिक क्षमता एवं मानसिक क्षमता' },
+  { id: 'sec_gk_reasoning', subject: 'General Knowledge & Reasoning', subjectHi: 'सामान्य ज्ञान एवं तर्कशक्ति' },
+  { id: 'sec_mental_ability', subject: 'Intellectual Ability & Mental Ability', subjectHi: 'बौद्धिक क्षमता एवं मानसिक क्षमता' },
   { id: 'sec_science_arithmetic', subject: 'Science & Simple Arithmetic', subjectHi: 'विज्ञान एवं सरल अंकगणित' },
 ] as const;
 
