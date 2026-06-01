@@ -22,21 +22,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { QuizListItem } from '@/components/QuizListItem';
 import { ConnectSocials } from '@/components/ConnectSocials';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
-import { MP_Police_UNITS } from './constants';
-
-// Subjects list — filter me use hoga
-const SUBJECTS = [
-  { value: 'History', label: 'History', labelHi: 'इतिहास' },
-  { value: 'MP Culture', label: 'MP Culture', labelHi: 'म.प्र. संस्कृति' },
-  { value: 'Geography', label: 'Geography', labelHi: 'भूगोल' },
-  { value: 'MP Geography', label: 'MP Geography', labelHi: 'म.प्र. भूगोल' },
-  { value: 'Polity', label: 'Polity', labelHi: 'राजव्यवस्था' },
-  { value: 'Economy', label: 'Economy', labelHi: 'अर्थव्यवस्था' },
-  { value: 'Science', label: 'Science', labelHi: 'विज्ञान' },
-  { value: 'Current Affairs', label: 'Current Affairs', labelHi: 'समसामयिकी' },
-  { value: 'ICT', label: 'ICT', labelHi: 'सूचना प्रौद्योगिकी' },
-  { value: 'MP Tribes', label: 'MP Tribes', labelHi: 'म.प्र. जनजातियाँ' },
-];
+import { MP_Police_SECTIONS, MP_Police_SUBJECTS } from './constants';
 
 interface FreeQuiz {
   id: string;
@@ -55,40 +41,40 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
   const { language } = useSettingsStore();
   const hi = language === 'hi';
 
-  // Filter state — subject aur unit wise
+  // Filter state — subject aur section wise
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
+  const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [loadingTestId, setLoadingTestId] = useState<string | null>(null);
 
   // Tags se subject nikalo — har test ke tags me subject hoga
   const getTestSubject = (quiz: FreeQuiz): string | null => {
     const tags = quiz.tags as string[] | null;
     if (!tags || !Array.isArray(tags)) return null;
-    // Tags me se subject match karo
-    const match = SUBJECTS.find((s) => tags.includes(s.value));
+    // Tags me se subject match karo. Tag can be 'ui_bucket:general_knowledge' or just 'general_knowledge'
+    const match = MP_Police_SUBJECTS.find((s) => tags.includes(s.value) || tags.includes(`ui_bucket:${s.value}`));
     return match?.value || tags[0] || null;
   };
 
-  // Filter logic — subject + unit se match karo
+  // Filter logic — subject + section se match karo
   const filteredQuizzes = useMemo(() => {
     let result = quizzes;
     if (selectedSubject) {
       result = result.filter((q) => getTestSubject(q) === selectedSubject);
     }
-    if (selectedUnit) {
-      result = result.filter((q) => q.unitId === selectedUnit);
+    if (selectedSection) {
+      result = result.filter((q) => q.unitId === selectedSection);
     }
     return result;
-  }, [quizzes, selectedSubject, selectedUnit]);
+  }, [quizzes, selectedSubject, selectedSection]);
 
   // Active filter count — badge me dikhega
-  const activeFilters = (selectedSubject ? 1 : 0) + (selectedUnit ? 1 : 0);
+  const activeFilters = (selectedSubject ? 1 : 0) + (selectedSection ? 1 : 0);
 
   // Clear all filters ek click me
   const clearFilters = () => {
     setSelectedSubject(null);
-    setSelectedUnit(null);
+    setSelectedSection(null);
   };
 
   // Test click → play page pe le jao
@@ -104,11 +90,11 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
     });
   }, [filteredQuizzes, router]);
 
-  const renderUnitBadge = (unitId: string | null) => {
+  const renderSectionBadge = (unitId: string | null) => {
     if (!unitId) return null;
-    const unit = MP_Police_UNITS.find((u) => u.id === unitId);
-    if (unit) {
-      return `🏛️ Unit ${unitId.replace('unit_', '')} · ${hi ? unit.subjectHi : unit.subject}`;
+    const section = MP_Police_SECTIONS.find((u) => u.id === unitId);
+    if (section) {
+      return `🏛️ ${hi ? section.subjectHi : section.subject}`;
     }
     
     // Human readable fallback for sec_ tags
@@ -169,18 +155,18 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
                   className="gap-1 rounded-full border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs text-indigo-700"
                 >
                   {hi
-                    ? SUBJECTS.find((s) => s.value === selectedSubject)?.labelHi
+                    ? MP_Police_SUBJECTS.find((s) => s.value === selectedSubject)?.labelHi
                     : selectedSubject}
                   <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedSubject(null)} />
                 </Badge>
               )}
-              {selectedUnit && (
+              {selectedSection && (
                 <Badge
                   variant="outline"
                   className="gap-1 rounded-full border-amber-200 bg-amber-50 px-2.5 py-1 text-xs text-amber-700"
                 >
-                  {renderUnitBadge(selectedUnit)?.replace('🏛️ ', '')}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedUnit(null)} />
+                  {renderSectionBadge(selectedSection)?.replace('🏛️ ', '')}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedSection(null)} />
                 </Badge>
               )}
               {activeFilters > 0 && (
@@ -250,13 +236,13 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
                       <span className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold text-slate-600">
                         📚{' '}
                         {hi
-                          ? SUBJECTS.find((s) => s.value === subject)?.labelHi || subject
+                          ? MP_Police_SUBJECTS.find((s) => s.value === subject)?.labelHi || subject
                           : subject}
                       </span>
                     )}
                     {quiz.unitId && (
                       <span className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                        {renderUnitBadge(quiz.unitId)}
+                        {renderSectionBadge(quiz.unitId)}
                       </span>
                     )}
                   </div>
@@ -283,7 +269,7 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
                 {hi ? 'विषय चुनो' : 'Select Subject'}
               </p>
               <div className="flex flex-wrap gap-2">
-                {SUBJECTS.map((sub) => (
+                {MP_Police_SUBJECTS.map((sub) => (
                   <button
                     key={sub.value}
                     onClick={() =>
@@ -304,24 +290,21 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
 
             <div>
               <p className="mb-2 text-xs font-bold tracking-wider text-slate-500 uppercase">
-                {hi ? 'यूनिट चुनो' : 'Select Unit'}
+                {hi ? 'सेक्शन चुनो' : 'Select Section'}
               </p>
               <div className="flex flex-wrap gap-2">
-                {MP_Police_UNITS.map((unit) => (
+                {MP_Police_SECTIONS.map((section) => (
                   <button
-                    key={unit.id}
-                    onClick={() => setSelectedUnit(selectedUnit === unit.id ? null : unit.id)}
+                    key={section.id}
+                    onClick={() => setSelectedSection(selectedSection === section.id ? null : section.id)}
                     className={cn(
                       'rounded-full border px-3 py-1.5 text-xs font-bold transition-all active:scale-95',
-                      selectedUnit === unit.id
+                      selectedSection === section.id
                         ? 'border-amber-500 bg-amber-50 text-amber-700'
                         : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                     )}
                   >
-                    U{unit.id.replace('unit_', '')}
-                    <span className="ml-1 hidden text-[10px] font-normal opacity-70 sm:inline">
-                      {hi ? unit.subjectHi : unit.subject}
-                    </span>
+                    {hi ? section.subjectHi : section.subject}
                   </button>
                 ))}
               </div>
