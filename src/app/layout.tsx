@@ -18,10 +18,7 @@ const InstallPrompt = dynamic(() =>
 const SupportButton = dynamic(() =>
   import('@/components/SupportButton').then((m) => m.SupportButton)
 );
-const TelemetryTracker = dynamic(() =>
-  import('@/components/TelemetryTracker').then((m) => m.TelemetryTracker),
-  { ssr: false }
-);
+import { TelemetryTrackerDynamic as TelemetryTracker } from '@/components/TelemetryTrackerDynamic';
 
 export const viewport: Viewport = {
   themeColor: '#4c1d95',
