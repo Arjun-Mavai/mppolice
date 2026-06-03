@@ -18,6 +18,7 @@ const InstallPrompt = dynamic(() =>
 const SupportButton = dynamic(() =>
   import('@/components/SupportButton').then((m) => m.SupportButton)
 );
+import { TelemetryTrackerDynamic as TelemetryTracker } from '@/components/TelemetryTrackerDynamic';
 
 export const viewport: Viewport = {
   themeColor: '#4c1d95',
@@ -168,6 +169,7 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <SupportButton />
           </Suspense>
+          <TelemetryTracker />
           <Toaster position="top-right" richColors />
           <InstallPrompt />
           <VersionManager />
