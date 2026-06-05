@@ -15,7 +15,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -448,10 +448,15 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
       </Dialog>
       {/* ── Instant Mode Guide Modal ───────────────────────── */}
       <Dialog open={showInstantGuide} onOpenChange={setShowInstantGuide}>
-        <DialogContent className="max-w-md gap-0 overflow-hidden border-none p-0 sm:rounded-3xl shadow-2xl">
+        <DialogContent showCloseButton={false} className="max-w-md gap-0 overflow-hidden border-none p-0 sm:rounded-3xl shadow-2xl">
           <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white overflow-hidden">
             <div className="absolute top-0 right-0 -mt-10 -mr-10 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl" />
             
+            <DialogClose className="absolute right-4 top-4 z-20 rounded-full p-1 opacity-70 transition-opacity hover:bg-white/10 hover:opacity-100 focus:outline-none">
+              <X className="h-5 w-5 text-white" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+
             <DialogHeader className="relative z-10 text-left">
               <DialogTitle className="flex items-center gap-2 text-xl font-black tracking-tight text-white">
                 <Zap className="h-5 w-5 text-amber-400 fill-amber-400/20" />
