@@ -16,8 +16,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { Sparkles, Filter, X, BookOpen, Clock, ChevronRight } from 'lucide-react';
+import { Sparkles, Filter, X, BookOpen, Clock, ChevronRight, Zap } from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { QuizListItem } from '@/components/QuizListItem';
 import { ConnectSocials } from '@/components/ConnectSocials';
@@ -34,9 +36,10 @@ interface FreeQuiz {
   unitId: string | null;
   tags: unknown;
   createdAt: Date | string | null;
+  isInstantMode?: boolean | null;
 }
 
-export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
+export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQuiz[], isLoggedIn?: boolean }) {
   const router = useRouter();
   const { language } = useSettingsStore();
   const hi = language === 'hi';
@@ -46,6 +49,8 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [loadingTestId, setLoadingTestId] = useState<string | null>(null);
+  const [instantModeOnly, setInstantModeOnly] = useState(false);
+  const [showInstantGuide, setShowInstantGuide] = useState(false);
 
   // Tags se subject nikalo — har test ke tags me subject hoga
   const getTestSubject = (quiz: FreeQuiz): string | null => {
@@ -59,6 +64,11 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
   // Filter logic — subject + section se match karo
   const filteredQuizzes = useMemo(() => {
     let result = quizzes;
+    if (instantModeOnly) {
+      result = result.filter((q) => q.isInstantMode === true);
+    } else {
+      result = result.filter((q) => !q.isInstantMode);
+    }
     if (selectedSubject) {
       result = result.filter((q) => getTestSubject(q) === selectedSubject);
     }
@@ -66,7 +76,7 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
       result = result.filter((q) => q.unitId === selectedSection);
     }
     return result;
-  }, [quizzes, selectedSubject, selectedSection]);
+  }, [quizzes, selectedSubject, selectedSection, instantModeOnly]);
 
   // Active filter count — badge me dikhega
   const activeFilters = (selectedSubject ? 1 : 0) + (selectedSection ? 1 : 0);
@@ -75,9 +85,9 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
   const clearFilters = () => {
     setSelectedSubject(null);
     setSelectedSection(null);
+    setInstantModeOnly(false);
   };
 
-  // Test click → play page pe le jao
   const handleQuizClick = (quiz: FreeQuiz) => {
     setLoadingTestId(quiz.id);
     router.push(`/free-quiz/play?testId=${quiz.id}`);
@@ -177,7 +187,48 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
                   {hi ? 'सब हटाओ' : 'Clear'}
                 </button>
               )}
+              
+              <div className="ml-auto flex items-center gap-1.5 rounded-full border border-indigo-100 bg-indigo-50/50 px-2 py-1">
+                <Switch 
+                  checked={instantModeOnly} 
+                  onCheckedChange={setInstantModeOnly} 
+                  className="scale-75 data-[state=checked]:bg-indigo-600"
+                />
+                <span className="text-[10px] font-bold text-indigo-700 tracking-wide uppercase">
+                  ⚡ Instant Mode
+                </span>
+              </div>
             </div>
+
+            {/* INSTANT MODE GUIDE BUTTON */}
+            <AnimatePresence>
+              {instantModeOnly && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-2 overflow-hidden"
+                >
+                  <button
+                    onClick={() => setShowInstantGuide(true)}
+                    className="group relative flex w-full items-center justify-between rounded-[1rem] bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 p-[1px] shadow-lg transition-all hover:scale-[1.01] hover:shadow-indigo-500/25 active:scale-95"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 opacity-0 transition-opacity group-hover:animate-pulse group-hover:opacity-100" />
+                    <div className="relative flex w-full items-center justify-between gap-3 rounded-[1rem] bg-slate-950 px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-7 w-7 animate-bounce items-center justify-center rounded-full bg-indigo-500/20 text-indigo-400">
+                          ⚡
+                        </div>
+                        <span className="text-xs font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 to-purple-200 uppercase">
+                          {hi ? 'इंस्टेंट मोड कैसे इस्तेमाल करें?' : 'How to use Instant Mode?'}
+                        </span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-indigo-400 transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -328,6 +379,56 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
                 <ChevronRight className="ml-1 h-3 w-3" />
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* ── Instant Mode Guide Modal ───────────────────────── */}
+      <Dialog open={showInstantGuide} onOpenChange={setShowInstantGuide}>
+        <DialogContent className="max-w-md gap-0 overflow-hidden border-slate-200 p-0 sm:rounded-[2rem]">
+          <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-indigo-50 p-6 sm:p-8">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-xl shadow-indigo-500/10 ring-4 ring-indigo-50">
+              <Zap className="h-8 w-8 text-indigo-600 fill-indigo-100" />
+            </div>
+            <h2 className="text-center text-xl font-black text-slate-900 sm:text-2xl">
+              {hi ? 'इंस्टेंट मोड क्या है?' : 'What is Instant Mode?'}
+            </h2>
+            <p className="mt-2 text-center text-[10px] font-black uppercase tracking-widest text-indigo-600">
+              {hi ? 'टेस्ट सबमिट करने का इंतज़ार खत्म!' : 'No need to wait for submit!'}
+            </p>
+          </div>
+          
+          <div className="space-y-6 bg-white p-6 sm:p-8">
+            <p className="text-[13px] font-semibold leading-relaxed text-slate-600">
+              {hi 
+                ? "इस मोड में आपको पूरा टेस्ट खत्म करके 'Submit' करने की ज़रूरत नहीं है। बस किसी भी सवाल का जवाब चुनें, और तुरंत नीचे दिए गए बटन पर क्लिक करके उसका सही उत्तर और डिटेल में व्याख्या (Explanation) पढ़ें।" 
+                : "In this mode, you don't need to finish the test and submit. Just select an answer and click the button below to instantly see the correct answer and detailed explanation."}
+            </p>
+
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-5 text-center">
+              <p className="mb-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                {hi ? 'टेस्ट के अंदर यह बटन देखें 👇' : 'Look for this button inside 👇'}
+              </p>
+              <div className="mx-auto flex w-fit items-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-white shadow-xl">
+                <Zap size={14} className="fill-emerald-400 text-emerald-400" />
+                {hi ? 'जवाब चेक करें' : 'Check Answer'}
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 rounded-2xl bg-indigo-50/50 p-4">
+              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500" />
+              <p className="text-xs font-medium leading-relaxed text-indigo-900/80">
+                {hi 
+                  ? "यह मोड आपके रिवीज़न को 10x फ़ास्ट बनाता है। आप अपनी गलतियों को तुरंत पकड़ सकते हैं और सीखते हुए आगे बढ़ सकते हैं।" 
+                  : "This mode makes your revision 10x faster. You can catch your mistakes instantly and learn as you go."}
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowInstantGuide(false)}
+              className="w-full rounded-full bg-slate-900 py-3.5 text-xs font-black uppercase tracking-widest text-white shadow-xl transition-transform active:scale-95 hover:bg-slate-800"
+            >
+              {hi ? 'मुझे समझ आ गया' : 'Got it, let\'s go'}
+            </button>
           </div>
         </DialogContent>
       </Dialog>
