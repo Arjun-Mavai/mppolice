@@ -19,7 +19,9 @@ function parseToTelegramHTML(rawText: string) {
     // Blockquote (line starts with > optionally followed by space)
     .replace(/^> ?(.*)$/gm, '<blockquote>$1</blockquote>')
     // Merge adjacent blockquotes
-    .replace(/<\/blockquote>\n<blockquote>/g, '\n');
+    .replace(/<\/blockquote>\n<blockquote>/g, '\n')
+    // Markdown links to HTML links
+    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
 
   return htmlText;
 }

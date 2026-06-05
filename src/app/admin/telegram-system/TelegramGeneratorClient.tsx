@@ -49,8 +49,8 @@ D) टीकमगढ़
 
 At the end, always include exactly this footer (including the blockquote style at the very end):
 🔗 <b>Quick Access:</b>
-👉 <a href="https://mppolice.zenscroll.app/syllabus">MP Police Syllabus Tracker</a>
-👉 <a href="https://mppolice.zenscroll.app/free-quiz">MP Police Free Quiz</a>
+👉 [MP Police Syllabus Tracker](https://mppolice.zenscroll.app/syllabus)
+👉 [MP Police Free Quiz](https://mppolice.zenscroll.app/free-quiz)
 
 > 👮 <i>हर सही उत्तर एक कदम है...</i>
 > 🛡 <i>वर्दी की ओर बढ़ता हुआ कदम!</i>`;
@@ -96,8 +96,8 @@ Pattern:
 
 At the end, always include exactly this footer (including the blockquote style at the very end):
 🔗 <b>Quick Access:</b>
-👉 <a href="https://mppolice.zenscroll.app/">MP Police Preparation</a>
-👉 <a href="https://mppolice.zenscroll.app/free-quiz">MP Police Free Quiz</a>
+👉 [MP Police Preparation](https://mppolice.zenscroll.app/)
+👉 [MP Police Free Quiz](https://mppolice.zenscroll.app/free-quiz)
 
 > 👮 <i>जो रोज़ थोड़ा-थोड़ा पढ़ता है...</i>
 > 🏆 <i>वही एक दिन वर्दी पहनता है!</i>`;
