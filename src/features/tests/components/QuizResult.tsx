@@ -1512,7 +1512,10 @@ export function QuizResult({
 
       <TestSeriesFeedbackModal
         isOpen={showFeedback}
-        onClose={() => setShowFeedback(false)}
+        onClose={() => {
+          setShowFeedback(false);
+          if (typeof window !== 'undefined') localStorage.setItem('mppolice_feedback_given', 'true');
+        }}
         onSubmit={handleFeedbackSubmit}
         testSeriesId={testId}
       />
