@@ -198,20 +198,18 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
 
             {/* ── Filter Button + Active Filters ──────────────── */}
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={() => setFilterOpen(true)}
-                className="gap-2 rounded-full border-2 border-pink-500 px-4 text-xs font-bold text-slate-800 shadow-[0_0_10px_rgba(236,72,153,0.3)] transition-transform hover:scale-105 hover:border-pink-600 active:scale-95"
+                className="relative flex items-center gap-2 rounded-full border-2 border-transparent bg-white bg-clip-padding px-4 py-1.5 text-xs font-bold text-slate-800 shadow-[0_0_15px_rgba(236,72,153,0.2)] transition-transform hover:scale-105 active:scale-95 before:absolute before:-inset-[2px] before:-z-10 before:rounded-full before:bg-gradient-to-r before:from-pink-500 before:via-red-500 before:to-emerald-500"
               >
                 <Filter className="h-3.5 w-3.5" />
                 {hi ? 'फ़िल्तर' : 'Filter'}
                 {activeFilters > 0 && (
-                  <Badge className="ml-1 h-5 w-5 rounded-full bg-indigo-600 p-0 text-[10px] text-white">
+                  <Badge className="ml-1 h-5 w-5 rounded-full bg-indigo-600 p-0 text-[10px] text-white border-0">
                     {activeFilters}
                   </Badge>
                 )}
-              </Button>
+              </button>
               {selectedSubject && (
                 <Badge
                   variant="outline"
@@ -450,18 +448,19 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
       </Dialog>
       {/* ── Instant Mode Guide Modal ───────────────────────── */}
       <Dialog open={showInstantGuide} onOpenChange={setShowInstantGuide}>
-        <DialogContent className="max-w-md gap-0 overflow-hidden border-slate-200 p-0 sm:rounded-[2rem]">
-          <DialogTitle className="sr-only">Instant Mode Guide</DialogTitle>
-          <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-indigo-50 p-6 sm:p-8">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-xl shadow-indigo-500/10 ring-4 ring-indigo-50">
-              <Zap className="h-8 w-8 text-indigo-600 fill-indigo-100" />
-            </div>
-            <h2 className="text-center text-xl font-black text-slate-900 sm:text-2xl">
-              {hi ? 'इंस्टेंट मोड क्या है?' : 'What is Instant Mode?'}
-            </h2>
-            <p className="mt-2 text-center text-[10px] font-black uppercase tracking-widest text-indigo-600">
-              {hi ? 'टेस्ट सबमिट करने का इंतज़ार खत्म!' : 'No need to wait for submit!'}
-            </p>
+        <DialogContent className="max-w-md gap-0 overflow-hidden border-none p-0 sm:rounded-3xl shadow-2xl">
+          <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white overflow-hidden">
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl" />
+            
+            <DialogHeader className="relative z-10 text-left">
+              <DialogTitle className="flex items-center gap-2 text-xl font-black tracking-tight text-white">
+                <Zap className="h-5 w-5 text-amber-400 fill-amber-400/20" />
+                {hi ? 'इंस्टेंट मोड क्या है?' : 'What is Instant Mode?'}
+              </DialogTitle>
+              <div className="pt-1 text-sm font-medium text-slate-400">
+                {hi ? 'टेस्ट सबमिट करने का इंतज़ार खत्म!' : 'No need to wait for submit!'}
+              </div>
+            </DialogHeader>
           </div>
           
           <div className="space-y-6 bg-white p-6 sm:p-8">
