@@ -25,6 +25,7 @@ import { QuizListItem } from '@/components/QuizListItem';
 import { ConnectSocials } from '@/components/ConnectSocials';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { MP_Police_SECTIONS, MP_Police_SUBJECTS } from './constants';
+import { notifyInstantModeGuideClick } from './actions';
 
 interface FreeQuiz {
   id: string;
@@ -187,48 +188,32 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                   {hi ? 'सब हटाओ' : 'Clear'}
                 </button>
               )}
-              
-              <div className="ml-auto flex items-center gap-1.5 rounded-full border border-indigo-100 bg-indigo-50/50 px-2 py-1">
-                <Switch 
-                  checked={instantModeOnly} 
-                  onCheckedChange={setInstantModeOnly} 
-                  className="scale-75 data-[state=checked]:bg-indigo-600"
-                />
-                <span className="text-[10px] font-bold text-indigo-700 tracking-wide uppercase">
-                  ⚡ Instant Mode
-                </span>
+              <div className="ml-auto flex items-center gap-1.5">
+                <button
+                  onClick={() => {
+                    setShowInstantGuide(true);
+                    notifyInstantModeGuideClick();
+                  }}
+                  className="flex items-center gap-1.5 rounded-full border border-amber-200/50 bg-[#0f172a] px-2.5 py-1 shadow-md transition-transform hover:scale-105 active:scale-95"
+                >
+                  <Zap size={12} className="fill-amber-400 text-amber-400" />
+                  <span className="text-[9px] font-black uppercase tracking-widest text-amber-300">
+                    {hi ? 'गाइड देखें' : 'How to use'}
+                  </span>
+                </button>
+
+                <div className="flex items-center gap-1.5 rounded-full border border-indigo-100 bg-indigo-50/50 px-2 py-1">
+                  <Switch 
+                    checked={instantModeOnly} 
+                    onCheckedChange={setInstantModeOnly} 
+                    className="scale-75 data-[state=checked]:bg-indigo-600"
+                  />
+                  <span className="text-[10px] font-bold text-indigo-700 tracking-wide uppercase">
+                    ⚡ Instant Mode
+                  </span>
+                </div>
               </div>
             </div>
-
-            {/* INSTANT MODE GUIDE BUTTON */}
-            <AnimatePresence>
-              {instantModeOnly && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mt-2 overflow-hidden"
-                >
-                  <button
-                    onClick={() => setShowInstantGuide(true)}
-                    className="group relative flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 p-[1px] shadow-xl transition-all hover:scale-[1.02] hover:shadow-amber-500/20 active:scale-95"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 opacity-0 transition-opacity duration-500 group-hover:animate-pulse group-hover:opacity-100" />
-                    <div className="relative flex w-full items-center justify-between gap-3 rounded-[15px] bg-[#0f172a] px-4 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 animate-bounce items-center justify-center rounded-full bg-amber-500/20 shadow-inner ring-1 ring-amber-500/50">
-                          <Zap size={16} className="fill-amber-400 text-amber-400" />
-                        </div>
-                        <span className="text-xs font-black tracking-widest text-amber-300 uppercase drop-shadow-md">
-                          {hi ? 'इंस्टेंट मोड कैसे इस्तेमाल करें?' : 'How to use Instant Mode?'}
-                        </span>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-amber-500 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -404,35 +389,89 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                 : "In this mode, you don't need to finish the test and submit. Just select an answer and click the button below to instantly see the correct answer and detailed explanation."}
             </p>
 
-            {/* MOCK UI OF THE QUIZ */}
-            <div className="relative mx-auto max-w-[280px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+            {/* MOCK UI OF THE QUIZ WITH CSS ANIMATION */}
+            <style dangerouslySetInnerHTML={{__html: `
+              @keyframes pointerFlow {
+                0% { transform: translate(140px, 160px) scale(1); opacity: 0; }
+                10% { transform: translate(140px, 160px) scale(1); opacity: 1; }
+                20% { transform: translate(190px, 20px) scale(1); opacity: 1; }
+                25% { transform: translate(190px, 20px) scale(0.85); opacity: 1; }
+                30% { transform: translate(190px, 20px) scale(1); opacity: 1; }
+                45% { transform: translate(100px, 110px) scale(1); opacity: 1; }
+                50% { transform: translate(100px, 110px) scale(0.85); opacity: 1; }
+                55% { transform: translate(100px, 110px) scale(1); opacity: 1; }
+                70% { transform: translate(140px, 240px) scale(1); opacity: 1; }
+                80% { transform: translate(140px, 240px) scale(0.85); opacity: 1; }
+                90% { transform: translate(140px, 240px) scale(1); opacity: 0; }
+                100% { transform: translate(140px, 160px) scale(1); opacity: 0; }
+              }
+              @keyframes toggleSwitch {
+                0%, 25% { transform: translateX(0); background-color: #cbd5e1; }
+                30%, 100% { transform: translateX(100%); background-color: #4f46e5; }
+              }
+              @keyframes optionWrong {
+                0%, 50% { background-color: #f8fafc; border-color: #e2e8f0; }
+                55%, 100% { background-color: #fff1f2; border-color: #fecdd3; }
+              }
+              @keyframes optionWrongDot {
+                0%, 50% { background-color: #f1f5f9; border-color: #cbd5e1; }
+                55%, 100% { background-color: #ffe4e6; border-color: #fda4af; }
+              }
+              @keyframes optionRight {
+                0%, 50% { background-color: #f8fafc; border-color: #e2e8f0; }
+                55%, 100% { background-color: #ecfdf5; border-color: #10b981; }
+              }
+              @keyframes optionRightDot {
+                0%, 50% { background-color: #f1f5f9; border-color: #cbd5e1; }
+                55%, 100% { background-color: #10b981; border-color: #10b981; }
+              }
+              @keyframes pillGlow {
+                0%, 75% { transform: scale(1); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
+                80%, 100% { transform: scale(1.05); box-shadow: 0 0 20px 0px rgba(16, 185, 129, 0.4); }
+              }
+            `}} />
+            <div className="relative mx-auto w-full max-w-[280px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+              
+              {/* TOP HEADER / TOGGLE */}
+              <div className="flex items-center justify-end border-b border-slate-200 bg-white p-2 px-3">
+                <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5">
+                  <div className="flex h-3 w-[22px] rounded-full bg-slate-300 p-[2px] transition-colors" style={{ animation: 'toggleSwitch 6s infinite' }}>
+                    <div className="h-2 w-2 rounded-full bg-white shadow-sm" />
+                  </div>
+                  <span className="text-[6px] font-bold text-slate-500">⚡ INSTANT</span>
+                </div>
+              </div>
+
+              {/* QUIZ CONTENT */}
               <div className="bg-white p-4">
                 <div className="mb-3 h-2 w-3/4 rounded-full bg-slate-200" />
                 <div className="mb-4 h-2 w-1/2 rounded-full bg-slate-200" />
                 
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 p-2.5">
-                    <div className="h-3 w-3 rounded-full border border-rose-300 bg-rose-100" />
-                    <div className="h-1.5 w-1/2 rounded-full bg-rose-200" />
+                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 transition-colors" style={{ animation: 'optionWrong 6s infinite' }}>
+                    <div className="h-3 w-3 rounded-full border border-slate-300 bg-slate-100 transition-colors" style={{ animation: 'optionWrongDot 6s infinite' }} />
+                    <div className="h-1.5 w-1/2 rounded-full bg-slate-300" />
                   </div>
-                  <div className="flex items-center gap-2 rounded-xl border border-emerald-500 bg-emerald-50 p-2.5 shadow-sm ring-1 ring-emerald-500">
-                    <div className="flex h-3 w-3 items-center justify-center rounded-full bg-emerald-500">
-                      <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 transition-colors" style={{ animation: 'optionRight 6s infinite' }}>
+                    <div className="flex h-3 w-3 items-center justify-center rounded-full border border-slate-300 bg-slate-100 transition-colors" style={{ animation: 'optionRightDot 6s infinite' }}>
+                      <div className="h-1 w-1 rounded-full bg-white" />
                     </div>
-                    <div className="h-1.5 w-2/3 rounded-full bg-emerald-600" />
+                    <div className="h-1.5 w-2/3 rounded-full bg-slate-300" />
                   </div>
                 </div>
               </div>
 
-              {/* ARROW POINTING TO BUTTON */}
-              <div className="relative bg-slate-100 p-4 pt-6 text-center border-t border-slate-200">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 transform text-amber-500 animate-bounce">
-                  ⬇️
-                </div>
-                <div className="mx-auto flex w-fit items-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-lg">
+              {/* CHECK ANSWER PILL */}
+              <div className="relative border-t border-slate-200 bg-slate-100 p-4 py-5 text-center">
+                <div className="mx-auto flex w-fit items-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-lg transition-all" style={{ animation: 'pillGlow 6s infinite' }}>
                   <Zap size={14} className="fill-emerald-400 text-emerald-400" />
                   {hi ? 'जवाब चेक करें' : 'Check Answer'}
                 </div>
+              </div>
+
+              {/* THE ANIMATED POINTER */}
+              <div className="pointer-events-none absolute left-0 top-0 z-50 text-3xl drop-shadow-[0_10px_15px_rgba(0,0,0,0.5)]" style={{ animation: 'pointerFlow 6s infinite' }}>
+                👆🏽
               </div>
             </div>
 

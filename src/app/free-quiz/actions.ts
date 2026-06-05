@@ -83,6 +83,18 @@ export async function recordGuestAttempt(data: {
   }
 }
 
+export async function notifyInstantModeGuideClick() {
+  try {
+    await sendTelegramNotification(
+      `⚡ <b>INSTANT MODE GUIDE CLICKED</b>\n\n` +
+      `Someone opened the "How to use Instant Mode" guide on the Free Quiz page.\n\n` +
+      `#FeatureEngagement #InstantMode`
+    );
+  } catch (error) {
+    logger.error('Failed to notify instant mode guide click:', error);
+  }
+}
+
 /**
  * getCachedFreeQuizzes — unstable_cache se cached MISC tests
  * 60s revalidate + 'tests' tag — admin se test add/edit hone pe bust hota h
@@ -103,6 +115,7 @@ export const getCachedFreeQuizzes = unstable_cache(
           unitId: tests.unitId,
           tags: tests.tags,
           createdAt: tests.createdAt,
+          isInstantMode: tests.isInstantMode,
         })
         .from(tests)
         .where(
