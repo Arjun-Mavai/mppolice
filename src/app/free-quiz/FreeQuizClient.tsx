@@ -27,18 +27,53 @@ import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { MP_Police_SECTIONS, MP_Police_SUBJECTS } from './constants';
 import { notifyInstantModeGuideClick } from './actions';
 
-function PointingArrow({ className }: { className?: string }) {
+function PointingArrow({ className, direction = 'up' }: { className?: string, direction?: 'up' | 'down' }) {
+  if (direction === 'down') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -15, scale: 0.8 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
+        className={cn("pointer-events-none absolute z-30 flex select-none flex-col items-center", className)}
+      >
+        <div className="-mr-4 -mb-3 text-2xl drop-shadow-md filter">
+          🚶‍♂️
+        </div>
+        <svg 
+          width="35" 
+          height="40" 
+          viewBox="0 0 35 40" 
+          fill="none" 
+          className="filter drop-shadow-[0_2.5px_4px_rgba(236,72,153,0.6)]"
+        >
+          {/* Sweep curve from top right to bottom left */}
+          <path d="M 25 5 Q 10 25 5 35" stroke="#ec4899" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+          {/* Arrowhead pointing Down/Left */}
+          <path d="M 14 34 L 5 35 L 5 26" stroke="#ec4899" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        </svg>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 15, scale: 0.8 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
-      className={cn("pointer-events-none absolute z-30 flex select-none flex-col items-center animate-bounce", className)}
+      className={cn("pointer-events-none absolute z-30 flex select-none flex-col items-center", className)}
     >
-      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.5)]">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 5v14M19 12l-7 7-7-7"/>
-        </svg>
+      <svg 
+        width="35" 
+        height="40" 
+        viewBox="0 0 35 40" 
+        fill="none" 
+        className="filter drop-shadow-[0_2.5px_4px_rgba(236,72,153,0.6)]"
+      >
+        <path d="M 5 35 Q 10 15 25 5" stroke="#ec4899" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+        <path d="M 17 8 L 25 5 L 26 14" stroke="#ec4899" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      </svg>
+      <div className="-ml-4 -mt-3 -scale-x-100 text-2xl drop-shadow-md filter">
+        🚶‍♂️
       </div>
     </motion.div>
   );
@@ -167,7 +202,7 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                 variant="outline"
                 size="sm"
                 onClick={() => setFilterOpen(true)}
-                className="gap-2 rounded-full border-2 border-pink-500 bg-white px-4 text-xs font-bold text-pink-600 shadow-[0_0_10px_rgba(236,72,153,0.2)] transition-all active:scale-95 hover:border-emerald-500 hover:text-emerald-600"
+                className="gap-2 rounded-full border-2 border-pink-500 px-4 text-xs font-bold text-slate-800 shadow-[0_0_10px_rgba(236,72,153,0.3)] transition-transform hover:scale-105 hover:border-pink-600 active:scale-95"
               >
                 <Filter className="h-3.5 w-3.5" />
                 {hi ? 'फ़िल्तर' : 'Filter'}
@@ -205,7 +240,12 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                   {hi ? 'सब हटाओ' : 'Clear'}
                 </button>
               )}
-              <div className="ml-auto flex items-center gap-1.5">
+              <div className="ml-auto flex items-center gap-2">
+                {instantModeOnly && (
+                  <div className="flex items-center pt-2">
+                    <PointingArrow direction="down" className="relative scale-75" />
+                  </div>
+                )}
                 <div 
                   className="relative flex cursor-pointer items-center gap-1.5 rounded-full border border-amber-500/30 bg-[#022c22] px-2.5 py-1 shadow-sm transition-transform active:scale-95 hover:border-amber-500/50"
                   onClick={() => setInstantModeOnly(!instantModeOnly)}
@@ -218,7 +258,7 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                   <span className="select-none text-[10px] font-black tracking-wide text-amber-400 uppercase drop-shadow-sm">
                     ⚡ Instant Mode
                   </span>
-                  {!instantModeOnly && <PointingArrow className="bottom-full left-1/2 -translate-x-1/2 mb-1.5" />}
+                  {!instantModeOnly && <PointingArrow className="right-4 top-full mt-2" />}
                 </div>
               </div>
             </div>
@@ -251,7 +291,6 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                       </div>
                       <ChevronRight className="h-5 w-5 text-amber-500 transition-transform group-hover:translate-x-1" />
                     </div>
-                    {instantModeOnly && <PointingArrow className="bottom-full left-1/2 -translate-x-1/2 mb-1" />}
                   </button>
                 </motion.div>
               )}
@@ -539,6 +578,15 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
             >
               {hi ? 'मुझे समझ आ गया' : 'Got it, let\'s go'}
             </button>
+
+            {/* Subtle Premium Note */}
+            <div className="flex flex-col items-center gap-1 pt-2">
+              <a href="/pricing" className="text-[10px] font-medium text-slate-400 transition-colors hover:text-slate-600">
+                {hi 
+                  ? 'इंस्टेंट मोड एक प्रीमियम फीचर है, जो सभी टेस्ट सीरीज में उपलब्ध है ✨' 
+                  : 'Instant Mode is a Premium Feature, available in all test series ✨'}
+              </a>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
