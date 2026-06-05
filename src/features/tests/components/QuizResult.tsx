@@ -205,10 +205,9 @@ export function QuizResult({
     if (!showFeedbackModal) return;
 
     const checkFeedbackStatus = async () => {
-      // 1. Check LocalStorage per test
-      const storageKey = testId ? `mppolice_feedback_given_${testId}` : 'mppolice_feedback_given';
+      // 1. Check LocalStorage (Global for both guests and logged-in users)
       const hasFeedbackStorage =
-        typeof window !== 'undefined' ? localStorage.getItem(storageKey) : null;
+        typeof window !== 'undefined' ? localStorage.getItem('mppolice_feedback_given') : null;
       if (hasFeedbackStorage) {
         setShowFeedback(false);
         return;
@@ -216,11 +215,11 @@ export function QuizResult({
 
       // 3. For logged-in mppscUsers, check database
       if (userId) {
-        const submitted = await hasUserSubmittedFeedback(testId);
+        const submitted = await hasUserSubmittedFeedback();
         if (submitted) {
           setShowFeedback(false);
           // Sync with localStorage
-          if (typeof window !== 'undefined') localStorage.setItem(storageKey, 'true');
+          if (typeof window !== 'undefined') localStorage.setItem('mppolice_feedback_given', 'true');
           return;
         }
       }
@@ -253,8 +252,7 @@ export function QuizResult({
 
       if (response.success) {
         // Sync with localStorage on success
-        const storageKey = currentTestId ? `mppolice_feedback_given_${currentTestId}` : 'mppolice_feedback_given';
-        if (typeof window !== 'undefined') localStorage.setItem(storageKey, 'true');
+        if (typeof window !== 'undefined') localStorage.setItem('mppolice_feedback_given', 'true');
       } else {
         logger.error('Failed to submit feedback', new Error(response.error), { category: 'ui' });
       }

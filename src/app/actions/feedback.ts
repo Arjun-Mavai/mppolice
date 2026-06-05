@@ -105,25 +105,16 @@ export async function submitTestFeedback(params: SubmitFeedbackParams): Promise<
   }
 }
 
-export async function hasUserSubmittedFeedback(testId?: string) {
+export async function hasUserSubmittedFeedback() {
   try {
     const authUser = await verifyAuth();
     if (!authUser) return false;
 
-    let existingFeedback;
-    if (testId) {
-      existingFeedback = await db
-        .select({ id: testFeedback.id })
-        .from(testFeedback)
-        .where(and(eq(testFeedback.userId, authUser.id), eq(testFeedback.testId, testId)))
-        .limit(1);
-    } else {
-      existingFeedback = await db
-        .select({ id: testFeedback.id })
-        .from(testFeedback)
-        .where(eq(testFeedback.userId, authUser.id))
-        .limit(1);
-    }
+    const existingFeedback = await db
+      .select({ id: testFeedback.id })
+      .from(testFeedback)
+      .where(eq(testFeedback.userId, authUser.id))
+      .limit(1);
 
     return existingFeedback.length > 0;
   } catch (error) {
