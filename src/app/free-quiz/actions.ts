@@ -36,14 +36,14 @@ export async function recordGuestAttempt(data: {
   try {
     const attemptId = crypto.randomUUID();
     
-    // 1. Save to DB
-    await db.insert(freeQuizAttempts).values({
-      id: attemptId,
-      testId: data.testId,
-      guestId: 'guest_session', // Placeholder
-      score: data.score,
-      completedAt: new Date(),
-    });
+    // 1. Save to DB (Commented out per request)
+    // await db.insert(freeQuizAttempts).values({
+    //   id: attemptId,
+    //   testId: data.testId,
+    //   guestId: 'guest_session', // Placeholder
+    //   score: data.score,
+    //   completedAt: new Date(),
+    // });
 
     // 2. Fetch Test Title for better notification
     const test = await db.query.tests.findFirst({

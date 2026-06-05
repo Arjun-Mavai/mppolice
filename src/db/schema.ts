@@ -222,6 +222,8 @@ export const mppoliceOneLinerFacts = sqliteTable(
       related?: string[];
       explanationHi?: string;
       explanationEn?: string;
+      patternConnections?: string[];
+      pyqs?: { exam: string; question: string; year?: string }[];
     } | null>(),
     status: text('status', { enum: ['draft', 'published', 'archived'] }).default('draft'),
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),

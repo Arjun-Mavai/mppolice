@@ -13,10 +13,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Loader2, Copy, Upload, BarChart3, Database, Sparkles } from 'lucide-react';
-import { importMppoliceOneLinersJson, publishAllDraftMppoliceOneLiners, getMppoliceOneLinerStats } from '@/actions/mppolice-one-liners-admin';
+import { Loader2, Copy, Upload, BarChart3, Database, Sparkles, CheckCircle2, FileText, Trash2 } from 'lucide-react';
+import { importMppoliceOneLinersJson, publishAllDraftMppoliceOneLiners, getMppoliceOneLinerStats, deleteSubjectOneLiners } from '@/actions/mppolice-one-liners-admin';
 import { MPPOLICE_ONELINER_SUBJECTS } from '@/features/revision/constants/mppolice-one-liners';
+import { MpgkUploadWizard } from './MpgkUploadWizard';
+import { GeneralSubjectWizard } from './GeneralSubjectWizard';
 
 const DEMO_JSON = `[
   {
@@ -53,6 +56,21 @@ export default function OneLinerGkAdminClient() {
     }
     setIsStatsLoading(false);
   }, []);
+
+  const handleDeleteSubject = async (subject: string) => {
+    if (!confirm(`Are you sure you want to delete ALL facts for ${subject}? This cannot be undone.`)) {
+      return;
+    }
+    startTransition(async () => {
+      const res = await deleteSubjectOneLiners(subject);
+      if (res.success) {
+        toast.success(`Deleted all facts for ${subject}`);
+        fetchStats();
+      } else {
+        toast.error(res.error || 'Failed to delete');
+      }
+    });
+  };
 
   useEffect(() => {
     fetchStats();
@@ -171,7 +189,23 @@ export default function OneLinerGkAdminClient() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <Card className="lg:col-span-2">
+          <Tabs defaultValue="wizard" className="lg:col-span-2">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="wizard">MPGK Gen Wizard</TabsTrigger>
+              <TabsTrigger value="general">Other Subjects Wizard</TabsTrigger>
+              <TabsTrigger value="importer">Standard Importer</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="wizard">
+              <MpgkUploadWizard />
+            </TabsContent>
+
+            <TabsContent value="general">
+              <GeneralSubjectWizard />
+            </TabsContent>
+
+            <TabsContent value="importer">
+              <Card>
             <CardHeader>
               <CardTitle>Import JSON array</CardTitle>
               <CardDescription>
@@ -238,7 +272,7 @@ export default function OneLinerGkAdminClient() {
                 <Textarea
                   value={json}
                   onChange={(e) => setJson(e.target.value)}
-                  className="min-h-[280px] font-mono text-xs"
+                  className="min-h-[400px] h-[60vh] max-h-[800px] overflow-y-auto font-mono text-xs shadow-inner"
                   placeholder="[ { &quot;subjectTag&quot;: &quot;General Knowledge&quot;, ... } ]"
                 />
               </div>
@@ -253,6 +287,8 @@ export default function OneLinerGkAdminClient() {
               </div>
             </CardContent>
           </Card>
+          </TabsContent>
+          </Tabs>
 
           <Card>
             <CardHeader>
@@ -276,9 +312,22 @@ export default function OneLinerGkAdminClient() {
                           </span>
                         </div>
                       </div>
-                      <span className="rounded bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">
-                        {sStats.total}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="rounded bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">
+                          {sStats.total}
+                        </span>
+                        {sStats.total > 0 && (
+                          <Button 
+                            variant="destructive" 
+                            size="icon" 
+                            className="h-7 w-7" 
+                            onClick={() => handleDeleteSubject(subject)}
+                            disabled={pending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -290,6 +339,4 @@ export default function OneLinerGkAdminClient() {
     </div>
   );
 }
-
-import { CheckCircle2, FileText } from 'lucide-react';
 

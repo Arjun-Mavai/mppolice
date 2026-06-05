@@ -393,7 +393,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
       .from(guests)
       .where(eq(guests.examType, 'mppolice'))
       .orderBy(desc(guests.createdAt))
-      .limit(100); // Increased limit to show more history per user request
+      .limit(1000); // Increased limit to show more history per user request
 
     const totalTests = testsData.length;
     const totalQuestions = testsData.reduce((acc, t) => acc + (t.totalQuestions || 0), 0);

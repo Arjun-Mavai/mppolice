@@ -104,9 +104,10 @@ const FlipCard: React.FC<FlipCardProps> = ({
     ? (facts || extendedData?.facts || [])
     : (extendedData?.factsEn || facts || extendedData?.facts || []);
     
-  const finalMnemonic = isLanguageHindi
+  const rawMnemonic = isLanguageHindi
     ? (mnemonic || extendedData?.memoryTip || '')
     : (extendedData?.memoryTipEn || mnemonic || extendedData?.memoryTip || '');
+  const finalMnemonic = rawMnemonic.replace(/^🧠\s*मेमोरी ट्रिक.*?:?\s*/i, '');
 
   const handleFlip = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('button')) return;
@@ -264,6 +265,53 @@ const FlipCard: React.FC<FlipCardProps> = ({
                 </div>
                 <div className="text-sm font-bold text-amber-100/90 italic">
                   &quot;{finalMnemonic}&quot;
+                </div>
+              </div>
+            )}
+
+            {extendedData?.patternConnections && extendedData.patternConnections.length > 0 && (
+              <div className="rounded-2xl border border-indigo-500/20 bg-indigo-900/20 p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="text-[10px] font-black tracking-wider text-indigo-400 uppercase">
+                    Pattern Connections
+                  </span>
+                </div>
+                <ul className="space-y-2">
+                  {extendedData.patternConnections.map((pc: string, i: number) => (
+                    <li key={i} className="text-sm font-medium text-indigo-100/90 leading-relaxed">
+                      {pc}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {extendedData?.pyqs && extendedData.pyqs.length > 0 && (
+              <div className="rounded-2xl border border-slate-500/20 bg-slate-800/80 p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase">
+                    Previous Year Questions (PYQ)
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {extendedData.pyqs.map((pyq: any, i: number) => (
+                    <details key={i} className="group space-y-2 cursor-pointer [&_summary::-webkit-details-marker]:hidden">
+                      <summary className="text-xs font-semibold text-slate-300 leading-relaxed outline-none">
+                        <div className="flex items-start gap-2">
+                          <span className="text-slate-500 mt-0.5">•</span>
+                          <span className="flex-1">{pyq.question}</span>
+                        </div>
+                        <div className="mt-1 text-[9px] font-black text-indigo-400 uppercase tracking-widest group-open:hidden">
+                          Tap to view answer
+                        </div>
+                      </summary>
+                      {pyq.answer && (
+                        <div className="mt-2 pl-4 border-l-2 border-emerald-400/50 animate-in fade-in slide-in-from-top-2 duration-300">
+                          <p className="text-[10px] font-bold text-emerald-400">उ. {pyq.answer}</p>
+                        </div>
+                      )}
+                    </details>
+                  ))}
                 </div>
               </div>
             )}
