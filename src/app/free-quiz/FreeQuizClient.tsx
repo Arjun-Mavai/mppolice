@@ -189,31 +189,51 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                 </button>
               )}
               <div className="ml-auto flex items-center gap-1.5">
-                <button
-                  onClick={() => {
-                    setShowInstantGuide(true);
-                    notifyInstantModeGuideClick();
-                  }}
-                  className="flex items-center gap-1.5 rounded-full border border-amber-200/50 bg-[#0f172a] px-2.5 py-1 shadow-md transition-transform hover:scale-105 active:scale-95"
-                >
-                  <Zap size={12} className="fill-amber-400 text-amber-400" />
-                  <span className="text-[9px] font-black uppercase tracking-widest text-amber-300">
-                    {hi ? 'गाइड देखें' : 'How to use'}
-                  </span>
-                </button>
-
-                <div className="flex items-center gap-1.5 rounded-full border border-indigo-100 bg-indigo-50/50 px-2 py-1">
+                <div className="flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-[#022c22] px-2.5 py-1 shadow-sm">
                   <Switch 
                     checked={instantModeOnly} 
                     onCheckedChange={setInstantModeOnly} 
-                    className="scale-75 data-[state=checked]:bg-indigo-600"
+                    className="scale-75 data-[state=checked]:bg-amber-500 data-[state=unchecked]:bg-slate-500"
                   />
-                  <span className="text-[10px] font-bold text-indigo-700 tracking-wide uppercase">
+                  <span className="text-[10px] font-black text-amber-400 tracking-wide uppercase drop-shadow-sm">
                     ⚡ Instant Mode
                   </span>
                 </div>
               </div>
             </div>
+
+            {/* INSTANT MODE GUIDE BUTTON (BANNER) */}
+            <AnimatePresence>
+              {instantModeOnly && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-3 overflow-hidden"
+                >
+                  <button
+                    onClick={() => {
+                      setShowInstantGuide(true);
+                      notifyInstantModeGuideClick();
+                    }}
+                    className="group relative flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-amber-500/50 via-yellow-400/50 to-amber-500/50 p-[1px] shadow-xl transition-all hover:scale-[1.02] hover:shadow-amber-500/20 active:scale-95"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 opacity-0 transition-opacity duration-500 group-hover:animate-pulse group-hover:opacity-100" />
+                    <div className="relative flex w-full items-center justify-between gap-3 rounded-[15px] bg-[#022c22] px-4 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 animate-bounce items-center justify-center rounded-full bg-amber-500/20 shadow-inner ring-1 ring-amber-500/50">
+                          <Zap size={16} className="fill-amber-400 text-amber-400" />
+                        </div>
+                        <span className="text-xs font-black tracking-widest text-amber-400 uppercase drop-shadow-md">
+                          {hi ? 'इंस्टेंट मोड कैसे इस्तेमाल करें?' : 'How to use Instant Mode?'}
+                        </span>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-amber-500 transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -400,9 +420,8 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                 45% { transform: translate(100px, 110px) scale(1); opacity: 1; }
                 50% { transform: translate(100px, 110px) scale(0.85); opacity: 1; }
                 55% { transform: translate(100px, 110px) scale(1); opacity: 1; }
-                70% { transform: translate(140px, 240px) scale(1); opacity: 1; }
-                80% { transform: translate(140px, 240px) scale(0.85); opacity: 1; }
-                90% { transform: translate(140px, 240px) scale(1); opacity: 0; }
+                80% { transform: translate(100px, 110px) scale(1); opacity: 1; }
+                90% { transform: translate(100px, 110px) scale(1); opacity: 0; }
                 100% { transform: translate(140px, 160px) scale(1); opacity: 0; }
               }
               @keyframes toggleSwitch {
@@ -425,9 +444,10 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                 0%, 50% { background-color: #f1f5f9; border-color: #cbd5e1; }
                 55%, 100% { background-color: #10b981; border-color: #10b981; }
               }
-              @keyframes pillGlow {
-                0%, 75% { transform: scale(1); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
-                80%, 100% { transform: scale(1.05); box-shadow: 0 0 20px 0px rgba(16, 185, 129, 0.4); }
+              @keyframes explanationReveal {
+                0%, 50% { opacity: 0; transform: translateY(10px); }
+                55%, 90% { opacity: 1; transform: translateY(0); }
+                95%, 100% { opacity: 0; transform: translateY(10px); }
               }
             `}} />
             <div className="relative mx-auto w-full max-w-[280px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
@@ -461,11 +481,17 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                 </div>
               </div>
 
-              {/* CHECK ANSWER PILL */}
-              <div className="relative border-t border-slate-200 bg-slate-100 p-4 py-5 text-center">
-                <div className="mx-auto flex w-fit items-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-lg transition-all" style={{ animation: 'pillGlow 6s infinite' }}>
-                  <Zap size={14} className="fill-emerald-400 text-emerald-400" />
-                  {hi ? 'जवाब चेक करें' : 'Check Answer'}
+              {/* BEST EXPLANATION REVEAL */}
+              <div className="relative border-t border-slate-200 bg-slate-100 p-3 pt-5 text-center transition-opacity" style={{ opacity: 0, animation: 'explanationReveal 6s infinite' }}>
+                <div className="mx-auto flex w-fit flex-col items-center gap-1">
+                  <div className="flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 shadow-sm">
+                    <Zap size={12} className="fill-emerald-500 text-emerald-500" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">
+                      {hi ? 'बेस्ट एक्सप्लेनेशन' : 'Best Explanation'}
+                    </span>
+                  </div>
+                  <div className="mt-2 h-2 w-full rounded-full bg-slate-200" />
+                  <div className="h-2 w-3/4 rounded-full bg-slate-200" />
                 </div>
               </div>
 
