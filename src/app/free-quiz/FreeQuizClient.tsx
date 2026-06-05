@@ -580,11 +580,16 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
             </button>
 
             {/* Subtle Premium Note */}
-            <div className="flex flex-col items-center gap-1 pt-2">
-              <a href="/pricing" className="text-[10px] font-medium text-slate-400 transition-colors hover:text-slate-600">
-                {hi 
-                  ? 'इंस्टेंट मोड एक प्रीमियम फीचर है, जो सभी टेस्ट सीरीज में उपलब्ध है ✨' 
-                  : 'Instant Mode is a Premium Feature, available in all test series ✨'}
+            <div className="flex flex-col items-center gap-1.5 pt-3">
+              <span className="text-[11px] font-medium text-slate-400">
+                {hi ? 'इंस्टेंट मोड एक प्रीमियम फीचर है ✨' : 'Instant Mode is a Premium Feature ✨'}
+              </span>
+              <a 
+                href="/pricing" 
+                className="group flex items-center gap-1 rounded-full border border-indigo-100 bg-indigo-50/50 px-3 py-1.5 text-[10px] font-bold text-indigo-500 transition-all hover:bg-indigo-50 hover:text-indigo-600 active:scale-95"
+              >
+                <span>{hi ? 'सभी टेस्ट सीरीज में उपलब्ध — अभी देखें' : 'Available in all test series — View Now'}</span>
+                <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
               </a>
             </div>
           </div>
