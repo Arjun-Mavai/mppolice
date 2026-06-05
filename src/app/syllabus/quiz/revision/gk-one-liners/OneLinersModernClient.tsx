@@ -28,7 +28,6 @@ import { markOneLinerRevised, getOneLinerRevisionMap, getUserOneLinerProgress } 
 import { MPPOLICE_ONELINER_SUBJECTS } from '@/features/revision/constants/mppolice-one-liners';
 import { toast } from 'sonner';
 import { QuickFeedback } from '@/components/QuickFeedback';
-import { Languages } from 'lucide-react';
 
 const renderWithLineBreaks = (text: string | undefined) => {
   if (!text) return null;
@@ -504,7 +503,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                                            {(hi ? f.extendedData.facts : f.extendedData.factsEn || f.extendedData.facts).map((line: string, i: number) => (
                                              <li key={i} className="flex items-start gap-2 text-sm font-semibold text-slate-600">
                                                 <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-300" />
-                                                {formatBilingual(line, hi)}
+                                                {renderWithLineBreaks(formatBilingual(line, hi))}
                                              </li>
                                            ))}
                                          </ul>

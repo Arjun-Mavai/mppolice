@@ -160,13 +160,9 @@ export async function getMpgkUnitStats() {
     const topicCounts: Record<string, number> = {};
 
     for (const r of all) {
-      if (r.extendedData && typeof r.extendedData === 'object') {
-        const ext = r.extendedData as any;
-        if (ext.syllabusTopic) {
-          topicCounts[ext.syllabusTopic] = (topicCounts[ext.syllabusTopic] || 0) + 1;
-        } else {
-          topicCounts['Uncategorized'] = (topicCounts['Uncategorized'] || 0) + 1;
-        }
+      const ext = r.extendedData as { syllabusTopic?: string } | null;
+      if (ext?.syllabusTopic) {
+        topicCounts[ext.syllabusTopic] = (topicCounts[ext.syllabusTopic] || 0) + 1;
       } else {
         topicCounts['Uncategorized'] = (topicCounts['Uncategorized'] || 0) + 1;
       }
@@ -212,7 +208,7 @@ export async function fetchLatestQuestionsForSubject(subject: string, limitCount
       })
       .from(mppoliceOneLinerFacts)
       .where(eq(mppoliceOneLinerFacts.subjectTag, subject))
-      .orderBy(desc(mppoliceOneLinerFacts.createdAt))
+      .orderBy(desc(mppoliceOneLinerFacts.updatedAt))
       .limit(limitCount);
       
     return { success: true, facts };

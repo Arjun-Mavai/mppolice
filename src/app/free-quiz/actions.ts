@@ -22,7 +22,7 @@ import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { headers } from 'next/headers';
 
 /**
- * recordGuestAttempt — Saves guest score to DB and notifies admin
+ * recordGuestAttempt — Notifies admin of a guest score (DB storage disabled)
  */
 export async function recordGuestAttempt(data: {
   testId: string;

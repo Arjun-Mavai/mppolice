@@ -67,6 +67,7 @@ export const tests = sqliteTable(
     isFreeAccess: integer('is_free_access', { mode: 'boolean' }).default(false),
     isLiteAccess: integer('is_lite_access', { mode: 'boolean' }).default(false),
     isProAccess: integer('is_pro_access', { mode: 'boolean' }).default(true),
+    isInstantMode: integer('is_instant_mode', { mode: 'boolean' }).default(false),
     displayOrder: integer('display_order').default(0),
     isHidden: integer('is_hidden', { mode: 'boolean' }).default(false),
     maxRetries: integer('max_retries'), // null = unlimited. Standard: Unit=5, FLT=3
@@ -222,8 +223,11 @@ export const mppoliceOneLinerFacts = sqliteTable(
       related?: string[];
       explanationHi?: string;
       explanationEn?: string;
+      analogy?: string;
+      analogyEn?: string;
+      syllabusTopic?: string;
       patternConnections?: string[];
-      pyqs?: { exam: string; question: string; year?: string }[];
+      pyqs?: { exam: string; question: string; year?: string; answer?: string }[];
     } | null>(),
     status: text('status', { enum: ['draft', 'published', 'archived'] }).default('draft'),
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
