@@ -414,9 +414,9 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
               @keyframes pointerFlow {
                 0% { transform: translate(140px, 160px) scale(1); opacity: 0; }
                 10% { transform: translate(140px, 160px) scale(1); opacity: 1; }
-                20% { transform: translate(190px, 20px) scale(1); opacity: 1; }
-                25% { transform: translate(190px, 20px) scale(0.85); opacity: 1; }
-                30% { transform: translate(190px, 20px) scale(1); opacity: 1; }
+                20% { transform: translate(30px, 20px) scale(1); opacity: 1; }
+                25% { transform: translate(30px, 20px) scale(0.85); opacity: 1; }
+                30% { transform: translate(30px, 20px) scale(1); opacity: 1; }
                 45% { transform: translate(100px, 110px) scale(1); opacity: 1; }
                 50% { transform: translate(100px, 110px) scale(0.85); opacity: 1; }
                 55% { transform: translate(100px, 110px) scale(1); opacity: 1; }
@@ -453,7 +453,7 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
             <div className="relative mx-auto w-full max-w-[280px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
               
               {/* TOP HEADER / TOGGLE */}
-              <div className="flex items-center justify-end border-b border-slate-200 bg-white p-2 px-3">
+              <div className="flex items-center justify-start border-b border-slate-200 bg-white p-2 px-3">
                 <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5">
                   <div className="flex h-3 w-[22px] rounded-full bg-slate-300 p-[2px] transition-colors" style={{ animation: 'toggleSwitch 6s infinite' }}>
                     <div className="h-2 w-2 rounded-full bg-white shadow-sm" />
