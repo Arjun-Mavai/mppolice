@@ -27,6 +27,31 @@ import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { MP_Police_SECTIONS, MP_Police_SUBJECTS } from './constants';
 import { notifyInstantModeGuideClick } from './actions';
 
+function PointingArrow({ className }: { className?: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 15, scale: 0.8 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
+      className={cn("pointer-events-none absolute z-30 flex select-none flex-col items-center", className)}
+    >
+      <svg 
+        width="35" 
+        height="40" 
+        viewBox="0 0 35 40" 
+        fill="none" 
+        className="filter drop-shadow-[0_2.5px_4px_rgba(236,72,153,0.6)]"
+      >
+        <path d="M 5 35 Q 10 15 25 5" stroke="#ec4899" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+        <path d="M 17 8 L 25 5 L 26 14" stroke="#ec4899" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      </svg>
+      <div className="-ml-4 -mt-3 -scale-x-100 text-2xl drop-shadow-md filter">
+        🚶‍♂️
+      </div>
+    </motion.div>
+  );
+}
+
 interface FreeQuiz {
   id: string;
   title: string;
@@ -189,15 +214,19 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                 </button>
               )}
               <div className="ml-auto flex items-center gap-1.5">
-                <div className="flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-[#022c22] px-2.5 py-1 shadow-sm">
+                <div 
+                  className="relative flex cursor-pointer items-center gap-1.5 rounded-full border border-amber-500/30 bg-[#022c22] px-2.5 py-1 shadow-sm transition-transform active:scale-95 hover:border-amber-500/50"
+                  onClick={() => setInstantModeOnly(!instantModeOnly)}
+                >
                   <Switch 
                     checked={instantModeOnly} 
                     onCheckedChange={setInstantModeOnly} 
-                    className="scale-75 data-[state=checked]:bg-amber-500 data-[state=unchecked]:bg-slate-500"
+                    className="pointer-events-none scale-75 data-[state=checked]:bg-amber-500 data-[state=unchecked]:bg-slate-500"
                   />
-                  <span className="text-[10px] font-black text-amber-400 tracking-wide uppercase drop-shadow-sm">
+                  <span className="select-none text-[10px] font-black tracking-wide text-amber-400 uppercase drop-shadow-sm">
                     ⚡ Instant Mode
                   </span>
+                  {!instantModeOnly && <PointingArrow className="right-4" />}
                 </div>
               </div>
             </div>
@@ -230,6 +259,7 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                       </div>
                       <ChevronRight className="h-5 w-5 text-amber-500 transition-transform group-hover:translate-x-1" />
                     </div>
+                    {instantModeOnly && <PointingArrow className="right-8" />}
                   </button>
                 </motion.div>
               )}
