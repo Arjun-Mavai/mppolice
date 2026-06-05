@@ -211,19 +211,19 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                 >
                   <button
                     onClick={() => setShowInstantGuide(true)}
-                    className="group relative flex w-full items-center justify-between rounded-[1rem] bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 p-[1px] shadow-lg transition-all hover:scale-[1.01] hover:shadow-indigo-500/25 active:scale-95"
+                    className="group relative flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 p-[1px] shadow-xl transition-all hover:scale-[1.02] hover:shadow-amber-500/20 active:scale-95"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 opacity-0 transition-opacity group-hover:animate-pulse group-hover:opacity-100" />
-                    <div className="relative flex w-full items-center justify-between gap-3 rounded-[1rem] bg-slate-950 px-4 py-3">
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 opacity-0 transition-opacity duration-500 group-hover:animate-pulse group-hover:opacity-100" />
+                    <div className="relative flex w-full items-center justify-between gap-3 rounded-[15px] bg-[#0f172a] px-4 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-7 w-7 animate-bounce items-center justify-center rounded-full bg-indigo-500/20 text-indigo-400">
-                          ⚡
+                        <div className="flex h-8 w-8 animate-bounce items-center justify-center rounded-full bg-amber-500/20 shadow-inner ring-1 ring-amber-500/50">
+                          <Zap size={16} className="fill-amber-400 text-amber-400" />
                         </div>
-                        <span className="text-xs font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 to-purple-200 uppercase">
+                        <span className="text-xs font-black tracking-widest text-amber-300 uppercase drop-shadow-md">
                           {hi ? 'इंस्टेंट मोड कैसे इस्तेमाल करें?' : 'How to use Instant Mode?'}
                         </span>
                       </div>
-                      <ChevronRight className="h-4 w-4 text-indigo-400 transition-transform group-hover:translate-x-1" />
+                      <ChevronRight className="h-5 w-5 text-amber-500 transition-transform group-hover:translate-x-1" />
                     </div>
                   </button>
                 </motion.div>
@@ -404,19 +404,41 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                 : "In this mode, you don't need to finish the test and submit. Just select an answer and click the button below to instantly see the correct answer and detailed explanation."}
             </p>
 
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-5 text-center">
-              <p className="mb-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                {hi ? 'टेस्ट के अंदर यह बटन देखें 👇' : 'Look for this button inside 👇'}
-              </p>
-              <div className="mx-auto flex w-fit items-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-white shadow-xl">
-                <Zap size={14} className="fill-emerald-400 text-emerald-400" />
-                {hi ? 'जवाब चेक करें' : 'Check Answer'}
+            {/* MOCK UI OF THE QUIZ */}
+            <div className="relative mx-auto max-w-[280px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+              <div className="bg-white p-4">
+                <div className="mb-3 h-2 w-3/4 rounded-full bg-slate-200" />
+                <div className="mb-4 h-2 w-1/2 rounded-full bg-slate-200" />
+                
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 p-2.5">
+                    <div className="h-3 w-3 rounded-full border border-rose-300 bg-rose-100" />
+                    <div className="h-1.5 w-1/2 rounded-full bg-rose-200" />
+                  </div>
+                  <div className="flex items-center gap-2 rounded-xl border border-emerald-500 bg-emerald-50 p-2.5 shadow-sm ring-1 ring-emerald-500">
+                    <div className="flex h-3 w-3 items-center justify-center rounded-full bg-emerald-500">
+                      <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                    </div>
+                    <div className="h-1.5 w-2/3 rounded-full bg-emerald-600" />
+                  </div>
+                </div>
+              </div>
+
+              {/* ARROW POINTING TO BUTTON */}
+              <div className="relative bg-slate-100 p-4 pt-6 text-center border-t border-slate-200">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 transform text-amber-500 animate-bounce">
+                  ⬇️
+                </div>
+                <div className="mx-auto flex w-fit items-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-lg">
+                  <Zap size={14} className="fill-emerald-400 text-emerald-400" />
+                  {hi ? 'जवाब चेक करें' : 'Check Answer'}
+                </div>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 rounded-2xl bg-indigo-50/50 p-4">
-              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500" />
-              <p className="text-xs font-medium leading-relaxed text-indigo-900/80">
+            <div className="flex items-start gap-3 rounded-2xl bg-amber-50/80 p-4 border border-amber-100">
+              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+              <p className="text-xs font-bold leading-relaxed text-amber-900/80">
                 {hi 
                   ? "यह मोड आपके रिवीज़न को 10x फ़ास्ट बनाता है। आप अपनी गलतियों को तुरंत पकड़ सकते हैं और सीखते हुए आगे बढ़ सकते हैं।" 
                   : "This mode makes your revision 10x faster. You can catch your mistakes instantly and learn as you go."}
@@ -425,7 +447,7 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
 
             <button
               onClick={() => setShowInstantGuide(false)}
-              className="w-full rounded-full bg-slate-900 py-3.5 text-xs font-black uppercase tracking-widest text-white shadow-xl transition-transform active:scale-95 hover:bg-slate-800"
+              className="w-full rounded-full bg-gradient-to-r from-slate-900 to-slate-800 py-3.5 text-xs font-black uppercase tracking-widest text-white shadow-xl transition-transform active:scale-95 hover:shadow-2xl"
             >
               {hi ? 'मुझे समझ आ गया' : 'Got it, let\'s go'}
             </button>
