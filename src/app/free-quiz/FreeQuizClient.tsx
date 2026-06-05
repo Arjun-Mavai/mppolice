@@ -390,6 +390,7 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
       {/* ── Instant Mode Guide Modal ───────────────────────── */}
       <Dialog open={showInstantGuide} onOpenChange={setShowInstantGuide}>
         <DialogContent className="max-w-md gap-0 overflow-hidden border-slate-200 p-0 sm:rounded-[2rem]">
+          <DialogTitle className="sr-only">Instant Mode Guide</DialogTitle>
           <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-indigo-50 p-6 sm:p-8">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-xl shadow-indigo-500/10 ring-4 ring-indigo-50">
               <Zap className="h-8 w-8 text-indigo-600 fill-indigo-100" />
