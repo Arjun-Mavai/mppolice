@@ -64,7 +64,7 @@ Follow this EXACT structure to ensure perfect Telegram HTML parsing:
 
 Pattern:
 <b>━━━━━━━━━━━━━━━━━━━━━━━</b>
-🏆 <b>MP POLICE CONSTABLE MASTER SERIES</b>
+🏆 <b>🔥 MPGK MASTER SERIES #02</b>
 📅 <b>Day 002 | FIRST IN MP (एक पंक्ति में)</b>
 <b>━━━━━━━━━━━━━━━━━━━━━━━</b>
 
@@ -96,6 +96,7 @@ Pattern:
 
 At the end, always include exactly this footer (including the blockquote style at the very end):
 🔗 <b>Quick Access:</b>
+👉 <a href="https://mppolice.zenscroll.app/">MP Police Preparation</a>
 👉 <a href="https://mppolice.zenscroll.app/free-quiz">MP Police Free Quiz</a>
 
 > 👮 <i>जो रोज़ थोड़ा-थोड़ा पढ़ता है...</i>
