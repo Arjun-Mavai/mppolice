@@ -5,7 +5,7 @@ import { testFeedback, mppscUsers } from '@/db/schema';
 import { type FeedbackFormType, type FeedbackResponse, feedbackFormSchema } from '@/lib/schemas/feedback';
 import { randomUUID } from 'crypto';
 import { verifyAuth } from '@/lib/auth';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { sendTelegramNotification } from '@/lib/telegram';
 import { getTelegramStatsSummary } from '@/lib/telegram-stats-loader';
 

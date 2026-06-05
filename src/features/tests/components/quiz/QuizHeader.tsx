@@ -22,6 +22,7 @@ interface QuizHeaderProps {
     topicPractice: string;
   };
   paletteButton?: React.ReactNode;
+  showInstantModeToggle?: boolean;
 }
 
 export function QuizHeader({
@@ -36,6 +37,7 @@ export function QuizHeader({
   onExit,
   translations: t,
   paletteButton,
+  showInstantModeToggle = true,
 }: QuizHeaderProps) {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -77,7 +79,7 @@ export function QuizHeader({
       {/* Right: Instant Mode + Timer + Palette */}
       <div className="flex items-center gap-2 sm:gap-3">
         {/* Instant Mode Toggle */}
-        {!isSubmitted && (
+        {!isSubmitted && showInstantModeToggle && (
           <div
             className={cn(
               'flex cursor-pointer items-center gap-2 rounded-full border-2 px-3 py-1.5 transition-all select-none',

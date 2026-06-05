@@ -135,6 +135,22 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   ], []);
 
   // ------------------------------------------------------------------
+  // PERFORMANCE: DEFER GUEST AUTH CALL
+  // ------------------------------------------------------------------
+  const [shouldFetchAuth, setShouldFetchAuth] = useState(false);
+
+  useEffect(() => {
+    if (globalUser) {
+      setShouldFetchAuth(true);
+    } else {
+      const timer = setTimeout(() => {
+        setShouldFetchAuth(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [globalUser]);
+
+  // ------------------------------------------------------------------
   // QUERY: SESSION RESTORATION (The "Hydration")
   // Pure data fetching only — no side effects inside queryFn.
   // Side effects (logout, toast) are handled in the Master useEffect below.
@@ -145,6 +161,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     refetch: refetchSession,
   } = useQuery({
     queryKey: ['me'],
+    enabled: shouldFetchAuth,
     queryFn: async () => {
       const result = await getCurrentUser();
       if (result.user) {

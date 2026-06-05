@@ -257,10 +257,14 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     handleSubmit();
   }, [handleSubmit]);
 
+  // Prevent multiple submissions
+  const hasProcessedRef = React.useRef(false);
+
   useEffect(() => {
     // Watch for isSubmitted change from useQuizLogic
     // When isSubmitted becomes true, we process and redirect
-    if (isSubmitted) {
+    if (isSubmitted && !hasProcessedRef.current) {
+      hasProcessedRef.current = true;
       // Exit fullscreen first
       if (document.fullscreenElement) {
         document.exitFullscreen().catch(() => {});
@@ -366,14 +370,20 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
         mode={mode}
         timeLeft={timeLeft}
         instantModeEnabled={effectiveInstantMode}
+        showInstantModeToggle={!disableInstantMode}
         isSubmitted={isSubmitted}
         language={language}
         onInstantModeToggle={() => {
           if (disableInstantMode) {
-            toast('🔒 Pro Feature', {
+            toast.success(language === 'hi' ? '✨ प्रीमियम फीचर' : '✨ Premium Feature', {
               description: language === 'hi'
-                ? 'Instant Mode सिर्फ Pro users के लिए है। Upgrade करें!'
-                : 'Instant Mode is a Pro feature. Upgrade to unlock!',
+                ? 'यह बेहतरीन फीचर सिर्फ उन टेस्ट्स में उपलब्ध है जहाँ यह इनेबल किया गया है!'
+                : 'This awesome feature is only available in tests where it is enabled!',
+              style: {
+                backgroundColor: '#f0fdf4',
+                color: '#166534',
+                borderColor: '#bbf7d0',
+              }
             });
             return;
           }

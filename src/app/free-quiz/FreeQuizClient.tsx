@@ -15,7 +15,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -26,6 +26,58 @@ import { ConnectSocials } from '@/components/ConnectSocials';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { MP_Police_SECTIONS, MP_Police_SUBJECTS } from './constants';
 import { notifyInstantModeGuideClick } from './actions';
+
+function PointingArrow({ className, direction = 'up' }: { className?: string, direction?: 'up' | 'down' }) {
+  if (direction === 'down') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -15, scale: 0.8 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
+        className={cn("pointer-events-none absolute z-30 flex select-none flex-col items-center", className)}
+      >
+        <div className="-mr-4 -mb-3 text-2xl drop-shadow-md filter">
+          🚶‍♂️
+        </div>
+        <svg 
+          width="35" 
+          height="40" 
+          viewBox="0 0 35 40" 
+          fill="none" 
+          className="filter drop-shadow-[0_2.5px_4px_rgba(236,72,153,0.6)]"
+        >
+          {/* Sweep curve from top right to bottom left */}
+          <path d="M 25 5 Q 10 25 5 35" stroke="#ec4899" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+          {/* Arrowhead pointing Down/Left */}
+          <path d="M 14 34 L 5 35 L 5 26" stroke="#ec4899" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        </svg>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 15, scale: 0.8 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
+      className={cn("pointer-events-none absolute z-30 flex select-none flex-col items-center", className)}
+    >
+      <svg 
+        width="35" 
+        height="40" 
+        viewBox="0 0 35 40" 
+        fill="none" 
+        className="filter drop-shadow-[0_2.5px_4px_rgba(236,72,153,0.6)]"
+      >
+        <path d="M 5 35 Q 10 15 25 5" stroke="#ec4899" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+        <path d="M 17 8 L 25 5 L 26 14" stroke="#ec4899" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      </svg>
+      <div className="-ml-4 -mt-3 -scale-x-100 text-2xl drop-shadow-md filter">
+        🚶‍♂️
+      </div>
+    </motion.div>
+  );
+}
 
 interface FreeQuiz {
   id: string;
@@ -146,20 +198,18 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
 
             {/* ── Filter Button + Active Filters ──────────────── */}
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={() => setFilterOpen(true)}
-                className="gap-2 rounded-full border-slate-200 px-4 text-xs font-bold transition-transform active:scale-95"
+                className="relative flex items-center gap-2 rounded-full border-2 border-transparent bg-white bg-clip-padding px-4 py-1.5 text-xs font-bold text-slate-800 shadow-[0_0_15px_rgba(236,72,153,0.2)] transition-transform hover:scale-105 active:scale-95 before:absolute before:-inset-[2px] before:-z-10 before:rounded-full before:bg-gradient-to-r before:from-pink-500 before:via-red-500 before:to-emerald-500"
               >
                 <Filter className="h-3.5 w-3.5" />
                 {hi ? 'फ़िल्तर' : 'Filter'}
                 {activeFilters > 0 && (
-                  <Badge className="ml-1 h-5 w-5 rounded-full bg-indigo-600 p-0 text-[10px] text-white">
+                  <Badge className="ml-1 h-5 w-5 rounded-full bg-indigo-600 p-0 text-[10px] text-white border-0">
                     {activeFilters}
                   </Badge>
                 )}
-              </Button>
+              </button>
               {selectedSubject && (
                 <Badge
                   variant="outline"
@@ -188,16 +238,25 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                   {hi ? 'सब हटाओ' : 'Clear'}
                 </button>
               )}
-              <div className="ml-auto flex items-center gap-1.5">
-                <div className="flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-[#022c22] px-2.5 py-1 shadow-sm">
+              <div className="ml-auto flex items-center gap-2">
+                {instantModeOnly && (
+                  <div className="flex items-center pt-2">
+                    <PointingArrow direction="down" className="relative scale-75" />
+                  </div>
+                )}
+                <div 
+                  className="relative flex cursor-pointer items-center gap-1.5 rounded-full border border-amber-500/30 bg-[#022c22] px-2.5 py-1 shadow-sm transition-transform active:scale-95 hover:border-amber-500/50"
+                  onClick={() => setInstantModeOnly(!instantModeOnly)}
+                >
                   <Switch 
                     checked={instantModeOnly} 
                     onCheckedChange={setInstantModeOnly} 
-                    className="scale-75 data-[state=checked]:bg-amber-500 data-[state=unchecked]:bg-slate-500"
+                    className="pointer-events-none scale-75 data-[state=checked]:bg-amber-500 data-[state=unchecked]:bg-slate-500"
                   />
-                  <span className="text-[10px] font-black text-amber-400 tracking-wide uppercase drop-shadow-sm">
+                  <span className="select-none text-[10px] font-black tracking-wide text-amber-400 uppercase drop-shadow-sm">
                     ⚡ Instant Mode
                   </span>
+                  {!instantModeOnly && <PointingArrow className="right-4 top-full mt-2" />}
                 </div>
               </div>
             </div>
@@ -389,18 +448,24 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
       </Dialog>
       {/* ── Instant Mode Guide Modal ───────────────────────── */}
       <Dialog open={showInstantGuide} onOpenChange={setShowInstantGuide}>
-        <DialogContent className="max-w-md gap-0 overflow-hidden border-slate-200 p-0 sm:rounded-[2rem]">
-          <DialogTitle className="sr-only">Instant Mode Guide</DialogTitle>
-          <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-indigo-50 p-6 sm:p-8">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-xl shadow-indigo-500/10 ring-4 ring-indigo-50">
-              <Zap className="h-8 w-8 text-indigo-600 fill-indigo-100" />
-            </div>
-            <h2 className="text-center text-xl font-black text-slate-900 sm:text-2xl">
-              {hi ? 'इंस्टेंट मोड क्या है?' : 'What is Instant Mode?'}
-            </h2>
-            <p className="mt-2 text-center text-[10px] font-black uppercase tracking-widest text-indigo-600">
-              {hi ? 'टेस्ट सबमिट करने का इंतज़ार खत्म!' : 'No need to wait for submit!'}
-            </p>
+        <DialogContent showCloseButton={false} className="max-w-md gap-0 overflow-hidden border-none p-0 sm:rounded-3xl shadow-2xl">
+          <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white overflow-hidden">
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl" />
+            
+            <DialogClose className="absolute right-4 top-4 z-20 rounded-full p-1 opacity-70 transition-opacity hover:bg-white/10 hover:opacity-100 focus:outline-none">
+              <X className="h-5 w-5 text-white" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+
+            <DialogHeader className="relative z-10 text-left">
+              <DialogTitle className="flex items-center gap-2 text-xl font-black tracking-tight text-white">
+                <Zap className="h-5 w-5 text-amber-400 fill-amber-400/20" />
+                {hi ? 'इंस्टेंट मोड क्या है?' : 'What is Instant Mode?'}
+              </DialogTitle>
+              <div className="pt-1 text-sm font-medium text-slate-400">
+                {hi ? 'टेस्ट सबमिट करने का इंतज़ार खत्म!' : 'No need to wait for submit!'}
+              </div>
+            </DialogHeader>
           </div>
           
           <div className="space-y-6 bg-white p-6 sm:p-8">
@@ -517,6 +582,20 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
             >
               {hi ? 'मुझे समझ आ गया' : 'Got it, let\'s go'}
             </button>
+
+            {/* Subtle Premium Note */}
+            <div className="flex flex-col items-center gap-1.5 pt-3">
+              <span className="text-[11px] font-medium text-slate-400">
+                {hi ? 'इंस्टेंट मोड एक प्रीमियम फीचर है ✨' : 'Instant Mode is a Premium Feature ✨'}
+              </span>
+              <a 
+                href="/pricing" 
+                className="group flex items-center gap-1 rounded-full border border-indigo-100 bg-indigo-50/50 px-3 py-1.5 text-[10px] font-bold text-indigo-500 transition-all hover:bg-indigo-50 hover:text-indigo-600 active:scale-95"
+              >
+                <span>{hi ? 'सभी टेस्ट सीरीज में उपलब्ध — अभी देखें' : 'Available in all test series — View Now'}</span>
+                <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+              </a>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
