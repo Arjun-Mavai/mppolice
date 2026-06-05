@@ -249,9 +249,16 @@ export default function PricingPage() {
                 },
                 {
                   icon: Flame,
-                  label: 'रैपिड रिवीज़न वॉल्ट',
-                  sub: '1000+ महत्वपूर्ण तथ्य। व्याख्या सहित। परीक्षा से पहले तेज़ रिवीज़न।',
+                  label: '1000+ वन-लाइनर्स',
+                  sub: 'तेज रिवीज़न के लिए व्याख्या सहित।',
                   highlight: true,
+                },
+                {
+                  icon: Sparkles,
+                  label: 'MPGK स्मार्ट वॉल्ट',
+                  sub: '1000+ स्मार्ट वन-लाइनर्स, मेमोरी ट्रिक्स और PYQs के साथ। 100% कवरेज।',
+                  highlight: true,
+                  badges: ['Pattern Connections', 'PYQs', 'Memory Tricks'],
                 }
               ].map((item) => {
                 const { icon: Icon, label, sub, highlight } = item;

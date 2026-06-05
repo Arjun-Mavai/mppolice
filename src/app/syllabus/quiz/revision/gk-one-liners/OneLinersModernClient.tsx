@@ -17,7 +17,8 @@ import {
   Sparkles,
   Zap,
   Info,
-  ChevronRight
+  ChevronRight,
+  Puzzle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,59 @@ import { markOneLinerRevised, getOneLinerRevisionMap, getUserOneLinerProgress } 
 import { MPPOLICE_ONELINER_SUBJECTS } from '@/features/revision/constants/mppolice-one-liners';
 import { toast } from 'sonner';
 import { QuickFeedback } from '@/components/QuickFeedback';
+
+const renderWithLineBreaks = (text: string | undefined) => {
+  if (!text) return null;
+  const lines = text.replace(/([\|।])\s*/g, '$1\n').replace(/(\.)\s+/g, '$1\n').split('\n');
+  return (
+    <>
+      {lines.map((line, i) => line.trim() ? (
+        <span key={i} className={i > 0 ? "block mt-1.5" : ""}>
+          {line.trim()}
+        </span>
+      ) : null)}
+    </>
+  );
+};
+
+const formatBilingual = (text: string | undefined, isHindi: boolean) => {
+  if (!text) return text;
+  
+  let result = text;
+  const match = text.match(/^([\s\S]*?)[ \t]*[\(\/][ \t]*([\s\S]*?)[ \t]*[\)]?$/);
+  
+  if (match) {
+    const part1 = match[1].trim();
+    const part2 = match[2].trim();
+    const isPart1Hindi = /[\u0900-\u097F]/.test(part1);
+    const isPart2Hindi = /[\u0900-\u097F]/.test(part2);
+    
+    if (isPart1Hindi && !isPart2Hindi) {
+      result = isHindi ? `${part1}\n/ ${part2}` : `${part2}\n/ ${part1}`;
+    } else if (!isPart1Hindi && isPart2Hindi) {
+      result = isHindi ? `${part2}\n/ ${part1}` : `${part1}\n/ ${part2}`;
+    }
+  } else if (text.includes(' / ')) {
+    const parts = text.split(' / ');
+    if (parts.length === 2) {
+      const part1 = parts[0].trim();
+      const part2 = parts[1].trim();
+      const isPart1Hindi = /[\u0900-\u097F]/.test(part1);
+      const isPart2Hindi = /[\u0900-\u097F]/.test(part2);
+      
+      if (isPart1Hindi && !isPart2Hindi) {
+        result = isHindi ? `${part1}\n/ ${part2}` : `${part2}\n/ ${part1}`;
+      } else if (!isPart1Hindi && isPart2Hindi) {
+        result = isHindi ? `${part2}\n/ ${part1}` : `${part1}\n/ ${part2}`;
+      }
+    }
+  }
+  
+  result = result.replace(/^\[.*?\]\s*/, '');
+  result = result.replace(/^(Explanation in Hindi|Explanation in English|Hindi|English|Hinglish|In Hindi|In English)[):\]\s]*\s*/i, '');
+  
+  return result;
+};
 
 // 🚀 PERFORMANCE: Lazy load heavy components
 const FlipCard = dynamic(() => import('@/components/FlipCard'), { 
@@ -141,11 +195,18 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
 
   const handleSetSubject = useCallback(
     (s: string) => {
+      if (isFreeDemo) {
+        const el = document.getElementById('pricing-upsell');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+        return;
+      }
       const p = new URLSearchParams(searchParams.toString());
       p.set('subject', s);
       router.push(`/syllabus/quiz/revision/gk-one-liners?${p.toString()}`, { scroll: false });
     },
-    [router, searchParams]
+    [router, searchParams, isFreeDemo]
   );
 
   const handleMarkRevised = useCallback(async (factId: string) => {
@@ -365,25 +426,24 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                        >
                          <button
                            onClick={() => toggleExpand(f.id)}
-                           className="flex w-full items-start gap-4 p-5 text-left sm:p-7"
+                           className="flex flex-col w-full items-start gap-2 px-3 py-3.5 sm:p-4 text-left relative"
                          >
                            <span className={cn(
-                             "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-black shadow-inner",
-                             "bg-white",
+                             "inline-flex items-center justify-center rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider",
                              color.text
                            )}>
-                             {globalIdx}
+                             Q{globalIdx}
                            </span>
-                           <div className="min-w-0 flex-1">
-                             <p className="text-[17px] font-bold leading-relaxed text-slate-900 sm:text-lg">
-                               {hi ? f.stemHi : f.stemEn || f.stemHi}
-                             </p>
+                           <div className="min-w-0 flex-1 w-full mt-1">
+                             <div className="text-[15px] font-bold leading-relaxed text-slate-900 sm:text-[16px]">
+                               {renderWithLineBreaks(formatBilingual(hi ? f.stemHi : f.stemEn || f.stemHi, hi))}
+                             </div>
                              
-                             <motion.p 
-                               className={cn("mt-2 text-lg font-black sm:text-xl", color.text)}
+                             <div 
+                               className={cn("mt-1.5 text-[16px] font-black sm:text-[17px]", color.text)}
                              >
-                               {hi ? f.answerHi : f.answerEn || f.answerHi}
-                             </motion.p>
+                               {renderWithLineBreaks(formatBilingual(hi ? f.answerHi : f.answerEn || f.answerHi, hi))}
+                             </div>
 
                              <div className="flex flex-wrap items-center gap-3 mt-4">
                                {activeSubject === 'All' && (
@@ -400,8 +460,8 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                                </span>
                              </div>
                            </div>
-                           <span className="shrink-0 text-slate-300 mt-2">
-                             {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                           <span className="absolute top-4 right-4 shrink-0 text-slate-400/50 group-hover:text-slate-400 transition-colors">
+                             {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                            </span>
                          </button>
 
@@ -413,15 +473,29 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                                exit={{ height: 0, opacity: 0 }}
                                transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }} className="border-t border-white/50 bg-white/30 overflow-hidden"
                              >
-                                <div className="p-5 sm:p-8 space-y-6">
+                                <div className="p-2.5 sm:p-4 space-y-3.5">
                                    {f.extendedData ? (
                                      <div className="space-y-4">
+                                       {f.extendedData.memoryTip && (
+                                         <div className="group rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 px-3 py-3 shadow-inner">
+                                           <div className="flex items-center gap-2 mb-2">
+                                              <Sparkles className="h-4 w-4 text-amber-500" />
+                                              <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">{hi ? 'ट्रिक' : 'Trick'}</span>
+                                           </div>
+                                           <div className="text-[14px] font-bold text-amber-900 leading-relaxed italic">
+                                             {renderWithLineBreaks(formatBilingual((hi ? f.extendedData.memoryTip : f.extendedData.memoryTipEn || f.extendedData.memoryTip)?.replace(/^🧠\s*मेमोरी ट्रिक.*?:?\s*/i, ''), hi))}
+                                           </div>
+                                         </div>
+                                       )}
                                        {(f.extendedData.explanationHi || f.extendedData.explanationEn) && (
-                                         <div className="relative rounded-2xl bg-white/80 p-5 border border-white">
-                                            <Info className="absolute -top-2 -left-2 h-6 w-6 text-slate-200" />
-                                            <p className="text-[15px] leading-relaxed font-medium text-slate-700">
-                                              {hi ? f.extendedData.explanationHi : f.extendedData.explanationEn || f.extendedData.explanationHi}
-                                            </p>
+                                         <div className="rounded-xl bg-rose-50/50 px-3 py-3 border border-rose-100">
+                                            <div className="flex items-center gap-2 mb-2">
+                                              <Info className="h-4 w-4 text-rose-500" />
+                                              <span className="text-[10px] font-black uppercase tracking-widest text-rose-600">Examiner Trap</span>
+                                            </div>
+                                            <div className="text-[14px] leading-relaxed font-bold text-rose-900/80">
+                                              {renderWithLineBreaks(formatBilingual((hi ? f.extendedData.explanationHi : f.extendedData.explanationEn || f.extendedData.explanationHi)?.replace(/^⚠️\s*एग्जामिनर ट्रैप.*?:?\s*/i, ''), hi))}
+                                            </div>
                                          </div>
                                        )}
                                        {f.extendedData.facts && f.extendedData.facts.length > 0 && (
@@ -429,20 +503,65 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                                            {(hi ? f.extendedData.facts : f.extendedData.factsEn || f.extendedData.facts).map((line: string, i: number) => (
                                              <li key={i} className="flex items-start gap-2 text-sm font-semibold text-slate-600">
                                                 <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-300" />
-                                                {line}
+                                                {renderWithLineBreaks(formatBilingual(line, hi))}
                                              </li>
                                            ))}
                                          </ul>
                                        )}
-                                       {f.extendedData.memoryTip && (
-                                         <div className="group rounded-[1.5rem] bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 p-5 shadow-inner">
-                                           <div className="flex items-center gap-2 mb-2">
-                                              <Sparkles className="h-4 w-4 text-amber-500" />
-                                              <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">{hi ? 'ट्रिक' : 'Trick'}</span>
+
+                                       {f.extendedData.analogy && (
+                                          <div className="rounded-xl bg-sky-50/50 px-3 py-3 border border-sky-100">
+                                             <div className="flex items-center gap-2 mb-2">
+                                               <Puzzle className="h-4 w-4 text-sky-500" />
+                                               <span className="text-[10px] font-black uppercase tracking-widest text-sky-600">{hi ? 'एनालॉजी (Analogy)' : 'Analogy'}</span>
+                                             </div>
+                                             <div className="text-[14px] leading-relaxed font-bold text-sky-900/80">
+                                               {renderWithLineBreaks(formatBilingual(hi ? f.extendedData.analogy : f.extendedData.analogyEn || f.extendedData.analogy, hi))}
+                                             </div>
+                                          </div>
+                                        )}
+                                       {f.extendedData.patternConnections && f.extendedData.patternConnections.length > 0 && (
+                                         <div className="rounded-xl bg-indigo-50/50 border border-indigo-100/50 px-3 py-3">
+                                           <div className="flex items-center gap-2 mb-3">
+                                              <Layers className="h-4 w-4 text-indigo-500" />
+                                              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Pattern Connections</span>
                                            </div>
-                                           <p className="text-[14px] font-bold text-amber-900 leading-relaxed italic">
-                                             {hi ? f.extendedData.memoryTip : f.extendedData.memoryTipEn || f.extendedData.memoryTip}
-                                           </p>
+                                           <ul className="space-y-3">
+                                             {f.extendedData.patternConnections.map((pc: string, i: number) => (
+                                               <li key={i} className="flex items-start gap-3 text-[13px] font-semibold text-indigo-900/80 leading-relaxed">
+                                                 <span className="mt-0.5 opacity-60">🔗</span>
+                                                 <span>{renderWithLineBreaks(formatBilingual(pc, hi))}</span>
+                                               </li>
+                                             ))}
+                                           </ul>
+                                         </div>
+                                       )}
+                                       {f.extendedData.pyqs && f.extendedData.pyqs.length > 0 && (
+                                         <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-3">
+                                           <div className="flex items-center gap-2 mb-4">
+                                              <LayoutList className="h-4 w-4 text-slate-500" />
+                                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">Previous Year Questions (PYQ)</span>
+                                           </div>
+                                           <div className="space-y-4">
+                                             {f.extendedData.pyqs.map((pyq: any, i: number) => (
+                                               <details key={i} className="group space-y-2 bg-white px-3 py-3 rounded-xl border border-slate-100 shadow-sm cursor-pointer [&_summary::-webkit-details-marker]:hidden">
+                                                  <summary className="text-xs font-semibold text-slate-700 leading-relaxed outline-none">
+                                                    <div className="flex items-start gap-2">
+                                                      <span className="text-slate-400 mt-0.5">•</span>
+                                                      <span className="flex-1">{renderWithLineBreaks(formatBilingual(pyq.question, hi))}</span>
+                                                    </div>
+                                                    <div className="mt-2 text-[10px] font-black text-indigo-500 uppercase tracking-widest group-open:hidden">
+                                                      Tap to view answer
+                                                    </div>
+                                                  </summary>
+                                                  {pyq.answer && (
+                                                    <div className="mt-3 pl-4 border-l-2 border-emerald-300 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                      <div className="text-[12px] font-bold text-emerald-700">{renderWithLineBreaks(formatBilingual(pyq.answer, hi))}</div>
+                                                    </div>
+                                                  )}
+                                               </details>
+                                             ))}
+                                           </div>
                                          </div>
                                        )}
                                      </div>
@@ -555,6 +674,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
             {/* 💎 CTA FOR FREE USERS - Premium Dark/Amber Theme */}
             {isFreeDemo && (
               <motion.div 
+                id="pricing-upsell"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-12 flex flex-col items-center justify-center p-8 text-center rounded-[3rem] bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] border border-slate-700/50 shadow-2xl shadow-slate-900/40 relative overflow-hidden group"

@@ -22,13 +22,19 @@ export interface MppoliceOneLinerRow {
     related?: string[];
     explanationHi?: string;
     explanationEn?: string;
+    analogy?: string;
+    analogyEn?: string;
+    syllabusTopic?: string;
+    patternConnections?: string[];
+    pyqs?: { exam: string; question: string; year?: string; answer?: string }[];
   } | null;
 }
 
 export async function getPublishedMppoliceOneLiners(
   subject: string,
   limit = 50,
-  offset = 0
+  offset = 0,
+  sortBy: 'default' | 'newest' = 'default'
 ): Promise<MppoliceOneLinerRow[]> {
   const safeLimit = Math.min(Math.max(limit, 1), 5000);
   const safeOffset = Math.max(offset, 0);
@@ -41,7 +47,7 @@ export async function getPublishedMppoliceOneLiners(
       const isAll = cacheKeySubject === 'All';
 
       const subjectCond = isAll
-        ? inArray(mppoliceOneLinerFacts.subjectTag, subs)
+        ? inArray(mppoliceOneLinerFacts.subjectTag, subs.filter(s => s !== 'MP GK'))
         : eq(mppoliceOneLinerFacts.subjectTag, normalizedSubject);
 
       const rows = await db
@@ -58,7 +64,7 @@ export async function getPublishedMppoliceOneLiners(
         .from(mppoliceOneLinerFacts)
         .where(and(eq(mppoliceOneLinerFacts.status, 'published'), subjectCond))
         .orderBy(
-          desc(mppoliceOneLinerFacts.importanceScore),
+          sortBy === 'newest' ? desc(mppoliceOneLinerFacts.updatedAt) : desc(mppoliceOneLinerFacts.importanceScore),
           desc(mppoliceOneLinerFacts.sortOrder),
           mppoliceOneLinerFacts.id
         )
@@ -74,7 +80,7 @@ export async function getPublishedMppoliceOneLiners(
     // 🛡️ CRITICAL FIX: Added safeOffset to the cache key
     // Bhai, pehle offset cache key me nahi tha, jis wajah se pagination kaam nahi kar rahi thi
     // (saare batches me same data aa raha tha). Ab ye fix ho gaya h!
-    ['mppolice-one-liners', cacheKeySubject, String(safeLimit), String(safeOffset)],
+    ['mppolice-one-liners', cacheKeySubject, String(safeLimit), String(safeOffset), sortBy],
     { revalidate: 300, tags: ['mppolice-one-liners'] }
   )();
 }

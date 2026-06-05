@@ -90,7 +90,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     // 🛠️ Map raw DB rows to clean UI Question type
     const questions: Question[] = questionsSlice.map((q: any) => {
       const opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-      let ext = typeof q.extendedData === 'string' ? (JSON.parse(q.extendedData) || {}) : (q.extendedData || {});
+      const ext = typeof q.extendedData === 'string' ? (JSON.parse(q.extendedData) || {}) : (q.extendedData || {});
       
       return {
         id: q.id,
@@ -162,7 +162,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
   // 🛠️ Map Questions for UI
   const questions: Question[] = testData.questions.map((q) => {
     const opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-    let ext = typeof q.extendedData === 'string' ? (JSON.parse(q.extendedData) || {}) : (q.extendedData || {});
+    const ext = typeof q.extendedData === 'string' ? (JSON.parse(q.extendedData) || {}) : (q.extendedData || {});
     
     return {
       id: q.id,

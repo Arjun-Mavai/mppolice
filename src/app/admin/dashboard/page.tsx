@@ -90,6 +90,7 @@ const AdminTelemetryToggle = dynamic(
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminDashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [guestSearch, setGuestSearch] = useState('');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
     uploads: true,
     guests: true,
@@ -121,6 +122,16 @@ export default function AdminDashboardPage() {
 
   const { stats: metrics, recentUploads = [], recentGuests = [] } = stats;
   const { typeCount } = metrics;
+
+  const filteredGuests = recentGuests.filter((g) => {
+    if (!guestSearch) return true;
+    const q = guestSearch.toLowerCase();
+    return (
+      (g.name?.toLowerCase().includes(q) || false) ||
+      (g.email?.toLowerCase().includes(q) || false) ||
+      (g.mobile?.includes(q) || false)
+    );
+  });
 
   return (
     <div className="min-h-screen bg-slate-50/50 p-4 font-sans md:p-8 lg:p-12">
@@ -200,17 +211,26 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-bold flex items-center gap-2">
                     <Activity className="h-4 w-4 text-slate-400" />
-                    Guest Users ({recentGuests.length})
+                    Guest Users ({filteredGuests.length})
                   </CardTitle>
                   {collapsed.guests ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                 </div>
               </CardHeader>
               {!collapsed.guests && (
-                <CardContent className="max-h-[400px] space-y-4 overflow-y-auto pr-2 pt-0 scrollbar-hide">
-                  {recentGuests.length === 0 ? (
-                    <p className="text-xs text-slate-400">No guests yet.</p>
+                <CardContent className="max-h-[400px] flex flex-col gap-3 pr-2 pt-0">
+                  <input
+                    type="text"
+                    placeholder="Search name, email, mobile..."
+                    value={guestSearch}
+                    onChange={(e) => setGuestSearch(e.target.value)}
+                    className="h-8 w-full shrink-0 rounded border border-slate-200 px-2 text-xs outline-none focus:border-indigo-500"
+                    onClick={(e) => e.stopPropagation()} // Prevent collapse toggle
+                  />
+                  <div className="space-y-4 overflow-y-auto scrollbar-hide flex-1 pb-2">
+                  {filteredGuests.length === 0 ? (
+                    <p className="text-xs text-slate-400">No guests found.</p>
                   ) : (
-                    recentGuests.map((g) => (
+                    filteredGuests.map((g) => (
                       <div key={g.id} className="flex items-start justify-between border-b border-slate-50 pb-3 last:border-0">
                         <div className="space-y-1">
                           <p className="text-xs font-semibold text-slate-800">{g.name}</p>
@@ -224,6 +244,7 @@ export default function AdminDashboardPage() {
                       </div>
                     ))
                   )}
+                  </div>
                 </CardContent>
               )}
             </Card>

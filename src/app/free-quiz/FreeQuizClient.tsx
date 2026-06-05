@@ -16,13 +16,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { Sparkles, Filter, X, BookOpen, Clock, ChevronRight } from 'lucide-react';
+import { Sparkles, Filter, X, BookOpen, Clock, ChevronRight, Zap } from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { QuizListItem } from '@/components/QuizListItem';
 import { ConnectSocials } from '@/components/ConnectSocials';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { MP_Police_SECTIONS, MP_Police_SUBJECTS } from './constants';
+import { notifyInstantModeGuideClick } from './actions';
 
 interface FreeQuiz {
   id: string;
@@ -34,9 +37,10 @@ interface FreeQuiz {
   unitId: string | null;
   tags: unknown;
   createdAt: Date | string | null;
+  isInstantMode?: boolean | null;
 }
 
-export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
+export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQuiz[], isLoggedIn?: boolean }) {
   const router = useRouter();
   const { language } = useSettingsStore();
   const hi = language === 'hi';
@@ -46,6 +50,8 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [loadingTestId, setLoadingTestId] = useState<string | null>(null);
+  const [instantModeOnly, setInstantModeOnly] = useState(false);
+  const [showInstantGuide, setShowInstantGuide] = useState(false);
 
   // Tags se subject nikalo — har test ke tags me subject hoga
   const getTestSubject = (quiz: FreeQuiz): string | null => {
@@ -59,6 +65,11 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
   // Filter logic — subject + section se match karo
   const filteredQuizzes = useMemo(() => {
     let result = quizzes;
+    if (instantModeOnly) {
+      result = result.filter((q) => q.isInstantMode === true);
+    } else {
+      result = result.filter((q) => !q.isInstantMode);
+    }
     if (selectedSubject) {
       result = result.filter((q) => getTestSubject(q) === selectedSubject);
     }
@@ -66,7 +77,7 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
       result = result.filter((q) => q.unitId === selectedSection);
     }
     return result;
-  }, [quizzes, selectedSubject, selectedSection]);
+  }, [quizzes, selectedSubject, selectedSection, instantModeOnly]);
 
   // Active filter count — badge me dikhega
   const activeFilters = (selectedSubject ? 1 : 0) + (selectedSection ? 1 : 0);
@@ -75,9 +86,9 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
   const clearFilters = () => {
     setSelectedSubject(null);
     setSelectedSection(null);
+    setInstantModeOnly(false);
   };
 
-  // Test click → play page pe le jao
   const handleQuizClick = (quiz: FreeQuiz) => {
     setLoadingTestId(quiz.id);
     router.push(`/free-quiz/play?testId=${quiz.id}`);
@@ -177,7 +188,52 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
                   {hi ? 'सब हटाओ' : 'Clear'}
                 </button>
               )}
+              <div className="ml-auto flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-[#022c22] px-2.5 py-1 shadow-sm">
+                  <Switch 
+                    checked={instantModeOnly} 
+                    onCheckedChange={setInstantModeOnly} 
+                    className="scale-75 data-[state=checked]:bg-amber-500 data-[state=unchecked]:bg-slate-500"
+                  />
+                  <span className="text-[10px] font-black text-amber-400 tracking-wide uppercase drop-shadow-sm">
+                    ⚡ Instant Mode
+                  </span>
+                </div>
+              </div>
             </div>
+
+            {/* INSTANT MODE GUIDE BUTTON (BANNER) */}
+            <AnimatePresence>
+              {instantModeOnly && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-3 overflow-hidden"
+                >
+                  <button
+                    onClick={() => {
+                      setShowInstantGuide(true);
+                      notifyInstantModeGuideClick();
+                    }}
+                    className="group relative flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-amber-500/50 via-yellow-400/50 to-amber-500/50 p-[1px] shadow-xl transition-all hover:scale-[1.02] hover:shadow-amber-500/20 active:scale-95"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 opacity-0 transition-opacity duration-500 group-hover:animate-pulse group-hover:opacity-100" />
+                    <div className="relative flex w-full items-center justify-between gap-3 rounded-[15px] bg-[#022c22] px-4 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 animate-bounce items-center justify-center rounded-full bg-amber-500/20 shadow-inner ring-1 ring-amber-500/50">
+                          <Zap size={16} className="fill-amber-400 text-amber-400" />
+                        </div>
+                        <span className="text-xs font-black tracking-widest text-amber-400 uppercase drop-shadow-md">
+                          {hi ? 'इंस्टेंट मोड कैसे इस्तेमाल करें?' : 'How to use Instant Mode?'}
+                        </span>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-amber-500 transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -328,6 +384,139 @@ export default function FreeQuizClient({ quizzes }: { quizzes: FreeQuiz[] }) {
                 <ChevronRight className="ml-1 h-3 w-3" />
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* ── Instant Mode Guide Modal ───────────────────────── */}
+      <Dialog open={showInstantGuide} onOpenChange={setShowInstantGuide}>
+        <DialogContent className="max-w-md gap-0 overflow-hidden border-slate-200 p-0 sm:rounded-[2rem]">
+          <DialogTitle className="sr-only">Instant Mode Guide</DialogTitle>
+          <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-indigo-50 p-6 sm:p-8">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-xl shadow-indigo-500/10 ring-4 ring-indigo-50">
+              <Zap className="h-8 w-8 text-indigo-600 fill-indigo-100" />
+            </div>
+            <h2 className="text-center text-xl font-black text-slate-900 sm:text-2xl">
+              {hi ? 'इंस्टेंट मोड क्या है?' : 'What is Instant Mode?'}
+            </h2>
+            <p className="mt-2 text-center text-[10px] font-black uppercase tracking-widest text-indigo-600">
+              {hi ? 'टेस्ट सबमिट करने का इंतज़ार खत्म!' : 'No need to wait for submit!'}
+            </p>
+          </div>
+          
+          <div className="space-y-6 bg-white p-6 sm:p-8">
+            <p className="text-[13px] font-semibold leading-relaxed text-slate-600">
+              {hi 
+                ? "इस मोड में आपको पूरा टेस्ट खत्म करके 'Submit' करने की ज़रूरत नहीं है। बस किसी भी सवाल का जवाब चुनें, और तुरंत नीचे दिए गए बटन पर क्लिक करके उसका सही उत्तर और डिटेल में व्याख्या (Explanation) पढ़ें।" 
+                : "In this mode, you don't need to finish the test and submit. Just select an answer and click the button below to instantly see the correct answer and detailed explanation."}
+            </p>
+
+            {/* MOCK UI OF THE QUIZ WITH CSS ANIMATION */}
+            <style dangerouslySetInnerHTML={{__html: `
+              @keyframes pointerFlow {
+                0% { transform: translate(140px, 160px) scale(1); opacity: 0; }
+                10% { transform: translate(140px, 160px) scale(1); opacity: 1; }
+                20% { transform: translate(30px, 20px) scale(1); opacity: 1; }
+                25% { transform: translate(30px, 20px) scale(0.85); opacity: 1; }
+                30% { transform: translate(30px, 20px) scale(1); opacity: 1; }
+                45% { transform: translate(100px, 110px) scale(1); opacity: 1; }
+                50% { transform: translate(100px, 110px) scale(0.85); opacity: 1; }
+                55% { transform: translate(100px, 110px) scale(1); opacity: 1; }
+                80% { transform: translate(100px, 110px) scale(1); opacity: 1; }
+                90% { transform: translate(100px, 110px) scale(1); opacity: 0; }
+                100% { transform: translate(140px, 160px) scale(1); opacity: 0; }
+              }
+              @keyframes toggleSwitch {
+                0%, 25% { transform: translateX(0); background-color: #cbd5e1; }
+                30%, 100% { transform: translateX(100%); background-color: #4f46e5; }
+              }
+              @keyframes optionWrong {
+                0%, 50% { background-color: #f8fafc; border-color: #e2e8f0; }
+                55%, 100% { background-color: #fff1f2; border-color: #fecdd3; }
+              }
+              @keyframes optionWrongDot {
+                0%, 50% { background-color: #f1f5f9; border-color: #cbd5e1; }
+                55%, 100% { background-color: #ffe4e6; border-color: #fda4af; }
+              }
+              @keyframes optionRight {
+                0%, 50% { background-color: #f8fafc; border-color: #e2e8f0; }
+                55%, 100% { background-color: #ecfdf5; border-color: #10b981; }
+              }
+              @keyframes optionRightDot {
+                0%, 50% { background-color: #f1f5f9; border-color: #cbd5e1; }
+                55%, 100% { background-color: #10b981; border-color: #10b981; }
+              }
+              @keyframes explanationReveal {
+                0%, 50% { opacity: 0; transform: translateY(10px); }
+                55%, 90% { opacity: 1; transform: translateY(0); }
+                95%, 100% { opacity: 0; transform: translateY(10px); }
+              }
+            `}} />
+            <div className="relative mx-auto w-full max-w-[280px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+              
+              {/* TOP HEADER / TOGGLE */}
+              <div className="flex items-center justify-start border-b border-slate-200 bg-white p-2 px-3">
+                <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5">
+                  <div className="flex h-3 w-[22px] rounded-full bg-slate-300 p-[2px] transition-colors" style={{ animation: 'toggleSwitch 6s infinite' }}>
+                    <div className="h-2 w-2 rounded-full bg-white shadow-sm" />
+                  </div>
+                  <span className="text-[6px] font-bold text-slate-500">⚡ INSTANT</span>
+                </div>
+              </div>
+
+              {/* QUIZ CONTENT */}
+              <div className="bg-white p-4">
+                <div className="mb-3 h-2 w-3/4 rounded-full bg-slate-200" />
+                <div className="mb-4 h-2 w-1/2 rounded-full bg-slate-200" />
+                
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 transition-colors" style={{ animation: 'optionWrong 6s infinite' }}>
+                    <div className="h-3 w-3 rounded-full border border-slate-300 bg-slate-100 transition-colors" style={{ animation: 'optionWrongDot 6s infinite' }} />
+                    <div className="h-1.5 w-1/2 rounded-full bg-slate-300" />
+                  </div>
+                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 transition-colors" style={{ animation: 'optionRight 6s infinite' }}>
+                    <div className="flex h-3 w-3 items-center justify-center rounded-full border border-slate-300 bg-slate-100 transition-colors" style={{ animation: 'optionRightDot 6s infinite' }}>
+                      <div className="h-1 w-1 rounded-full bg-white" />
+                    </div>
+                    <div className="h-1.5 w-2/3 rounded-full bg-slate-300" />
+                  </div>
+                </div>
+              </div>
+
+              {/* BEST EXPLANATION REVEAL */}
+              <div className="relative border-t border-slate-200 bg-slate-100 p-3 pt-5 text-center transition-opacity" style={{ opacity: 0, animation: 'explanationReveal 6s infinite' }}>
+                <div className="mx-auto flex w-fit flex-col items-center gap-1">
+                  <div className="flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 shadow-sm">
+                    <Zap size={12} className="fill-emerald-500 text-emerald-500" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">
+                      {hi ? 'बेस्ट एक्सप्लेनेशन' : 'Best Explanation'}
+                    </span>
+                  </div>
+                  <div className="mt-2 h-2 w-full rounded-full bg-slate-200" />
+                  <div className="h-2 w-3/4 rounded-full bg-slate-200" />
+                </div>
+              </div>
+
+              {/* THE ANIMATED POINTER */}
+              <div className="pointer-events-none absolute left-0 top-0 z-50 text-3xl drop-shadow-[0_10px_15px_rgba(0,0,0,0.5)]" style={{ animation: 'pointerFlow 6s infinite' }}>
+                👆🏽
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 rounded-2xl bg-amber-50/80 p-4 border border-amber-100">
+              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+              <p className="text-xs font-bold leading-relaxed text-amber-900/80">
+                {hi 
+                  ? "यह मोड आपके रिवीज़न को 10x फ़ास्ट बनाता है। आप अपनी गलतियों को तुरंत पकड़ सकते हैं और सीखते हुए आगे बढ़ सकते हैं।" 
+                  : "This mode makes your revision 10x faster. You can catch your mistakes instantly and learn as you go."}
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowInstantGuide(false)}
+              className="w-full rounded-full bg-gradient-to-r from-slate-900 to-slate-800 py-3.5 text-xs font-black uppercase tracking-widest text-white shadow-xl transition-transform active:scale-95 hover:shadow-2xl"
+            >
+              {hi ? 'मुझे समझ आ गया' : 'Got it, let\'s go'}
+            </button>
           </div>
         </DialogContent>
       </Dialog>

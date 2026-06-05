@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { mppoliceOneLinerFacts } from '@/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, desc } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { revalidateTag } from 'next/cache';
 import { requireAdmin } from '@/lib/auth-admin';
@@ -37,7 +37,10 @@ export async function importMppoliceOneLinersJson(
       }
 
       for (const r of rows) {
-        const subjectTag = typeof r.subjectTag === 'string' ? r.subjectTag.trim() : '';
+        let subjectTag = typeof r.subjectTag === 'string' ? r.subjectTag.trim() : '';
+        if (subjectTag.startsWith('MP GK')) {
+          subjectTag = 'MP GK';
+        }
         if (!isValidSubject(subjectTag)) {
           throw new Error(`Invalid subjectTag: ${subjectTag || '(empty)'} — use one of: ${MPPOLICE_ONELINER_SUBJECTS.join(', ')}`);
         }
@@ -47,19 +50,38 @@ export async function importMppoliceOneLinersJson(
           throw new Error('Each row needs stemHi and answerHi (non-empty strings)');
         }
 
+        const stemEnVal = typeof r.stemEn === 'string' ? r.stemEn.trim() : null;
+        const answerEnVal = typeof r.answerEn === 'string' ? r.answerEn.trim() : null;
+        const importanceScoreVal = typeof r.importanceScore === 'number' ? r.importanceScore : 0;
+        const sortOrderVal = typeof r.sortOrder === 'number' ? r.sortOrder : 0;
+        const extendedDataVal = r.extendedData && typeof r.extendedData === 'object' ? (r.extendedData as object) : null;
+
         await tx.insert(mppoliceOneLinerFacts).values({
-          id: nanoid(),
+          id: typeof r.id === 'string' && r.id ? r.id : nanoid(),
           subjectTag,
           stemHi,
-          stemEn: typeof r.stemEn === 'string' ? r.stemEn.trim() : null,
+          stemEn: stemEnVal,
           answerHi,
-          answerEn: typeof r.answerEn === 'string' ? r.answerEn.trim() : null,
-          importanceScore: typeof r.importanceScore === 'number' ? r.importanceScore : 0,
-          sortOrder: typeof r.sortOrder === 'number' ? r.sortOrder : 0,
-          extendedData: r.extendedData && typeof r.extendedData === 'object' ? (r.extendedData as object) : null,
+          answerEn: answerEnVal,
+          importanceScore: importanceScoreVal,
+          sortOrder: sortOrderVal,
+          extendedData: extendedDataVal,
           status: options.status,
           createdAt: now,
           updatedAt: now,
+        }).onConflictDoUpdate({
+          target: mppoliceOneLinerFacts.id,
+          set: {
+            stemHi,
+            stemEn: stemEnVal,
+            answerHi,
+            answerEn: answerEnVal,
+            importanceScore: importanceScoreVal,
+            sortOrder: sortOrderVal,
+            extendedData: extendedDataVal,
+            status: options.status,
+            updatedAt: now
+          }
         });
         inserted++;
       }
@@ -125,3 +147,72 @@ export async function getMppoliceOneLinerStats() {
   }
 }
 
+export async function getMpgkUnitStats() {
+  await requireAdmin();
+  try {
+    const all = await db
+      .select({
+        extendedData: mppoliceOneLinerFacts.extendedData,
+      })
+      .from(mppoliceOneLinerFacts)
+      .where(eq(mppoliceOneLinerFacts.subjectTag, 'MP GK'));
+
+    const topicCounts: Record<string, number> = {};
+
+    for (const r of all) {
+      const ext = r.extendedData as { syllabusTopic?: string } | null;
+      if (ext?.syllabusTopic) {
+        topicCounts[ext.syllabusTopic] = (topicCounts[ext.syllabusTopic] || 0) + 1;
+      } else {
+        topicCounts['Uncategorized'] = (topicCounts['Uncategorized'] || 0) + 1;
+      }
+    }
+
+    return { success: true, topicCounts };
+  } catch (e) {
+    logger.error('getMpgkUnitStats', e);
+    return { success: false, error: getErrorMessage(e) };
+  }
+}
+
+export async function deleteSubjectOneLiners(subject: string) {
+  await requireAdmin();
+  try {
+    if (!isValidSubject(subject)) {
+      throw new Error('Invalid subject');
+    }
+    await db.delete(mppoliceOneLinerFacts).where(eq(mppoliceOneLinerFacts.subjectTag, subject));
+    revalidateTag('mppolice-one-liners', { expire: 0 });
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: getErrorMessage(e) };
+  }
+}
+
+export async function fetchLatestQuestionsForSubject(subject: string, limitCount: number = 10) {
+  await requireAdmin();
+  try {
+    if (!isValidSubject(subject)) {
+      throw new Error('Invalid subject');
+    }
+    
+    const facts = await db
+      .select({
+        id: mppoliceOneLinerFacts.id,
+        subjectTag: mppoliceOneLinerFacts.subjectTag,
+        stemHi: mppoliceOneLinerFacts.stemHi,
+        stemEn: mppoliceOneLinerFacts.stemEn,
+        answerHi: mppoliceOneLinerFacts.answerHi,
+        answerEn: mppoliceOneLinerFacts.answerEn,
+        extendedData: mppoliceOneLinerFacts.extendedData,
+      })
+      .from(mppoliceOneLinerFacts)
+      .where(eq(mppoliceOneLinerFacts.subjectTag, subject))
+      .orderBy(desc(mppoliceOneLinerFacts.updatedAt))
+      .limit(limitCount);
+      
+    return { success: true, facts };
+  } catch (e) {
+    return { success: false, error: getErrorMessage(e) };
+  }
+}

@@ -19,9 +19,10 @@ import { logger } from '@/lib/logger';
 import { sendTelegramNotification } from '@/lib/telegram';
 import { getTelegramStatsSummary } from '@/lib/telegram-stats-loader';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
+import { headers } from 'next/headers';
 
 /**
- * recordGuestAttempt — Saves guest score to DB and notifies admin
+ * recordGuestAttempt — Notifies admin of a guest score (DB storage disabled)
  */
 export async function recordGuestAttempt(data: {
   testId: string;
@@ -36,14 +37,14 @@ export async function recordGuestAttempt(data: {
   try {
     const attemptId = crypto.randomUUID();
     
-    // 1. Save to DB
-    await db.insert(freeQuizAttempts).values({
-      id: attemptId,
-      testId: data.testId,
-      guestId: 'guest_session', // Placeholder
-      score: data.score,
-      completedAt: new Date(),
-    });
+    // 1. Save to DB (Commented out per request)
+    // await db.insert(freeQuizAttempts).values({
+    //   id: attemptId,
+    //   testId: data.testId,
+    //   guestId: 'guest_session', // Placeholder
+    //   score: data.score,
+    //   completedAt: new Date(),
+    // });
 
     // 2. Fetch Test Title for better notification
     const test = await db.query.tests.findFirst({
@@ -83,6 +84,62 @@ export async function recordGuestAttempt(data: {
   }
 }
 
+export async function notifyInstantModeGuideClick() {
+  try {
+    const headersList = await headers();
+    const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'Unknown IP';
+    const city = headersList.get('x-vercel-ip-city') || 'Unknown City';
+    const region = headersList.get('x-vercel-ip-region') || 'Unknown Region';
+    const country = headersList.get('x-vercel-ip-country') || 'Unknown Country';
+    const userAgent = headersList.get('user-agent') || 'Unknown Browser';
+
+    // Parse User Agent for Device OS and Browser
+    const ua = userAgent.toLowerCase();
+    let browser = 'Unknown';
+    let os = 'Unknown';
+    if (ua.includes('firefox')) browser = 'Firefox';
+    else if (ua.includes('edg/') || ua.includes('edge')) browser = 'Edge';
+    else if (ua.includes('chrome')) browser = 'Chrome';
+    else if (ua.includes('safari')) browser = 'Safari';
+    if (ua.includes('iphone')) os = 'iPhone';
+    else if (ua.includes('ipad')) os = 'iPad';
+    else if (ua.includes('android')) os = 'Android';
+    else if (ua.includes('macintosh') || ua.includes('mac os')) os = 'macOS';
+    else if (ua.includes('windows')) os = 'Windows';
+    else if (ua.includes('linux')) os = 'Linux';
+    const browserOs = `${browser} on ${os}`;
+
+    const dateObj = new Date();
+    const dayName = dateObj.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short' });
+    const dateStr = dateObj.toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit', month: 'short', year: 'numeric',
+    });
+    const timeStr = dateObj.toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
+    });
+    const timestamp = `${dayName}, ${dateStr} | ${timeStr} IST`;
+
+    const location = (city !== 'Unknown City' || region !== 'Unknown Region') 
+      ? `${city}, ${region}, ${country}` 
+      : 'Location Unavailable';
+
+    await sendTelegramNotification(
+      `⚡ <b>INSTANT MODE GUIDE CLICKED</b>\n\n` +
+      `Someone opened the "How to use Instant Mode" guide on the Free Quiz page.\n\n` +
+      `👤 <b>Guest User</b>\n` +
+      `📱 <b>Device:</b> ${browserOs}\n` +
+      `🌐 <b>IP Address:</b> ${ip}\n` +
+      `📍 <b>Location:</b> ${location}\n` +
+      `📅 <b>Date & Time:</b> ${timestamp}\n\n` +
+      `#FeatureEngagement #InstantMode`
+    );
+  } catch (error) {
+    logger.error('Failed to notify instant mode guide click:', error);
+  }
+}
+
 /**
  * getCachedFreeQuizzes — unstable_cache se cached MISC tests
  * 60s revalidate + 'tests' tag — admin se test add/edit hone pe bust hota h
@@ -103,6 +160,7 @@ export const getCachedFreeQuizzes = unstable_cache(
           unitId: tests.unitId,
           tags: tests.tags,
           createdAt: tests.createdAt,
+          isInstantMode: tests.isInstantMode,
         })
         .from(tests)
         .where(
