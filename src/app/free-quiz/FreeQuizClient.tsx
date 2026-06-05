@@ -30,23 +30,15 @@ import { notifyInstantModeGuideClick } from './actions';
 function PointingArrow({ className }: { className?: string }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15, scale: 0.8 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
-      className={cn("pointer-events-none absolute z-30 flex select-none flex-col items-center", className)}
+      className={cn("pointer-events-none absolute z-30 flex select-none flex-col items-center animate-bounce", className)}
     >
-      <svg 
-        width="35" 
-        height="40" 
-        viewBox="0 0 35 40" 
-        fill="none" 
-        className="filter drop-shadow-[0_2.5px_4px_rgba(236,72,153,0.6)]"
-      >
-        <path d="M 5 35 Q 10 15 25 5" stroke="#ec4899" strokeWidth="3.5" strokeLinecap="round" fill="none" />
-        <path d="M 17 8 L 25 5 L 26 14" stroke="#ec4899" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      </svg>
-      <div className="-ml-4 -mt-3 -scale-x-100 text-2xl drop-shadow-md filter">
-        🚶‍♂️
+      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.5)]">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 5v14M19 12l-7 7-7-7"/>
+        </svg>
       </div>
     </motion.div>
   );
@@ -175,7 +167,7 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                 variant="outline"
                 size="sm"
                 onClick={() => setFilterOpen(true)}
-                className="gap-2 rounded-full border-slate-200 px-4 text-xs font-bold transition-transform active:scale-95"
+                className="gap-2 rounded-full border-2 border-pink-500 bg-white px-4 text-xs font-bold text-pink-600 shadow-[0_0_10px_rgba(236,72,153,0.2)] transition-all active:scale-95 hover:border-emerald-500 hover:text-emerald-600"
               >
                 <Filter className="h-3.5 w-3.5" />
                 {hi ? 'फ़िल्तर' : 'Filter'}
@@ -226,7 +218,7 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                   <span className="select-none text-[10px] font-black tracking-wide text-amber-400 uppercase drop-shadow-sm">
                     ⚡ Instant Mode
                   </span>
-                  {!instantModeOnly && <PointingArrow className="right-4" />}
+                  {!instantModeOnly && <PointingArrow className="bottom-full left-1/2 -translate-x-1/2 mb-1.5" />}
                 </div>
               </div>
             </div>
@@ -259,7 +251,7 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                       </div>
                       <ChevronRight className="h-5 w-5 text-amber-500 transition-transform group-hover:translate-x-1" />
                     </div>
-                    {instantModeOnly && <PointingArrow className="right-8" />}
+                    {instantModeOnly && <PointingArrow className="bottom-full left-1/2 -translate-x-1/2 mb-1" />}
                   </button>
                 </motion.div>
               )}
