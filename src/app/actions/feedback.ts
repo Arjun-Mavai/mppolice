@@ -5,7 +5,7 @@ import { testFeedback, mppscUsers } from '@/db/schema';
 import { type FeedbackFormType, type FeedbackResponse, feedbackFormSchema } from '@/lib/schemas/feedback';
 import { randomUUID } from 'crypto';
 import { verifyAuth } from '@/lib/auth';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { sendTelegramNotification } from '@/lib/telegram';
 import { getTelegramStatsSummary } from '@/lib/telegram-stats-loader';
 
@@ -105,16 +105,25 @@ export async function submitTestFeedback(params: SubmitFeedbackParams): Promise<
   }
 }
 
-export async function hasUserSubmittedFeedback() {
+export async function hasUserSubmittedFeedback(testId?: string) {
   try {
     const authUser = await verifyAuth();
     if (!authUser) return false;
 
-    const existingFeedback = await db
-      .select({ id: testFeedback.id })
-      .from(testFeedback)
-      .where(eq(testFeedback.userId, authUser.id))
-      .limit(1);
+    let existingFeedback;
+    if (testId) {
+      existingFeedback = await db
+        .select({ id: testFeedback.id })
+        .from(testFeedback)
+        .where(and(eq(testFeedback.userId, authUser.id), eq(testFeedback.testId, testId)))
+        .limit(1);
+    } else {
+      existingFeedback = await db
+        .select({ id: testFeedback.id })
+        .from(testFeedback)
+        .where(eq(testFeedback.userId, authUser.id))
+        .limit(1);
+    }
 
     return existingFeedback.length > 0;
   } catch (error) {

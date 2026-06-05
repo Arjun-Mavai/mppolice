@@ -84,7 +84,7 @@ export function TestSeriesFeedbackModal({
     formData.overallRating > 0 && 
     formData.difficultyLevel && 
     formData.wouldRecommend &&
-    (formData.overallRating !== 1 || (formData.comment && formData.comment.trim() !== ''));
+    (formData.overallRating > 2 || (formData.comment && formData.comment.trim() !== ''));
 
   if (!isOpen) return null;
 
@@ -212,9 +212,9 @@ export function TestSeriesFeedbackModal({
                   </div>
                 ))}
 
-                {/* CONDITIONAL COMMENT FOR 1 STAR */}
+                {/* CONDITIONAL COMMENT FOR 1 OR 2 STARS */}
                 <AnimatePresence>
-                  {rating === 1 && (
+                  {rating <= 2 && (
                     <motion.div
                       initial={{ opacity: 0, height: 0, scale: 0.95 }}
                       animate={{ opacity: 1, height: 'auto', scale: 1 }}

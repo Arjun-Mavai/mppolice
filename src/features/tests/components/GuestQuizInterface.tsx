@@ -257,10 +257,14 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     handleSubmit();
   }, [handleSubmit]);
 
+  // Prevent multiple submissions
+  const hasProcessedRef = React.useRef(false);
+
   useEffect(() => {
     // Watch for isSubmitted change from useQuizLogic
     // When isSubmitted becomes true, we process and redirect
-    if (isSubmitted) {
+    if (isSubmitted && !hasProcessedRef.current) {
+      hasProcessedRef.current = true;
       // Exit fullscreen first
       if (document.fullscreenElement) {
         document.exitFullscreen().catch(() => {});
