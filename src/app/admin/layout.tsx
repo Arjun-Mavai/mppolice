@@ -129,6 +129,12 @@ const ADMIN_ROUTES = [
     icon: KeyRound,
     description: 'Direct password reset',
   },
+  {
+    href: '/admin/telegram-system',
+    label: 'Telegram Automator',
+    icon: Sparkles,
+    description: 'Push AI content to Telegram',
+  },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
