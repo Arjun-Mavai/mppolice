@@ -677,7 +677,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                 id="pricing-upsell"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-12 flex flex-col items-center justify-center p-8 text-center rounded-[3rem] bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] border border-slate-700/50 shadow-2xl shadow-slate-900/40 relative overflow-hidden group"
+                className="mt-12 scroll-mt-40 flex flex-col items-center justify-center p-8 text-center rounded-[3rem] bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] border border-slate-700/50 shadow-2xl shadow-slate-900/40 relative overflow-hidden group"
               >
                 {/* Decorative Background Elements */}
                 <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-amber-500/10 blur-[60px]" />
