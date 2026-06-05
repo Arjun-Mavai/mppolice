@@ -29,15 +29,15 @@ export function HeroSection() {
       {/* 🎭 PREMIUM BACKGROUND: Grid aur Animated Glows */}
       <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.05] [mask-image:radial-gradient(ellipse_at_center,black,transparent)]" />
-        <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-amber-500/10 blur-[120px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-orange-600/5 blur-[120px] animate-pulse delay-1000" />
+        <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-amber-500/10 blur-[60px] md:blur-[120px] opacity-60 md:opacity-100 animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-orange-600/5 blur-[60px] md:blur-[120px] opacity-60 md:opacity-100 animate-pulse delay-1000" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020617]/50 to-[#020617]" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl space-y-8 text-center md:space-y-20">
         {/* 👮 Exam Badge */}
         <div className="flex justify-center">
-            <div className="inline-flex items-center gap-3 rounded-full border border-amber-500/30 bg-amber-950/30 px-5 py-2 text-[10px] font-black tracking-widest text-amber-400 backdrop-blur-xl transition-all hover:border-amber-500/50 md:text-xs">
+            <div className="inline-flex items-center gap-3 rounded-full border border-amber-500/30 bg-amber-950/30 px-5 py-2 text-[10px] font-black tracking-widest text-amber-400 backdrop-blur-sm md:backdrop-blur-xl transition-all hover:border-amber-500/50 md:text-xs">
                 <Shield className="h-4 w-4 fill-amber-500/20" />
                 {language === 'hi' ? 'MP POLICE EXAM 2026' : 'MP POLICE EXAM 2026'}
                 <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
@@ -90,7 +90,7 @@ export function HeroSection() {
                   className="group relative w-full focus:outline-none"
                   onClick={() => trackFbCustomEvent('hero_free_test_clicked', { location: 'home_hero', user: 'guest' })}
                 >
-                  <div className="relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-500 group-hover:-translate-y-0.5 group-hover:border-amber-500/40 group-hover:bg-amber-500/10 group-hover:shadow-[0_0_40px_rgba(245,158,11,0.12)] group-active:scale-[0.99] md:h-24 md:rounded-[2.5rem]">
+                  <div className="relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm md:backdrop-blur-xl transition-all duration-500 group-hover:-translate-y-0.5 group-hover:border-amber-500/40 group-hover:bg-amber-500/10 group-hover:shadow-[0_0_40px_rgba(245,158,11,0.12)] group-active:scale-[0.99] md:h-24 md:rounded-[2.5rem]">
                     <div className="relative z-10 flex h-full w-full items-center justify-center gap-3 px-6 md:gap-6 md:px-10">
                       <Zap className="h-5 w-5 text-amber-400 md:h-7 md:w-7" />
                       <span className="text-[11px] font-black tracking-[0.15em] whitespace-nowrap text-white/90 uppercase md:text-lg md:tracking-[0.2em]">
@@ -121,7 +121,7 @@ export function HeroSection() {
                 </Link>
 
                 <Link href="/syllabus/quiz/full-tests" className="group relative w-full">
-                  <div className="relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-500 group-hover:-translate-y-0.5 md:h-24 md:rounded-[2.5rem]">
+                  <div className="relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm md:backdrop-blur-xl transition-all duration-500 group-hover:-translate-y-0.5 md:h-24 md:rounded-[2.5rem]">
                     <div className="relative z-10 flex h-full w-full items-center justify-center gap-3 px-6 md:gap-6 md:px-10">
                       <Trophy className="h-5 w-5 text-amber-500 md:h-7 md:w-7" />
                       <span className="text-[11px] font-black tracking-[0.15em] whitespace-nowrap text-white/90 uppercase md:text-lg md:tracking-[0.2em]">
