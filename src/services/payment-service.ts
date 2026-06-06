@@ -185,7 +185,7 @@ export async function fulfillOrder(input: FulfillmentInput) {
     // Trigger background tasks (Email, Telegram) without blocking the response
     // Using a separate try-catch to ensure background failures are logged but don't crash
     runPostFulfillment().catch((err) => {
-      logger.error('Post-fulfillment background task failed:', err, { userId, paymentId });
+      logger.error('Post-fulfillment background task failed:', err, { category: 'payment', userId, paymentId });
     });
 
     return { success: true, planTier, accessExpiresAt };
