@@ -120,7 +120,7 @@ export async function fulfillOrder(input: FulfillmentInput) {
         const fromAddress = process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'mppolice@zenscroll.app';
         const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
 
-        await resend.emails.send({
+        const { error: emailError } = await resend.emails.send({
           from: `${fromName} <${fromAddress}>`,
           to: [user.email],
           subject: isUpgrade ? '🚀 Your Plan has been Upgraded!' : '🎉 Welcome to MP POLICE ZEN',
@@ -129,15 +129,24 @@ export async function fulfillOrder(input: FulfillmentInput) {
             actionUrl, 
             planName: planTier.toUpperCase() 
           }),
-        }).catch(err => {
-          logger.error('Failed to send fulfillment email', err, { category: 'email', userId });
-          notifyAdminOnEmailFailure({
+        });
+
+        if (emailError) {
+          logger.error('Failed to send fulfillment email', emailError, { category: 'email', userId });
+          
+          // Use type narrowing to extract message gracefully
+          const errorMessage = 
+            typeof emailError === 'object' && emailError !== null && 'message' in emailError
+              ? String(emailError.message)
+              : JSON.stringify(emailError);
+
+          await notifyAdminOnEmailFailure({
             userName: user.name || 'Unknown',
             userEmail: user.email,
-            errorMessage: JSON.stringify(err),
+            errorMessage,
             paymentId,
-          });
-        });
+          }).catch(() => {});
+        }
 
         // C. Notify Admin
         await notifyAdminOnPayment({
@@ -173,7 +182,11 @@ export async function fulfillOrder(input: FulfillmentInput) {
       }
     };
 
-    runPostFulfillment(); // Trigger background tasks
+    // Trigger background tasks (Email, Telegram) without blocking the response
+    // Using a separate try-catch to ensure background failures are logged but don't crash
+    runPostFulfillment().catch((err) => {
+      logger.error('Post-fulfillment background task failed:', err, { category: 'payment', userId, paymentId });
+    });
 
     return { success: true, planTier, accessExpiresAt };
   } catch (error) {

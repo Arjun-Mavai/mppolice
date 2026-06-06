@@ -82,7 +82,7 @@ export async function POST(req: Request) {
     const order = await instance.orders.create({
       amount,
       currency: 'INR',
-      notes: { planType, userId: session?.id ?? '' }, // Metadata for future reference
+      notes: { planType, userId: session?.id ?? '', examType: 'mppolice' }, // Metadata for future reference
     });
 
     return NextResponse.json({ ...(order as any), planType });

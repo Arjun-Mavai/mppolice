@@ -12,10 +12,13 @@ export function MainContentWrapper({ children }: { children: React.ReactNode }) 
   
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Apply anti-copy globally for everyone EXCEPT on the login page
-  // Isse users login credentials copy-paste kar payenge, par content protected rahega.
+  // Apply anti-copy globally EXCEPT for login and admin pages
+  // Admins need to copy-paste for content generation, users need it for login.
   const isLoginPage = pathname === '/login';
-  useDisableSelection(containerRef, !isLoginPage);
+  const isAdminPage = pathname?.startsWith('/admin');
+  const shouldDisableSelection = !isLoginPage && !isAdminPage;
+  
+  useDisableSelection(containerRef, shouldDisableSelection);
 
   return <div ref={containerRef} className={cn(isQuizPlay ? '' : 'min-h-screen pt-14')}>{children}</div>;
 }
