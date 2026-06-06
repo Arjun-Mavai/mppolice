@@ -1,0 +1,1 @@
+ALTER TABLE `pricing_config` DROP COLUMN `id`;
