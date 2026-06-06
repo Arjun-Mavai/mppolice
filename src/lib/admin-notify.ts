@@ -54,13 +54,14 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
       const statusText = type === 'upgrade' ? 'PLAN UPGRADE' : type === 'failed' ? 'PAYMENT FAILED' : 'NEW PAYMENT';
       const planEmoji = planTier === 'pro' ? '💎' : '🎫';
 
-      const tgMessage = `${statusEmoji} <b>${statusText} SUCCESS!</b>\n\n` +
+      const tgMessage = `👮 <b>MP POLICE ZEN</b>\n` +
+        `${statusEmoji} <b>${statusText}</b>\n\n` +
         `👤 <b>User:</b> ${escapeHTML(userName)}\n` +
         `📧 <b>Email:</b> ${escapeHTML(userEmail)}\n` +
-        `Plan: ${planEmoji} ${planTier.toUpperCase()}${isUpgrade ? ' (UPGRADED)' : ''}\n` +
+        `🎟️ <b>Plan:</b> ${planEmoji} ${planTier.toUpperCase()}${isUpgrade ? ' (Upgrade)' : ''}\n` +
         `💵 <b>Amount:</b> ₹${amountInRupees}\n` +
-        `🆔 <b>Order ID:</b> <code>${orderId}</code>\n` +
-        `🆔 <b>Payment ID:</b> <code>${paymentId}</code>\n\n` +
+        `🆔 <b>PayID:</b> <code>${paymentId}</code>\n` +
+        `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST\n\n` +
         `✅ <i>Access granted instantly. Check dashboard for details.</i>`;
       
       await sendTelegramNotification(tgMessage);
@@ -159,13 +160,14 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
 
     // 🚀 Telegram Notification (FALLBACK - Must always send)
     try {
-      const tgMessage = `🚨 <b>USER EMAIL FAILED!</b>\n\n` +
+      const tgMessage = `👮 <b>MP POLICE ZEN ALERT</b>\n` +
+        `🚨 <b>USER EMAIL FAILED!</b>\n\n` +
+        `User ne payment kiya but unhe welcome email nahi gaya. <b>Manual Action Required!</b>\n\n` +
         `👤 <b>User:</b> ${escapeHTML(userName)}\n` +
         `📧 <b>Email:</b> ${escapeHTML(userEmail)}\n` +
-        `🆔 <b>Payment ID:</b> <code>${paymentId}</code>\n` +
-        `❌ <b>Error:</b> <i>${escapeHTML(errorMessage)}</i>\n\n` +
-        `⚠️ <b>User ne pay kiya but unhe welcome email nahi gaya!</b>\n` +
-        `👉 <i>Action: Please manually send them the setup link from dashboard.</i>`;
+        `🆔 <b>PayID:</b> <code>${paymentId}</code>\n` +
+        `❌ <b>Error:</b> <i>${escapeHTML(errorMessage)}</i>\n` +
+        `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
       
       await sendTelegramNotification(tgMessage);
     } catch (tgErr) {
@@ -254,12 +256,14 @@ export async function notifyAdminOnVerificationFailure(data: {
 
   // 🚀 Telegram Notification
   try {
-    const tgMessage = `❌ <b>VERIFICATION FAILED!</b>\n\n` +
+    const tgMessage = `👮 <b>MP POLICE ZEN SECURITY</b>\n` +
+      `🛡️ <b>VERIFICATION FAILURE!</b>\n\n` +
+      `Payment verification process encountered an error.\n\n` +
       `👤 <b>User ID:</b> <code>${userId}</code>\n` +
       `🆔 <b>Order ID:</b> <code>${orderId}</code>\n` +
-      `${paymentId ? `🆔 <b>Payment ID:</b> <code>${paymentId}</code>\n` : ''}` +
-      `⚠️ <b>Error:</b> <i>${escapeHTML(error)}</i>\n\n` +
-      `🚨 <b>Security Alert:</b> This could be a failed attempt or a mismatch. Check Razorpay dashboard.`;
+      `${paymentId ? `🆔 <b>PayID:</b> <code>${paymentId}</code>\n` : ''}` +
+      `❌ <b>Error:</b> <i>${escapeHTML(error)}</i>\n` +
+      `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
     
     await sendTelegramNotification(tgMessage);
   } catch (tgErr) {

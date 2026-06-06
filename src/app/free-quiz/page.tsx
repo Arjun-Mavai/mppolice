@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { getCachedFreeQuizzes } from './actions';
+import { verifyAuth } from '@/lib/auth';
 import FreeQuizClient from './FreeQuizClient';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -22,8 +23,13 @@ export default async function FreeQuizPage() {
 
 // Server data fetcher — tests DB se laao
 async function FreeQuizData() {
-  const quizzes = await getCachedFreeQuizzes();
-  return <FreeQuizClient quizzes={quizzes} />;
+  // 🏎️ Parallel Fetching: Zero Waterfall
+  const [quizzes, user] = await Promise.all([
+    getCachedFreeQuizzes(),
+    verifyAuth()
+  ]);
+  
+  return <FreeQuizClient quizzes={quizzes} isLoggedIn={!!user} />;
 }
 
 // Loading skeleton — jab tak data load ho raha h

@@ -104,8 +104,7 @@ async function FreeQuizDataFetcher({ searchParams }: { searchParams: Promise<{ t
     );
   }
 
-  const tags = Array.isArray(testData.tags) ? (testData.tags as string[]) : [];
-  const disableInstantMode = tags.includes('no-instant-mode');
+  const disableInstantMode = !testData.isInstantMode;
 
   return (
     <ProductionErrorBoundary>

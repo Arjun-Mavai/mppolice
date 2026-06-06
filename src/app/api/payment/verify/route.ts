@@ -50,17 +50,18 @@ export async function POST(req: Request) {
 
     const isValidHex = /^[a-f0-9]+$/i.test(razorpay_signature);
     if (!isValidHex || razorpay_signature.length !== generated_signature.length) {
+      await notifyAdminOnVerificationFailure({ userId, orderId: razorpay_order_id, paymentId: razorpay_payment_id, error: 'Malformed payment signature format' });
       return NextResponse.json({ error: 'Invalid signature format' }, { status: 400 });
     }
 
     if (!crypto.timingSafeEqual(Buffer.from(generated_signature, 'hex'), Buffer.from(razorpay_signature, 'hex'))) {
-      notifyAdminOnVerificationFailure({ userId, orderId: razorpay_order_id, paymentId: razorpay_payment_id, error: 'Invalid Signature' });
+      await notifyAdminOnVerificationFailure({ userId, orderId: razorpay_order_id, paymentId: razorpay_payment_id, error: 'Invalid Signature' });
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 
     // 2. Idempotency Check
     const existingPayment = await db.query.payments.findFirst({
-      where: eq(payments.orderId, razorpay_order_id),
+      where: eq(payments.paymentId, razorpay_payment_id),
     });
     if (existingPayment) {
       return NextResponse.json({ success: true, message: 'Already verified' });
@@ -73,8 +74,14 @@ export async function POST(req: Request) {
     });
     const order = await instance.orders.fetch(razorpay_order_id);
     
-    // Ownership check
+    // Ownership check (IDOR Prevention)
     if (order.notes?.userId && order.notes.userId !== userId) {
+      await notifyAdminOnVerificationFailure({
+        userId,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        error: `Order ownership mismatch (User: ${userId}, Order notes: ${order.notes.userId})`,
+      });
       return NextResponse.json({ error: 'Order ownership mismatch' }, { status: 403 });
     }
 
@@ -98,6 +105,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, planTier: result.planTier });
   } catch (error) {
     logger.error('API Verification error:', error);
+    await notifyAdminOnVerificationFailure({
+      userId: requestUserId || 'unknown',
+      orderId: requestOrderId || 'unknown',
+      paymentId: requestPaymentId,
+      error: error instanceof Error ? error.message : 'Unexpected verification error in verify API route',
+    }).catch(() => {});
     return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
   }
 }
