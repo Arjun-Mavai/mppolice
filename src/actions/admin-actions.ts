@@ -4,7 +4,7 @@ import { db } from '@/db';
 import { tests, questions, contentBlogs, paymentExitReasons, guests } from '@/db/schema';
 import { nanoid } from 'nanoid';
 import { revalidatePath, revalidateTag } from 'next/cache';
-import { eq, sql, desc, and } from 'drizzle-orm';
+import { eq, sql, desc } from 'drizzle-orm';
 import { CACHE } from '@/lib/cache';
 import { AdminDashboardResponse } from '@/types/admin';
 import { logger } from '@/lib/logger';
@@ -105,7 +105,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
             'JSON must be a question array, or an object { "testTitle"?, "testTitleEn"?, "questions": [...] }',
         };
       }
-    } catch (e) {
+    } catch {
       return { success: false, message: 'Invalid JSON format' };
     }
 
@@ -179,6 +179,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         nanoid(4);
 
       const isFreeAccessFlag = formData.get('isFreeAccess') === 'true';
+      const isInstantModeFlag = formData.get('isInstantMode') === 'true';
 
       await db.insert(tests).values({
         id: testId,
@@ -195,6 +196,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         examType: 'mppolice',
         // Now using the explicit toggle from the admin panel
         isFreeAccess: isFreeAccessFlag,
+        isInstantMode: isInstantModeFlag,
         tags: tagsBase,
         createdAt: new Date(),
         updatedAt: new Date(),

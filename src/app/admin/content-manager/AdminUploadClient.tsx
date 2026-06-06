@@ -142,6 +142,7 @@ export default function AdminUploadPage() {
     existingTestId: '',
     questionsJson: '',
     isFreeAccess: false,
+    isInstantMode: false,
   });
 
   // Prompt Generator State
@@ -443,6 +444,7 @@ RAW TEXT (IF ANY):
           formData.append('subjectTag', testData.subjectTag);
         }
         formData.append('isFreeAccess', testData.isFreeAccess ? 'true' : 'false');
+        formData.append('isInstantMode', testData.isInstantMode ? 'true' : 'false');
       } else {
         formData.append('existingTestId', testData.existingTestId);
         // Same as new mode: so MBT `collection:memory` (etc.) actually persists on the row
@@ -1120,6 +1122,19 @@ RAW TEXT (IF ANY):
                           <Switch
                             checked={testData.isFreeAccess}
                             onCheckedChange={(v) => setTestData((p) => ({ ...p, isFreeAccess: v }))}
+                          />
+                        </div>
+
+                        <div className="flex flex-row items-center justify-between rounded-lg border border-indigo-200 bg-indigo-50/30 p-4 shadow-sm">
+                          <div className="space-y-0.5">
+                            <Label className="text-base font-bold text-indigo-900">Enable Instant Mode</Label>
+                            <p className="text-xs text-indigo-500/80">
+                              Turn this ON to allow users to play this test in Instant Feedback mode.
+                            </p>
+                          </div>
+                          <Switch
+                            checked={testData.isInstantMode}
+                            onCheckedChange={(v) => setTestData((p) => ({ ...p, isInstantMode: v }))}
                           />
                         </div>
                       </div>

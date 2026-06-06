@@ -67,6 +67,7 @@ export async function getAllTestsForAdmin() {
       displayOrder: tests.displayOrder,
       tags: tests.tags,
       createdAt: tests.createdAt,
+      isInstantMode: tests.isInstantMode,
     })
     .from(tests)
     .where(mppoliceTestsFilter)
@@ -515,46 +516,22 @@ export async function updateTestContent(
  *
  * No migration needed — tags column already exist karta h!
  */
-export async function toggleInstantMode(testId: string, disable: boolean) {
+export async function toggleInstantMode(testId: string, isInstantMode: boolean) {
   await requireAdmin();
 
   try {
     const gate = await assertMppoliceTest(testId);
     if (!gate.ok) return { success: false, error: gate.error };
 
-    const test = await db
-      .select({ tags: tests.tags })
-      .from(tests)
-      .where(and(eq(tests.id, testId), mppoliceTestsFilter))
-      .get();
-
-    if (!test) return { success: false, error: 'Test not found' };
-
-    // Tags ko array me convert karo (null/invalid handle)
-    let currentTags: string[] = [];
-    if (Array.isArray(test.tags)) {
-      currentTags = test.tags as string[];
-    }
-
-    if (disable) {
-      // Tag add karo (agar pehle se nahi h)
-      if (!currentTags.includes('no-instant-mode')) {
-        currentTags.push('no-instant-mode');
-      }
-    } else {
-      // Tag remove karo
-      currentTags = currentTags.filter((t) => t !== 'no-instant-mode');
-    }
-
     await db
       .update(tests)
-      .set({ tags: currentTags, updatedAt: new Date() })
+      .set({ isInstantMode, updatedAt: new Date() })
       .where(and(eq(tests.id, testId), mppoliceTestsFilter));
 
     revalidateTag('tests', { expire: 0 });
     revalidateTag('tests-list', { expire: 0 });
 
-    logger.info(`Instant mode ${disable ? 'disabled' : 'enabled'}: ${testId}`);
+    logger.info(`Instant mode updated: ${testId} -> ${isInstantMode}`);
     return { success: true };
   } catch (error: unknown) {
     logger.error('Toggle Instant Mode Error:', error);
