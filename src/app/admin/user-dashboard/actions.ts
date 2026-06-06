@@ -19,9 +19,9 @@ export interface UserWithStats {
   avgScore: number | null;
   lastActiveAt: Date | null;
   // Category-wise breakdown
-  fltCount: number;
-  unitCount: number;
-  csatCount: number;
+  constableCount: number;
+  siCount: number;
+  miscCount: number;
   pyqCount: number;
   topicCount: number;
 }
@@ -70,9 +70,9 @@ export async function getUserDashboardData(): Promise<UserWithStats[]> {
       completedAttempts: sql<number>`sum(case when ${userAttempts.isCompleted} = 1 then 1 else 0 end)`,
       avgScore: sql<number>`avg(case when ${userAttempts.isCompleted} = 1 then ${userAttempts.score} else null end)`,
       lastActiveAt: sql<Date>`max(${userAttempts.endTime})`,
-      fltCount: sql<number>`sum(case when ${tests.type} = 'FLT' then 1 else 0 end)`,
-      unitCount: sql<number>`sum(case when ${tests.type} = 'UNIT' then 1 else 0 end)`,
-      csatCount: sql<number>`sum(case when ${tests.type} = 'CSAT' then 1 else 0 end)`,
+      constableCount: sql<number>`sum(case when ${tests.type} = 'POLICE_CONSTABLE' then 1 else 0 end)`,
+      siCount: sql<number>`sum(case when ${tests.type} = 'POLICE_SI' then 1 else 0 end)`,
+      miscCount: sql<number>`sum(case when ${tests.type} = 'MISC' then 1 else 0 end)`,
       pyqCount: sql<number>`sum(case when ${tests.type} = 'PYQ' then 1 else 0 end)`,
       topicCount: sql<number>`sum(case when ${tests.type} = 'TOPIC' then 1 else 0 end)`,
     })
@@ -98,9 +98,9 @@ export async function getUserDashboardData(): Promise<UserWithStats[]> {
     avgScore: r.avgScore != null ? Math.round(Number(r.avgScore) * 100) / 100 : null,
     lastActiveAt: r.lastActiveAt,
     accessExpiresAt: r.accessExpiresAt,
-    fltCount: Number(r.fltCount) || 0,
-    unitCount: Number(r.unitCount) || 0,
-    csatCount: Number(r.csatCount) || 0,
+    constableCount: Number(r.constableCount) || 0,
+    siCount: Number(r.siCount) || 0,
+    miscCount: Number(r.miscCount) || 0,
     pyqCount: Number(r.pyqCount) || 0,
     topicCount: Number(r.topicCount) || 0,
   }));

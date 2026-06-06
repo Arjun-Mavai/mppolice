@@ -196,6 +196,42 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
               <ConnectSocials minimal className="shrink-0 scale-90 sm:scale-100" />
             </div>
 
+            {/* ── Prominent Mode Switcher (Expert UI Redesign) ──────────────── */}
+            <div className="my-4 flex w-full items-center rounded-2xl bg-slate-200/80 p-1.5 shadow-inner ring-1 ring-slate-900/5 sm:w-auto">
+              <button
+                onClick={() => setInstantModeOnly(false)}
+                className={cn(
+                  "relative flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-[11px] font-black tracking-widest uppercase transition-all duration-300 sm:px-8 sm:text-[13px]",
+                  !instantModeOnly
+                    ? "bg-gradient-to-b from-slate-800 to-slate-950 text-white shadow-[0_4px_15px_rgba(245,158,11,0.4)] ring-1 ring-amber-500/50"
+                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-300/50"
+                )}
+              >
+                <BookOpen className={cn("h-4 w-4 transition-colors", !instantModeOnly ? "text-amber-400" : "opacity-60")} />
+                {hi ? 'एग्जाम मोड' : 'Exam Mode'}
+              </button>
+              <button
+                onClick={() => setInstantModeOnly(true)}
+                className={cn(
+                  "relative flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-[11px] font-black tracking-widest uppercase transition-all duration-300 sm:px-8 sm:text-[13px]",
+                  instantModeOnly
+                    ? "bg-gradient-to-b from-amber-400 to-orange-500 text-white shadow-[0_4px_12px_rgba(245,158,11,0.3)] ring-1 ring-orange-500/50"
+                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-300/50"
+                )}
+              >
+                <Zap className={cn("h-4 w-4 transition-colors", instantModeOnly ? "fill-orange-100 text-white" : "text-amber-600 opacity-80")} />
+                {hi ? 'फास्ट रिवीजन' : 'Fast Revision'}
+                
+                {/* Micro-animation spark for attention when inactive */}
+                {!instantModeOnly && (
+                  <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex h-3 w-3 m-[2px] rounded-full bg-amber-500 shadow-sm"></span>
+                  </span>
+                )}
+              </button>
+            </div>
+
             {/* ── Filter Button + Active Filters ──────────────── */}
             <div className="flex items-center gap-2">
               <button
@@ -238,27 +274,6 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                   {hi ? 'सब हटाओ' : 'Clear'}
                 </button>
               )}
-              <div className="ml-auto flex items-center gap-2">
-                {instantModeOnly && (
-                  <div className="flex items-center pt-2">
-                    <PointingArrow direction="down" className="relative scale-75" />
-                  </div>
-                )}
-                <div 
-                  className="relative flex cursor-pointer items-center gap-1.5 rounded-full border border-amber-500/30 bg-[#022c22] px-2.5 py-1 shadow-sm transition-transform active:scale-95 hover:border-amber-500/50"
-                  onClick={() => setInstantModeOnly(!instantModeOnly)}
-                >
-                  <Switch 
-                    checked={instantModeOnly} 
-                    onCheckedChange={setInstantModeOnly} 
-                    className="pointer-events-none scale-75 data-[state=checked]:bg-amber-500 data-[state=unchecked]:bg-slate-500"
-                  />
-                  <span className="select-none text-[10px] font-black tracking-wide text-amber-400 uppercase drop-shadow-sm">
-                    ⚡ Instant Mode
-                  </span>
-                  {!instantModeOnly && <PointingArrow className="right-4 top-full mt-2" />}
-                </div>
-              </div>
             </div>
 
             {/* INSTANT MODE GUIDE BUTTON (BANNER) */}
@@ -284,7 +299,7 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                           <Zap size={16} className="fill-amber-400 text-amber-400" />
                         </div>
                         <span className="text-xs font-black tracking-widest text-amber-400 uppercase drop-shadow-md">
-                          {hi ? 'इंस्टेंट मोड कैसे इस्तेमाल करें?' : 'How to use Instant Mode?'}
+                          {hi ? 'फास्ट रिवीजन कैसे इस्तेमाल करें?' : 'How to use Fast Revision?'}
                         </span>
                       </div>
                       <ChevronRight className="h-5 w-5 text-amber-500 transition-transform group-hover:translate-x-1" />
@@ -460,7 +475,7 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
             <DialogHeader className="relative z-10 text-left">
               <DialogTitle className="flex items-center gap-2 text-xl font-black tracking-tight text-white">
                 <Zap className="h-5 w-5 text-amber-400 fill-amber-400/20" />
-                {hi ? 'इंस्टेंट मोड क्या है?' : 'What is Instant Mode?'}
+                {hi ? 'फास्ट रिवीजन क्या है?' : 'What is Fast Revision?'}
               </DialogTitle>
               <div className="pt-1 text-sm font-medium text-slate-400">
                 {hi ? 'टेस्ट सबमिट करने का इंतज़ार खत्म!' : 'No need to wait for submit!'}
@@ -586,7 +601,7 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
             {/* Subtle Premium Note */}
             <div className="flex flex-col items-center gap-1.5 pt-3">
               <span className="text-[11px] font-medium text-slate-400">
-                {hi ? 'इंस्टेंट मोड एक प्रीमियम फीचर है ✨' : 'Instant Mode is a Premium Feature ✨'}
+                {hi ? 'फास्ट रिवीजन एक प्रीमियम फीचर है ✨' : 'Fast Revision is a Premium Feature ✨'}
               </span>
               <a 
                 href="/pricing" 

@@ -669,7 +669,7 @@ export const mppscUserActivities = sqliteTable(
     userName: text('user_name'),
     adminId: text('admin_id'), // Who performed the action
     action: text('action', {
-      enum: ['PLAN_CHANGE', 'DELETE', 'GRANT', 'UPDATE', 'LOGIN'],
+      enum: ['PLAN_CHANGE', 'DELETE', 'GRANT', 'UPDATE', 'LOGIN', 'LOGOUT'],
     }).notNull(),
     details: text('details', { mode: 'json' }), // Store old/new values
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
