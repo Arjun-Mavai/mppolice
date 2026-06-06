@@ -6,6 +6,7 @@ import { eq, and, ne } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import { touchAuthLogoutMetadata } from '@/lib/auth-session-metadata';
 
 const updateUserSchema = z.object({
   userId: z.string().min(1),
@@ -16,6 +17,7 @@ const updateUserSchema = z.object({
   isActive: z.boolean().optional(),
   isSubscribed: z.boolean().optional(),
   accessMonths: z.number().min(1).max(24).optional(),
+  forceLogout: z.boolean().optional(),
 });
 
 const PLAN_MONTHS: Record<string, number> = { lite: 8, pro: 6 };
@@ -44,7 +46,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = updateUserSchema.parse(body);
     targetUserId = parsed.userId;
-    const { userId, name, email, password, planTier, isActive, isSubscribed, accessMonths } =
+    const { userId, name, email, password, planTier, isActive, isSubscribed, accessMonths, forceLogout } =
       parsed;
 
     // Check target user exists
@@ -56,6 +58,12 @@ export async function POST(request: Request) {
     // Build update object — only include changed fields
     const updates: Record<string, any> = {};
     const changes: string[] = [];
+    let shouldInvalidateSessions = false;
+
+    if (forceLogout) {
+      shouldInvalidateSessions = true;
+      changes.push('forced logout');
+    }
 
     if (name !== undefined && name !== targetUser.name) {
       updates.name = name.trim();
@@ -83,6 +91,7 @@ export async function POST(request: Request) {
     if (password) {
       updates.password = await bcrypt.hash(password, 10);
       changes.push('password');
+      shouldInvalidateSessions = true;
     }
 
     if (planTier !== undefined && planTier !== targetUser.planTier) {
@@ -103,6 +112,9 @@ export async function POST(request: Request) {
     if (isActive !== undefined && isActive !== targetUser.isActive) {
       updates.isActive = isActive;
       changes.push(isActive ? 'activated' : 'deactivated');
+      if (!isActive) {
+        shouldInvalidateSessions = true;
+      }
     }
 
     if (isSubscribed !== undefined) {
@@ -114,6 +126,11 @@ export async function POST(request: Request) {
       expiry.setMonth(expiry.getMonth() + accessMonths);
       updates.accessExpiresAt = expiry;
       changes.push(`expiry +${accessMonths}mo`);
+    }
+
+    if (shouldInvalidateSessions) {
+      updates.sessionVersion = (targetUser.sessionVersion || 0) + 1;
+      updates.metadata = touchAuthLogoutMetadata(targetUser.metadata);
     }
 
     if (changes.length === 0) {
@@ -136,6 +153,18 @@ export async function POST(request: Request) {
           reason: 'Admin manual update',
         },
       });
+      if (shouldInvalidateSessions) {
+        await logUserActivity({
+          userId: targetUser.id,
+          userEmail: targetUser.email,
+          userName: targetUser.name,
+          adminId: adminUser.id,
+          action: 'LOGOUT',
+          details: {
+            reason: forceLogout ? 'forced_logout' : isActive === false ? 'deactivated' : 'password_reset',
+          },
+        });
+      }
     }
 
     return NextResponse.json({

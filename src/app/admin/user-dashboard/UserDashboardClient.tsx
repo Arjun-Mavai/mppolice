@@ -35,12 +35,12 @@ const TIER_COLORS: Record<string, string> = {
 };
 
 const TEST_TYPE_COLORS: Record<string, string> = {
-  FLT: 'bg-violet-100 text-violet-700',
-  UNIT: 'bg-blue-100 text-blue-700',
-  CSAT: 'bg-amber-100 text-amber-700',
+  POLICE_CONSTABLE: 'bg-violet-100 text-violet-700',
+  POLICE_SI: 'bg-blue-100 text-blue-700',
+  MISC: 'bg-amber-100 text-amber-700',
   PYQ: 'bg-emerald-100 text-emerald-700',
   TOPIC: 'bg-rose-100 text-rose-700',
-  MISC: 'bg-slate-100 text-slate-600',
+  FREE_QUIZ: 'bg-slate-100 text-slate-600',
 };
 
 interface Props {
@@ -338,11 +338,11 @@ export default function UserDashboardClient({ users }: Props) {
                     <div className="mt-4 space-y-4 border-t border-slate-100 pt-4">
                       {/* Category Stats */}
                       <div className="grid grid-cols-5 gap-2">
-                        <CategoryStat label="FLT" count={user.fltCount} emoji="📝" color="violet" />
-                        <CategoryStat label="Unit" count={user.unitCount} emoji="📚" color="blue" />
-                        <CategoryStat label="CSAT" count={user.csatCount} emoji="🧠" color="amber" />
+                        <CategoryStat label="Constable" count={user.constableCount} emoji="👮‍♂️" color="violet" />
+                        <CategoryStat label="SI" count={user.siCount} emoji="⭐️" color="blue" />
+                        <CategoryStat label="Misc" count={user.miscCount} emoji="🎯" color="amber" />
                         <CategoryStat label="PYQ" count={user.pyqCount} emoji="📜" color="emerald" />
-                        <CategoryStat label="Topic" count={user.topicCount} emoji="🎯" color="rose" />
+                        <CategoryStat label="Topic" count={user.topicCount} emoji="📚" color="rose" />
                       </div>
 
                       {/* Quick Info */}

@@ -19,8 +19,12 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
+  Key,
+  Mail,
+  Info,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { generateManualPasswordLink, testResendEmail } from '@/actions/admin-actions';
 
 interface User {
   id: string;
@@ -36,6 +40,7 @@ interface User {
   phone: string | null;
   metadata: any;
   previousUserId: string | null;
+  examType?: string;
 }
 
 interface Stats {
@@ -55,7 +60,7 @@ interface ActivityLog {
   userId?: string; // Add this
   userEmail: string;
   userName: string | null;
-  action: 'PLAN_CHANGE' | 'DELETE' | 'GRANT' | 'UPDATE' | 'LOGIN';
+  action: 'PLAN_CHANGE' | 'DELETE' | 'GRANT' | 'UPDATE' | 'LOGIN' | 'LOGOUT';
   details: string | null; // JSON string
   createdAt: string;
   adminId: string;
@@ -80,6 +85,7 @@ export default function UsersClient() {
   });
   const [saving, setSaving] = useState(false);
   const [showGrant, setShowGrant] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const [grantForm, setGrantForm] = useState({
     name: '',
     email: '',
@@ -286,6 +292,71 @@ export default function UsersClient() {
     }
   };
 
+  // ── Force Logout ──
+  const handleForceLogout = async (userId: string) => {
+    if (!confirm('Are you sure you want to force logout this user from all devices?')) return;
+    try {
+      const res = await fetch('/api/admin/update-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, forceLogout: true }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success('User forcefully logged out from all devices');
+        fetchUsers();
+      } else toast.error(data.error);
+    } catch {
+      toast.error('Failed to force logout');
+    }
+  };
+
+  // ── Generate Manual Link ──
+  const handleManualLink = async (userId: string) => {
+    try {
+      const res = await generateManualPasswordLink(userId);
+      if (res.success && res.url) {
+        if (!navigator.clipboard) {
+          toast.error('Clipboard is unavailable. Copy the password link manually.');
+          console.log('Manual URL:', res.url);
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(res.url);
+          toast.success('Password link copied! Share it with the user.');
+        } catch (err) {
+          toast.error('Failed to copy password link');
+          console.error('Clipboard error:', err);
+        }
+      } else {
+        toast.error(res.error || 'Failed to generate link');
+      }
+    } catch (error) {
+      toast.error('Error generating link');
+      console.error('Action error:', error);
+    }
+  };
+
+  // ── Test Resend ──
+  const handleTestEmail = async () => {
+    const email = prompt('Enter email to receive test message:');
+    if (!email) return;
+
+    const id = toast.loading('Sending test email via Resend...');
+    try {
+      const res = await testResendEmail(email);
+      if (res.success) {
+        toast.success('Test email sent! Check your inbox.', { id });
+      } else {
+        toast.error(`Error: ${res.error}`, { id, duration: 6000 });
+        console.error('Email Debug Details:', res.details);
+      }
+    } catch (err: any) {
+      toast.error('Failed to execute test', { id });
+    }
+  };
+
   // ── Filter ──
   const now = new Date();
   const filteredUsers = users.filter((user) => {
@@ -445,6 +516,63 @@ export default function UsersClient() {
               <div className="text-[10px] text-slate-500">{l}</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* 🛠️ Debug Tools */}
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={() => setShowGuide(!showGuide)}
+          className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-sm transition-all ${
+            showGuide
+              ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
+              : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
+          }`}
+        >
+          <Info className="h-3.5 w-3.5" />
+          Tapori Guide (System Workings)
+        </button>
+        <button
+          onClick={handleTestEmail}
+          className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-indigo-600"
+        >
+          <Mail className="h-3.5 w-3.5" />
+          Test Mail Settings
+        </button>
+      </div>
+
+      {showGuide && (
+        <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-blue-50 p-5 shadow-inner">
+          <div className="mb-4 flex items-center gap-2">
+            <Info className="h-5 w-5 text-indigo-600" />
+            <h3 className="text-lg font-black text-indigo-900">Bhai ka Guide: Background me kya chal rela hai? 🕵️‍♂️</h3>
+          </div>
+          <div className="space-y-4 text-sm text-slate-700">
+            <div className="rounded-lg bg-white p-3 shadow-sm">
+              <strong className="text-indigo-800">1. Force Logout (Logout Button):</strong>
+              <p className="mt-1">
+                Bhai, jab apun "Logout" dabate hain, toh backend api (`update-user/route.ts`) user ka `sessionVersion` +1 kar deti hai DB me aur JWT validation ko break kar deti hai. Isse JWT token purana ho jata hai aur user automatically har device se dhakke maar ke bahar nikla jata hai (multi-device logout style me). Iska Telegram pe koi notification nahi jaata, chup chaap execute ho jata hai.
+              </p>
+            </div>
+            <div className="rounded-lg bg-white p-3 shadow-sm">
+              <strong className="text-indigo-800">2. Manual Password Link (Key Link Button):</strong>
+              <p className="mt-1">
+                Agar user ko "No Password" dikha raha hai, matlab usne sirf Google se signup kiya hai aur direct login karta hai. Ab agar use password set karna hai bina OTP wagera ke, toh apun yeh "Key" button dbate hain. Backend ek secure 24-ghante wala token banata hai aur link return karta hai jo apun ke clipboard pe direct copy ho jata hai. Ye link usko DM kar do, direct password set kar lega!
+              </p>
+            </div>
+            <div className="rounded-lg bg-white p-3 shadow-sm">
+              <strong className="text-indigo-800">3. Test Mail Settings (Mail Button):</strong>
+              <p className="mt-1">
+                Server live pe kaam kar raha hai ya nahi, Resend SMTP set hai ya udi padi hai? Yeh check karne ke liye isko dabao, aur apna email dalo. Ye `testResendEmail` action call karta hai aur "MP POLICE ZEN" se ek demo email bhejta hai. Agar toast me error aaya, toh Resend API key missing hai ya limit khatam ho gai!
+              </p>
+            </div>
+            <div className="rounded-lg bg-white p-3 shadow-sm">
+              <strong className="text-indigo-800">4. Password Status & Badges:</strong>
+              <p className="mt-1">
+                Har user ke samne 🔑 dikhega. "Password Set" bole toh account solid hai, password usne bana rakha hai. "Password PENDING" blinking red me dikhega jab user premium/paid hai lekin password abhi tak set nai kiya (Aise cases me direct Key link bana ke de dena chahiye).
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -650,6 +778,25 @@ export default function UsersClient() {
                             >
                               {status.label}
                             </span>
+                            {/* 🔑 Password Status */}
+                            {user.deletedAt ? null : (
+                              <span
+                                className={`rounded-full border px-1.5 py-0.5 text-[10px] font-bold ${
+                                  user.isActive
+                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                    : user.planTier !== 'free'
+                                      ? 'animate-pulse border-amber-200 bg-amber-50 text-amber-700'
+                                      : 'border-slate-200 bg-slate-50 text-slate-500'
+                                }`}
+                              >
+                                🔑{' '}
+                                {user.isActive
+                                  ? 'Password Set'
+                                  : user.planTier !== 'free'
+                                    ? 'Password PENDING'
+                                    : 'No Password'}
+                              </span>
+                            )}
                             {user.role === 'admin' && (
                               <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700">
                                 ADMIN
@@ -663,6 +810,41 @@ export default function UsersClient() {
                             <span className="flex items-center gap-0.5">
                               <Clock className="h-3 w-3" />
                               {formatExpiry(user.accessExpiresAt)}
+                            </span>
+                          </div>
+
+                          {/* 🕒 Creation Proof & Metadata */}
+                          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] sm:text-[11px]">
+                            <span className="flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-100/50 px-2 py-0.5 font-semibold text-slate-600">
+                              <Clock className="h-3 w-3 text-indigo-500" />
+                              {user.createdAt ? (
+                                <span title={new Date(user.createdAt).toISOString()}>
+                                  Created:{' '}
+                                  {new Date(user.createdAt).toLocaleString('en-IN', {
+                                    weekday: 'short',
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true,
+                                  })}
+                                </span>
+                              ) : (
+                                'Created: N/A'
+                              )}
+                            </span>
+
+                            <span className="flex items-center gap-1 text-slate-400">
+                              <Shield className="h-3 w-3 text-slate-300" />
+                              <code className="rounded border border-slate-100 bg-slate-50 px-1.5 py-0.5 font-mono text-[9px] select-all">
+                                ID: {user.id}
+                              </code>
+                            </span>
+
+                            {/* 🎯 Exam & Source Badges */}
+                            <span className="flex items-center gap-1 rounded-full bg-slate-900 px-2 py-0.5 text-[9px] font-bold tracking-wider text-white uppercase">
+                              Exam: {user.examType || 'mppolice'}
                             </span>
                           </div>
                         </div>
@@ -715,6 +897,24 @@ export default function UsersClient() {
                               ) : (
                                 <ChevronDown className="h-3 w-3" />
                               )}
+                            </button>
+                            {/* Manual Password Link */}
+                            {!user.isActive && !user.deletedAt && (
+                              <button
+                                onClick={() => handleManualLink(user.id)}
+                                className="flex h-7 items-center gap-0.5 rounded-md border border-purple-200 bg-purple-50 px-2 text-[10px] font-bold text-purple-600 hover:bg-purple-100"
+                                title="Copy Set Password Link"
+                              >
+                                <Key className="h-3 w-3" /> Link
+                              </button>
+                            )}
+                            {/* Force Logout */}
+                            <button
+                              onClick={() => handleForceLogout(user.id)}
+                              className="flex h-7 items-center gap-0.5 rounded-md border border-orange-200 bg-orange-50 px-2 text-[10px] font-bold text-orange-600 hover:bg-orange-100"
+                              title="Force Logout All Devices"
+                            >
+                              <AlertTriangle className="h-3 w-3" /> Logout
                             </button>
                             {/* Delete Button */}
                             <button
