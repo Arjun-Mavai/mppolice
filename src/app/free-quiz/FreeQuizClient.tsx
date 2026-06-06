@@ -203,11 +203,11 @@ export default function FreeQuizClient({ quizzes, isLoggedIn }: { quizzes: FreeQ
                 className={cn(
                   "relative flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-[11px] font-black tracking-widest uppercase transition-all duration-300 sm:px-8 sm:text-[13px]",
                   !instantModeOnly
-                    ? "bg-gradient-to-b from-indigo-500 to-indigo-700 text-white shadow-[0_4px_12px_rgba(79,70,229,0.3)] ring-1 ring-indigo-500/50"
+                    ? "bg-gradient-to-b from-slate-800 to-slate-950 text-white shadow-[0_4px_15px_rgba(245,158,11,0.4)] ring-1 ring-amber-500/50"
                     : "text-slate-500 hover:text-slate-800 hover:bg-slate-300/50"
                 )}
               >
-                <BookOpen className={cn("h-4 w-4 transition-colors", !instantModeOnly ? "text-indigo-100" : "opacity-60")} />
+                <BookOpen className={cn("h-4 w-4 transition-colors", !instantModeOnly ? "text-amber-400" : "opacity-60")} />
                 {hi ? 'एग्जाम मोड' : 'Exam Mode'}
               </button>
               <button
