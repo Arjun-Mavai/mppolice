@@ -65,36 +65,36 @@ export function HeroSection() {
           <div className="mx-auto -mt-2 flex w-full max-w-[620px] flex-col items-center justify-center gap-8 px-4 md:mt-0">
             {!globalUser ? (
               <div className="flex w-full flex-col gap-3 md:flex-row md:gap-4">
-                {/* 🟠 PRIMARY: One-Liners Button */}
+                {/* 🟠 PRIMARY: Test Series Hub Button */}
                 <Link
-                  href={oneLinersHref}
+                  href="/syllabus/quiz/full-tests"
                   prefetch={true}
                   className="group relative w-full focus:outline-none"
-                  onClick={() => trackFbCustomEvent('hero_one_liners_clicked', { location: 'home_hero', user: 'guest' })}
+                  onClick={() => trackFbCustomEvent('hero_test_series_hub_clicked', { location: 'home_hero', user: 'guest' })}
                 >
                   <div className="relative flex h-16 w-full transform items-center justify-center overflow-hidden rounded-2xl bg-amber-600 transition-all duration-500 group-hover:-translate-y-1 group-hover:bg-amber-500 group-hover:shadow-[0_0_40px_rgba(245,158,11,0.4)] group-active:scale-[0.98] md:h-24 md:rounded-[2.5rem]">
                     <div className="relative z-10 flex h-full w-full items-center justify-center gap-4 px-6 md:gap-8 md:px-10">
-                      <Target className="h-6 w-6 fill-white text-white md:h-8 md:w-8" />
+                      <Trophy className="h-6 w-6 fill-white text-white md:h-8 md:w-8 animate-pulse" />
                       <span className="text-xs font-black tracking-[0.15em] whitespace-nowrap text-white uppercase md:text-xl md:tracking-[0.2em]">
-                        {language === 'hi' ? 'GK वन-लाइनर्स प्रैक्टिस' : 'Practice GK One-Liners'}
+                        {language === 'hi' ? 'फ्री टेस्ट सीरीज हब 👮‍♂️' : 'Free Test Series Hub 👮‍♂️'}
                       </span>
                       <ChevronRight className="h-6 w-6 text-white transition-transform duration-500 group-hover:translate-x-2 md:h-8 md:w-8" strokeWidth={4} />
                     </div>
                   </div>
                 </Link>
 
-                {/* ⚪️ SECONDARY: Free Test Button */}
+                {/* ⚪️ SECONDARY: One-Liners Button */}
                 <Link
-                  href="/free-quiz"
+                  href="/free-one-liners"
                   prefetch={true}
                   className="group relative w-full focus:outline-none"
-                  onClick={() => trackFbCustomEvent('hero_free_test_clicked', { location: 'home_hero', user: 'guest' })}
+                  onClick={() => trackFbCustomEvent('hero_one_liners_clicked', { location: 'home_hero', user: 'guest' })}
                 >
                   <div className="relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm md:backdrop-blur-xl transition-all duration-500 group-hover:-translate-y-0.5 group-hover:border-amber-500/40 group-hover:bg-amber-500/10 group-hover:shadow-[0_0_40px_rgba(245,158,11,0.12)] group-active:scale-[0.99] md:h-24 md:rounded-[2.5rem]">
                     <div className="relative z-10 flex h-full w-full items-center justify-center gap-3 px-6 md:gap-6 md:px-10">
-                      <Zap className="h-5 w-5 text-amber-400 md:h-7 md:w-7" />
+                      <Target className="h-5 w-5 text-amber-400 md:h-7 md:w-7" />
                       <span className="text-[11px] font-black tracking-[0.15em] whitespace-nowrap text-white/90 uppercase md:text-lg md:tracking-[0.2em]">
-                        {language === 'hi' ? 'फ्री प्रैक्टिस टेस्ट' : 'Practice Free'}
+                        {language === 'hi' ? 'GK वन-लाइनर्स प्रैक्टिस' : 'GK One-Liners Practice'}
                       </span>
                       <ChevronRight className="h-5 w-5 text-amber-400 transition-transform duration-500 group-hover:translate-x-1.5 md:h-7 md:w-7" strokeWidth={4} />
                     </div>
@@ -103,29 +103,29 @@ export function HeroSection() {
               </div>
             ) : (
               <div className="flex w-full flex-col gap-3 md:flex-row md:gap-4">
-                {/* Logged-In User State: Bypasses demo pages */}
+                {/* Logged-In User State: High premium navigation */}
                 <Link
-                  href={oneLinersHref}
-                  onMouseEnter={() => router.prefetch(oneLinersHref)}
+                  href="/syllabus/quiz/full-tests"
+                  onMouseEnter={() => router.prefetch('/syllabus/quiz/full-tests')}
                   className="group relative w-full"
                 >
-                  <div className="relative flex h-16 w-full transform items-center justify-center overflow-hidden rounded-2xl bg-amber-600 transition-all duration-500 group-hover:-translate-y-1 group-hover:bg-amber-500 md:h-24 md:rounded-[2.5rem]">
+                  <div className="relative flex h-16 w-full transform items-center justify-center overflow-hidden rounded-2xl bg-amber-600 transition-all duration-500 group-hover:-translate-y-1 group-hover:bg-amber-500 group-hover:shadow-[0_0_40px_rgba(245,158,11,0.4)] group-active:scale-[0.98] md:h-24 md:rounded-[2.5rem]">
                     <div className="relative z-10 flex h-full w-full items-center justify-center gap-4 px-6 md:gap-8 md:px-10">
-                      <Target className="h-6 w-6 fill-white text-white md:h-8 md:w-8" />
+                      <Trophy className="h-6 w-6 fill-white text-white md:h-8 md:w-8" />
                       <span className="text-xs font-black tracking-[0.15em] whitespace-nowrap text-white uppercase md:text-xl md:tracking-[0.2em]">
-                        {language === 'hi' ? 'GK वन-लाइनर्स' : 'Practice One-Liners'}
+                        {language === 'hi' ? 'टेस्ट सीरीज हब 👮‍♂️' : 'Test Series Hub 👮‍♂️'}
                       </span>
                       <ChevronRight className="h-6 w-6 text-white transition-transform group-hover:translate-x-2 md:h-8 md:w-8" strokeWidth={4} />
                     </div>
                   </div>
                 </Link>
 
-                <Link href="/syllabus/quiz/full-tests" className="group relative w-full">
-                  <div className="relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm md:backdrop-blur-xl transition-all duration-500 group-hover:-translate-y-0.5 md:h-24 md:rounded-[2.5rem]">
+                <Link href={oneLinersHref} className="group relative w-full">
+                  <div className="relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm md:backdrop-blur-xl transition-all duration-500 group-hover:-translate-y-0.5 group-hover:border-amber-500/40 group-hover:bg-amber-500/10 group-hover:shadow-[0_0_40px_rgba(245,158,11,0.12)] group-active:scale-[0.99] md:h-24 md:rounded-[2.5rem]">
                     <div className="relative z-10 flex h-full w-full items-center justify-center gap-3 px-6 md:gap-6 md:px-10">
-                      <Trophy className="h-5 w-5 text-amber-500 md:h-7 md:w-7" />
+                      <Target className="h-5 w-5 text-amber-500 md:h-7 md:w-7" />
                       <span className="text-[11px] font-black tracking-[0.15em] whitespace-nowrap text-white/90 uppercase md:text-lg md:tracking-[0.2em]">
-                        {language === 'hi' ? 'टेस्ट डैशबोर्ड' : 'Test Dashboard'}
+                        {language === 'hi' ? 'GK वन-लाइनर्स' : 'GK One-Liners'}
                       </span>
                       <ArrowLeft className="h-5 w-5 rotate-180 text-amber-500 transition-transform group-hover:translate-x-1.5 md:h-7 md:w-7" strokeWidth={3} />
                     </div>
