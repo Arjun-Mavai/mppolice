@@ -12,6 +12,7 @@ import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
+import { after } from 'next/server';
 import { Resend } from 'resend';
 import EmailTemplate from '@/components/email-template';
 import { addHours } from 'date-fns';
@@ -122,6 +123,26 @@ export async function startPayment(input: StartPaymentInput) {
         examType: examType,
       });
     }
+
+    // 🚀 TELEGRAM LEAD ALERT — Using after() for non-blocking fast response
+    after(async () => {
+      try {
+        const isReturning = !!existingUser;
+        const message =
+          `💰 <b>LEAD ALERT: Checkout Started</b>\n\n` +
+          `👤 <b>Name:</b> ${escapeHTML(name.trim())}\n` +
+          `📧 <b>Email:</b> ${escapeHTML(normalizedEmail)}\n` +
+          `📞 <b>Phone:</b> <code>${escapeHTML(phone.trim())}</code>\n` +
+          `🎯 <b>Plan:</b> ${planType.toUpperCase()}\n` +
+          `📘 <b>Exam:</b> MP Police\n` +
+          `🔄 <b>Type:</b> ${isReturning ? 'Returning Lead' : 'New Lead'}\n` +
+          `🔗 <b>Source:</b> ${escapeHTML(source || 'Direct')}\n\n` +
+          `#Lead #MPPolice #${planType}`;
+        await sendTelegramNotification(message);
+      } catch (e) {
+        logger.error('Telegram lead notification failed', e, { category: 'payment' });
+      }
+    });
 
     // ── PHASE 2: Create Razorpay Order (Server-Side Pricing)
     if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {

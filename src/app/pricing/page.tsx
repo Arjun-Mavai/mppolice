@@ -41,6 +41,7 @@ import { PricingCard } from '@/components/PricingCard';
 import { cn } from '@/lib/utils';
 import { getPricingData } from '@/actions/pricing-actions';
 import { useQuery } from '@tanstack/react-query';
+import { notifyLockModalOpen } from '@/lib/analytics/notifyLockModal';
 
 // ── FAQ data — bilingual ────────────────────────────────────
 const faqData = [
@@ -133,6 +134,8 @@ export default function PricingPage() {
   useEffect(() => {
     if (isProUser) {
       router.replace('/dashboard');
+    } else {
+      notifyLockModalOpen('pricing');
     }
   }, [isProUser, router]);
 

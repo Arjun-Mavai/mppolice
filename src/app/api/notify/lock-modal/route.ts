@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { sendTelegramEventNotification, escapeHTML } from '@/lib/telegram';
-import { getTelemetryEnabled } from '@/lib/system-settings';
 
 const rateLimitMap = new Map<string, { count: number; timestamp: number }>();
 const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
@@ -8,10 +7,6 @@ const MAX_REQUESTS_PER_WINDOW = 5;
 
 export async function POST(req: Request) {
   try {
-    const isTelemetryEnabled = await getTelemetryEnabled();
-    if (!isTelemetryEnabled) {
-      return NextResponse.json({ success: true, skipped: true });
-    }
 
     // Basic Rate Limiting
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
@@ -30,7 +25,7 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { modalType, path, user, guestName, device, userAgent } = body as {
-      modalType: 'premium' | 'payment';
+      modalType: 'premium' | 'payment' | 'pricing';
       path: string;
       user?: {
         id?: string;
@@ -101,9 +96,10 @@ export async function POST(req: Request) {
 
     // --- Build Telegram message ---
     const isPremium = modalType === 'premium';
-    const emoji = '🔒';
-    const label = isPremium ? 'PREMIUM SYLLABUS MODAL' : 'PAYMENT MODAL';
-    const tag = isPremium ? '#PremiumLock' : '#PaymentLock';
+    const isPricing = modalType === 'pricing';
+    const emoji = isPricing ? '🛒' : '🔒';
+    const label = isPricing ? 'PRICING PAGE VISITED' : isPremium ? 'PREMIUM SYLLABUS MODAL' : 'PAYMENT MODAL';
+    const tag = isPricing ? '#PricingPage' : isPremium ? '#PremiumLock' : '#PaymentLock';
 
     const message =
       `💰 <b>${emoji} ${label} OPENED</b>\n` +
