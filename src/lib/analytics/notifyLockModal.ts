@@ -1,6 +1,6 @@
 import { useSettingsStore } from '@/store/useSettingsStore';
 
-export function notifyLockModalOpen(modalType: 'premium' | 'payment') {
+export function notifyLockModalOpen(modalType: 'premium' | 'payment' | 'pricing') {
   if (typeof window === 'undefined') return;
 
   try {
