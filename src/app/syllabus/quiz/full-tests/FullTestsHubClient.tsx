@@ -7,7 +7,8 @@
 import { useCallback, useMemo, useState, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Sparkles } from 'lucide-react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { QuizListItem } from '@/components/QuizListItem';
@@ -111,6 +112,46 @@ export default function FullTestsHubClient({ miscTests }: FullTestsHubClientProp
           <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
             {hi ? 'विषयवार अभ्यास' : 'Subject-wise Practice'}
           </h1>
+        </motion.div>
+
+        {/* 🌟 PREMIUM GLOWING BANNER FOR FREE DEMO QUIZ */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="relative overflow-hidden rounded-[2rem] border border-amber-500/20 bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950 p-6 shadow-xl md:p-8 mb-8"
+        >
+          {/* Decorative glows inside the banner */}
+          <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-amber-500/10 blur-[40px] pointer-events-none" />
+          <div className="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-violet-600/10 blur-[40px] pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-3 text-center md:text-left">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-1 text-[10px] font-black tracking-widest text-amber-400 uppercase animate-pulse">
+                <span className="h-2 w-2 rounded-full bg-amber-500 animate-ping" />
+                {hi ? 'मुफ़्त डेमो क्विज़' : 'FREE DEMO QUIZ'}
+              </div>
+              <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl md:text-3xl">
+                {hi ? 'एक बार प्रयास करें, अंतर स्वयं देखें।' : 'Take One Quiz. See the Difference.'}
+              </h2>
+              <p className="max-w-xl text-xs md:text-sm font-medium text-slate-300 leading-relaxed">
+                {hi
+                  ? 'डेमो क्विज़ हल करें और हमारे परीक्षा इंटरफेस, स्मार्ट व्याख्याओं तथा विस्तृत प्रदर्शन विश्लेषण को अनुभव करें।'
+                  : 'Attempt the demo quiz and experience our exam-grade interface, smart explanations, and detailed performance insights.'}
+              </p>
+            </div>
+            
+            <Link
+              href="/free-quiz"
+              className="group relative shrink-0 w-full md:w-auto"
+            >
+              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-600 opacity-70 blur-md transition-all duration-300 group-hover:opacity-100 group-hover:scale-105" />
+              <button className="relative flex w-full md:w-auto items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-4 text-xs font-black tracking-wider text-white uppercase shadow-lg transition-transform active:scale-95">
+                <span>{hi ? 'मुफ़्त क्विज़ शुरू करें' : 'Start Free Quiz'}</span>
+                <Sparkles className="h-4 w-4 text-amber-300 animate-pulse fill-amber-300/20" />
+              </button>
+            </Link>
+          </div>
         </motion.div>
 
         {/* 💊 Horizontal Scrollable Filters */}
