@@ -670,10 +670,11 @@ export function PaymentModal({
                         ✅ {hi ? 'उत्पाद में शामिल सामग्री (What is included):' : 'What is included:'}
                       </p>
                       <ul className="list-disc list-inside space-y-0.5 pl-1 mb-2">
-                        <li>{hi ? 'सिलेबस डिकोडिंग और स्मार्ट ट्रैकर' : 'Syllabus Decoding & Smart Tracker'}</li>
-                        <li>{hi ? 'टॉपिक-wise PYQs और उत्तर' : 'Topic-wise PYQs & Model Answers'}</li>
-                        <li>{hi ? 'इंटेलीजेंट प्रैक्टिस टेस्ट' : 'Interactive Practice Questions'}</li>
-                        <li>{hi ? 'वैल्यू एडिशन और प्रोग्रेस ट्रैकिंग' : 'Value Addition & Progress Insights'}</li>
+                        <li>{hi ? 'संपूर्ण MPGK स्मार्ट वन-लाइनर्स' : 'Entire MPGK via Smart One-Liners'}</li>
+                        <li>{hi ? '1000+ महत्वपूर्ण तथ्य तेज़ रिवीज़न' : '1000+ Important Facts for Rapid Revision'}</li>
+                        <li>{hi ? 'टॉपिक-वाइज़ और फुल मॉक टेस्ट' : 'Topic-Wise & Full Mock Tests'}</li>
+                        <li>{hi ? 'PYQs के साथ परीक्षा पैटर्न' : 'Exam Pattern via PYQs'}</li>
+                        <li>{hi ? 'तुरंत व्याख्या और प्रोग्रेस ट्रैकिंग' : 'Instant Explanations & Progress Tracking'}</li>
                       </ul>
                       <p className="mb-2 font-semibold text-red-700">
                         ❌ {hi ? 'उत्पाद में शामिल नहीं है (What is NOT included):' : 'What is NOT included:'}
