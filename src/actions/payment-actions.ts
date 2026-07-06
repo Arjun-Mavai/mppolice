@@ -30,6 +30,10 @@ const startPaymentSchema = z.object({
   source: z.string().optional(),
   planType: z.enum(['lite', 'pro', 'upgrade']),
   examType: z.enum(['upsc', 'mppsc', 'mppolice']).default('mppolice'),
+  consentAccepted: z.boolean().refine((val) => val === true, {
+    message: 'Consent to terms is mandatory to proceed',
+  }),
+  consentVersion: z.string().default('v1.2'),
 });
 
 type StartPaymentInput = z.infer<typeof startPaymentSchema>;
@@ -56,8 +60,24 @@ export async function startPayment(input: StartPaymentInput) {
       };
     }
 
-    const { name, email, phone, source, planType, examType } = validatedInput.data;
+    const { name, email, phone, source, planType, examType, consentAccepted, consentVersion } = validatedInput.data;
     const normalizedEmail = email.toLowerCase().trim();
+
+    const { headers } = await import('next/headers');
+    const reqHeaders = await headers();
+    const forwardedFor = reqHeaders.get('x-forwarded-for');
+    const ipAddress = forwardedFor 
+      ? forwardedFor.split(',')[0].trim() 
+      : reqHeaders.get('x-real-ip') || '127.0.0.1';
+    const userAgent = reqHeaders.get('user-agent') || 'unknown';
+
+    const consentInfo = {
+      accepted: consentAccepted,
+      version: consentVersion,
+      ip: ipAddress,
+      userAgent: userAgent,
+      timestamp: new Date().toISOString(),
+    };
 
     // ── PHASE 1: Find existing user by email (case-insensitive)
     const existingUser = await db.query.mppscUsers.findFirst({
@@ -102,6 +122,7 @@ export async function startPayment(input: StartPaymentInput) {
           metadata: {
             ...existingMeta,
             source,
+            consent: consentInfo,
           },
         })
         .where(eq(mppscUsers.id, existingUser.id));
@@ -118,7 +139,7 @@ export async function startPayment(input: StartPaymentInput) {
         password: tempPassword,
         isActive: false,
         role: 'guest',
-        metadata: { source },
+        metadata: { source, consent: consentInfo },
         planTier: 'free',
         examType: examType,
       });
@@ -128,6 +149,15 @@ export async function startPayment(input: StartPaymentInput) {
     after(async () => {
       try {
         const isReturning = !!existingUser;
+        const formattedTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST';
+        const consentDetails = 
+          `\n\n🛡️ <b>Clickwrap Consent Captured:</b>\n` +
+          `• Accepted: ${consentAccepted ? '✅ Yes' : '❌ No'}\n` +
+          `• Version: <code>${consentVersion}</code>\n` +
+          `• IP Address: <code>${ipAddress}</code>\n` +
+          `• Device/UA: <code>${userAgent.slice(0, 100)}${userAgent.length > 100 ? '...' : ''}</code>\n` +
+          `• Time: <code>${formattedTime}</code>`;
+
         const message =
           `💰 <b>LEAD ALERT: Checkout Started</b>\n\n` +
           `👤 <b>Name:</b> ${escapeHTML(name.trim())}\n` +
@@ -136,7 +166,8 @@ export async function startPayment(input: StartPaymentInput) {
           `🎯 <b>Plan:</b> ${planType.toUpperCase()}\n` +
           `📘 <b>Exam:</b> MP Police\n` +
           `🔄 <b>Type:</b> ${isReturning ? 'Returning Lead' : 'New Lead'}\n` +
-          `🔗 <b>Source:</b> ${escapeHTML(source || 'Direct')}\n\n` +
+          `🔗 <b>Source:</b> ${escapeHTML(source || 'Direct')}\n` +
+          `${consentDetails}\n\n` +
           `#Lead #MPPolice #${planType}`;
         await sendTelegramNotification(message);
       } catch (e) {

@@ -3,8 +3,9 @@
 import { Resend } from 'resend';
 import { logger } from '@/lib/logger';
 import { db } from '@/db';
-import { sql } from 'drizzle-orm';
 import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
+import { after } from 'next/server';
+import { sql } from 'drizzle-orm';
 
 /**
  * 📧 ADMIN NOTIFICATION SYSTEM
@@ -29,6 +30,13 @@ interface PaymentNotification {
   orderId: string;
   paymentId: string;
   isUpgrade?: boolean;
+  consent?: {
+    consentAccepted: boolean;
+    ipAddress: string;
+    userAgent: string;
+    version: string;
+    timestamp: string;
+  } | null;
 }
 
 interface EmailFailureNotification {
@@ -46,28 +54,43 @@ interface EmailFailureNotification {
  */
 export async function notifyAdminOnPayment(data: PaymentNotification) {
   try {
-    const { type, userName, userEmail, planTier, amountInRupees, orderId, paymentId, isUpgrade } = data;
+    const { type, userName, userEmail, planTier, amountInRupees, orderId, paymentId, isUpgrade, consent } = data;
 
     // 🚀 Send Telegram Notification (Primary)
-    try {
-      const statusEmoji = type === 'failed' ? '❌' : '💰';
-      const statusText = type === 'upgrade' ? 'PLAN UPGRADE' : type === 'failed' ? 'PAYMENT FAILED' : 'NEW PAYMENT';
-      const planEmoji = planTier === 'pro' ? '💎' : '🎫';
+    after(async () => {
+      try {
+        const statusEmoji = type === 'failed' ? '❌' : '💰';
+        const statusText = type === 'upgrade' ? 'PLAN UPGRADE' : type === 'failed' ? 'PAYMENT FAILED' : 'NEW PAYMENT';
+        const planEmoji = planTier === 'pro' ? '💎' : '🎫';
 
-      const tgMessage = `👮 <b>MP POLICE ZEN</b>\n` +
-        `${statusEmoji} <b>${statusText}</b>\n\n` +
-        `👤 <b>User:</b> ${escapeHTML(userName)}\n` +
-        `📧 <b>Email:</b> ${escapeHTML(userEmail)}\n` +
-        `🎟️ <b>Plan:</b> ${planEmoji} ${planTier.toUpperCase()}${isUpgrade ? ' (Upgrade)' : ''}\n` +
-        `💵 <b>Amount:</b> ₹${amountInRupees}\n` +
-        `🆔 <b>PayID:</b> <code>${paymentId}</code>\n` +
-        `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST\n\n` +
-        `✅ <i>Access granted instantly. Check dashboard for details.</i>`;
-      
-      await sendTelegramNotification(tgMessage);
-    } catch (tgErr) {
-      logger.error('Telegram payment notification failed', tgErr, { category: 'payment' });
-    }
+        let tgMessage = `👮 <b>MP POLICE ZEN</b>\n` +
+          `${statusEmoji} <b>${statusText}</b>\n\n` +
+          `👤 <b>User:</b> ${escapeHTML(userName)}\n` +
+          `📧 <b>Email:</b> ${escapeHTML(userEmail)}\n` +
+          `🎟️ <b>Plan:</b> ${planEmoji} ${planTier.toUpperCase()}${isUpgrade ? ' (Upgrade)' : ''}\n` +
+          `💵 <b>Amount:</b> ₹${amountInRupees}\n` +
+          `🆔 <b>PayID:</b> <code>${paymentId}</code>\n` +
+          `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST\n\n`;
+
+        if (consent) {
+          const formattedTimestamp = consent.timestamp
+            ? new Date(consent.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST'
+            : 'N/A';
+          tgMessage += `🛡️ <b>Expectation Consent Captured:</b>\n` +
+            `• Accepted: ${consent.consentAccepted ? '✅ Yes' : '❌ No'}\n` +
+            `• IP Address: <code>${consent.ipAddress}</code>\n` +
+            `• Device/UA: <code>${consent.userAgent.slice(0, 50)}${consent.userAgent.length > 50 ? '...' : ''}</code>\n` +
+            `• Agreement Ver: <code>${consent.version}</code>\n` +
+            `• Time: <code>${formattedTimestamp}</code>\n\n`;
+        }
+
+        tgMessage += `✅ <i>Access granted instantly. Check dashboard for details.</i>`;
+        
+        await sendTelegramNotification(tgMessage);
+      } catch (tgErr) {
+        logger.error('Telegram payment notification failed', tgErr, { category: 'payment' });
+      }
+    });
 
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
@@ -159,20 +182,22 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
     const { userName, userEmail, errorMessage, paymentId } = data;
 
     // 🚀 Telegram Notification (FALLBACK - Must always send)
-    try {
-      const tgMessage = `👮 <b>MP POLICE ZEN ALERT</b>\n` +
-        `🚨 <b>USER EMAIL FAILED!</b>\n\n` +
-        `User ne payment kiya but unhe welcome email nahi gaya. <b>Manual Action Required!</b>\n\n` +
-        `👤 <b>User:</b> ${escapeHTML(userName)}\n` +
-        `📧 <b>Email:</b> ${escapeHTML(userEmail)}\n` +
-        `🆔 <b>PayID:</b> <code>${paymentId}</code>\n` +
-        `❌ <b>Error:</b> <i>${escapeHTML(errorMessage)}</i>\n` +
-        `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
-      
-      await sendTelegramNotification(tgMessage);
-    } catch (tgErr) {
-      logger.error('Telegram email failure notification failed', tgErr, { category: 'email' });
-    }
+    after(async () => {
+      try {
+        const tgMessage = `👮 <b>MP POLICE ZEN ALERT</b>\n` +
+          `🚨 <b>USER EMAIL FAILED!</b>\n\n` +
+          `User ne payment kiya but unhe welcome email nahi gaya. <b>Manual Action Required!</b>\n\n` +
+          `👤 <b>User:</b> ${escapeHTML(userName)}\n` +
+          `📧 <b>Email:</b> ${escapeHTML(userEmail)}\n` +
+          `🆔 <b>PayID:</b> <code>${paymentId}</code>\n` +
+          `❌ <b>Error:</b> <i>${escapeHTML(errorMessage)}</i>\n` +
+          `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
+        
+        await sendTelegramNotification(tgMessage);
+      } catch (tgErr) {
+        logger.error('Telegram email failure notification failed', tgErr, { category: 'email' });
+      }
+    });
 
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
@@ -255,20 +280,22 @@ export async function notifyAdminOnVerificationFailure(data: {
   const { userId, orderId, paymentId, error } = data;
 
   // 🚀 Telegram Notification
-  try {
-    const tgMessage = `👮 <b>MP POLICE ZEN SECURITY</b>\n` +
-      `🛡️ <b>VERIFICATION FAILURE!</b>\n\n` +
-      `Payment verification process encountered an error.\n\n` +
-      `👤 <b>User ID:</b> <code>${userId}</code>\n` +
-      `🆔 <b>Order ID:</b> <code>${orderId}</code>\n` +
-      `${paymentId ? `🆔 <b>PayID:</b> <code>${paymentId}</code>\n` : ''}` +
-      `❌ <b>Error:</b> <i>${escapeHTML(error)}</i>\n` +
-      `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
-    
-    await sendTelegramNotification(tgMessage);
-  } catch (tgErr) {
-    logger.error('Telegram verification failure notification failed', tgErr);
-  }
+  after(async () => {
+    try {
+      const tgMessage = `👮 <b>MP POLICE ZEN SECURITY</b>\n` +
+        `🛡️ <b>VERIFICATION FAILURE!</b>\n\n` +
+        `Payment verification process encountered an error.\n\n` +
+        `👤 <b>User ID:</b> <code>${userId}</code>\n` +
+        `🆔 <b>Order ID:</b> <code>${orderId}</code>\n` +
+        `${paymentId ? `🆔 <b>PayID:</b> <code>${paymentId}</code>\n` : ''}` +
+        `❌ <b>Error:</b> <i>${escapeHTML(error)}</i>\n` +
+        `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
+      
+      await sendTelegramNotification(tgMessage);
+    } catch (tgErr) {
+      logger.error('Telegram verification failure notification failed', tgErr);
+    }
+  });
 
   try {
     const apiKey = process.env.RESEND_API_KEY;
@@ -349,19 +376,25 @@ export async function notifyAdminOnMultiDeviceLogin(data: {
 
     const isPro = data.isSubscribed || data.planTier !== 'FREE';
 
-    const tgMessage = `🚨 <b>NEW LOGIN DETECTED</b> ${data.forced ? '(FORCED)' : ''}\n\n` +
-      `👤 <b>User:</b> ${escapeHTML(data.name)}\n` +
-      `📧 <b>Email:</b> ${escapeHTML(data.email)}\n` +
-      `📞 <b>Phone:</b> ${escapeHTML(data.phone)}\n` +
-      `🏆 <b>Plan:</b> ${escapeHTML(data.planTier.toUpperCase())} ${isPro ? '✅' : '❌'}\n\n` +
-      `📱 <b>Device:</b> ${escapeHTML(data.userAgent.slice(0, 100))}\n` +
-      `🌐 <b>IP:</b> ${escapeHTML(data.ip)}\n` +
-      `🔢 <b>Session v:</b> ${data.sessionVersion}\n` +
-      `⏱️ <b>Time:</b> ${timestamp} IST\n\n` +
-      `⚠️ <i>${data.forced ? 'User forcefully kicked other active sessions.' : 'Previous sessions on other devices have been invalidated automatically.'}</i>`;
-    
-    await sendTelegramNotification(tgMessage);
+    after(async () => {
+      try {
+        const tgMessage = `🚨 <b>NEW LOGIN DETECTED</b> ${data.forced ? '(FORCED)' : ''}\n\n` +
+          `👤 <b>User:</b> ${escapeHTML(data.name)}\n` +
+          `📧 <b>Email:</b> ${escapeHTML(data.email)}\n` +
+          `📞 <b>Phone:</b> ${escapeHTML(data.phone)}\n` +
+          `🏆 <b>Plan:</b> ${escapeHTML(data.planTier.toUpperCase())} ${isPro ? '✅' : '❌'}\n\n` +
+          `📱 <b>Device:</b> ${escapeHTML(data.userAgent.slice(0, 100))}\n` +
+          `🌐 <b>IP:</b> ${escapeHTML(data.ip)}\n` +
+          `🔢 <b>Session v:</b> ${data.sessionVersion}\n` +
+          `⏱️ <b>Time:</b> ${timestamp} IST\n\n` +
+          `⚠️ <i>${data.forced ? 'User forcefully kicked other active sessions.' : 'Previous sessions on other devices have been invalidated automatically.'}</i>`;
+        
+        await sendTelegramNotification(tgMessage);
+      } catch (err) {
+        logger.error('Failed to send multi-device telegram alert internally', err);
+      }
+    });
   } catch (error) {
-    logger.error('Failed to send multi-device telegram alert', error);
+    logger.error('Failed to setup multi-device telegram alert', error);
   }
 }
