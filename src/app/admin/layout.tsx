@@ -139,7 +139,7 @@ const ADMIN_ROUTES = [
     href: '/admin/support-inbox',
     label: 'Support Inbox',
     icon: HelpCircle,
-    description: 'Manage Telegram & WhatsApp queries',
+    description: 'Telegram & Web Chat Support',
   },
 ];
 
