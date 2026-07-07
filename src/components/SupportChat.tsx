@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MessageCircle, X, Send, Phone, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -41,32 +41,42 @@ const FAQS: QA[] = [
   },
   {
     question: {
+      en: 'Do you provide traditional bookish textbook notes?',
+      hi: 'क्या आप इसमें पारंपरिक टेक्स्टबुक नोट्स भी देते हैं?',
+    },
+    answer: {
+      en: 'No. We do NOT provide boring, bulky textbook notes to memorize. The MP Police exam is not cleared by just collecting piles of notes! We eliminate the hassle of checking 10 different PDFs just to navigate the syllabus. Instead, we offer complete conceptual clarity, topic-wise practice, and smart one-liners.',
+      hi: 'नहीं! हम रटने वाली पारंपरिक और भारी-भरकम पीडीएफ नोट्स नहीं देते हैं। सिर्फ नोट्स जमा करने से MP Police परीक्षा क्लियर नहीं होती! यहां आपको 10 अलग-अलग PDFs देखने के झंझट से मुक्ति मिलती है। हम आपको पूरे सिलेबस के अनुसार विषय-वार अभ्यास और स्मार्ट वन-लाइनर्स प्रदान करते हैं।',
+    },
+  },
+  {
+    question: {
+      en: 'How is the content and PYQs structured?',
+      hi: 'कंटेंट और PYQs कैसे व्यवस्थित हैं?',
+    },
+    answer: {
+      en: 'Our modules are systematically organized in a highly structured layout: Subject-wise (GK, Science, Math, Reasoning) and Topic-wise. Every single question has detailed explanations, analytics, and bilingual retention mnemonics.',
+      hi: 'हमारा कंटेंट पूरी तरह से व्यवस्थित है: विषय-वार (GK, विज्ञान, गणित, रीज़निंग) और टॉपिक-वार। हर प्रश्न के साथ आपको मिलेगी स्मार्ट व्याख्या, याद रखने के लिए आसान मेमोनिक्स और सुधारात्मक एनालिटिक्स।',
+    },
+  },
+  {
+    question: {
+      en: 'What exactly do we get in the Pro module?',
+      hi: 'प्रो (Pro) मॉड्यूल में वास्तव में क्या-क्या मिलेगा?',
+    },
+    answer: {
+      en: 'You get entire syllabus coverage topic-by-topic. Every section features extensive question banks, smart explanations (in both Hindi & English), and our MPGK Smart Vault with PYQs and memory tricks to ensure maximum score.',
+      hi: 'प्रो मॉड्यूल में आपको पूरे सिलेबस की गहरी समझ मिलती है। हर सेक्शन में विशाल प्रश्न बैंक, स्मार्ट व्याख्या (हिंदी और अंग्रेजी दोनों में) और हमारा MPGK स्मार्ट वॉल्ट मिलता है, जिसमें अधिकतम स्कोर सुनिश्चित करने के लिए PYQs और मेमोरी ट्रिक्स शामिल हैं।',
+    },
+  },
+  {
+    question: {
       en: 'What if my access expires or exam gets delayed?',
       hi: 'अगर एक्सेस समाप्त हो जाए या परीक्षा देरी से हो?',
     },
     answer: {
-      en: 'If MP Police delays the exam, we extend your access — no extra charge. Admin can also extend your access anytime from the dashboard.',
-      hi: 'अगर MP Police परीक्षा में देरी करता है, तो हम आपका एक्सेस बढ़ा देंगे — कोई अतिरिक्त शुल्क नहीं।',
-    },
-  },
-  {
-    question: {
-      en: 'Is this available in Hindi & English?',
-      hi: 'क्या यह हिंदी और अंग्रेजी दोनों में उपलब्ध है?',
-    },
-    answer: {
-      en: 'Yes! All tests, blogs, and explanations are available in both Hindi & English with a one-click language toggle.',
-      hi: 'हाँ! सभी टेस्ट, ब्लॉग्स और एक्सप्लेनेशन हिंदी और अंग्रेजी दोनों में एक क्लिक से उपलब्ध हैं।',
-    },
-  },
-  {
-    question: {
-      en: "What's included in the Pro access?",
-      hi: 'प्रो एक्सेस में क्या-क्या शामिल है?',
-    },
-    answer: {
-      en: '1000+ GK Revision One-Liners, Subject-wise Special Tests, Full Length Mock Tests (100Q), Previous Year Papers, Smart explanations, and Analytics dashboard.',
-      hi: '1000+ GK रिवीज़न वन-लाइनर्स, विषय-वार स्पेशल टेस्ट, फुल लेंथ मॉक टेस्ट (100 प्रश्न), पुराने पेपर, स्मार्ट एक्सप्लेनेशन और एनालिटिक्स डैशबोर्ड।',
+      en: 'If the exam is delayed, we extend your access with no extra charge. Your strategic preparation is fully covered!',
+      hi: 'अगर परीक्षा में देरी होती है, तो हम आपका एक्सेस बढ़ा देंगे — कोई अतिरिक्त शुल्क नहीं। आपकी तैयारी की सुरक्षा हमारी ज़िम्मेदारी है!',
     },
   },
 ];
@@ -81,13 +91,24 @@ export function SupportChat() {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
   const [isNudgeOpen, setIsNudgeOpen] = useState(true);
 
+  useEffect(() => {
+    if (isNudgeOpen) {
+      const timer = setTimeout(() => {
+        setIsNudgeOpen(false);
+      }, 5000); // Auto-dismiss nudge after 5 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [isNudgeOpen]);
+
+  const dynamicFaqs = FAQS;
+
   /**
    * Enterprise-grade user name detection with multiple fallback strategies
    * Priority: Guest localStorage > Authenticated User > Default
    *
    * @returns Sanitized user name or default greeting
    */
-  const getUserDisplayName = (): string => {
+  const getUserDisplayName = React.useCallback((): string => {
     try {
       // Strategy 1: Check localStorage for guest name (from quiz)
       // This is set when guest users take tests
@@ -118,11 +139,11 @@ export function SupportChat() {
       console.error('[SupportChat] Error getting user name:', error);
       return 'there';
     }
-  };
+  }, [user?.name]);
 
   // Get display name once on mount and when user changes
   // Memoize to prevent unnecessary re-renders
-  const displayName = React.useMemo(() => getUserDisplayName(), [user?.name]);
+  const displayName = React.useMemo(() => getUserDisplayName(), [user?.name, getUserDisplayName]);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -131,17 +152,29 @@ export function SupportChat() {
     phone: '',
     message: '',
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  // Show ONLY on the Home page and Thank You page to reduce clutter, especially on mobile
-  if (pathname !== '/' && pathname !== '/thank-you') return null;
+  const [isSubmitting] = useState(false);
+  
+  // 🎯 Detect exam context
+  const isProUser = user?.planTier === 'pro';
+  
+  // Determine support category based on context
+  const getSupportCategory = (): 'premium' | 'general' => {
+    if (isProUser) return 'premium';
+    return 'general';
+  };
+  
+  // Show on all pages except quiz/test pages to reduce clutter during exams
+  if (pathname.includes('/quiz') || pathname.includes('/test')) return null;
 
   const handleWhatsApp = () => {
     const message = 'Hi, I need help with the MP Police App. My query is:';
-    window.open(`https://wa.me/918766451748?text=${encodeURIComponent(message)}`, '_blank');
+    const waNumber = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_NUMBER || '917489388350';
+    window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const handleTelegram = () => {
-    window.open('https://t.me/mppss_26_bot', '_blank');
+    const botUsername = process.env.NEXT_PUBLIC_SUPPORT_TELEGRAM_BOT_USERNAME || 'mppolice_human_chat_bot';
+    window.open(`https://t.me/${botUsername}`, '_blank');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -151,25 +184,28 @@ export function SupportChat() {
       return;
     }
 
-    setIsSubmitting(true);
+    // 🚀 INSTANT UI FEEDBACK
+    // Bhai, user ko lagega kaam ho gaya, logic background mein chalti rahegi.
+    setIsOpen(false);
+    toast.success("Message sent! We'll get back to you shortly.");
+    
+    // Exact path at the time of click
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : pathname;
+
     try {
-      const result = await submitSupportTicket({
+      // Non-blocking background call
+      submitSupportTicket({
         ...formData,
         userId: user?.id || null,
-        category: 'general',
+        category: getSupportCategory(),
+        pagePath: currentPath,
+      }).catch(err => {
+        console.error('Background support submission failed', err);
       });
-
-      if (result.success) {
-        toast.success("Message sent! We'll get back to you shortly.");
-        setFormData({ ...formData, message: '' });
-        setIsOpen(false);
-      } else {
-        toast.error('Something went wrong. Try WhatsApp instead.');
-      }
-    } catch (error) {
-      toast.error('Failed to send message.');
-    } finally {
-      setIsSubmitting(false);
+      
+      setFormData({ ...formData, message: '' });
+    } catch (_error) {
+      // Construction failed
     }
   };
 
@@ -196,15 +232,15 @@ export function SupportChat() {
               className="fixed right-6 bottom-24 z-[100] flex max-h-[600px] w-[90vw] max-w-[380px] flex-col overflow-hidden overscroll-y-none rounded-2xl border border-indigo-100 bg-white shadow-2xl"
             >
               {/* Header */}
-              <div className="relative overflow-hidden bg-gradient-to-r from-amber-400 to-orange-500 p-6 text-white">
-                <div className="absolute top-0 right-0 p-4 opacity-20">
+              <div className="relative overflow-hidden bg-gradient-to-r from-[#00F0FF] to-[#00D1E0] p-6 text-slate-900">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
                   <MessageCircle size={100} />
                 </div>
-                <h3 className="relative z-10 mb-1 font-sans text-xl font-bold text-white">
+                <h3 className="relative z-10 mb-1 font-sans text-xl font-bold text-slate-900">
                   {hi ? 'नमस्ते' : 'Hello'}
                   {displayName !== 'there' ? `, ${displayName}` : ''}! 👋
                 </h3>
-                <p className="relative z-10 text-sm font-medium text-white/90">
+                <p className="relative z-10 text-sm font-medium text-slate-700">
                   {hi
                     ? 'हम आमतौर पर कुछ ही घंटों में जवाब देते हैं।'
                     : 'We usually reply within a few hours.'}
@@ -330,7 +366,7 @@ export function SupportChat() {
                 ) : (
                   <div className="space-y-2 p-4">
                     <p className="mb-2 px-1 text-xs font-medium text-slate-500">Common Questions</p>
-                    {FAQS.map((faq, idx) => (
+                    {dynamicFaqs.map((faq, idx) => (
                       <div
                         key={idx}
                         className="overflow-hidden rounded-xl border border-slate-200 bg-white transition-all"
@@ -389,21 +425,19 @@ export function SupportChat() {
         <AnimatePresence>
           {!isOpen && isNudgeOpen && (
             <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.9 }}
-              className="mr-1 mb-1 flex origin-bottom-right items-center gap-3 rounded-xl border border-amber-200 bg-white px-4 py-3 shadow-xl"
+              className="mr-1 mb-1 flex origin-bottom-right items-center gap-3 rounded-2xl border border-amber-500/30 bg-[#060a12]/95 px-4 py-3.5 shadow-2xl backdrop-blur-md text-white ring-1 ring-white/5"
             >
               <div className="relative flex h-3 w-3 shrink-0">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex h-3 w-3 rounded-full bg-green-500"></span>
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-amber-500"></span>
               </div>
               <div>
-                <p className="text-sm leading-tight font-bold text-slate-800">
+                <p className="text-sm leading-tight font-black text-white">
                   {hi ? 'मदद चाहिए?' : 'Need Help?'}
                 </p>
-                <p className="text-xs font-medium whitespace-nowrap text-slate-500">
-                  {hi ? 'सपोर्ट टीम से बात करें' : 'Chat with our support team'}
+                <p className="text-[11px] font-semibold whitespace-nowrap text-slate-400 mt-0.5">
+                  {hi ? 'सपोर्ट टीम से बात करें' : 'Chat with support team'}
                 </p>
               </div>
 
@@ -411,14 +445,9 @@ export function SupportChat() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  // We rely on the parent logic or just let user click the main button
-                  // Ideally we would have a separate state to dismiss JUST the nudge,
-                  // but user said "click ke baad hat jaaye" (main button click).
-                  // Adding a visual distinct close just in case, but functionally
-                  // clicking the main button is the primary dismissal.
                   setIsNudgeOpen(false);
                 }}
-                className="ml-2 rounded-full p-1 text-slate-400 hover:bg-slate-100"
+                className="ml-2 rounded-full p-1 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
               >
                 <X size={12} />
               </button>
@@ -430,19 +459,24 @@ export function SupportChat() {
           onMouseEnter={() => !isOpen} // Just for interaction tracking if needed
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
-            'group relative flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-2xl shadow-orange-500/40 transition-all duration-300 hover:scale-105 hover:from-amber-600 hover:to-orange-700 active:scale-95',
-            isOpen && 'rotate-90 border-slate-700 from-slate-700 to-slate-800 bg-none bg-slate-800 shadow-none'
+            'group relative flex h-14 w-14 items-center justify-center rounded-full border-3 border-slate-950 bg-gradient-to-tr from-amber-600 via-amber-500 to-orange-500 text-white shadow-2xl shadow-amber-500/20 transition-all duration-300 hover:scale-110 active:scale-95',
+            isOpen ? 'rotate-90 bg-slate-800' : 'hover:shadow-[0_0_30px_rgba(245,158,11,0.45)]'
           )}
         >
           {isOpen ? (
-            <X className="h-7 w-7" />
+            <X className="h-6 w-6" />
           ) : (
-            <MessageCircle className="h-7 w-7 transition-transform group-hover:rotate-12" />
+            <MessageCircle className="h-6 w-6 transition-transform group-hover:rotate-12" />
           )}
 
           {/* Ping animation when closed */}
           {!isOpen && (
-            <span className="absolute top-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-red-500" />
+            <span className="absolute top-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-slate-950 bg-red-500" />
+          )}
+
+          {/* Golden Ring Pulse when closed */}
+          {!isOpen && (
+            <span className="absolute inset-0 -z-10 rounded-full bg-amber-500/10 animate-ping" />
           )}
         </button>
       </div>

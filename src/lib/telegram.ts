@@ -10,7 +10,7 @@ export function escapeHTML(str: string): string {
 }
 
 export async function sendTelegramNotification(message: string) {
-  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+  const BOT_TOKEN = process.env.TELEGRAM_SUPPORT_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
   const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
   if (!BOT_TOKEN || !CHAT_ID) {

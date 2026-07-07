@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { type PricingData, calcDiscount, calcMonthly, PlanFeatureWithIcon } from '@/config/pricing';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { trackAction } from '@/lib/analytics/track';
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Target,
@@ -248,7 +249,10 @@ export function PricingCard({
           ) : (
             <motion.div whileTap={{ scale: 0.96 }} className="w-full">
               <Button
-                onClick={onBuy}
+                onClick={(e) => {
+                  trackAction('💰 Clicked Buy Button', { planType, from: href ? 'home' : 'pricing_page' });
+                  onBuy();
+                }}
                 variant={isLite ? 'outline' : 'default'}
                 className={cn(
                   'h-12 w-full rounded-xl font-bold transition-all',

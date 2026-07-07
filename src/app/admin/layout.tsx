@@ -135,6 +135,12 @@ const ADMIN_ROUTES = [
     icon: Sparkles,
     description: 'Push AI content to Telegram',
   },
+  {
+    href: '/admin/support-inbox',
+    label: 'Support Inbox',
+    icon: HelpCircle,
+    description: 'Telegram & Web Chat Support',
+  },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

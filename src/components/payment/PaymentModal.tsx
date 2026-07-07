@@ -32,6 +32,7 @@ import { getCurrentUser } from '@/actions/auth-actions';
 import { trackFbStandardEvent } from '@/lib/analytics/facebook-pixel';
 import { getErrorMessage } from '@/lib/errors';
 import { notifyLockModalOpen } from '@/lib/analytics/notifyLockModal';
+import { trackAction } from '@/lib/analytics/track';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -101,12 +102,13 @@ export function PaymentModal({
   useEffect(() => {
     if (open) {
       notifyLockModalOpen('payment');
+      trackAction('💰 Payment Modal Opened', { planType });
       setStep('form');
       setConsentChecked(false);
       setTermsOpen(false);
       setHasScrolledToBottom(false);
     }
-  }, [open]);
+  }, [open, planType]);
 
   // Bhai, ye phases users ko batate h ki abhi background me kya chal raha h.
   // Transparancy = Trust. 🤝
@@ -267,6 +269,7 @@ export function PaymentModal({
       userIdRef.current = userId;
 
       // Launch Razorpay
+      trackAction('💳 Triggered Razorpay Checkout', { planType, amount: orderData.amount, orderId: orderData.id });
       if (!(window as any).Razorpay) {
         throw new Error('Razorpay SDK not loaded. Please refresh and try again.');
       }

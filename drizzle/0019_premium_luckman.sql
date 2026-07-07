@@ -42,7 +42,7 @@ CREATE TABLE `__new_pricing_config` (
 	`updated_at` integer DEFAULT (strftime('%s', 'now'))
 );
 --> statement-breakpoint
-INSERT INTO `__new_pricing_config`("exam_type", "id", "lite_price", "lite_original_price", "lite_validity_text", "lite_months", "pro_price", "pro_original_price", "pro_validity_text", "pro_months", "upgrade_price", "upgrade_original_price", "urgency_text", "urgency_text_hi", "students_bought", "updated_at") SELECT "exam_type", "id", "lite_price", "lite_original_price", "lite_validity_text", "lite_months", "pro_price", "pro_original_price", "pro_validity_text", "pro_months", "upgrade_price", "upgrade_original_price", "urgency_text", "urgency_text_hi", "students_bought", "updated_at" FROM `pricing_config`;--> statement-breakpoint
+INSERT INTO `__new_pricing_config`("exam_type", "id", "lite_price", "lite_original_price", "lite_validity_text", "lite_months", "pro_price", "pro_original_price", "pro_validity_text", "pro_months", "upgrade_price", "upgrade_original_price", "urgency_text", "urgency_text_hi", "students_bought", "updated_at") SELECT 'mppsc', "id", "lite_price", "lite_original_price", "lite_validity_text", "lite_months", "pro_price", "pro_original_price", "pro_validity_text", "pro_months", "upgrade_price", "upgrade_original_price", "urgency_text", "urgency_text_hi", "students_bought", "updated_at" FROM `pricing_config`;--> statement-breakpoint
 DROP TABLE `pricing_config`;--> statement-breakpoint
 ALTER TABLE `__new_pricing_config` RENAME TO `pricing_config`;--> statement-breakpoint
 PRAGMA foreign_keys=ON;--> statement-breakpoint

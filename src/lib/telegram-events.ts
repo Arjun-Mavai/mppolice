@@ -168,7 +168,7 @@ export async function sendTelemetryEvent(event: TelemetryEvent) {
       return;
     }
 
-    const BOT_TOKEN = process.env.TELEGRAM_EVENTS_BOT_TOKEN;
+    const BOT_TOKEN = process.env.TELEGRAM_EVENTS_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
     const CHAT_ID = process.env.TELEGRAM_EVENTS_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
 
     if (!BOT_TOKEN || !CHAT_ID) {
