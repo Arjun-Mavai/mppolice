@@ -12,7 +12,7 @@
 
 'use server';
 
-import { assertAdmin } from '@/lib/auth';
+import { requireAdmin as assertAdmin } from '@/lib/auth-admin';
 import { db } from '@/db';
 import { supportConversations, supportMessages, guests } from '@/db/schema';
 import { eq, desc, asc, or, and } from 'drizzle-orm';
@@ -80,6 +80,7 @@ export async function saveIncomingMessage({
         unreadCount: 1,
         lastMessageAt: new Date(),
         humanActive: false,
+        examType: 'mppolice' as const,
       };
       
       await db.insert(supportConversations).values(newConv);
@@ -117,6 +118,7 @@ export async function saveIncomingMessage({
       text,
       messageType,
       mediaUrl,
+      examType: 'mppolice',
       createdAt: new Date(),
     });
 
@@ -144,6 +146,7 @@ export async function saveOutgoingMessage(conversationId: string, text: string, 
       status: 'sent',
       mediaUrl,
       messageType: mediaUrl ? 'image' : 'text',
+      examType: 'mppolice',
       createdAt: new Date(),
     });
 
@@ -193,6 +196,7 @@ export async function getConversations() {
     // If you need older conversations, we can implement server-side search/pagination later.
     const convs = await db.select()
       .from(supportConversations)
+      .where(or(eq(supportConversations.examType, 'mppolice'), eq(supportConversations.examType, 'all')))
       .orderBy(desc(supportConversations.lastMessageAt))
       .limit(100);
     return { success: true, conversations: convs };
@@ -272,7 +276,7 @@ export async function sendAdminReply(conversationId: string, text: string, optio
           if (data.result?.message_id) metaMessageId = `tg_${data.result.message_id}`;
         } else {
           const errorText = await res.text();
-          logger.error('Telegram Admin Reply API error', new Error(errorText), { category: 'telegram' });
+          logger.error('Telegram Admin Reply API error', new Error(errorText));
           try {
             const errData = JSON.parse(errorText);
             if (errData.description) {
@@ -328,7 +332,7 @@ export async function sendAdminReply(conversationId: string, text: string, optio
           if (data.messages?.[0]?.id) metaMessageId = data.messages[0].id;
         } else {
           const errorText = await res.text();
-          logger.error('WhatsApp Admin Reply API error', new Error(errorText), { category: 'api' });
+          logger.error('WhatsApp Admin Reply API error', new Error(errorText));
           try {
             const errData = JSON.parse(errorText);
             if (errData.error?.message) {
@@ -348,7 +352,7 @@ export async function sendAdminReply(conversationId: string, text: string, optio
       return { success: false, error: errorMessage };
     }
   } catch (error) {
-    logger.error('Error sending admin reply', error, { category: 'api' });
+    logger.error('Error sending admin reply', error);
     return { success: false, error: 'Internal Server Error' };
   }
 }

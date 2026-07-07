@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useState } from 'react';
 import { Loader2, Star, Send, ThumbsUp, ChevronLeft, MapPin } from 'lucide-react';
 import {
@@ -96,7 +95,7 @@ export default function FeedbackPage() {
         <div className="mb-10 space-y-2 text-center">
           <h1 className="font-display text-3xl font-bold text-slate-900">We Value Your Feedback</h1>
           <p className="text-slate-500">
-            Help us make MP Police 2026 the best preparation platform for you.
+            Help us make Mindful MP Police the best preparation platform for you.
           </p>
         </div>
 
@@ -284,7 +283,7 @@ export default function FeedbackPage() {
                   asChild
                   className="w-full bg-slate-900 text-white hover:bg-slate-800 sm:w-auto"
                 >
-                  <Link href="/">Back to Home</Link>
+                  <a href="/">Back to Home</a>
                 </Button>
               </div>
             </div>

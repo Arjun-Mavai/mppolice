@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { getConversations, getMessages, sendAdminReply, markAsRead, resolveConversation, toggleHumanActive } from '@/actions/support-inbox-actions';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { UploadButton } from '@/utils/uploadthing';
+// import { UploadButton } from '@/utils/uploadthing';
 
 type Message = {
   id: string;
@@ -186,7 +186,7 @@ export default function SupportInbox() {
   const handleResolveFeedback = async () => {
     if (!activeId || !activeConversation) return;
     
-    const textToSend = '✅ क्या आपकी समस्या का समाधान हो गया है? (Has your query been resolved?)\n\nआपको हमारा सपोर्ट कैसा लगा? कृपया नीचे दिए गए बटनों में से कोई एक चुनें (How was your experience?):\n\nRegards,\n*MP Police Team*';
+    const textToSend = '✅ क्या आपकी समस्या का समाधान हो गया है? (Has your query been resolved?)\n\nआपको हमारा सपोर्ट कैसा लगा? कृपया नीचे दिए गए बटनों में से कोई एक चुनें (How was your experience?):\n\nRegards,\n*MPPSC ZenScroll Team*';
     
     sendMessageMutation.mutate({ 
       text: textToSend,
@@ -206,7 +206,7 @@ export default function SupportInbox() {
   const handleGeneralFeedback = async () => {
     if (!activeId || !activeConversation) return;
     
-    const textToSend = 'नमस्ते! 🙏\n\nबातचीत के बाद आपसे फीडबैक लेना चाहते हैं। आपको हमारा सपोर्ट और गाइडेंस कैसा लगा? कृपया नीचे दिए गए बटनों में से कोई एक चुनें:\n\nRegards,\n*MP Police Team*';
+    const textToSend = 'नमस्ते! 🙏\n\nबातचीत के बाद आपसे फीडबैक लेना चाहते हैं। आपको हमारा सपोर्ट और गाइडेंस कैसा लगा? कृपया नीचे दिए गए बटनों में से कोई एक चुनें:\n\nRegards,\n*MPPSC ZenScroll Team*';
     
     sendMessageMutation.mutate({ 
       text: textToSend,
@@ -226,23 +226,23 @@ export default function SupportInbox() {
   };
 
   const QUICK_REPLIES = [
-    { label: '👋 Hi (Hindi)', text: 'नमस्ते! 🙏\n\nमैं अर्जुन बात कर रहा हूँ। MP Police Platform की सपोर्ट टीम से जुड़ने के लिए धन्यवाद।\n\nमैं आज आपकी क्या सहायता कर सकता हूँ?\n\nRegards,\nArjun\n*MP Police Team*' },
-    { label: '👋 Hi (English)', text: 'Hello! 🙏\n\nThis is Arjun. Thank you for reaching out to MP Police Platform support.\n\nHow can I help you today?\n\nRegards,\nArjun\n*MP Police Team*' },
-    { label: '🔗 Pre + physical Links', text: '🎯 *MP Police Platform - Active Libraries* 🚀\n\nनमस्ते! 🙏\n\nआप अपनी तैयारी के अनुसार नीचे दिए गए डायरेक्ट लिंक्स से हमारी लाइब्रेरीज को एक्सप्लोर कर सकते हैं:\n\n💻 *Home (exam Library):*\n👉 https://mppolice.zenscroll.app\n\n🏛️ *physical Library (Syllabus & Model Answers):*\n👉 https://mppolice.zenscroll.app/physical\n\nRegards,\n*MP Police Team*' },
-    { label: '💡 Pre Strategy Advice', text: '💡 *MP Police exam - ZenScroll Strategy* 🎯\n\nनमस्ते! 🙏\n\nexam की तैयारी को लेकर हमारी एप्रोच बहुत सिंपल है:\n\n1️⃣ *Syllabus की गहरी समझ:* रटने से पहले पूरे सिलेबस (Unit-wise) को माइक्रो-लेवल पर समझें।\n2️⃣ *PYQs का गहरा विश्लेषण:* पिछले साल के प्रश्नों (PYQs) को समझें ताकि पता चले कि आयोग किस तरह के प्रश्न और फैक्ट्स पूछ रहा है।\n3️⃣ *Clarity Before Content:* पहले अपनी समझ मजबूत करें, फिर कंटेंट पढ़ें।\n\nअपनी तैयारी शुरू करने के लिए यहाँ जाएँ:\n🔗 Home / exam: https://mppolice.zenscroll.app\n🔗 Free Demo Quiz: https://mppolice.zenscroll.app/free-quiz\n\nRegards,\n*MP Police Team*' },
-    { label: '💡 physical Strategy Advice', text: '💡 *MP Police physical - ZenScroll Strategy* 🏛️\n\nनमस्ते! 🙏\n\nphysical परीक्षा (2024 New Syllabus) को क्रैक करने के लिए हमारी थिंकिंग:\n\n1️⃣ *Keyword Level Decoding:* सिलेबस के हर एक टॉपिक पर आपके पास 3, 5, और 11 markers के पॉइंट तैयार होने चाहिए।\n2️⃣ *PYQ Integration:* टॉपिक को पुराने साल के प्रश्नों से लिंक करके पढ़ें ताकि एग्जाम का पैटर्न समझ आए।\n3️⃣ *Answer Thinking (उत्तर सोचने का तरीका):* नोट्स रटने के बजाय सही उत्तर लिखने की एप्रोच सीखें।\n\nमैल्यू-ऐडेड नोट्स और मॉडल उत्तर देखने के लिए यहाँ जाएँ:\n🔗 physical Library: https://mppolice.zenscroll.app/physical\n\nRegards,\n*MP Police Team*' },
-    { label: '💳 Pre Payment', text: '🎯 *exam Intelligence Course*\n\nनमस्ते! 🙏\nCourse access ke liye aap apna secure payment yahan se complete kar sakte hain:\n\n🔗 Payment Link: https://mppolice.zenscroll.app/pricing?need=pre\n\n⚡ (Payment complete hone ke baad please yahan ek screenshot bhej dijiye!)\n\nRegards,\n*MP Police Team*' },
-    { label: '💳 physical Payment', text: '🏛️ *physical Syllabus Hub*\n\nनमस्ते! 🙏\nCourse access ke liye aap apna secure payment yahan se complete kar sakte hain:\n\n🔗 Payment Link: https://mppolice.zenscroll.app/pricing?need=physical\n\n⚡ (Payment complete hone ke baad please yahan ek screenshot bhej dijiye!)\n\nRegards,\n*MP Police Team*' },
-    { label: '💳 Combo Plan', text: '🏛️ *Combo Plan (exam + physical)*\n\nनमस्ते! 🙏\nexam and physical dono courses ko join karne ke liye secure payment complete karein:\n\n🔗 Pricing Page: https://mppolice.zenscroll.app/pricing\n\n👉 Direct exam: https://mppolice.zenscroll.app/pricing?need=pre\n👉 Direct physical: https://mppolice.zenscroll.app/pricing?need=physical\n\nRegards,\n*MP Police Team*' },
-    { label: '⚙️ Tech Fixed', text: '🛠️ *Issue Resolved / तकनीकी समस्या हल*\n\nनमस्ते! 🙏\nAapne jo issue report kiya tha, humari technical team ne use successfully resolve kar diya hai.\n\nKripya ek baar website ko refresh karein aur check karein.\n\nRegards,\n*MP Police Team*' },
-    { label: '⏳ Follow up', text: '⏳ *Awaiting Your Reply / प्रतीक्षा*\n\nनमस्ते! 🙏\nHum aapke reply ka wait kar rahe hain. Agar aapko abhi bhi koi doubt ya issue hai, toh please humein batayein.\n\nHum aapki help karne ke liye ready hain!\n\nRegards,\n*MP Police Team*' },
-    { label: '🔐 Login Issue', text: '🔐 *Login Assistance /ログイン सहायता*\n\nनमस्ते! 🙏\nLogin karne me issue aa raha hai?\n\nPlease make sure ki aap exactly usi Google Account (Gmail) se login karein, jisse aapne payment kiya tha. Agar aapko yaad nahi hai toh please yahan apna email id likh kar bhej dein.\n\nRegards,\n*MP Police Team*' },
-    { label: '🎯 Pre Strategy', text: '🎯 *MP Police exam 2026 - Master Strategy*\n\nनमस्ते! 🙏\nAgar aap MP Police exam ki taiyari ekdum ZERO se start kar rahe hain, toh humne aapke liye ek detailed step-by-step strategy blog banaya hai.\n\nIse dhyaan se padhein:\n🔗 https://mppolice.zenscroll.app/blogs/how-to-crack-mppsc-exam-2026-strategy?from=category%3Dgeneral\n\nRegards,\n*MP Police Team*' },
-    { label: '🏛️ physical Strategy', text: '🏛️ *MP Police physical - Zero to Selection Strategy*\n\nनमस्ते! 🙏\nMP Police physical ke naye syllabus (2024) ko samajhne aur answer writing master karne ke liye humara yeh comprehensive blog zarur padhein.\n\nLink par click karein:\n🔗 https://mppolice.zenscroll.app/blogs/mppsc-physical-master-strategy-2024-zero-to-selection-comprehensive\n\nRegards,\n*MP Police Team*' },
-    { label: '🎁 Free Resources', text: '🎁 *Explore MP Police Platform Free Resources*\n\nनमस्ते! 🙏\nMP Police ki taiyari ko directional aur simple banane ke liye humare saare free resources check karein:\n\n🎯 *exam Library & Demo:*\n👉 Attempt Free Demo Quiz:\n🔗 https://mppolice.zenscroll.app/free-quiz\n👉 Track Syllabus Unit-wise:\n🔗 https://mppolice.zenscroll.app/syllabus\n\n🏛️ *physical Library:*\n👉 Explore Syllabus Map & Model Answer Frameworks:\n🔗 https://mppolice.zenscroll.app/physical\n\n📝 *Strategy Blogs & Preparation Tips:*\n🔗 https://mppolice.zenscroll.app/blogs\n\nRegards,\n*MP Police Team*' },
-    { label: '📱 App Download', text: '📱 *MP Police Platform App Install Guide*\n\nनमस्ते! 🙏\nZenScroll fast aur lightweight Web-App hai. Ise install karne ke liye niche diye step-by-step points check karein:\n\n🤖 *For Android Users (Chrome):*\n1️⃣ Open: 🔗 https://mppolice.zenscroll.app\n2️⃣ Click **Three Dots (⋮)** in top right corner.\n3️⃣ Tap **"Add to Home screen"**.\n4️⃣ Click **"Add"** again. Done! 🎉\n\n🍎 *For iPhone Users (Safari):*\n1️⃣ Open: 🔗 https://mppolice.zenscroll.app\n2️⃣ Tap **Share icon** (square with up arrow) at bottom.\n3️⃣ Scroll down & tap **"Add to Home Screen"** ➕.\n4️⃣ Tap **"Add"** in top right. Done! 🎉\n\nAb aap ZenScroll ko direct app ki tarah use kar sakte hain! 🚀\n\nRegards,\n*MP Police Team*' },
-    { label: '📄 2026 Paper Solution', text: '📄 *MP Police 2026 Official exam Paper Solution*\n\nनमस्ते! 🙏\nHumne MP Police 2026 ka exam Paper detailed analytics aur official answer key ke sath upload kar diya hai.\n\n🔗 Paper Solution yahan check karein: https://mppolice.zenscroll.app/paper-solution\n\nRegards,\n*MP Police Team*' },
-    { label: '📞 Request Call', text: '📞 *Schedule a Call / कॉल बुक करें*\n\nनमस्ते! 🙏\nAapka sawal thoda detail me hai, toh ise ache se samajhne ke liye humein call par baat karni hogi.\n\nKripya humein call karne ke liye aaj ka ek sahi samay batayein.\n\nRegards,\n*MP Police Team*' },
+    { label: '👋 Hi (Hindi)', text: 'नमस्ते! 🙏\n\nमैं अर्जुन बात कर रहा हूँ। MPPSC ZenScroll की सपोर्ट टीम से जुड़ने के लिए धन्यवाद।\n\nमैं आज आपकी क्या सहायता कर सकता हूँ?\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
+    { label: '👋 Hi (English)', text: 'Hello! 🙏\n\nThis is Arjun. Thank you for reaching out to MPPSC ZenScroll support.\n\nHow can I help you today?\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
+    { label: '🔗 Pre + Mains Links', text: '🎯 *MPPSC ZenScroll - Active Libraries* 🚀\n\nनमस्ते! 🙏\n\nआप अपनी तैयारी के अनुसार नीचे दिए गए डायरेक्ट लिंक्स से हमारी लाइब्रेरीज को एक्सप्लोर कर सकते हैं:\n\n💻 *Home (Prelims Library):*\n👉 https://mppsc.zenscroll.app\n\n🏛️ *Mains Library (Syllabus & Model Answers):*\n👉 https://mppsc.zenscroll.app/mains\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '💡 Pre Strategy Advice', text: '💡 *MPPSC Prelims - ZenScroll Strategy* 🎯\n\nनमस्ते! 🙏\n\nPrelims की तैयारी को लेकर हमारी एप्रोच बहुत सिंपल है:\n\n1️⃣ *Syllabus की गहरी समझ:* रटने से पहले पूरे सिलेबस (Unit-wise) को माइक्रो-लेवल पर समझें।\n2️⃣ *PYQs का गहरा विश्लेषण:* पिछले साल के प्रश्नों (PYQs) को समझें ताकि पता चले कि आयोग किस तरह के प्रश्न और फैक्ट्स पूछ रहा है।\n3️⃣ *Clarity Before Content:* पहले अपनी समझ मजबूत करें, फिर कंटेंट पढ़ें।\n\nअपनी तैयारी शुरू करने के लिए यहाँ जाएँ:\n🔗 Home / Prelims: https://mppsc.zenscroll.app\n🔗 Free Demo Quiz: https://mppsc.zenscroll.app/free-quiz\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '💡 Mains Strategy Advice', text: '💡 *MPPSC Mains - ZenScroll Strategy* 🏛️\n\nनमस्ते! 🙏\n\nMains परीक्षा (2024 New Syllabus) को क्रैक करने के लिए हमारी थिंकिंग:\n\n1️⃣ *Keyword Level Decoding:* सिलेबस के हर एक टॉपिक पर आपके पास 3, 5, और 11 markers के पॉइंट तैयार होने चाहिए।\n2️⃣ *PYQ Integration:* टॉपिक को पुराने साल के प्रश्नों से लिंक करके पढ़ें ताकि एग्जाम का पैटर्न समझ आए।\n3️⃣ *Answer Thinking (उत्तर सोचने का तरीका):* नोट्स रटने के बजाय सही उत्तर लिखने की एप्रोच सीखें।\n\nमैल्यू-ऐडेड नोट्स और मॉडल उत्तर देखने के लिए यहाँ जाएँ:\n🔗 Mains Library: https://mppsc.zenscroll.app/mains\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '💳 Pre Payment', text: '🎯 *Prelims Intelligence Course*\n\nनमस्ते! 🙏\nCourse access ke liye aap apna secure payment yahan se complete kar sakte hain:\n\n🔗 Payment Link: https://mppsc.zenscroll.app/pricing?need=pre\n\n⚡ (Payment complete hone ke baad please yahan ek screenshot bhej dijiye!)\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '💳 Mains Payment', text: '🏛️ *Mains Syllabus Hub*\n\nनमस्ते! 🙏\nCourse access ke liye aap apna secure payment yahan se complete kar sakte hain:\n\n🔗 Payment Link: https://mppsc.zenscroll.app/pricing?need=mains\n\n⚡ (Payment complete hone ke baad please yahan ek screenshot bhej dijiye!)\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '💳 Combo Plan', text: '🏛️ *Combo Plan (Prelims + Mains)*\n\nनमस्ते! 🙏\nPrelims and Mains dono courses ko join karne ke liye secure payment complete karein:\n\n🔗 Pricing Page: https://mppsc.zenscroll.app/pricing\n\n👉 Direct Prelims: https://mppsc.zenscroll.app/pricing?need=pre\n👉 Direct Mains: https://mppsc.zenscroll.app/pricing?need=mains\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '⚙️ Tech Fixed', text: '🛠️ *Issue Resolved / तकनीकी समस्या हल*\n\nनमस्ते! 🙏\nAapne jo issue report kiya tha, humari technical team ne use successfully resolve kar diya hai.\n\nKripya ek baar website ko refresh karein aur check karein.\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '⏳ Follow up', text: '⏳ *Awaiting Your Reply / प्रतीक्षा*\n\nनमस्ते! 🙏\nHum aapke reply ka wait kar rahe hain. Agar aapko abhi bhi koi doubt ya issue hai, toh please humein batayein.\n\nHum aapki help karne ke liye ready hain!\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '🔐 Login Issue', text: '🔐 *Login Assistance /ログイン सहायता*\n\nनमस्ते! 🙏\nLogin karne me issue aa raha hai?\n\nPlease make sure ki aap exactly usi Google Account (Gmail) se login karein, jisse aapne payment kiya tha. Agar aapko yaad nahi hai toh please yahan apna email id likh kar bhej dein.\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '🎯 Pre Strategy', text: '🎯 *MPPSC Prelims 2026 - Master Strategy*\n\nनमस्ते! 🙏\nAgar aap MPPSC Prelims ki taiyari ekdum ZERO se start kar rahe hain, toh humne aapke liye ek detailed step-by-step strategy blog banaya hai.\n\nIse dhyaan se padhein:\n🔗 https://mppsc.zenscroll.app/blogs/how-to-crack-mppsc-prelims-2026-strategy?from=category%3Dgeneral\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '🏛️ Mains Strategy', text: '🏛️ *MPPSC Mains - Zero to Selection Strategy*\n\nनमस्ते! 🙏\nMPPSC Mains ke naye syllabus (2024) ko samajhne aur answer writing master karne ke liye humara yeh comprehensive blog zarur padhein.\n\nLink par click karein:\n🔗 https://mppsc.zenscroll.app/blogs/mppsc-mains-master-strategy-2024-zero-to-selection-comprehensive\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '🎁 Free Resources', text: '🎁 *Explore MPPSC ZenScroll Free Resources*\n\nनमस्ते! 🙏\nMPPSC ki taiyari ko directional aur simple banane ke liye humare saare free resources check karein:\n\n🎯 *Prelims Library & Demo:*\n👉 Attempt Free Demo Quiz:\n🔗 https://mppsc.zenscroll.app/free-quiz\n👉 Track Syllabus Unit-wise:\n🔗 https://mppsc.zenscroll.app/syllabus\n\n🏛️ *Mains Library:*\n👉 Explore Syllabus Map & Model Answer Frameworks:\n🔗 https://mppsc.zenscroll.app/mains\n\n📝 *Strategy Blogs & Preparation Tips:*\n🔗 https://mppsc.zenscroll.app/blogs\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '📱 App Download', text: '📱 *MPPSC ZenScroll App Install Guide*\n\nनमस्ते! 🙏\nZenScroll fast aur lightweight Web-App hai. Ise install karne ke liye niche diye step-by-step points check karein:\n\n🤖 *For Android Users (Chrome):*\n1️⃣ Open: 🔗 https://mppsc.zenscroll.app\n2️⃣ Click **Three Dots (⋮)** in top right corner.\n3️⃣ Tap **"Add to Home screen"**.\n4️⃣ Click **"Add"** again. Done! 🎉\n\n🍎 *For iPhone Users (Safari):*\n1️⃣ Open: 🔗 https://mppsc.zenscroll.app\n2️⃣ Tap **Share icon** (square with up arrow) at bottom.\n3️⃣ Scroll down & tap **"Add to Home Screen"** ➕.\n4️⃣ Tap **"Add"** in top right. Done! 🎉\n\nAb aap ZenScroll ko direct app ki tarah use kar sakte hain! 🚀\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '📄 2026 Paper Solution', text: '📄 *MPPSC 2026 Official Prelims Paper Solution*\n\nनमस्ते! 🙏\nHumne MPPSC 2026 ka Prelims Paper detailed analytics aur official answer key ke sath upload kar diya hai.\n\n🔗 Paper Solution yahan check karein: https://mppsc.zenscroll.app/paper-solution\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '📞 Request Call', text: '📞 *Schedule a Call / कॉल बुक करें*\n\nनमस्ते! 🙏\nAapka sawal thoda detail me hai, toh ise ache se samajhne ke liye humein call par baat karni hogi.\n\nKripya humein call karne ke liye aaj ka ek sahi samay batayein.\n\nRegards,\n*MPPSC ZenScroll Team*' },
   ];
 
   const filteredConversations = conversations.filter(c => 
@@ -503,26 +503,7 @@ export default function SupportInbox() {
             )}
             
             <div className="px-4 py-2 flex items-end gap-2 pb-4">
-              <UploadButton
-                endpoint="adminImage"
-                onClientUploadComplete={(res) => {
-                  if (res && res[0]) {
-                    setAttachedImage(res[0].url);
-                    toast.success("Image attached!");
-                  }
-                }}
-                onUploadError={(error: Error) => {
-                  toast.error(`Upload Error: ${error.message}`);
-                }}
-                appearance={{
-                  button: "ut-ready:bg-transparent bg-transparent ut-ready:text-zinc-500 text-zinc-500 hover:ut-ready:text-indigo-600 transition-colors h-11 w-11 p-0 m-0 border-0 focus-within:ring-0 after:hidden",
-                  container: "h-11 w-11 flex-shrink-0 flex items-center justify-center m-0",
-                  allowedContent: "hidden"
-                }}
-                content={{
-                  button: <ImagePlus size={22} className="shrink-0" />
-                }}
-              />
+{/* Upload button removed */}
               <textarea
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}

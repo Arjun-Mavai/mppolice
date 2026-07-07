@@ -847,9 +847,13 @@ export const supportConversations = sqliteTable('support_conversations', {
   lastMessageAt: integer('last_message_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+    .default('mppolice')
+    .notNull(),
 }, (table) => ({
   guestPhoneIdx: index('idx_support_conv_guest_phone').on(table.guestPhone),
   lastMessageAtIdx: index('idx_support_conv_last_msg').on(table.lastMessageAt),
+  examTypeIdx: index('idx_support_conv_exam_type').on(table.examType),
 }));
 
 export const supportMessages = sqliteTable('support_messages', {
@@ -861,9 +865,13 @@ export const supportMessages = sqliteTable('support_messages', {
   messageType: text('message_type', { enum: ['text', 'image', 'interactive'] }).default('text'),
   status: text('status', { enum: ['sent', 'delivered', 'read', 'failed'] }),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+    .default('mppolice')
+    .notNull(),
 }, (table) => ({
   conversationIdIdx: index('idx_support_msg_conv_id').on(table.conversationId),
   createdAtIdx: index('idx_support_msg_created_at').on(table.createdAt),
+  examTypeIdx: index('idx_support_msg_exam_type').on(table.examType),
 }));
 
 export const supportConversationsRelations = relations(supportConversations, ({ many, one }) => ({
