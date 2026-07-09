@@ -250,19 +250,19 @@ export default function PricingPage() {
                   sub: 'हर चैप्टर पर फोकस्ड प्रश्न। कमज़ोर विषयों को मज़बूत बनाओ।',
                   highlight: true,
                 },
-                {
-                  icon: Flame,
-                  label: '1000+ वन-लाइनर्स',
-                  sub: 'तेज रिवीज़न के लिए व्याख्या सहित।',
-                  highlight: true,
-                },
-                {
-                  icon: Sparkles,
-                  label: 'MPGK स्मार्ट वॉल्ट',
-                  sub: '1000+ स्मार्ट वन-लाइनर्स, मेमोरी ट्रिक्स और PYQs के साथ। 100% कवरेज।',
-                  highlight: true,
-                  badges: ['Pattern Connections', 'PYQs', 'Memory Tricks'],
-                }
+                // {
+                //   icon: Flame,
+                //   label: '1000+ वन-लाइनर्स',
+                //   sub: 'तेज रिवीज़न के लिए व्याख्या सहित।',
+                //   highlight: true,
+                // },
+                // {
+                //   icon: Sparkles,
+                //   label: 'MPGK स्मार्ट वॉल्ट',
+                //   sub: '1000+ स्मार्ट वन-लाइनर्स, मेमोरी ट्रिक्स और PYQs के साथ। 100% कवरेज।',
+                //   highlight: true,
+                //   badges: ['Pattern Connections', 'PYQs', 'Memory Tricks'],
+                // }
               ].map((item) => {
                 const { icon: Icon, label, sub, highlight } = item;
                 const badges = (item as any).badges as string[] | undefined;
