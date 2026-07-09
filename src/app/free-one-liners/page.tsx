@@ -23,7 +23,7 @@ function OneLinersFallback() {
 export default async function FreeOneLinersPage() {
   // 🏎️ Parallel Fetching: Dono data ek saath fetch ho rahe h (Zero Waterfall)
   const [facts, counts] = await Promise.all([
-    getPublishedMppoliceOneLiners('All', 10, 0, 'newest'), // Demo ke liye sirf top 10 NEWEST facts
+    getPublishedMppoliceOneLiners('All', 10, 0), // Demo ke liye sirf top 10 facts
     getMppoliceOnelinerCountsBySubject(),
   ]);
 
