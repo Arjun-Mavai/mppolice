@@ -40,3 +40,6 @@ overrides:
 # Filhal list khali hai, bole toh bugs pe Zero Tolerance!
 auditConfig:
   ignoreCves: []
+
+minimumReleaseAgeExclude:
+  - '@typescript/typescript6@6.0.2'
