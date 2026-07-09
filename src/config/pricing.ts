@@ -71,11 +71,11 @@ export const PRO_FEATURES: PlanFeatureWithIcon[] = [
   //   hi: 'संपूर्ण MPGK स्मार्ट वन-लाइनर्स के माध्यम से कवर', 
   //   icon: 'Sparkles' 
   // },
-  // { 
-  //   en: '1000+ Important Facts Rapid Revision ke liye', 
-  //   hi: '1000+ महत्वपूर्ण तथ्य तेज़ रिवीज़न के लिए', 
-  //   icon: 'Zap' 
-  // },
+  { 
+    en: '1000+ Important Facts Rapid Revision ke liye', 
+    hi: '1000+ महत्वपूर्ण तथ्य तेज़ रिवीज़न के लिए', 
+    icon: 'Zap' 
+  },
   { 
     en: 'PYQs ke saath Exam Pattern samjho', 
     hi: 'PYQs के साथ परीक्षा पैटर्न समझें', 

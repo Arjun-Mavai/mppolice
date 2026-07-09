@@ -240,8 +240,8 @@ export default function PricingPage() {
                 },
                 {
                   icon: Target,
-                  label: 'पूरा MP Police सिलेबस',
-                  sub: 'GK, रीज़निंग, विज्ञान, गणित, हिंदी — एक ही जगह।',
+                  label: 'पूरा MP Police सिलेबस Tests',
+                  sub: 'GK, रीज़निंग, विज्ञान, गणित — एक ही जगह।',
                   highlight: true,
                 },
                 {
@@ -250,12 +250,12 @@ export default function PricingPage() {
                   sub: 'हर चैप्टर पर फोकस्ड प्रश्न। कमज़ोर विषयों को मज़बूत बनाओ।',
                   highlight: true,
                 },
-                // {
-                //   icon: Flame,
-                //   label: '1000+ वन-लाइनर्स',
-                //   sub: 'तेज रिवीज़न के लिए व्याख्या सहित।',
-                //   highlight: true,
-                // },
+                {
+                  icon: Flame,
+                  label: '1000+ वन-लाइनर्स',
+                  sub: 'तेज रिवीज़न के लिए व्याख्या सहित।',
+                  highlight: true,
+                },
                 // {
                 //   icon: Sparkles,
                 //   label: 'MPGK स्मार्ट वॉल्ट',
