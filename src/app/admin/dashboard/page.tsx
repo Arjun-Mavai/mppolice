@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getAdminDashboardStats } from '@/actions/admin-actions';
@@ -88,8 +89,14 @@ const AdminTelemetryToggle = dynamic(
 );
 
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState<AdminDashboardResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: stats, isLoading: loading } = useQuery<AdminDashboardResponse | null>({
+    queryKey: ['admin-dashboard-stats'],
+    queryFn: async () => {
+      const res = await getAdminDashboardStats();
+      return res.success ? res : null;
+    }
+  });
+
   const [guestSearch, setGuestSearch] = useState('');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
     uploads: true,
@@ -100,15 +107,6 @@ export default function AdminDashboardPage() {
   });
 
   const toggle = (key: string) => setCollapsed(prev => ({ ...prev, [key]: !prev[key] }));
-
-  useEffect(() => {
-    getAdminDashboardStats().then((res) => {
-      if (res.success) {
-        setStats(res);
-      }
-      setLoading(false);
-    });
-  }, []);
 
   if (loading) {
     return (
