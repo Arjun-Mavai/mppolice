@@ -117,8 +117,9 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
   const hi = language === 'hi';
 
   const subjectParam = searchParams.get('subject') || initialSubject;
-  const isKnown = subjectParam === 'All' || MPPOLICE_ONELINER_SUBJECTS.includes(subjectParam as any);
-  const activeSubject = isKnown ? subjectParam : 'All';
+  const foundSubject = MPPOLICE_ONELINER_SUBJECTS.find(s => s.toLowerCase() === subjectParam.toLowerCase());
+  const isKnown = subjectParam.toLowerCase() === 'all' || !!foundSubject;
+  const activeSubject = isKnown ? (subjectParam.toLowerCase() === 'all' ? 'All' : foundSubject!) : 'All';
 
   // States
   const [facts, setFacts] = useState<MppoliceOneLinerRow[]>(() => initialFacts.slice(0, PAGE_SIZE));
@@ -130,6 +131,12 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
   const [loadingBatch, setLoadingBatch] = useState(false);
   const [stats, setStats] = useState({ revisedFactsCount: 0, totalFacts: 0 });
   const [isFocusMode, setIsFocusMode] = useState(false);
+
+  // Sync state when URL (initialFacts) changes
+  useEffect(() => {
+    setFacts(initialFacts.slice(0, PAGE_SIZE));
+    setBatchIndex(0);
+  }, [initialFacts]);
 
   // 1. Progress Stats
   const refreshStats = useCallback(async () => {

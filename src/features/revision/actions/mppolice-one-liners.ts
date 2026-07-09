@@ -38,7 +38,7 @@ export async function getPublishedMppoliceOneLiners(
   const safeLimit = Math.min(Math.max(limit, 1), 5000);
   const safeOffset = Math.max(offset, 0);
   const subs = [...MPPOLICE_ONELINER_SUBJECTS] as string[];
-  const normalizedSubject = subs.includes(subject) ? subject : 'General Knowledge';
+  const normalizedSubject = subs.find(s => s.toLowerCase() === subject.toLowerCase()) || 'General Knowledge';
   const cacheKeySubject = subject === 'All' || subject === 'all' ? 'All' : normalizedSubject;
 
   return unstable_cache(
