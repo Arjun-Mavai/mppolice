@@ -1,23 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-export function AdminTicketsList() {
-  const [tickets, setTickets] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+interface SupportTicket {
+  id: string;
+  userId: string | null;
+  name: string;
+  email: string;
+  phone: string | null;
+  category: string;
+  message: string;
+  status: string;
+  createdAt: string | Date;
+}
 
-  useEffect(() => {
-    import('@/actions/support-actions').then(({ getSupportTickets }) => {
-      getSupportTickets().then((res) => {
-        if (res.success && res.tickets) {
-          setTickets(res.tickets);
-        }
-        setLoading(false);
-      });
-    });
-  }, []);
+export function AdminTicketsList() {
+  const { data: tickets = [] as SupportTicket[], isLoading: loading } = useQuery<SupportTicket[]>({
+    queryKey: ['admin-support-tickets'],
+    queryFn: async () => {
+      const { getSupportTickets } = await import('@/actions/support-actions');
+      const res = await getSupportTickets();
+      return (res.success && res.tickets) ? res.tickets as SupportTicket[] : [];
+    }
+  });
 
   if (loading) return <div className="text-sm text-slate-500">Loading tickets...</div>;
   if (tickets.length === 0) return <div className="text-sm text-slate-500">No open tickets.</div>;

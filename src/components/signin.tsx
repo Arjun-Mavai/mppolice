@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -15,24 +15,29 @@ import { loginUserAction } from '@/actions/auth-actions';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  
+  const initialReason = searchParams?.get('reason');
+  const [error, setError] = useState(() => initialReason === 'multi_device' ? 'Session logged out due to multi-device login.' : '');
+  const toastFired = useRef(false);
 
   useEffect(() => {
-    if (searchParams?.get('reason') === 'multi_device') {
+    if (toastFired.current) return;
+    toastFired.current = true;
+    
+    if (initialReason === 'multi_device') {
       toast.error('Security Alert', {
         description: 'You were logged out because your account was opened on another device. Please log in again to continue here.',
         duration: 8000,
       });
-      setError('Session logged out due to multi-device login.');
-    } else if (searchParams?.get('reason') === 'logged_out') {
+    } else if (initialReason === 'logged_out') {
       toast.success('Logged out successfully');
     }
-  }, [searchParams]);
+  }, [initialReason]);
 
   const handleSubmit = async (e?: React.FormEvent, force: boolean = false) => {
     if (e) e.preventDefault();
