@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { mppoliceOneLinerFacts } from '@/db/schema';
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { MPPOLICE_ONELINER_SUBJECTS } from '@/features/revision/constants/mppolice-one-liners';
 
@@ -33,13 +33,12 @@ export interface MppoliceOneLinerRow {
 export async function getPublishedMppoliceOneLiners(
   subject: string,
   limit = 50,
-  offset = 0,
-  sortBy: 'default' | 'newest' = 'default'
+  offset = 0
 ): Promise<MppoliceOneLinerRow[]> {
   const safeLimit = Math.min(Math.max(limit, 1), 5000);
   const safeOffset = Math.max(offset, 0);
   const subs = [...MPPOLICE_ONELINER_SUBJECTS] as string[];
-  const normalizedSubject = subs.includes(subject) ? subject : 'General Knowledge';
+  const normalizedSubject = subs.find(s => s.toLowerCase() === subject.toLowerCase()) || 'General Knowledge';
   const cacheKeySubject = subject === 'All' || subject === 'all' ? 'All' : normalizedSubject;
 
   return unstable_cache(
@@ -64,8 +63,8 @@ export async function getPublishedMppoliceOneLiners(
         .from(mppoliceOneLinerFacts)
         .where(and(eq(mppoliceOneLinerFacts.status, 'published'), subjectCond))
         .orderBy(
-          sortBy === 'newest' ? desc(mppoliceOneLinerFacts.updatedAt) : desc(mppoliceOneLinerFacts.importanceScore),
-          desc(mppoliceOneLinerFacts.sortOrder),
+          asc(mppoliceOneLinerFacts.updatedAt),
+          asc(mppoliceOneLinerFacts.sortOrder),
           mppoliceOneLinerFacts.id
         )
         .limit(safeLimit)
@@ -80,7 +79,7 @@ export async function getPublishedMppoliceOneLiners(
     // 🛡️ CRITICAL FIX: Added safeOffset to the cache key
     // Bhai, pehle offset cache key me nahi tha, jis wajah se pagination kaam nahi kar rahi thi
     // (saare batches me same data aa raha tha). Ab ye fix ho gaya h!
-    ['mppolice-one-liners', cacheKeySubject, String(safeLimit), String(safeOffset), sortBy],
+    ['mppolice-one-liners', cacheKeySubject, String(safeLimit), String(safeOffset)],
     { revalidate: 300, tags: ['mppolice-one-liners'] }
   )();
 }

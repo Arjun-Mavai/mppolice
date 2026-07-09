@@ -42,13 +42,13 @@ export default async function GkOneLinersPage({ searchParams }: PageProps) {
         : 'All';
 
   const [facts, counts] = await Promise.all([
-    getPublishedMppoliceOneLiners(subject, 3000, 0, 'newest'),
+    getPublishedMppoliceOneLiners(subject, 50, 0),
     getMppoliceOnelinerCountsBySubject(),
   ]);
 
   return (
     <Suspense fallback={<OneLinersFallback />}>
-      <OneLinersModernClient facts={facts} counts={counts} initialSubject={subject} />
+      <OneLinersModernClient key={subject} facts={facts} counts={counts} initialSubject={subject} />
     </Suspense>
   );
 }

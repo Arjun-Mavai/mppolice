@@ -240,8 +240,8 @@ export default function PricingPage() {
                 },
                 {
                   icon: Target,
-                  label: 'पूरा MP Police सिलेबस',
-                  sub: 'GK, रीज़निंग, विज्ञान, गणित, हिंदी — एक ही जगह।',
+                  label: 'पूरा MP Police सिलेबस Tests',
+                  sub: 'GK, रीज़निंग, विज्ञान, गणित — एक ही जगह।',
                   highlight: true,
                 },
                 {
@@ -256,13 +256,13 @@ export default function PricingPage() {
                   sub: 'तेज रिवीज़न के लिए व्याख्या सहित।',
                   highlight: true,
                 },
-                {
-                  icon: Sparkles,
-                  label: 'MPGK स्मार्ट वॉल्ट',
-                  sub: '1000+ स्मार्ट वन-लाइनर्स, मेमोरी ट्रिक्स और PYQs के साथ। 100% कवरेज।',
-                  highlight: true,
-                  badges: ['Pattern Connections', 'PYQs', 'Memory Tricks'],
-                }
+                // {
+                //   icon: Sparkles,
+                //   label: 'MPGK स्मार्ट वॉल्ट',
+                //   sub: '1000+ स्मार्ट वन-लाइनर्स, मेमोरी ट्रिक्स और PYQs के साथ। 100% कवरेज।',
+                //   highlight: true,
+                //   badges: ['Pattern Connections', 'PYQs', 'Memory Tricks'],
+                // }
               ].map((item) => {
                 const { icon: Icon, label, sub, highlight } = item;
                 const badges = (item as any).badges as string[] | undefined;
