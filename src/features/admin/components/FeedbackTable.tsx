@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Table,
   TableBody,
@@ -29,48 +30,28 @@ interface Feedback {
 }
 
 export function FeedbackTable() {
-  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
-  const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'rating' | 'latest'>('rating');
-
-
-  useEffect(() => {
-    fetchFeedbacks();
-  }, []);
-
-  const fetchFeedbacks = async () => {
-    try {
+  const { data: rawFeedbacks = [], isLoading: loading } = useQuery<Feedback[]>({
+    queryKey: ['admin-test-feedbacks'],
+    queryFn: async () => {
       const res = await fetch('/api/admin/test-feedbacks');
-      if (res.ok) {
-        const data = await res.json();
-        applySort(data.feedbacks, sortBy);
-      }
-    } catch (error) {
-      console.error('Failed to fetch test feedbacks', error);
-    } finally {
-      setLoading(false);
+      if (!res.ok) throw new Error('Failed to fetch test feedbacks');
+      const data = await res.json();
+      return data.feedbacks || [];
     }
-  };
+  });
 
-  const applySort = (data: Feedback[], mode: 'rating' | 'latest') => {
-    const sorted = [...data].sort((a, b) => {
-      if (mode === 'latest') {
+  const feedbacks = useMemo(() => {
+    return [...rawFeedbacks].sort((a, b) => {
+      if (sortBy === 'latest') {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
-      // Default: Rating desc, then Date desc
       if (b.overallRating !== a.overallRating) {
         return b.overallRating - a.overallRating;
       }
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-    setFeedbacks(sorted);
-  };
-
-  useEffect(() => {
-    if (feedbacks.length > 0) {
-      applySort(feedbacks, sortBy);
-    }
-  }, [sortBy]);
+  }, [rawFeedbacks, sortBy]);
 
 
   const getDifficultyColor = (level: string) => {

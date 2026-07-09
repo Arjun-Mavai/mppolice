@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getLiveActivity, ActivityEvent } from '@/actions/admin-activity';
@@ -19,23 +20,17 @@ import {
 import { cn } from '@/lib/utils';
 
 export function LiveActivityFeed() {
-  const [events, setEvents] = useState<ActivityEvent[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [lastRefreshed, setLastRefreshed] = useState(new Date());
 
-  const fetchActivity = async (isManual = false) => {
-    if (isManual) setLoading(true);
-    const data = await getLiveActivity();
-    setEvents(data);
-    setLoading(false);
-    setLastRefreshed(new Date());
-  };
+  const { data: events = [], isLoading: loading, refetch: refetchActivity, dataUpdatedAt } = useQuery<ActivityEvent[]>({
+    queryKey: ['admin-live-activity'],
+    queryFn: async () => {
+      return await getLiveActivity();
+    },
+    staleTime: 60 * 1000, // 1 minute
+  });
 
-  useEffect(() => {
-    fetchActivity();
-    // Auto-refresh removed per user request for efficiency
-  }, []);
+  const lastRefreshed = new Date(dataUpdatedAt || Date.now());
 
   return (
     <Card className="border-slate-200 shadow-sm overflow-hidden flex flex-col transition-all duration-300">
@@ -54,10 +49,10 @@ export function LiveActivityFeed() {
                 {lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             )}
-            <button 
+              <button 
               onClick={(e) => {
                 e.stopPropagation();
-                fetchActivity(true);
+                refetchActivity();
               }} 
               className={cn("text-slate-400 hover:text-indigo-600 transition-colors p-1 rounded-full hover:bg-white", loading && "animate-spin")}
             >

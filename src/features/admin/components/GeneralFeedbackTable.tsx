@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Table,
   TableBody,
@@ -28,26 +28,15 @@ interface GeneralFeedback {
 }
 
 export function GeneralFeedbackTable() {
-  const [feedbacks, setFeedbacks] = useState<GeneralFeedback[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchFeedbacks();
-  }, []);
-
-  const fetchFeedbacks = async () => {
-    try {
+  const { data: feedbacks = [], isLoading: loading } = useQuery<GeneralFeedback[]>({
+    queryKey: ['admin-general-feedbacks'],
+    queryFn: async () => {
       const res = await fetch('/api/admin/feedbacks');
-      if (res.ok) {
-        const data = await res.json();
-        setFeedbacks(data.feedbacks || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch general feedbacks', error);
-    } finally {
-      setLoading(false);
+      if (!res.ok) throw new Error('Failed to fetch general feedbacks');
+      const data = await res.json();
+      return data.feedbacks || [];
     }
-  };
+  });
 
   const getCategoryColor = (cat: string) => {
     switch (cat) {

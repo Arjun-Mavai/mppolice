@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,17 +15,16 @@ import { getTopicTestStats, ExamCoverageStats } from '@/actions/getTopicTestStat
 import { getSectionLabel } from '@/data/mppoliceSyllabus';
 
 export function TopicCoverageMatrix() {
-  const [data, setData] = useState<ExamCoverageStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getTopicTestStats().then((res) => {
+  const { data, isLoading: loading } = useQuery<ExamCoverageStats | null>({
+    queryKey: ['admin-topic-coverage'],
+    queryFn: async () => {
+      const res = await getTopicTestStats();
       if (res.success && res.data) {
-        setData(res.data as any);
+        return res.data as ExamCoverageStats;
       }
-      setLoading(false);
-    });
-  }, []);
+      return null;
+    }
+  });
 
   if (loading)
     return (

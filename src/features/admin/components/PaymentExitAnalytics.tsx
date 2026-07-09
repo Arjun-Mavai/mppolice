@@ -1,25 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function PaymentExitAnalytics() {
-  const [data, setData] = useState<{ reasons: any[]; breakdown: Record<string, number> } | null>(
-    null
-  );
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    import('@/actions/admin-actions').then(({ getPaymentExitStats }) => {
-      getPaymentExitStats().then((res) => {
-        if (res.success) {
-          setData({ reasons: res.reasons || [], breakdown: res.breakdown || {} });
-        }
-        setLoading(false);
-      });
-    });
-  }, []);
+  const { data, isLoading: loading } = useQuery<{ reasons: any[]; breakdown: Record<string, number> } | null>({
+    queryKey: ['admin-payment-exit-stats'],
+    queryFn: async () => {
+      const { getPaymentExitStats } = await import('@/actions/admin-actions');
+      const res = await getPaymentExitStats();
+      if (res.success) {
+        return { reasons: res.reasons || [], breakdown: res.breakdown || {} };
+      }
+      return null;
+    }
+  });
 
   if (loading) return <div className="text-sm text-slate-500">Loading analytics...</div>;
   if (!data || data.reasons.length === 0)
