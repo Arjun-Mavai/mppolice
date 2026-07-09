@@ -128,9 +128,8 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
 
   // 🏷️ UI DEFAULT: Set to 'list' view by default
   const [viewMode, setViewMode] = useState<'list' | 'flip'>('list');
-  const [revisionMap, setRevisionMap] = useState<Record<string, number>>({});
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
-  const [stats, setStats] = useState({ revisedFactsCount: 0, totalFacts: 0 });
+  const [localRevisionOverrides, setLocalRevisionOverrides] = useState<Record<string, number>>({});
   const [isFocusMode, setIsFocusMode] = useState(false);
 
   // 🔄 React Query for Pagination & Caching
@@ -141,19 +140,21 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
     staleTime: 5 * 60 * 1000,
   });
 
-  // 1. Progress Stats
-  const refreshStats = useCallback(async () => {
-    try {
-      const res = await getUserOneLinerProgress();
-      setStats({ revisedFactsCount: res.revisedFactsCount, totalFacts: res.totalFacts });
-    } catch (e) {
-      console.error('Failed to fetch stats');
-    }
-  }, []);
+  // 🔄 React Query for Progress Stats
+  const { data: stats = { revisedFactsCount: 0, totalFacts: 0 }, refetch: refetchStats } = useQuery({
+    queryKey: ['mppolice-one-liner-progress'],
+    queryFn: getUserOneLinerProgress,
+    staleTime: 60 * 1000,
+  });
 
-  useEffect(() => {
-    refreshStats();
-  }, [refreshStats]);
+  // 🔄 React Query for Revision Map
+  const factIds = useMemo(() => facts.map(f => f.id), [facts]);
+  const { data: serverRevisionMap = {} } = useQuery({
+    queryKey: ['mppolice-one-liner-revisions', factIds],
+    queryFn: () => getOneLinerRevisionMap(factIds),
+    enabled: factIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const progressPercentRaw = (stats.revisedFactsCount / (stats.totalFacts || 1)) * 100;
   const progressPercent = Math.min(100, Math.round(progressPercentRaw));
@@ -169,22 +170,6 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
   }, [activeSubject, counts]);
 
   const totalBatches = Math.ceil(totalPossible / PAGE_SIZE);
-
-  const loadRevisionData = useCallback(async (ids: string[]) => {
-    if (ids.length === 0) return;
-    try {
-      const map = await getOneLinerRevisionMap(ids);
-      setRevisionMap(prev => ({ ...prev, ...map }));
-    } catch (e) {
-      console.error('Failed to load revisions');
-    }
-  }, []);
-
-  useEffect(() => {
-    if (facts.length > 0) {
-      loadRevisionData(facts.map(f => f.id));
-    }
-  }, [facts, loadRevisionData]);
 
   const handleBatchChange = useCallback((newIndex: number) => {
     setBatchIndex(newIndex);
@@ -209,16 +194,19 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
   );
 
   const handleMarkRevised = useCallback(async (factId: string) => {
-    setRevisionMap(prev => ({ ...prev, [factId]: (prev[factId] || 0) + 1 }));
+    // Optimistic UI update
+    const currentRevCount = (localRevisionOverrides[factId] !== undefined ? localRevisionOverrides[factId] : serverRevisionMap[factId]) || 0;
+    setLocalRevisionOverrides(prev => ({ ...prev, [factId]: currentRevCount + 1 }));
+    
     const res = await markOneLinerRevised(factId);
     if (!res.success) {
       toast.error('Failed to update revision');
-      setRevisionMap(prev => ({ ...prev, [factId]: Math.max(0, (prev[factId] || 1) - 1) }));
+      setLocalRevisionOverrides(prev => ({ ...prev, [factId]: Math.max(0, currentRevCount) }));
     } else {
       toast.success(hi ? 'रिवीजन अपडेट!' : 'Revised!');
-      refreshStats();
+      refetchStats();
     }
-  }, [hi, refreshStats]);
+  }, [hi, refetchStats, localRevisionOverrides, serverRevisionMap]);
 
   const toggleExpand = useCallback((id: string) => {
     setExpandedIds((prev) => {
@@ -407,7 +395,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                    {facts.map((f, idx) => {
                      const globalIdx = batchIndex * PAGE_SIZE + idx + 1;
                      const isExpanded = !!expandedIds[f.id];
-                     const revCount = revisionMap[f.id] || 0;
+                     const revCount = (localRevisionOverrides[f.id] !== undefined ? localRevisionOverrides[f.id] : serverRevisionMap[f.id]) || 0;
                      const color = colorVariants[idx % 4];
 
                      return (
@@ -605,7 +593,7 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
                     className={cn("grid grid-cols-1 md:grid-cols-2 gap-8 pb-24", isFocusMode && "pt-4")}
                  >
                    {facts.map((f, idx) => {
-                      const revCount = revisionMap[f.id] || 0;
+                      const revCount = (localRevisionOverrides[f.id] !== undefined ? localRevisionOverrides[f.id] : serverRevisionMap[f.id]) || 0;
                       const globalIdx = batchIndex * PAGE_SIZE + idx + 1;
                       const color = colorVariants[idx % 4];
 
