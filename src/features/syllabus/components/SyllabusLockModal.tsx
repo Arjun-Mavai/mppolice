@@ -1,7 +1,6 @@
 import { PremiumMarketing } from '@/components/PremiumMarketing';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { notifyLockModalOpen } from '@/lib/analytics/notifyLockModal';
+
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 interface SyllabusLockModalProps {
@@ -12,11 +11,7 @@ interface SyllabusLockModalProps {
 export function SyllabusLockModal({ open, onOpenChange }: SyllabusLockModalProps) {
   const router = useRouter();
 
-  useEffect(() => {
-    if (open) {
-      notifyLockModalOpen('premium');
-    }
-  }, [open]);
+
 
   // modal={true} by default ensures backdrop and scroll lock
   return (

@@ -16,7 +16,8 @@ import {
 import { TopicData } from '@/app/syllabus/[unitId]/UnitContent';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { useEffect, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getRevisionCount, markTopicRevised } from '@/features/syllabus/actions/revision';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { logger } from '@/lib/logger';
@@ -40,21 +41,16 @@ export function SyllabusTopicSheet({
 }: SyllabusTopicSheetProps) {
   // Apun user ko store se utha raha — guest check ke liye
   const { user } = useSettingsStore();
-  const [revisionCount, setRevisionCount] = useState<number | undefined>(0);
+  const [localOverride, setLocalOverride] = useState<number | undefined>();
   const [isPending, startTransition] = useTransition();
   const [isRevising, setIsRevising] = useState(false);
+  const { data: serverRevisionCount = 0 } = useQuery({
+    queryKey: ['syllabus-topic-revision', topic?.id],
+    queryFn: () => getRevisionCount(topic!.id.toString()),
+    enabled: !!(open && topic && user),
+  });
 
-  // Jab sheet khule aur topic ho, tabhi revision count fetch kar — guest ke liye skip
-  useEffect(() => {
-    if (open && topic && user) {
-      getRevisionCount(topic.id.toString()).then((count) => {
-        logger.debug('Fetched revision count:', { count, category: 'system' });
-        setRevisionCount(count);
-      });
-    } else {
-      setRevisionCount(0);
-    }
-  }, [open, topic, user]);
+  const revisionCount = localOverride !== undefined ? localOverride : serverRevisionCount;
 
   const handleMarkRevised = () => {
     // Guest user? — premium feature batao, API call mat karo
@@ -80,7 +76,7 @@ export function SyllabusTopicSheet({
       try {
         const res = await markTopicRevised(topic.id.toString(), targetUnitId);
         if (res.success && res.count) {
-          setRevisionCount(res.count);
+          setLocalOverride(res.count);
           toast.success(language === 'hi' ? 'पुनरीक्षण दर्ज किया गया!' : 'Revision recorded!');
         } else {
           toast.error(res.error || 'Failed to save revision');

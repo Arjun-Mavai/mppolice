@@ -9,6 +9,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { SyllabusTopicCard } from '@/components/SyllabusTopicCard';
 import { SyllabusData } from '@/types/syllabus';
+import { notifyLockModalOpen } from '@/lib/analytics/notifyLockModal';
 interface SyllabusClientProps {
   syllabusData: SyllabusData;
 }
@@ -145,6 +146,7 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                       onClick={() => {
                         if (isLocked) {
                           setUnlockModalOpen(true);
+                          notifyLockModalOpen('premium');
                         } else {
                           setNavigatingId(key);
                           router.push(`/syllabus/${key}`);
@@ -184,6 +186,7 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                       onClick={() => {
                         if (isLocked) {
                           setUnlockModalOpen(true);
+                          notifyLockModalOpen('premium');
                         } else {
                           setNavigatingId(key);
                           router.push(`/syllabus/${key}`);
@@ -235,6 +238,7 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setUnlockModalOpen(true);
+                                  notifyLockModalOpen('premium');
                                 }}
                                 className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500 hover:bg-slate-200 cursor-pointer transition-all"
                               >
