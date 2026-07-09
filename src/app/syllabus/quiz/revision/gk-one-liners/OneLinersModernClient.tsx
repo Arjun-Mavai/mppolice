@@ -27,6 +27,7 @@ import { getPublishedMppoliceOneLiners, type MppoliceOneLinerRow } from '@/featu
 import { markOneLinerRevised, getOneLinerRevisionMap, getUserOneLinerProgress } from '@/features/revision/actions/mppolice-one-liner-revisions';
 import { MPPOLICE_ONELINER_SUBJECTS } from '@/features/revision/constants/mppolice-one-liners';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 import { QuickFeedback } from '@/components/QuickFeedback';
 
 const renderWithLineBreaks = (text: string | undefined) => {
@@ -122,15 +123,23 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
   const activeSubject = isKnown ? (subjectParam.toLowerCase() === 'all' ? 'All' : foundSubject!) : 'All';
 
   // States
-  const [facts, setFacts] = useState<MppoliceOneLinerRow[]>(() => initialFacts.slice(0, PAGE_SIZE));
   const [batchIndex, setBatchIndex] = useState(0);
+  const offset = batchIndex * PAGE_SIZE;
+
   // 🏷️ UI DEFAULT: Set to 'list' view by default
   const [viewMode, setViewMode] = useState<'list' | 'flip'>('list');
   const [revisionMap, setRevisionMap] = useState<Record<string, number>>({});
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
-  const [loadingBatch, setLoadingBatch] = useState(false);
   const [stats, setStats] = useState({ revisedFactsCount: 0, totalFacts: 0 });
   const [isFocusMode, setIsFocusMode] = useState(false);
+
+  // 🔄 React Query for Pagination & Caching
+  const { data: facts = [], isLoading: loadingBatch } = useQuery({
+    queryKey: ['mppolice-one-liners-client', activeSubject, PAGE_SIZE, offset],
+    queryFn: () => getPublishedMppoliceOneLiners(activeSubject, PAGE_SIZE, offset),
+    initialData: batchIndex === 0 ? initialFacts.slice(0, PAGE_SIZE) : undefined,
+    staleTime: 5 * 60 * 1000,
+  });
 
   // 1. Progress Stats
   const refreshStats = useCallback(async () => {
@@ -172,27 +181,16 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
   }, []);
 
   useEffect(() => {
-    if (initialFacts.length > 0) {
-      loadRevisionData(initialFacts.slice(0, PAGE_SIZE).map(f => f.id));
+    if (facts.length > 0) {
+      loadRevisionData(facts.map(f => f.id));
     }
-  }, [initialFacts, loadRevisionData]);
+  }, [facts, loadRevisionData]);
 
-  const handleBatchChange = useCallback(async (newIndex: number) => {
-    setLoadingBatch(true);
+  const handleBatchChange = useCallback((newIndex: number) => {
     setBatchIndex(newIndex);
-    try {
-      const offset = newIndex * PAGE_SIZE;
-      const nextBatch = await getPublishedMppoliceOneLiners(activeSubject, PAGE_SIZE, offset);
-      setFacts(nextBatch);
-      setExpandedIds({});
-      await loadRevisionData(nextBatch.map(f => f.id));
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    } catch (err) {
-      toast.error('Failed to load batch');
-    } finally {
-      setLoadingBatch(false);
-    }
-  }, [activeSubject, loadRevisionData]);
+    setExpandedIds({});
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
 
   const handleSetSubject = useCallback(
     (s: string) => {
