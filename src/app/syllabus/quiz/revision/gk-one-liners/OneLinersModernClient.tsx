@@ -132,12 +132,6 @@ export default function OneLinersModernClient({ facts: initialFacts, counts, ini
   const [stats, setStats] = useState({ revisedFactsCount: 0, totalFacts: 0 });
   const [isFocusMode, setIsFocusMode] = useState(false);
 
-  // Sync state when URL (initialFacts) changes
-  useEffect(() => {
-    setFacts(initialFacts.slice(0, PAGE_SIZE));
-    setBatchIndex(0);
-  }, [initialFacts]);
-
   // 1. Progress Stats
   const refreshStats = useCallback(async () => {
     try {

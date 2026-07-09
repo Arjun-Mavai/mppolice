@@ -48,7 +48,7 @@ export default async function GkOneLinersPage({ searchParams }: PageProps) {
 
   return (
     <Suspense fallback={<OneLinersFallback />}>
-      <OneLinersModernClient facts={facts} counts={counts} initialSubject={subject} />
+      <OneLinersModernClient key={subject} facts={facts} counts={counts} initialSubject={subject} />
     </Suspense>
   );
 }
