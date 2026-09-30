@@ -582,7 +582,7 @@ export const getPyqTopicAnalysis = unstable_cache(
           WHEN ${tests.title} LIKE '%2022%' THEN 2022 
           WHEN ${tests.title} LIKE '%2019-20%' OR ${tests.title} LIKE '%2020%' THEN 2020 
           WHEN ${tests.title} LIKE '%2021%' THEN 2021
-          ELSE CAST(strftime('%Y', ${tests.createdAt}) AS INTEGER)
+          ELSE CAST(EXTRACT(YEAR FROM ${tests.createdAt}) AS INTEGER)
         END`.as('resolved_year'),
         questionCount: sql<number>`count(distinct ${pyqQuestionTopics.questionId})`,
       })

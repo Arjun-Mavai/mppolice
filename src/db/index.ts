@@ -1,42 +1,65 @@
 import { createClient } from '@libsql/client';
-import { drizzle } from 'drizzle-orm/libsql';
+import { drizzle as drizzleLibsql } from 'drizzle-orm/libsql';
+import postgres from 'postgres';
+import { drizzle as drizzlePostgres } from 'drizzle-orm/postgres-js';
+import path from 'path';
 import * as schema from './schema';
+import * as schemaPg from './schema.pg';
 import { env } from '@/lib/env';
 
 // Singleton pattern to prevent connection exhaustion in serverless/dev
 const globalForDb = globalThis as unknown as {
-  client: ReturnType<typeof createClient> | undefined;
+  libsqlClient: ReturnType<typeof createClient> | undefined;
+  postgresClient: ReturnType<typeof postgres> | undefined;
 };
 
-// Determine connection URL based on environment
-console.log('--- DEBUG DB CONNECTION ---');
-console.log('process.env.USE_PROD_DB:', process.env.USE_PROD_DB);
-console.log('env.USE_PROD_DB:', env.USE_PROD_DB);
-console.log('env.NODE_ENV:', env.NODE_ENV);
+const useLocalSqlite =
+  env.DB_PROVIDER === 'turso' &&
+  env.NODE_ENV === 'development' &&
+  (env.USE_PROD_DB || '').trim() !== 'true';
 
-const isDev = env.NODE_ENV === 'development' && env.USE_PROD_DB.trim() !== 'true';
-const connectionUrl = isDev 
-  ? 'file:mppolice_local_dev.db' 
-  : env.TURSO_DATABASE_URL;
+const localDbPath = path.resolve(process.cwd(), 'mppolice_local_dev.db');
+const fallbackSqliteUrl = `file:${localDbPath}`;
+const libsqlUrl = useLocalSqlite
+  ? fallbackSqliteUrl
+  : (env.TURSO_DATABASE_URL || fallbackSqliteUrl);
 
-const connectionAuthToken = isDev
-  ? undefined
-  : env.TURSO_AUTH_TOKEN;
+const clientInstance =
+  env.DB_PROVIDER === 'supabase'
+    ? (() => {
+        const pgUrl =
+          env.SUPABASE_DATABASE_URL ||
+          'postgresql://postgres:postgres@localhost:5432/postgres';
+        const pgClient =
+          globalForDb.postgresClient ??
+          postgres(pgUrl, { prepare: false, max: 10 });
+        if (!globalForDb.postgresClient && env.NODE_ENV === 'development') {
+          console.log('⚡ DB connected [SUPABASE_POSTGRES]');
+        }
+        if (env.NODE_ENV !== 'production') globalForDb.postgresClient = pgClient;
+        return pgClient;
+      })()
+    : (() => {
+        const libsqlClient =
+          globalForDb.libsqlClient ??
+          createClient({
+            url: libsqlUrl,
+            authToken: useLocalSqlite ? undefined : (env.TURSO_AUTH_TOKEN || undefined),
+          });
+        if (!globalForDb.libsqlClient && env.NODE_ENV === 'development') {
+          console.log(`🔌 DB connected [${useLocalSqlite ? 'LOCAL_SQLITE' : 'TURSO_REMOTE'}]`);
+        }
+        if (env.NODE_ENV !== 'production') globalForDb.libsqlClient = libsqlClient;
+        return libsqlClient;
+      })();
 
-if (process.env.NODE_ENV !== 'test') {
-  console.log(`🔌 Initializing DB Connection: ${isDev ? 'LOCAL (mppolice_local_dev.db)' : 'REMOTE (Turso)'}`);
-}
+const sqliteDb = drizzleLibsql(clientInstance as ReturnType<typeof createClient>, { schema });
+const dbInstance =
+  env.DB_PROVIDER === 'supabase'
+    ? drizzlePostgres(clientInstance as ReturnType<typeof postgres>, { schema: schemaPg })
+    : sqliteDb;
 
-export const client =
-  globalForDb.client ??
-  createClient({
-    url: connectionUrl,
-    authToken: connectionAuthToken,
-    // syncUrl: process.env.TURSO_SYNC_URL, // Optional: Enable if using embedded replica
-  });
-
-if (env.NODE_ENV !== 'production') {
-  globalForDb.client = client;
-}
-
-export const db = drizzle(client, { schema });
+export const client = clientInstance as ReturnType<typeof createClient> | ReturnType<typeof postgres>;
+// Both providers expose the same Drizzle query surface. Keep the SQLite schema
+// as the application-facing contract so existing typed queries remain stable.
+export const db = dbInstance as typeof sqliteDb;
