@@ -114,7 +114,9 @@ export async function loginUserAction(formData: LoginParams) {
         accessExpiresAt: mppscUsers.accessExpiresAt,
         phone: mppscUsers.phone,
         examType: mppscUsers.examType,
-        metadataText: mppscUsers.metadata,
+        // Read JSONB as text so postgres-js does not try to JSON.parse an
+        // already-decoded driver object before the auth action can normalize it.
+        metadataText: sql<string>`(${mppscUsers.metadata})::text`,
       })
       .from(mppscUsers)
       .where(
