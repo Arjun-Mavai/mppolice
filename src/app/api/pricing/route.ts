@@ -6,6 +6,7 @@ import { cookies } from 'next/headers';
 import { revalidateTag } from 'next/cache';
 import { logger } from '@/lib/logger';
 import { PRICING_DEFAULTS } from '@/config/pricing';
+import { extractAuthToken } from '@/lib/auth-constants';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 💰 PRICING API — GET (public) + PUT (admin-only)
@@ -57,7 +58,7 @@ export async function PUT(request: Request) {
   try {
     // Admin auth check
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppolice_token')?.value;
+    const token = extractAuthToken(cookieStore);
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

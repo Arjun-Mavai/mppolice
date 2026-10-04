@@ -1,0 +1,197 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ * 🔐 AUTH CONSTANTS — MP Police Elite Security System
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * Bhai, ye file hamare pure authentication aur anti-theft security system ka "HEAD OFFICE" hai!
+ * Pure codebase me KISI BHI FILE me koi cookie, token ya storage ka naam hardcoded nahi hoga.
+ * Kal ko agar hume koi bhi naam ya rule badalna ho, to sirf ISI EK FILE se badla jayega!
+ *
+ * ───────────────────────────────────────────────────────────────────────────────────────
+ * 📋 KYA-KYA CONSTANTS HAIN AUR INKA MATLAB (Desi Guide):
+ * ───────────────────────────────────────────────────────────────────────────────────────
+ *
+ * 1. AUTH_COOKIE_NAME = '_app_sid'
+ *    - Meaning: "App Session ID"
+ *    - Ye hamari primary JWT cookie hai jisme user ka login session hota hai.
+ *    - Pehle iska naam 'mppolice_token' tha jo bohot obvious tha. DevTools me koi bhi dekhkar
+ *      samajh jata tha ki ye login token hai.
+ *    - Ab iska naam '_app_sid' hai, jo Google Analytics ya generic framework cookie jaisa lagta hai.
+ *
+ * 2. LEGACY_AUTH_COOKIE_NAME = 'mppolice_token'
+ *    - Meaning: Purani cookie ka naam.
+ *    - Kyu zaroori hai: Jo students pehle se login hain, unka browser 'mppolice_token' leke aayega.
+ *      Agar hum iska fallback na rakhein, to sabhi existing users ka session toot jayega!
+ *
+ * 3. DEVICE_COOKIE_NAME = '_app_cid'
+ *    - Meaning: "App Client ID"
+ *    - Ye wo cookie hai jo browser ke hardware-bound WebCrypto device ID ko server tak pahunchati hai.
+ *
+ * 4. LEGACY_DEVICE_COOKIE_NAME = 'mppolice_did'
+ *    - Meaning: Puraane device cookie ka fallback.
+ *
+ * 5. DEVICE_STORAGE_KEY = '_sec_cid'
+ *    - Meaning: "Security Client ID"
+ *    - Ye browser ke localStorage me rehta hai. Fast memory lookup ke liye.
+ *
+ * 6. LEGACY_DEVICE_STORAGE_KEY = 'mppolice_device_id'
+ *    - Meaning: Purana localStorage key ka fallback.
+ *
+ * 7. IDB_DATABASE_NAME = '_app_vault' & IDB_STORE_NAME = '_app_c_store'
+ *    - Meaning: Browser ke IndexedDB ki tijori.
+ *    - Isme WebCrypto ki Asymmetric Private Key (extractable: false) locked rehti hai.
+ *    - DevTools console se bhi ye private key export ya copy nahi ho sakti!
+ *
+ * 8. AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 30 (30 Din)
+ *    - Meaning: Cookie ka lifetime 30 din ka hota hai.
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ */
+
+// 🎟️ 1. AUTH SESSION COOKIE (JWT)
+export const AUTH_COOKIE_NAME = '_app_sid';
+export const LEGACY_AUTH_COOKIE_NAME = 'mppolice_token';
+
+// 📱 2. DEVICE BINDING COOKIE
+export const DEVICE_COOKIE_NAME = '_app_cid';
+export const LEGACY_DEVICE_COOKIE_NAME = 'mppolice_did';
+
+// 💾 3. BROWSER LOCAL STORAGE KEYS
+export const DEVICE_STORAGE_KEY = '_sec_cid';
+export const LEGACY_DEVICE_STORAGE_KEY = 'mppolice_device_id';
+
+// 🔒 4. INDEXEDDB WEBCRYPTO VAULT
+export const IDB_DATABASE_NAME = '_app_vault';
+export const IDB_STORE_NAME = '_app_c_store';
+
+// ⏱️ 5. SESSION LIFETIME (30 Days in seconds)
+export const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
+
+/**
+ * 🛠️ HELPER 1: Universal Auth Token Extractor
+ * Next.js server components, API routes ya proxy/middleware se JWT token nikaalta hai.
+ * Pehle naya cookie '_app_sid' dekhta hai, agar nahi mila to purana 'mppolice_token' check karta hai.
+ * Isse 100% guarantee hoti hai ki existing active users ko koi farak nahi padega!
+ */
+export function extractAuthToken(cookieStore: {
+  get(name: string): { value?: string } | undefined;
+}): string | undefined {
+  return (
+    cookieStore.get(AUTH_COOKIE_NAME)?.value ||
+    cookieStore.get(LEGACY_AUTH_COOKIE_NAME)?.value
+  );
+}1
+
+/**
+ * 🛠️ HELPER 2: Universal Device ID Extractor
+ * Incoming request se device binding cookie nikaalta hai (naya '_app_cd' ya fallback 'mppolice_did').
+ */
+export function extractDeviceCookie(cookieStore: {
+  get(name: string): { value?: string } | undefined;
+}): string | undefined {
+  return (
+    cookieStore.get(DEVICE_COOKIE_NAME)?.value ||
+    cookieStore.get(LEGACY_DEVICE_COOKIE_NAME)?.value
+  );
+}
+
+/**
+ * 🛠️ HELPER 3: Set Auth & Device Cookies
+ * Login time par cookies set karne ka single standardized function.
+ */
+export function setAuthCookies(
+  cookieStore: {
+    set(name: string, value: string, options: any): void;
+  },
+  token: string,
+  deviceId?: string | null
+): void {
+  const isProd = process.env.NODE_ENV === 'production';
+
+  // 1. Primary JWT Session Cookie (HTTP-Only)
+  cookieStore.set(AUTH_COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: isProd,
+    path: '/',
+    maxAge: AUTH_COOKIE_MAX_AGE,
+    sameSite: 'lax',
+  });
+
+  // 2. Device Binding Cookie (Client accessible so IndexedDB can verify)
+  if (deviceId && typeof deviceId === 'string' && deviceId.trim()) {
+    cookieStore.set(DEVICE_COOKIE_NAME, deviceId.trim(), {
+      httpOnly: false,
+      secure: isProd,
+      path: '/',
+      maxAge: AUTH_COOKIE_MAX_AGE,
+      sameSite: 'lax',
+    });
+  }
+}
+
+/**
+ * 🛠️ HELPER 4: Delete All Auth & Device Cookies on Logout
+ * Logout time par dono naye aur purane cookies ko completely nuke karta hai (Path=/ and Max-Age=0).
+ */
+export function deleteAuthCookies(cookieStore: any): void {
+  if (!cookieStore) return;
+  const isProd = process.env.NODE_ENV === 'production';
+  const cookieNames = [
+    AUTH_COOKIE_NAME,
+    LEGACY_AUTH_COOKIE_NAME,
+    DEVICE_COOKIE_NAME,
+    LEGACY_DEVICE_COOKIE_NAME,
+  ];
+
+  for (const name of cookieNames) {
+    try {
+      if (typeof cookieStore.set === 'function') {
+        cookieStore.set(name, '', {
+          httpOnly: name === AUTH_COOKIE_NAME || name === LEGACY_AUTH_COOKIE_NAME,
+          secure: isProd,
+          path: '/',
+          maxAge: 0,
+          expires: new Date(0),
+          sameSite: 'lax',
+        });
+      }
+    } catch {}
+
+    try {
+      if (cookieStore.cookies && typeof cookieStore.cookies.set === 'function') {
+        cookieStore.cookies.set(name, '', {
+          httpOnly: name === AUTH_COOKIE_NAME || name === LEGACY_AUTH_COOKIE_NAME,
+          secure: isProd,
+          path: '/',
+          maxAge: 0,
+          expires: new Date(0),
+          sameSite: 'lax',
+        });
+      }
+    } catch {}
+
+    try {
+      cookieStore.delete({ name, path: '/' });
+    } catch {
+      try {
+        cookieStore.delete(name);
+      } catch {}
+    }
+  }
+}
+
+/**
+ * 🛠️ HELPER 5: Device-Aware Token Validator
+ * Validates whether the token's embedded deviceId matches the incoming request's device cookie.
+ * - Legacy tokens (without deviceId): returns true (100% backward compatible).
+ * - Device-bound tokens: returns true only if the device cookie matches decoded.deviceId.
+ */
+export function isDeviceBindingValid(
+  decodedToken: { deviceId?: string | null } | null | undefined,
+  cookieStore: { get(name: string): { value?: string } | undefined }
+): boolean {
+  if (!decodedToken) return false;
+  if (!decodedToken.deviceId) return true; // Legacy session backward compatibility
+
+  const clientDeviceId = extractDeviceCookie(cookieStore);
+  return !!clientDeviceId && clientDeviceId === decodedToken.deviceId;
+}

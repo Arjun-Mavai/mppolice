@@ -45,6 +45,7 @@ import { NavbarLogo } from './NavbarLogo';
 import { DesktopNavigation } from './DesktopNavigation';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { UserSection } from './UserSection';
+import { MP_POLICE_TELEGRAM_CHANNEL_URL } from '@/config/social-links';
 
 interface PropUser {
   id?: string;
@@ -95,7 +96,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const { isInstallable, installPwa, isIos } = usePwa();
 
   // Create a merged user object (prop + global), favoring global if updated
-  const user = useMemo(() => normalizeUser(globalUser || initialUser), [globalUser, initialUser]);
+  const user = useMemo(() => normalizeUser(globalUser ?? initialUser), [globalUser, initialUser]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 🚀 CROSS-TAB SYNC
@@ -164,6 +165,14 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     enabled: shouldFetchAuth,
     queryFn: async () => {
       const result = await getCurrentUser();
+      logger.debug('NAVBAR auth query result', {
+        category: 'auth',
+        userId: result.user?.id,
+        metadata: {
+          authenticated: Boolean(result.user),
+          reason: 'reason' in result ? result.reason || null : null,
+        },
+      });
       if (result.user) {
         return {
           user: {
@@ -184,6 +193,21 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     void refetchSession();
   }, [pathname, refetchSession]);
 
+  useEffect(() => {
+    logger.debug('NAVBAR render auth state', {
+      category: 'auth',
+      userId: user?.id,
+      metadata: {
+        hasInitialUser: Boolean(initialUser),
+        hasGlobalUser: Boolean(globalUser),
+        authenticated: Boolean(user),
+        authCheckStatus,
+        isMounted,
+        isSessionLoading,
+      },
+    });
+  }, [user, initialUser, globalUser, authCheckStatus, isMounted, isSessionLoading]);
+
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // handleLogout — defined BEFORE useEffect so it's stable reference
@@ -199,9 +223,27 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map((name) => caches.delete(name)));
       }
-      await fetch('/api/auth/mppolice-logout', { method: 'POST' });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      try {
+        await fetch('/api/auth/mppolice-logout', {
+          method: 'POST',
+          credentials: 'include',
+          keepalive: true,
+          signal: controller.signal,
+        });
+      } catch {
+        // Proceed even if network timed out
+      } finally {
+        clearTimeout(timeoutId);
+      }
+      // Clear non-httpOnly auth cookie fallbacks directly if any
+      if (typeof document !== 'undefined') {
+        document.cookie = '_app_sid=; path=/; max-age=0; SameSite=Lax';
+        document.cookie = 'mppolice_token=; path=/; max-age=0; SameSite=Lax';
+      }
       const safeReason = typeof reason === 'string' ? reason : 'logged_out';
-      window.location.href = `/login?reason=${safeReason}`;
+      window.location.href = `/login?reason=${encodeURIComponent(safeReason)}`;
     } catch (error) {
       localStorage.removeItem('settings-storage');
       window.location.href = '/login?reason=logged_out';
@@ -209,12 +251,43 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   }, [setUser, setAuthCheckStatus]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 🚀 MOUNT STATE
-  // Separated to avoid being part of the auth sync loop
+  // 🚀 MOUNT STATE + 🛡️ INDEXEDDB CRYPTOGRAPHIC VAULT CHECK
+  // On mount: detect if session cookie was pasted into Incognito
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+
+    // 🛡️ Client Device Integrity & Cryptographic Proof-of-Possession Check
+    import('@/lib/device-client').then(async ({ getOrCreateDeviceId, verifyClientVaultPossession }) => {
+      // Vault possession is required only for the new WebCrypto device cookie.
+      // Legacy IDs predate the IndexedDB key and must remain compatible.
+      const didMatch = document.cookie.match(/(?:^|;\s*)_app_cid=([^;]+)/);
+      const cookieDid = didMatch ? decodeURIComponent(didMatch[1]) : null;
+      if (cookieDid) {
+        const isPossessionValid = await verifyClientVaultPossession(cookieDid);
+        if (!isPossessionValid) {
+          // Cryptographic private key is absent from IndexedDB!
+          // (Cookie was copied into Incognito or another machine)
+          try {
+            fetch('/api/auth/security-alert', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                reason: 'client_vault_missing',
+                detail: 'Device cookie present but non-extractable IndexedDB cryptographic key is absent',
+                path: window.location.pathname,
+              }),
+              keepalive: true,
+            }).catch(() => {});
+          } catch {}
+          handleLogout('unauthorized_device');
+          return;
+        }
+      }
+      // Ensure device ID is generated & persisted for new sessions
+      getOrCreateDeviceId().catch(() => {});
+    });
+  }, [handleLogout]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 🚀 MASTER AUTHENTICATION SYNC
@@ -233,6 +306,16 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
         return;
       }
 
+      // 🚨 Security: device binding mismatch (cookie theft detection)
+      if ((sessionData as any).reason === 'device_mismatch' || (sessionData as any).reason === 'unauthorized_device') {
+        toast.error('Security Alert', {
+          description: 'This session is tied to another browser or device. Please log in directly.',
+          duration: 10000,
+        });
+        handleLogout('device_mismatch');
+        return;
+      }
+
       if (sessionData.user) {
         const newUser = normalizeUser(sessionData.user);
         
@@ -243,14 +326,18 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
         } else if (authCheckStatus !== 'checked') {
           setAuthCheckStatus('checked');
         }
-      } else {
-        // Clear stale persisted user if server says no session
+      } else if (!initialUser) {
+        // Only clear client state when the server-rendered layout also confirms
+        // that there is no authenticated session. A transient client query
+        // response must not turn an authenticated navbar into a login button.
         if (globalUser) {
           logger.info('No active session, clearing stale data');
           setUser(null);
         } else if (authCheckStatus !== 'checked') {
           setAuthCheckStatus('checked');
         }
+      } else if (authCheckStatus !== 'checked') {
+        setAuthCheckStatus('checked');
       }
       return;
     }
@@ -470,7 +557,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                         <div className="tap-scale-96">
                           <SheetClose asChild>
                             <a
-                              href="https://t.me/mppolice_26"
+                              href={MP_POLICE_TELEGRAM_CHANNEL_URL}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-sky-50 hover:text-sky-600"
@@ -629,7 +716,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                       <SheetClose asChild>
                         <Button
                           asChild
-                          className="w-full rounded-xl bg-slate-900 font-bold text-white hover:bg-slate-800"
+                          className="w-full cursor-pointer rounded-xl bg-slate-900 font-bold text-white hover:bg-slate-800"
                         >
                           <Link href="/login" prefetch={false}>
                             Log in

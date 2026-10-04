@@ -3,12 +3,13 @@ import { db } from '@/db';
 import { testFeedback, tests, mppscUsers } from '@/db/schema';
 import { cookies } from 'next/headers';
 import { desc, eq, sql } from 'drizzle-orm';
+import { extractAuthToken } from '@/lib/auth-constants';
 
 export async function GET(request: Request) {
   try {
     // Verify Admin
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppolice_token')?.value;
+    const token = extractAuthToken(cookieStore);
 
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

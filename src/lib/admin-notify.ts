@@ -342,11 +342,17 @@ export async function logEmailAttempt(data: {
   error?: string;
 }) {
   try {
-    // Log to a simple tracking table (create if needed)
-    await db.run(sql`
-      INSERT INTO email_logs (user_id, user_email, email_type, status, error_message, created_at)
-      VALUES (${data.userId}, ${data.userEmail}, ${data.type}, ${data.status}, ${data.error || null}, datetime('now'))
-    `);
+    if ('execute' in db && typeof (db as any).execute === 'function') {
+      await (db as any).execute(sql`
+        INSERT INTO email_logs (user_id, user_email, email_type, status, error_message, created_at)
+        VALUES (${data.userId}, ${data.userEmail}, ${data.type}, ${data.status}, ${data.error || null}, NOW())
+      `);
+    } else if ('run' in db && typeof (db as any).run === 'function') {
+      await (db as any).run(sql`
+        INSERT INTO email_logs (user_id, user_email, email_type, status, error_message, created_at)
+        VALUES (${data.userId}, ${data.userEmail}, ${data.type}, ${data.status}, ${data.error || null}, datetime('now'))
+      `);
+    }
   } catch {
     // Table might not exist, that's okay - just log
     logger.info('Email attempt logged', { category: 'email', metadata: data });

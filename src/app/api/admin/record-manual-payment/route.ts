@@ -3,9 +3,9 @@ import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { payments, mppscUsers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
+import { verifyAdminAuth } from '@/lib/auth';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 💳 RECORD MANUAL PAYMENT — Audit trail ONLY
@@ -34,22 +34,9 @@ export async function POST(request: Request) {
   let targetUserId: string | undefined;
   try {
     // ── Admin Auth ────────────────────────────────────────────
-    const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const { verifyToken } = await import('@/lib/jwt');
-    const decoded = verifyToken(token);
-    if (!decoded?.userId) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
-    adminId = decoded.userId;
-
-    const adminUser = await db.query.mppscUsers.findFirst({
-      where: eq(mppscUsers.id, adminId),
-      columns: { role: true, id: true },
-    });
-    if (!adminUser || adminUser.role !== 'admin') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-    }
+    const adminUser = await verifyAdminAuth();
+    if (!adminUser) return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    adminId = adminUser.id;
 
     // ── Parse + Validate ─────────────────────────────────────
     const body = await request.json();

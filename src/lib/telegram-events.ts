@@ -77,12 +77,17 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
   const deviceType = event.device ? `[${event.device}]` : '';
   const browserOs = event.userAgent ? parseReadableUserAgent(event.userAgent) : 'Unknown Browser';
   const connectionDisplay = `📱 ${escapeHTML(browserOs)} ${deviceType}`;
-  const locationDisplay = event.location ? `🌍 <b>Location:</b> ${escapeHTML(event.location)}` : '';
-  const ipDisplay = event.ip && event.ip !== 'Unknown IP' ? `🖥️ <code>${escapeHTML(event.ip)}</code>` : '';
+  const locationDisplay = event.location
+    ? `📍 <b>Location:</b> ${escapeHTML(event.location)}`
+    : '';
+  const ipDisplay =
+    event.ip && event.ip !== 'Unknown IP'
+      ? `🌐 <b>Real IP:</b> <code>${escapeHTML(event.ip)}</code>`
+      : '';
 
   let networkInfo = '';
   if (locationDisplay && ipDisplay) {
-    networkInfo = `${locationDisplay} | ${ipDisplay}\n`;
+    networkInfo = `${ipDisplay}\n${locationDisplay}\n`;
   } else if (locationDisplay) {
     networkInfo = `${locationDisplay}\n`;
   } else if (ipDisplay) {
@@ -101,16 +106,16 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
   });
   const timestamp = `${dayName}, ${dateStr} | ${timeStr} IST`;
 
-  let title = '📊 <b>MP POLICE ELITE TELEMETRY ALERT</b>';
+  let title = '📊 <b>MPPSC ZEN TELEMETRY ALERT</b>';
   let body = '';
-  let tags = '#telemetry #MPPolice';
+  let tags = '#telemetry #MPPSCZen';
 
   if (isPaymentPath) {
     title = '💰 <b>PAYMENT FUNNEL EVENT</b>';
-    tags = '#PaymentFunnel #conversion #MPPolice';
+    tags = '#PaymentFunnel #conversion #MPPSCZen';
   } else if (isQuizPath) {
     title = '📘 <b>QUIZ TELEMETRY ALERT</b>';
-    tags = '#QuizPlatform #MPPolice';
+    tags = '#QuizPlatform #MPPSCZen';
   }
 
   if (event.type === 'page_view') {
@@ -133,11 +138,12 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
     const stayTime = event.duration ? formatDuration(event.duration) : '0s';
     const totalSessionTime = event.sessionDuration ? formatDuration(event.sessionDuration) : null;
     
-    body = 
+    body =
       `${title}\n` +
-      `⏱️ <b>Time on Page:</b> <b>${stayTime}</b> (<code>${escapeHTML(event.path)}</code>)\n` +
-      (totalSessionTime ? `🕒 <b>Total Tab Session:</b> <b>${totalSessionTime}</b> (Open to Close/Switch)\n` : '') +
-      (event.previousPath ? `➡️ <b>Navigated to:</b> <code>${escapeHTML(event.previousPath)}</code>\n\n` : '\n') +
+      `👁️ <b>User stayed on this page for:</b> <b>${stayTime}</b>\n` +
+      `📄 <b>Page:</b> <code>${escapeHTML(event.path)}</code>\n` +
+      (totalSessionTime ? `🕒 <b>Total time on website before leaving:</b> <b>${totalSessionTime}</b>\n` : '') +
+      (event.previousPath ? `➡️ <b>Next page:</b> <code>${escapeHTML(event.previousPath)}</code>\n\n` : '\n') +
       `${userDisplay}\n` +
       `${connectionDisplay}\n` +
       networkInfo +

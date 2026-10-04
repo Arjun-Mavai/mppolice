@@ -28,13 +28,7 @@ function PaymentContent() {
   const [emailCopied, setEmailCopied] = useState(false);
   const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
   const queryAmount = searchParams.get('amount');
-  const [amount, setAmount] = useState(queryAmount || '99');
-
-  useEffect(() => {
-    if (queryAmount) {
-      setAmount(queryAmount);
-    }
-  }, [queryAmount]);
+  const amount = queryAmount || '99';
 
   const currencySymbol = currency === 'INR' ? '₹' : '$';
   const displayAmount = `${currencySymbol}${amount}`;

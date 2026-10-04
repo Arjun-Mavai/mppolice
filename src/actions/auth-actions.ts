@@ -1,6 +1,5 @@
 'use server';
 
-import { verifyAuth } from '@/lib/auth';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
@@ -8,7 +7,10 @@ import { cookies, headers } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
 import { hasActiveAuthSession, touchAuthLoginMetadata } from '@/lib/auth-session-metadata';
-import { v4 as uuidv4 } from 'uuid';
+import { after } from 'next/server';
+import { setAuthCookies } from '@/lib/auth-constants';
+import { getClientIp, getClientLocation } from '@/lib/ip';
+import { escapeHTML, sendTelegramNotification } from '@/lib/telegram';
 
 /**
  * 🔐 Get Current User (Server Action)
@@ -23,10 +25,24 @@ import { v4 as uuidv4 } from 'uuid';
  */
 export async function getCurrentUser() {
   const { verifyAuthWithMismatch } = await import('@/lib/auth');
-  const { user, _mismatch } = await verifyAuthWithMismatch();
+  const { user, _mismatch, _deviceMismatch } = await verifyAuthWithMismatch();
+  logger.debug('SERVER ACTION getCurrentUser result', {
+    category: 'auth',
+    userId: user?.id,
+    metadata: {
+      authenticated: Boolean(user),
+      mismatch: Boolean(_mismatch),
+      deviceMismatch: Boolean(_deviceMismatch),
+    },
+  });
 
   if (_mismatch) {
     return { user: null, reason: 'multi_device' };
+  }
+
+  // 🛡️ Device mismatch — cookie was copied to another browser/device
+  if (_deviceMismatch) {
+    return { user: null, reason: 'device_mismatch' };
   }
 
   if (!user) {
@@ -39,7 +55,7 @@ export async function getCurrentUser() {
       email: user.email,
       name: user.name,
       isSubscribed: !!user.isSubscribed,
-      planTier: (user.planTier as any) || 'free',
+      planTier: user.planTier || 'free',
       role: user.role ?? undefined,
       accessExpiresAt: user.accessExpiresAt ?? undefined,
     },
@@ -50,6 +66,7 @@ interface LoginParams {
   email?: string;
   password?: string;
   force?: boolean;
+  deviceId?: string;
 }
 
 /**
@@ -59,12 +76,13 @@ interface LoginParams {
  * API route se move kiya gaya taaki security aur consistency bani rahe.
  */
 export async function loginUserAction(formData: LoginParams) {
-  const { email, password, force } = formData;
+  const { email, password, force, deviceId } = formData;
+  const normalizedDeviceId = deviceId?.trim() || null;
 
   try {
     // ── Rate Limiting ───────────────────────────────────────────
     const headersList = await headers();
-    const ip = headersList.get('x-forwarded-for') ?? '127.0.0.1';
+    const ip = getClientIp(headersList);
     const { loginLimiter, checkRateLimit } = await import('@/lib/rate-limit');
 
     const { success } = await checkRateLimit(loginLimiter, ip);
@@ -81,7 +99,23 @@ export async function loginUserAction(formData: LoginParams) {
 
     // ── Find User by Email ──────────────────────────────────────
     const dbUsers = await db
-      .select()
+      .select({
+        id: mppscUsers.id,
+        createdAt: mppscUsers.createdAt,
+        email: mppscUsers.email,
+        password: mppscUsers.password,
+        name: mppscUsers.name,
+        isSubscribed: mppscUsers.isSubscribed,
+        planTier: mppscUsers.planTier,
+        role: mppscUsers.role,
+        deletedAt: mppscUsers.deletedAt,
+        isActive: mppscUsers.isActive,
+        sessionVersion: mppscUsers.sessionVersion,
+        accessExpiresAt: mppscUsers.accessExpiresAt,
+        phone: mppscUsers.phone,
+        examType: mppscUsers.examType,
+        metadataText: mppscUsers.metadata,
+      })
       .from(mppscUsers)
       .where(
         and(
@@ -90,7 +124,26 @@ export async function loginUserAction(formData: LoginParams) {
         )
       )
       .limit(1);
-    const user = dbUsers[0];
+    const rawUser = dbUsers[0];
+    const user = rawUser
+      ? {
+          ...rawUser,
+          metadata:
+            rawUser.metadataText && typeof rawUser.metadataText === 'string'
+              ? (() => {
+                try {
+                  return JSON.parse(rawUser.metadataText) as Record<string, unknown>;
+                } catch {
+                  logger.warn('Invalid user metadata ignored during login', {
+                    category: 'auth',
+                    userId: rawUser.id,
+                  });
+                  return {};
+                }
+                })()
+              : rawUser.metadataText ?? {},
+        }
+      : undefined;
 
     if (!user) {
       return { error: 'Invalid credentials' };
@@ -112,7 +165,7 @@ export async function loginUserAction(formData: LoginParams) {
     }
 
     // ── Access Expiry Check ────────────────────────────────────
-    let currentPlanTier = (user.planTier as any) || 'free';
+    let currentPlanTier = user.planTier || 'free';
     let currentIsSubscribed = !!user.isSubscribed;
 
     if (user.accessExpiresAt && user.planTier !== 'free') {
@@ -188,12 +241,48 @@ export async function loginUserAction(formData: LoginParams) {
         .catch(() => {});
     }
 
-    // ── Sign JWT Token ──────────────────────────────────────────
+    // ── Telegram Login Notification (Backgrounded) ───────────────
+    after(async () => {
+      try {
+        const userAgent = headersList.get('user-agent') || 'Unknown Device';
+        const location = await getClientLocation(headersList, ip);
+        const telegramMessage =
+          `🔑 <b>New Login — MP Police Elite</b>\n\n` +
+          `👤 <b>User:</b> ${escapeHTML(user.name || 'Anonymous')}\n` +
+          `📧 <b>Email:</b> ${escapeHTML(user.email)}\n` +
+          `🏆 <b>Plan:</b> ${escapeHTML(currentPlanTier.toUpperCase())}\n` +
+          `📱 <b>Device:</b> ${escapeHTML(userAgent.slice(0, 100))}\n` +
+          `🌐 <b>Real IP:</b> ${escapeHTML(ip)}\n` +
+          `📍 <b>Location:</b> ${escapeHTML(location)}\n` +
+          (normalizedDeviceId
+            ? `🔐 <b>Device ID:</b> <code>${escapeHTML(normalizedDeviceId.slice(0, 20))}...</code>\n`
+            : '') +
+          `🔁 <b>Session:</b> ${force ? 'Forced login (other sessions logged out)' : 'Normal login'}\n` +
+          `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            weekday: 'long',
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })} IST`;
+
+        await sendTelegramNotification(telegramMessage);
+      } catch (error) {
+        logger.error('Telegram login notification failed (non-blocking)', error, {
+          category: 'admin',
+        });
+      }
+    });
+
+    // ── Sign JWT Token (embed deviceId for hardware binding) ────
     const payload = {
       userId: user.id,
       email: user.email,
       role: user.role,
       sessionVersion: newSessionVersion,
+      ...(normalizedDeviceId ? { deviceId: normalizedDeviceId } : {}),
     };
 
     const { signToken } = await import('@/lib/jwt');
@@ -203,19 +292,13 @@ export async function loginUserAction(formData: LoginParams) {
       throw new Error('Token generation failed');
     }
 
-    // ── Set HTTP-Only Cookie (30 days) ──────────────────────────
+    // ── Set Standardized Auth & Device Cookies (stealth names) ──
     const cookieStore = await cookies();
-    cookieStore.set('mppolice_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 30,
-      sameSite: 'lax',
-    });
+    setAuthCookies(cookieStore, token, normalizedDeviceId);
 
     return {
       success: true,
-      message: force 
+      message: force
         ? 'Login forced. All other sessions have been logged out.' 
         : 'Logged in successfully.',
       user: {

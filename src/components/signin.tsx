@@ -11,6 +11,7 @@ import { Quote, Loader2, ArrowLeft, Eye, EyeOff, AlertTriangle } from 'lucide-re
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { logger } from '@/lib/logger';
 import { loginUserAction } from '@/actions/auth-actions';
+import { getOrCreateDeviceId } from '@/lib/device-client';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -22,14 +23,25 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // 🛡️ Handle redirect reasons (e.g. normal logout / multi-device / device theft)
   useEffect(() => {
-    if (searchParams?.get('reason') === 'multi_device') {
+    const reason = searchParams?.get('reason');
+    if (reason === 'multi_device') {
       toast.error('Security Alert', {
         description: 'You were logged out because your account was opened on another device. Please log in again to continue here.',
         duration: 8000,
       });
       setError('Session logged out due to multi-device login.');
-    } else if (searchParams?.get('reason') === 'logged_out') {
+    } else if (reason === 'unauthorized_device' || reason === 'device_mismatch') {
+      // 🛡️ Cookie theft / Incognito paste detected
+      useSettingsStore.getState().setUser(null);
+      useSettingsStore.getState().setAuthCheckStatus('checked');
+      toast.error('Security Alert', {
+        description: 'This session was tied to another browser or device. Please log in directly.',
+        duration: 10000,
+      });
+      setError('Session invalidated due to security check.');
+    } else if (reason === 'logged_out') {
       toast.success('Logged out successfully');
     }
   }, [searchParams]);
@@ -40,7 +52,9 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const data = await loginUserAction({ email, password, force });
+      // 🛡️ Get or create hardware-bound device ID from IndexedDB vault
+      const deviceId = await getOrCreateDeviceId();
+      const data = await loginUserAction({ email, password, force, deviceId });
 
       if (data.requiresConfirmation) {
         setShowConfirmDialog(true);

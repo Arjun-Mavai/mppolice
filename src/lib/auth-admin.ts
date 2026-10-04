@@ -3,6 +3,7 @@ import { verifyToken } from '@/lib/jwt';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { extractAuthToken } from '@/lib/auth-constants';
 
 /**
  * 🛡️ Validate Admin Session
@@ -12,7 +13,7 @@ import { eq } from 'drizzle-orm';
  */
 export async function requireAdmin() {
   const cookieStore = await cookies();
-  const token = cookieStore.get('mppolice_token')?.value;
+  const token = extractAuthToken(cookieStore);
 
   if (!token) {
     throw new Error('Unauthorized');

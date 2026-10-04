@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { deleteAuthCookies } from '@/lib/auth-constants';
 
 // Logout must never be cached
 export const dynamic = 'force-dynamic';
 
 export async function POST() {
   const cookieStore = await cookies();
-  const token = cookieStore.get('mppolice_token');
+  const { extractAuthToken } = await import('@/lib/auth-constants');
+  const tokenValue = extractAuthToken(cookieStore);
 
-  if (token) {
+  if (tokenValue) {
     try {
       const { verifyToken } = await import('@/lib/jwt');
-      const decoded: any = verifyToken(token.value);
+      const decoded: any = verifyToken(tokenValue);
       if (decoded && decoded.userId) {
         const { db } = await import('@/db');
         const { mppscUsers } = await import('@/db/schema');
@@ -40,8 +42,8 @@ export async function POST() {
     }
   }
 
-  // Clear the JWT auth cookie
-  cookieStore.delete('mppolice_token');
+  // 🛡️ Clear ALL auth & device cookies (new stealth names + legacy fallbacks)
+  deleteAuthCookies(cookieStore);
 
   // Set no-cache headers to prevent browser/CDN from caching logout response
   const response = NextResponse.json({ success: true });

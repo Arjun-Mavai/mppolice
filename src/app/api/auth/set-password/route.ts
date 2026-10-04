@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { mppscUsers, verificationTokens, payments } from '@/db/schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, lt, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { checkRateLimit } from '@/lib/rate-limit';
@@ -90,7 +90,7 @@ export async function POST(req: Request) {
     // Cleanup: delete all expired tokens (housekeeping)
     await db
       .delete(verificationTokens)
-      .where(sql`${verificationTokens.expires} < strftime('%s', 'now')`);
+      .where(lt(verificationTokens.expires, new Date()));
 
     return NextResponse.json({ success: true, planTier });
   } catch (error: unknown) {
