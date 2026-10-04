@@ -1,7 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { cache } from 'react';
 import { logger } from '@/lib/logger';
 import { extractAuthToken, extractDeviceCookie } from '@/lib/auth-constants';
@@ -91,7 +91,7 @@ export const verifyAuthWithMismatch = cache(async () => {
         gender: mppscUsers.gender,
         previousUserId: mppscUsers.previousUserId,
         examType: mppscUsers.examType,
-        metadata: mppscUsers.metadata,
+        metadata: sql<unknown>`(${mppscUsers.metadata})::text`,
       })
       .from(mppscUsers)
       .where(eq(mppscUsers.id, userId))
