@@ -22,6 +22,12 @@ const nextConfig: NextConfig = {
     root: process.cwd(),
   },
 
+  // Keep production bundles free of browser console output. Structured
+  // diagnostics continue through the logger/Sentry integrations.
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+
   // ⚡ REACT 19 COMPILER - AUTO-MEMOIZATION
   reactCompiler: true,
 
