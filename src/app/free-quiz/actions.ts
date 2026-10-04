@@ -161,6 +161,9 @@ export const getCachedFreeQuizzes = unstable_cache(
           tags: tests.tags,
           createdAt: tests.createdAt,
           isInstantMode: tests.isInstantMode,
+          isFreeAccess: tests.isFreeAccess,
+          isHidden: tests.isHidden,
+          examType: tests.examType,
         })
         .from(tests)
         .where(eq(tests.type, 'MISC'))
