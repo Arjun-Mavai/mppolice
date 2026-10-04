@@ -69,9 +69,14 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
-    const adminUser = await db.query.mppscUsers.findFirst({
-      where: (u, { eq }) => eq(u.id, decoded.userId),
-    });
+    // Keep the authorization lookup scalar-only. Selecting the full user row
+    // also hydrates JSONB metadata and can fail before the pricing write runs.
+    const adminUserRows = await db
+      .select({ id: mppscUsers.id, role: mppscUsers.role })
+      .from(mppscUsers)
+      .where(eq(mppscUsers.id, decoded.userId))
+      .limit(1);
+    const adminUser = adminUserRows[0];
     if (!adminUser || adminUser.role !== 'admin') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
