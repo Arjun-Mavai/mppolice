@@ -163,25 +163,25 @@ export const getCachedFreeQuizzes = unstable_cache(
           isInstantMode: tests.isInstantMode,
         })
         .from(tests)
-        .where(
-          and(
-            eq(tests.type, 'MISC'),
-            eq(tests.isFreeAccess, true),
-            eq(tests.isHidden, false),
-            eq(tests.examType, 'mppolice')
-          )
-        )
+        .where(eq(tests.type, 'MISC'))
         .orderBy(desc(tests.createdAt));
+
+      const eligible = result.filter(
+        (test) =>
+          test.isFreeAccess === true &&
+          test.isHidden !== true &&
+          test.examType === 'mppolice'
+      );
       
-      logger.info(`--- Successfully fetched ${result.length} quizzes ---`);
-      return result;
+      logger.info(`--- Successfully fetched ${eligible.length} quizzes ---`);
+      return eligible;
     } catch (error) {
       logger.error('--- CRITICAL DB ERROR in getCachedFreeQuizzes ---', error);
       
       return [];
     }
   },
-  ['free-tests-list-v4'],
+  ['free-tests-list-v5'],
   { revalidate: 60, tags: ['tests'] }
 );
 
@@ -234,21 +234,21 @@ export const getCachedSubjectWiseTests = unstable_cache(
  * NOW CACHED for performance - revalidates every 5 minutes
  */
 const fetchFreeQuizData = async (testId: string) => {
-  const test = await db
+  const testRows = await db
     .select()
     .from(tests)
-    .where(
-      and(
-        eq(tests.id, testId),
-        eq(tests.type, 'MISC'),
-        eq(tests.isFreeAccess, true),
-        eq(tests.isHidden, false),
-        eq(tests.examType, 'mppolice')
-      )
-    )
-    .get();
+    .where(and(eq(tests.id, testId), eq(tests.type, 'MISC')))
+    .limit(1);
+  const test = testRows[0];
 
-  if (!test) return null;
+  if (
+    !test ||
+    test.isFreeAccess !== true ||
+    test.isHidden === true ||
+    test.examType !== 'mppolice'
+  ) {
+    return null;
+  }
 
   const testQuestions = await db
     .select()
@@ -261,7 +261,7 @@ const fetchFreeQuizData = async (testId: string) => {
 
 export const getCachedFreeQuizWithQuestions = unstable_cache(
   fetchFreeQuizData,
-  ['free-quiz-with-questions-v4'],
+  ['free-quiz-with-questions-v5'],
   { revalidate: 300, tags: ['tests'] }
 );
 
