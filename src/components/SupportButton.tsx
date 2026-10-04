@@ -5,10 +5,12 @@ import { SupportChat } from './SupportChat';
 
 export function SupportButton() {
   const pathname = usePathname();
-  const isQuizPlay =
-    pathname?.includes('/quiz/play') || pathname?.includes('/free-quiz/play');
+  const isAllowedPage =
+    pathname === '/' ||
+    pathname === '/profile' ||
+    pathname === '/contact';
 
-  if (isQuizPlay) return null;
+  if (!isAllowedPage) return null;
 
   return <SupportChat />;
 }
