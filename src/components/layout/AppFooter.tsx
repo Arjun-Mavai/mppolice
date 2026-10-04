@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Info, MessageSquare, Mail, Shield, FileText, Send } from 'lucide-react';
+import { MP_POLICE_TELEGRAM_CHANNEL_URL } from '@/config/social-links';
 
 /**
  * AppFooter — Global Footer Component (Tapori Docs 🎬)
@@ -35,7 +36,7 @@ export function AppFooter() {
           <p className="mt-1 text-sm text-slate-500">© 2026 All rights reserved.</p>
           <div className="mt-4 flex items-center justify-center gap-4 md:justify-start">
             <a
-              href="https://t.me/mppolice_26"
+              href={MP_POLICE_TELEGRAM_CHANNEL_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-full bg-sky-100 p-2 text-sky-600 transition-all hover:bg-sky-200 hover:scale-110"

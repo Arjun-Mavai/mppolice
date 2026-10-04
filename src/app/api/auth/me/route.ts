@@ -16,6 +16,11 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const { user, _mismatch } = await verifyAuthWithMismatch();
+    logger.debug('API /api/auth/me result', {
+      category: 'auth',
+      userId: user?.id,
+      metadata: { authenticated: Boolean(user), mismatch: Boolean(_mismatch) },
+    });
 
     if (_mismatch) {
       return NextResponse.json(

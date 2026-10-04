@@ -25,7 +25,7 @@ const AUTH_ROUTES = ['/login', '/signup', '/forgot-password'];
 export async function proxy(request: NextRequest) {
   console.log('middleware running for the path', request.nextUrl.pathname);
   const { pathname, searchParams } = request.nextUrl;
-  const token = request.cookies.get('mppolice_token')?.value;
+  const token = request.cookies.get('_app_sid')?.value || request.cookies.get('mppolice_token')?.value;
   const testId = searchParams.get('testId');
   console.log('middleware running for the path', pathname);
   // 1. Verify Token (Agar token hai to check karo valid hai ya nahi)

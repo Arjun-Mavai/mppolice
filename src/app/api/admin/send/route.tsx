@@ -5,13 +5,14 @@ import { cookies } from 'next/headers';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { appPath } from '@/lib/app-url';
+import { extractAuthToken } from '@/lib/auth-constants';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
     // Admin auth check
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppolice_token')?.value;
+    const token = extractAuthToken(cookieStore);
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

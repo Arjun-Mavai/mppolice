@@ -3,19 +3,19 @@ import { cookies } from 'next/headers';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { extractAuthToken } from '@/lib/auth-constants';
 
 export async function GET() {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppolice_token');
+    const token = extractAuthToken(cookieStore);
 
     if (!token) {
       return NextResponse.json({ authenticated: false });
     }
 
-    // CRITICAL FIX: Decode the JWT to get the actual user ID
     const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token.value);
+    const decoded: any = verifyToken(token);
 
     if (!decoded || !decoded.userId) {
       return NextResponse.json({ authenticated: false });

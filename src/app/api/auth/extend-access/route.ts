@@ -4,6 +4,7 @@ import { mppscUsers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
+import { extractAuthToken } from '@/lib/auth-constants';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ⏳ EXTEND ACCESS API — Admin extends user's access duration
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
   try {
     // ── Admin Auth ──────────────────────────────────────────────
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppolice_token')?.value;
+    const token = extractAuthToken(cookieStore);
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

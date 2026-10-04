@@ -74,7 +74,7 @@ export const metadata: Metadata = {
   },
 };
 
-import { AppNavbar } from '@/components/layout/AppNavbar';
+import { AppHeader } from '@/components/layout/AppHeader';
 import { MainContentWrapper } from '@/components/layout/MainContentWrapper';
 
 export default function RootLayout({
@@ -82,8 +82,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // User is handled entirely on the client-side to allow static layout rendering
-
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -158,7 +156,7 @@ export default function RootLayout({
           <PwaRegistry />
           <Providers>
             <Suspense fallback={null}>
-              <AppNavbar user={null} />
+              <AppHeader />
             </Suspense>
             <MainContentWrapper>{children}</MainContentWrapper>
 

@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { getErrorCode, getErrorMessage } from '@/lib/errors';
+import { extractAuthToken } from '@/lib/auth-constants';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🔐 ADMIN SIGNUP API — Sirf admin hi naya user bana sakta h
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
 
     // ── Admin Auth Check — sirf admin bana sakta h user ─────────
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppolice_token')?.value;
+    const token = extractAuthToken(cookieStore);
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized: Admin session required' }, { status: 401 });

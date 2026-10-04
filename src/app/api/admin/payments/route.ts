@@ -1,29 +1,18 @@
 import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
-import { cookies } from 'next/headers';
-import { verifyToken } from '@/lib/jwt';
 import { db } from '@/db';
 import { payments, mppscUsers } from '@/db/schema';
 import { desc, eq, sql } from 'drizzle-orm';
+import { verifyAdminAuth } from '@/lib/auth';
 
 export async function GET(req: Request) {
-  let payload: any;
+  let adminId: string | undefined;
   try {
     // Auth check — admin only
-    const cookieStore = await cookies();
-    const token = cookieStore.get('mppolice_token')?.value;
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    payload = (await verifyToken(token)) as any;
-    if (!payload?.userId) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-
-    const [admin] = await db
-      .select({ role: mppscUsers.role })
-      .from(mppscUsers)
-      .where(eq(mppscUsers.id, payload.userId as string))
-      .limit(1);
-    if (!admin || admin.role !== 'admin')
+    const admin = await verifyAdminAuth();
+    if (!admin)
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    adminId = admin.id;
 
     // Parse query params
     const { searchParams } = new URL(req.url);
@@ -151,7 +140,7 @@ export async function GET(req: Request) {
   } catch (error) {
     logger.error('Admin payments error:', error, {
       category: 'system',
-      userId: payload?.userId,
+      userId: adminId,
     });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

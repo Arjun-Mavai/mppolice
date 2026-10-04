@@ -5,6 +5,8 @@ import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
+import { setAuthCookies } from '@/lib/auth-constants';
+import { getClientIp, getClientLocation } from '@/lib/ip';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🔑 LOGIN API — Email + Password → JWT cookie set karo
@@ -25,7 +27,7 @@ export async function POST(request: Request) {
 
   try {
     // ── Rate Limiting ───────────────────────────────────────────
-    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const ip = getClientIp(request.headers);
     const { loginLimiter, checkRateLimit } = await import('@/lib/rate-limit');
 
     const { success, limit, remaining, reset } = await checkRateLimit(loginLimiter, ip);
@@ -49,6 +51,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     email = body.email;
     const password = body.password;
+    // 🛡️ Device ID from client's IndexedDB WebCrypto vault (sent at login time)
+    const deviceId = typeof body.deviceId === 'string' ? body.deviceId.trim() : undefined;
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
@@ -129,11 +133,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // ── Sign JWT Token ──────────────────────────────────────────
+    // ── Sign JWT Token (embed deviceId for hardware binding) ────
     const payload = {
       userId: user.id,
       email: user.email,
       role: user.role,
+      ...(deviceId ? { deviceId } : {}),
     };
 
     const { signToken } = await import('@/lib/jwt');
@@ -143,15 +148,32 @@ export async function POST(request: Request) {
       throw new Error('Token generation failed');
     }
 
-    // ── Set HTTP-Only Cookie (30 days) ──────────────────────────
+    // ── Telegram Login Notification (Backgrounded) ───────────────
+    try {
+      const { sendTelegramNotification, escapeHTML } = await import('@/lib/telegram');
+      const userAgent = request.headers.get('user-agent') || 'Unknown Device';
+      const location = await getClientLocation(request.headers, ip);
+      const telegramMessage =
+        `🔑 <b>New Login — MP Police Elite</b>\n\n` +
+        `👤 <b>User:</b> ${escapeHTML(user.name || 'Anonymous')}\n` +
+        `📧 <b>Email:</b> ${escapeHTML(user.email)}\n` +
+        `🏆 <b>Plan:</b> ${escapeHTML((user.planTier as string)?.toUpperCase() || 'FREE')}\n` +
+        `📱 <b>Device:</b> ${escapeHTML(userAgent.slice(0, 100))}\n` +
+        `🌐 <b>Real IP:</b> ${escapeHTML(ip)}\n` +
+        `📍 <b>Location:</b> ${escapeHTML(location)}\n` +
+        (deviceId ? `🔐 <b>Device ID:</b> <code>${escapeHTML(deviceId.slice(0, 20))}...</code>\n` : '') +
+        `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
+
+      sendTelegramNotification(telegramMessage).catch((e) => {
+        logger.error('Telegram login notification failed (non-blocking)', e, { category: 'admin' });
+      });
+    } catch {
+      // Construction failed — non-blocking
+    }
+
+    // ── Set Standardized Auth & Device Cookies (stealth names) ──
     const cookieStore = await cookies();
-    cookieStore.set('mppolice_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 30,
-      sameSite: 'lax',
-    });
+    setAuthCookies(cookieStore, token, deviceId);
 
     return NextResponse.json({
       success: true,

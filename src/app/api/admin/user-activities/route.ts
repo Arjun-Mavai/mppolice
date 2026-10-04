@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { mppscUsers, mppscUserActivities } from '@/db/schema';
 import { desc } from 'drizzle-orm';
 import { cookies } from 'next/headers';
+import { extractAuthToken } from '@/lib/auth-constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +12,7 @@ export async function GET() {
   let decoded: any;
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppolice_token')?.value;
+    const token = extractAuthToken(cookieStore);
 
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

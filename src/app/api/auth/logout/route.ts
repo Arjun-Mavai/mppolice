@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { deleteAuthCookies } from '@/lib/auth-constants';
 
-export async function POST(request: Request) {
+export async function POST() {
   const cookieStore = await cookies();
 
-  // ✅ FIX: Delete the CORRECT cookie name!
-  // Login sets 'mppolice_token', so logout should delete 'mppolice_token'
-  cookieStore.delete('mppolice_token');
+  deleteAuthCookies(cookieStore);
 
   return NextResponse.json({ success: true });
 }

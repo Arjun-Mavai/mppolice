@@ -86,7 +86,7 @@ export const UserSection = memo(function UserSection({
     <div className="flex gap-2">
       <Button
         asChild
-        className="hidden rounded-full bg-slate-900 px-6 font-bold text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800 sm:flex"
+        className="hidden cursor-pointer rounded-full bg-slate-900 px-6 font-bold text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800 sm:flex"
       >
         <Link href="/login" prefetch={false}>
           Log in

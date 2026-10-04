@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { verifyToken } from '@/lib/jwt';
+import { extractAuthToken } from '@/lib/auth-constants';
 
 interface AdminTokenPayload {
   userId: string;
@@ -19,7 +20,7 @@ const isAdminTokenPayload = (value: unknown): value is AdminTokenPayload => {
 
 export async function getAdminUserFromRequest() {
   const cookieStore = await cookies();
-  const token = cookieStore.get('mppolice_token')?.value;
+  const token = extractAuthToken(cookieStore);
   if (!token) return null;
 
   const decoded = verifyToken(token);

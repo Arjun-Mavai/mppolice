@@ -28,7 +28,17 @@ export const timestampMode = customType<{ data: Date; driverData: Date | string 
 export const jsonText = <T = unknown>(name: string) =>
   customType<{ data: T; driverData: string | unknown }>({
     dataType: () => 'jsonb',
-    fromDriver: (value) => (typeof value === 'string' ? JSON.parse(value) : (value as T)),
+    fromDriver: (value) => {
+      if (value === null || value === undefined) return value as T;
+      if (typeof value !== 'string') return value as T;
+      try {
+        return JSON.parse(value) as T;
+      } catch {
+        // Some Postgres drivers can stringify an already-decoded JSON value
+        // as "[object Object]". Invalid optional JSON must not break auth.
+        return {} as T;
+      }
+    },
     toDriver: (value) => JSON.stringify(value),
   })(name);
 

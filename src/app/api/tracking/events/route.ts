@@ -2,6 +2,8 @@ import { NextResponse, after } from 'next/server';
 import { sendTelemetryEvent, TelemetryEvent } from '@/lib/telegram-events';
 import { logger } from '@/lib/logger';
 import { headers } from 'next/headers';
+import { verifyAuth } from '@/lib/auth';
+import { getClientIp, getClientLocation, getClientUserAgent } from '@/lib/ip';
 
 function normalizeOrigin(origin: string | null | undefined): string | null {
   if (!origin) return null;
@@ -49,23 +51,8 @@ export async function POST(req: Request) {
     const sanitize = <T extends string | null | undefined>(str: T, max = 500): T => 
       typeof str === 'string' ? str.substring(0, max) as T : str;
 
-    const isCloudflare = !!headerList.get('cf-connecting-ip');
-    const ip = headerList.get('cf-connecting-ip') || headerList.get('x-forwarded-for')?.split(',')[0]?.trim() || 'Unknown IP';
-    
-    const rawCity = isCloudflare ? headerList.get('cf-ipcity') : (headerList.get('x-vercel-ip-city') || headerList.get('cf-ipcity'));
-    let city: string | null = rawCity;
-    if (rawCity) {
-      try { city = decodeURIComponent(rawCity); } catch { city = rawCity; }
-    }
-    
-    const region = isCloudflare ? null : headerList.get('x-vercel-ip-country-region');
-    const country = isCloudflare ? headerList.get('cf-ipcountry') : (headerList.get('x-vercel-ip-country') || headerList.get('cf-ipcountry'));
-    
-    const locationParts: string[] = [];
-    if (city) locationParts.push(city);
-    if (region) locationParts.push(region);
-    if (country) locationParts.push(country);
-    const location = locationParts.length > 0 ? locationParts.join(', ') : undefined;
+    const ip = getClientIp(headerList);
+    const location = await getClientLocation(headerList, ip);
 
     const validatedEvent: TelemetryEvent = {
       ...body,
@@ -78,6 +65,24 @@ export async function POST(req: Request) {
       ip,
       location,
     };
+    validatedEvent.userAgent = getClientUserAgent(headerList);
+
+    // Treat the session cookie as the source of truth for registered users.
+    // Client-provided identity is only used for guests because it can be modified.
+    const authenticatedUser = await verifyAuth();
+    if (authenticatedUser) {
+      validatedEvent.user = {
+        id: authenticatedUser.id,
+        name: authenticatedUser.name ?? undefined,
+        email: authenticatedUser.email,
+        phone: authenticatedUser.phone,
+        role: authenticatedUser.role ?? undefined,
+        planTier: authenticatedUser.planTier ?? undefined,
+      };
+      validatedEvent.guestName = undefined;
+    } else {
+      validatedEvent.user = null;
+    }
 
     after(() => {
       sendTelemetryEvent(validatedEvent).catch((err) => {

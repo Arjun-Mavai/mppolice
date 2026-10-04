@@ -19,6 +19,7 @@ export type LogCategory =
   | 'email'
   | 'system'
   | 'admin'
+  | 'telegram'
   | 'ui'
   | 'guest'
   | 'error-boundary'

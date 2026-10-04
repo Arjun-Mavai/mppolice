@@ -18,6 +18,10 @@ const hostnames = [
 ];
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: process.cwd(),
+  },
+
   // ⚡ REACT 19 COMPILER - AUTO-MEMOIZATION
   reactCompiler: true,
 
