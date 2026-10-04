@@ -64,14 +64,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
   // 3. Handle Auth Routes
-  // Agar user logged in hai aur Login/Signup pe ja raha hai -> Syllabus pe bhejo
+  // Logged-in users should not return to login/signup pages.
   const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
 
-  if (isAuthRoute) {
-    if (isValidToken) {
-      // "Arre bhai, login toh hai tu, andar chal"
-      return NextResponse.redirect(new URL('/', request.url));
-    }
+  if (isAuthRoute && isValidToken) {
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   // 4. Admin Access

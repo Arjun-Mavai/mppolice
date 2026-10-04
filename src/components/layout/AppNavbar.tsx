@@ -96,7 +96,13 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const { isInstallable, installPwa, isIos } = usePwa();
 
   // Create a merged user object (prop + global), favoring global if updated
-  const user = useMemo(() => normalizeUser(globalUser ?? initialUser), [globalUser, initialUser]);
+  const user = useMemo(
+    () =>
+      normalizeUser(
+        isMounted && authCheckStatus === 'checked' ? globalUser : globalUser || initialUser
+      ),
+    [globalUser, initialUser, isMounted, authCheckStatus]
+  );
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 🚀 CROSS-TAB SYNC
